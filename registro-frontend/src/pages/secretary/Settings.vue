@@ -3,9 +3,9 @@
     <div class="row items-center q-mb-xl">
       <div class="col">
         <h1 class="text-h4 text-weight-bold text-outfit q-my-none text-gradient-premium">
-          Impostazioni Scuola
+          {{ t('settingsPage.secretaryTitle') || 'Impostazioni Scuola' }}
         </h1>
-        <div class="text-subtitle1 text-slate-500 q-mt-sm">Configurazione istituto, calendario e orari</div>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">{{ t('settingsPage.secretarySubtitle') || 'Configurazione istituto, calendario e orari' }}</div>
       </div>
     </div>
 
@@ -20,11 +20,11 @@
             narrow-indicator
             no-caps
         >
-            <q-tab name="general" label="Generale" icon="settings" class="q-px-xl py-4" />
-            <q-tab name="calendar" label="Calendario Scolastico" icon="calendar_today" class="q-px-xl py-4" />
-            <q-tab name="hours" label="Orari Ricevimento" icon="schedule" class="q-px-xl py-4" />
-            <q-tab name="accessibility" label="Accessibilità Visiva" icon="accessibility_new" class="q-px-xl py-4" />
-            <q-tab name="account" label="Account / Password" icon="lock" class="q-px-xl py-4" />
+            <q-tab name="general" :label="t('settings.general') || 'Generale'" icon="settings" class="q-px-xl py-4" />
+            <q-tab name="calendar" :label="t('settingsPage.tabCalendar') || 'Calendario Scolastico'" icon="calendar_today" class="q-px-xl py-4" />
+            <q-tab name="hours" :label="t('settingsPage.tabHours') || 'Orari Ricevimento'" icon="schedule" class="q-px-xl py-4" />
+            <q-tab name="accessibility" :label="t('settingsPage.tabAccessibility') || 'Accessibilità Visiva'" icon="accessibility_new" class="q-px-xl py-4" />
+            <q-tab name="account" :label="t('settingsPage.tabSecurity') || 'Account / Password'" icon="lock" class="q-px-xl py-4" />
         </q-tabs>
 
         <q-tab-panels v-model="tab" animated class="bg-transparent">
@@ -32,31 +32,31 @@
             <q-tab-panel name="general" class="q-pa-xl">
                 <div class="row items-center q-mb-xl">
                   <q-avatar color="indigo-50" text-color="indigo-700" icon="business" size="48px" class="q-mr-md" />
-                  <div class="text-h5 text-weight-bold text-slate-800">Dati Istituto</div>
+                  <div class="text-h5 text-weight-bold text-slate-800">{{ t('settings.generalConfig') || 'Dati Istituto' }}</div>
                 </div>
                 
                 <div class="row q-col-gutter-lg">
                     <div class="col-12 col-md-6">
-                        <q-input v-model="settings.schoolName" label="Nome Istituto" outlined />
+                        <q-input v-model="settings.schoolName" :label="t('settingsPage.schoolName') || 'Nome Istituto'" outlined />
                     </div>
                     <div class="col-12 col-md-6">
-                        <q-input v-model="settings.schoolCode" label="Codice Meccanografico" outlined />
+                        <q-input v-model="settings.schoolCode" :label="t('settingsPage.schoolCode') || 'Codice Meccanografico'" outlined />
                     </div>
                     <div class="col-12 col-md-8">
-                        <q-input v-model="settings.address" label="Indirizzo" outlined />
+                        <q-input v-model="settings.address" :label="t('settingsPage.address') || 'Indirizzo'" outlined />
                     </div>
                     <div class="col-12 col-md-4">
-                        <q-input v-model="settings.email" label="Email Segreteria" outlined />
+                        <q-input v-model="settings.email" :label="t('settingsPage.secretaryEmail') || 'Email Segreteria'" outlined />
                     </div>
                     <div class="col-12 col-md-6">
-                        <q-input v-model="settings.pec" label="PEC" outlined />
+                        <q-input v-model="settings.pec" :label="t('settingsPage.pec') || 'PEC'" outlined />
                     </div>
                     <div class="col-12 col-md-6">
-                        <q-input v-model="settings.phone" label="Telefono" outlined />
+                        <q-input v-model="settings.phone" :label="t('settingsPage.phone') || 'Telefono'" outlined />
                     </div>
                 </div>
                 <div class="row q-mt-xl">
-                    <q-btn color="primary" label="Salva Modifiche" size="lg" padding="md xl" no-caps class="rounded-lg shadow-sm" @click="saveSettings" />
+                    <q-btn color="primary" :label="t('settingsPage.saveChanges') || 'Salva Modifiche'" size="lg" padding="md xl" no-caps class="rounded-lg shadow-sm" @click="saveSettings" />
                 </div>
             </q-tab-panel>
 
@@ -65,9 +65,9 @@
                 <div class="row items-center justify-between q-mb-xl">
                   <div class="row items-center">
                     <q-avatar color="orange-50" text-color="orange-700" icon="event" size="48px" class="q-mr-md" />
-                    <div class="text-h5 text-weight-bold text-slate-800">Anno Scolastico {{ currentYearStr }}</div>
+                    <div class="text-h5 text-weight-bold text-slate-800">{{ t('common.schoolYear') || 'Anno Scolastico' }} {{ currentYearStr }}</div>
                   </div>
-                  <q-btn color="primary" unelevated label="Aggiungi Chiusura" icon="add" no-caps class="rounded-lg q-px-md" @click="openHolidayDialog()" />
+                  <q-btn color="primary" unelevated :label="t('settingsPage.addClosure') || 'Aggiungi Chiusura'" icon="add" no-caps class="rounded-lg q-px-md" @click="openHolidayDialog()" />
                 </div>
                 
                  <div class="q-pa-xl bg-slate-50 rounded-2xl q-mb-xl border-slate-200">
@@ -237,7 +237,7 @@
 
     <!-- Holiday Dialog -->
     <q-dialog v-model="holidayDialog.show" persistent class="premium-dialog">
-      <q-card style="min-width: 500px" class="rounded-xl overflow-hidden shadow-24">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24">
         <q-card-section class="bg-gradient-primary text-white q-pa-lg">
           <div class="text-h5 text-weight-bold">{{ holidayDialog.editIndex !== null ? 'Modifica Chiusura' : 'Nuova Chiusura' }}</div>
         </q-card-section>

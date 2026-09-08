@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Registre - Parent</string>
+    <string name="parent_dashboard_title">Portail Famille</string>
+    <string name="my_children">Mes enfants</string>
+    <string name="child_grades">Notes de l\'enfant</string>
+    <string name="pending_absences">Absences à justifier</string>
+    <string name="book_colloqui">Réserver un rendez-vous</string>
+    <string name="switch_child">Changer d\'enfant</string>
+    <string name="justify_absence">Justifier l\'absence</string>
+    <string name="book_colloquio">Réserver un rendez-vous</string>
+    <string name="pending_justifications">Justifications en attente</string>
+    <string name="no_pending_justifications">Aucune absence à justifier</string>
+    <string name="login_subtitle">Connectez-vous au portail parents</string>
+    <string name="email_label">E-mail du parent</string>
+    <string name="password_label">Mot de passe</string>
+    <string name="btn_login">ACCÉDER AU PORTAIL</string>
+    <string name="err_enter_credentials">Saisissez l\'e-mail et le mot de passe</string>
+    <string name="logout">Déconnexion</string>
+    <string name="child_attendance">Présences</string>
+    <string name="upcoming_colloqui">Prochains rendez-vous</string>
+    <string name="sign_hour">Confirmer</string>
+    <string name="communications">Communications</string>
+    <string name="no_circulars">Aucune circulaire ou communication disponible</string>
+    <string name="no_children_found">Aucun élève associé trouvé</string>
+    <string name="no_grades">Aucune note disponible</string>
+    <string name="status_justified">Justifiée</string>
+    <string name="colloquio_confirmed">Réservé</string>
+    <string name="btn_justify">Justifier</string>
+    <string name="err_login_failed">Échec de la connexion</string>
+    <string name="no_data">Aucune donnée disponible</string>
+</resources>

@@ -16,6 +16,9 @@ type Service interface {
 	MarkAttendance(ctx context.Context, eventID, studentID string) error
 	SavePreference(ctx context.Context, studentID string, pref StudentPreference) error
 	GetPreference(ctx context.Context, studentID string) (*StudentPreference, error)
+	SaveCapolavoro(ctx context.Context, studentID string, c Capolavoro) error
+	GetCapolavori(ctx context.Context, studentID string) ([]Capolavoro, error)
+	GetCurriculumStudente(ctx context.Context, studentID string) (*CurriculumStudenteSummary, error)
 }
 
 type service struct {
@@ -97,4 +100,20 @@ func (s *service) SavePreference(ctx context.Context, studentID string, pref Stu
 
 func (s *service) GetPreference(ctx context.Context, studentID string) (*StudentPreference, error) {
 	return s.repo.GetPreference(ctx, studentID)
+}
+
+func (s *service) SaveCapolavoro(ctx context.Context, studentID string, c Capolavoro) error {
+	if c.Title == "" {
+		return errors.New("il titolo del capolavoro è obbligatorio")
+	}
+	c.StudentID = studentID
+	return s.repo.SaveCapolavoro(ctx, &c)
+}
+
+func (s *service) GetCapolavori(ctx context.Context, studentID string) ([]Capolavoro, error) {
+	return s.repo.GetCapolavori(ctx, studentID)
+}
+
+func (s *service) GetCurriculumStudente(ctx context.Context, studentID string) (*CurriculumStudenteSummary, error) {
+	return s.repo.GetCurriculumStudente(ctx, studentID)
 }

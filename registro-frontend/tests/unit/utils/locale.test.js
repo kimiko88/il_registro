@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   SUPPORTED_LOCALES,
   normalizeLocale,
+  getBrowserLocale,
   getSavedLocale,
   getQuasarLang,
   applyLocale
@@ -92,6 +93,40 @@ describe('locale.js — Multilingual & Accessibility Support', () => {
       localStorage.removeItem('app_language')
       localStorage.setItem('user_locale', 'fr')
       expect(getSavedLocale()).toBe('fr-FR')
+    })
+
+    it('falls back to browser locale when fallbackToBrowser is true and storage is empty', () => {
+      const origNav = window.navigator.language
+      try {
+        Object.defineProperty(window.navigator, 'language', { value: 'de-DE', configurable: true })
+        expect(getSavedLocale(true)).toBe('de-DE')
+      } finally {
+        Object.defineProperty(window.navigator, 'language', { value: origNav, configurable: true })
+      }
+    })
+  })
+
+  describe('getBrowserLocale', () => {
+    it('detects and normalizes navigator.language', () => {
+      const origNav = window.navigator.language
+      try {
+        Object.defineProperty(window.navigator, 'language', { value: 'fr-FR', configurable: true })
+        expect(getBrowserLocale()).toBe('fr-FR')
+        Object.defineProperty(window.navigator, 'language', { value: 'es', configurable: true })
+        expect(getBrowserLocale()).toBe('es-ES')
+      } finally {
+        Object.defineProperty(window.navigator, 'language', { value: origNav, configurable: true })
+      }
+    })
+
+    it('falls back to it-IT on unknown browser language or error', () => {
+      const origNav = window.navigator.language
+      try {
+        Object.defineProperty(window.navigator, 'language', { value: 'xx-YY', configurable: true })
+        expect(getBrowserLocale()).toBe('it-IT')
+      } finally {
+        Object.defineProperty(window.navigator, 'language', { value: origNav, configurable: true })
+      }
     })
   })
 

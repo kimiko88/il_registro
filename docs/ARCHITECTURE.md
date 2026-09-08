@@ -33,6 +33,18 @@ il_registro/
 │   └── WIKI.md              # Wiki di progetto
 ├── registro-backend/        # Go API server
 ├── registro-frontend/       # Vue 3 + Quasar SPA/PWA
+├── android/                 # Progetto Multi-Modulo Android (Kotlin & Jetpack Compose) [Fase Alpha]
+│   ├── student/             # App Studente (:student)
+│   ├── parent/              # App Genitore (:parent)
+│   ├── teacher/             # App Docente (:teacher)
+│   └── secretary/           # App Segreteria (:secretary)
+├── ios/                     # Progetto iOS (Swift & SwiftUI, Xcode + SPM) [Fase Alpha]
+│   ├── RegistroStudente/    # Progetto Xcode integrato (RegistroStudente.xcodeproj, target per i 4 ruoli)
+│   ├── Package.swift        # Swift Package Manager manifest
+│   ├── student/             # Sorgenti modulo Studente
+│   ├── parent/              # Sorgenti modulo Genitore
+│   ├── teacher/             # Sorgenti modulo Docente
+│   └── secretary/           # Sorgenti modulo Segreteria
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
@@ -150,3 +162,45 @@ Middleware Go:
 | **In-Memory Store Caching**       | Frontend, `useGradesStore`     | Evita refetch inutili durante la navigazione                  |
 | **Pinia Global Error Bus**        | Frontend, `stores/error.js`    | Raccolta e notifica centralizzata di eccezioni                |
 | **Router-Integrated Interceptor** | Frontend, `services/api.js`    | Reindirizzamento SPA senza ricaricamento pagina su 401        |
+| **Mobile Declarative Reactive UI**| Android/iOS (`android/`, `ios/`)| Interfacce native con Jetpack Compose e SwiftUI               |
+| **Multi-Role Mobile Isolation**   | Android/iOS                     | Applicazioni e target dedicati per Studente, Genitore, Docente, Segreteria |
+| **Offline-First Mobile Cache**    | Mobile, `OfflineCacheManager`   | Accesso sicuro offline a voti, compiti ed orario con validazione temporale |
+| **Mobile Real-Time WebSocket**    | Mobile, `WebSocketClient/Manager`| Ricezione istantanea di notifiche, voti e stato code colloqui |
+| **Circuit Breaker Pattern**       | Backend, `pkg/circuitbreaker`  | Resilienza e fail-fast immediato (`ErrCircuitOpen`) su integrazioni esterne (Supabase Storage, SIDI, Webhook) |
+| **Deep Dependency Probes**        | Backend, `internal/handler`    | Verifiche cloud-native concorrenti (`/live`, `/ready`) con latenze DB/Redis in ms, goroutine e heap memory |
+| **Relational Integrity Linter**   | Backend, `internal/postgres`   | Scansione proattiva delle anomalie (studenti orfani, classi senza coordinatore, lezioni sovrapposte, voti festivi) |
+| **Descriptive Assessment Matrix** | Frontend, `DescriptiveEvaluationMatrix` | Valutazione per obiettivi su 4 livelli ministeriali (O.M. 172/2020) con matrice interattiva ed export CSV |
+| **Statutory Absence Forecasting** | Frontend, `AbsenceLimitWidget` | Monitoraggio e calcolo predittivo della soglia 25% assenze per la validità dell'anno (Art. 14 DPR 122/2009) |
+| **Idempotency-Key Injection**     | Frontend, `useIdempotency.js`  | Prevenzione duplicazioni su richieste mutative critiche con header HTTP `Idempotency-Key` automatico |
+
+---
+
+## Architettura Mobile (Android & iOS — Fase Alpha)
+
+> [!WARNING]
+> **STATO ALPHA — NON STABILE E INCOMPLETO**  
+> Le applicazioni mobile native per Android e iOS sono attualmente in **fase Alpha**. Il codice è in fase di sviluppo attivo, sperimentale, **non stabile e incompleto**. **NON sono destinate all'uso in produzione**.
+
+> [!IMPORTANT]
+> **LICENZA CONDIVISA**  
+> Anche tutte le applicazioni mobile native (Android e iOS per Studente, Genitore, Docente e Segreteria) sono distribuite sotto la medesima licenza dell'intero applicativo: **[PolyForm Noncommercial License 1.0.0](../LICENSE)**.
+
+Le applicazioni native sono organizzate per ruolo utente con architetture moderne, reattive e client HTTP connessi direttamente alle API di produzione (senza mock data):
+
+### Android Architecture
+- **Multi-Modulo Gradle**: Sottomoduli `:student`, `:parent`, `:teacher`, `:secretary` coordinati da `settings.gradle.kts`.
+- **UI & Toolkit**: Kotlin 1.9+, Jetpack Compose con componenti Material 3 dedicati per ciascun ruolo.
+- **State & Concurrency**: Architecture Components ViewModel con Kotlin Coroutines e StateFlow.
+- **Networking & API**: Client HTTP reali (`Http*ApiService`) che dialogano con l'API Go (`/api/v1`) con rotazione token JWT.
+- **Funzionalità Avanzate**: Autenticazione biometrica (`BiometricPrompt`), supporto a 11 lingue (`strings.xml`), WebSocket per notifiche real-time e cache offline (`OfflineCacheManager`).
+
+### iOS Architecture
+- **Xcode Project & SPM**: Progetto Xcode integrato `ios/RegistroStudente/RegistroStudente.xcodeproj` contenente schemi e target eseguibili per tutti i 4 ruoli:
+  - `RegistroStudente` (StudentApp)
+  - `RegistroDocente` (TeacherApp)
+  - `RegistroGenitore` (ParentApp)
+  - `RegistroSegreteria` (SecretaryApp)
+  Inoltre è presente il manifest Swift Package Manager (`Package.swift`) per compilazione e testing headless via CLI (`swift test`).
+- **UI & Framework**: Swift 5.9+, SwiftUI Declarative UI con navigazione nativa e layout responsive.
+- **Networking & Concurrency**: Client asincroni `URLSession` con `async/await`, token refresh trasparente, biometria nativa (`LocalAuthentication`).
+- **Localizzazione**: 11 lingue supportate tramite bundle `Localizable.strings` (`it`, `en`, `es`, `fr`, `de`, `ro`, `sq`, `ar` con RTL, `zh-Hans`, `uk`, `ru`).

@@ -75,6 +75,16 @@ func (m *mockOrientamentoRepo) GetPreference(ctx context.Context, studentID stri
 	return pref, nil
 }
 
+func (m *mockOrientamentoRepo) SaveCapolavoro(ctx context.Context, c *orientamento.Capolavoro) error {
+	return nil
+}
+func (m *mockOrientamentoRepo) GetCapolavori(ctx context.Context, studentID string) ([]orientamento.Capolavoro, error) {
+	return nil, nil
+}
+func (m *mockOrientamentoRepo) GetCurriculumStudente(ctx context.Context, studentID string) (*orientamento.CurriculumStudenteSummary, error) {
+	return nil, nil
+}
+
 func TestIntegration_Orientamento_Guidance_Workflow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

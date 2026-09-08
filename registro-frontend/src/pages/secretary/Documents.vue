@@ -117,7 +117,7 @@
     <q-dialog v-model="createDialog" persistent maximized transition-show="slide-up" transition-hide="slide-down">
       <q-card class="bg-slate-50 column no-wrap">
         <q-toolbar class="bg-white border-b border-slate-100 q-px-xl q-py-md">
-          <q-btn flat round dense icon="close" v-close-popup color="slate-400" />
+          <q-btn flat round dense icon="close" v-close-popup color="slate-400" :aria-label="$t('common.close') || 'Chiudi'" />
           <q-toolbar-title class="text-weight-bold text-slate-800 text-outfit">
             {{ isEdit ? 'Modifica Documento' : 'Redazione Nuovo Documento' }}
           </q-toolbar-title>
@@ -214,7 +214,7 @@
         <q-card-section class="row items-center q-pa-xl border-b border-slate-100">
           <div class="text-h5 text-weight-bold text-slate-800 text-outfit">{{ selectedDoc?.title }}</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup color="slate-400" />
+          <q-btn icon="close" flat round dense v-close-popup color="slate-400" :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-xl scroll bg-slate-50" style="max-height: 75vh">

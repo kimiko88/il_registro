@@ -106,7 +106,7 @@ func (s *service) CreateLesson(teacherID string, req CreateLessonRequest) (*Less
 			exStart, exEnd := l.Hour, l.Hour+lDur
 
 			if newStart < exEnd && exStart < newEnd {
-				if !(l.IsCoTeaching && req.IsCoTeaching) {
+				if !l.IsCoTeaching || !req.IsCoTeaching {
 					return nil, fmt.Errorf("impossibile inserire più lezioni nella stessa ora (%dª ora) per questa classe a meno che non sia spuntata la voce 'Compresenza'", req.Hour)
 				}
 			}
@@ -341,7 +341,7 @@ func (s *service) UpdateLesson(teacherID, role, id string, req UpdateLessonReque
 			}
 			exStart, exEnd := l.Hour, l.Hour+lDur
 			if newStart < exEnd && exStart < newEnd {
-				if !(l.IsCoTeaching && targetCoTeaching) {
+				if !l.IsCoTeaching || !targetCoTeaching {
 					return nil, fmt.Errorf("impossibile registrare più lezioni nella stessa ora (%dª ora) per questa classe senza la spunta 'Compresenza'", targetHour)
 				}
 			}

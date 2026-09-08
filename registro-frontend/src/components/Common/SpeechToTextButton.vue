@@ -36,7 +36,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'result'])
 
-const { isListening, isSupported, start, stop, toggle } = useSpeechToText({
+const { isListening, isSupported, toggle } = useSpeechToText({
   onResult: (text) => {
     let newText = text
     if (props.modelValue && props.modelValue.trim()) {

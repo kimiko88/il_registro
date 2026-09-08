@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
+import { Quasar } from 'quasar'
 import FascicoloStudente from '@/pages/secretary/FascicoloStudente.vue'
 import { userService } from '@/services/userService'
 
@@ -55,7 +56,22 @@ describe('Secretary Student Digital Dossier Workflow E2E', () => {
 
         const wrapper = mount(FascicoloStudente, {
             global: {
-                plugins: [pinia]
+                plugins: [Quasar, pinia],
+                mocks: {
+                    t: (key) => key === 'fascicolo.title' ? 'Fascicolo Digitale Studente' : key
+                },
+                stubs: {
+                    'q-page': { template: '<div><slot /></div>' },
+                    'q-btn': { template: '<button><slot /></button>' },
+                    'q-card': { template: '<div><slot /></div>' },
+                    'q-card-section': { template: '<div><slot /></div>' },
+                    'q-separator': true,
+                    'q-skeleton': true,
+                    'q-banner': { template: '<div><slot /></div>' },
+                    'q-icon': true,
+                    'q-avatar': { template: '<div><slot /></div>' },
+                    'q-tooltip': true
+                }
             }
         })
 

@@ -18,7 +18,7 @@ func loadEnv() {
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -31,8 +31,11 @@ func loadEnv() {
 		val := strings.TrimSpace(parts[1])
 		val = strings.Trim(val, `"'`)
 		if os.Getenv(key) == "" {
-			os.Setenv(key, val)
+			_ = os.Setenv(key, val)
 		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Printf("loadEnv scanner error: %v", err)
 	}
 }
 
@@ -63,7 +66,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to open DB connection: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	if err := db.Ping(); err != nil {
 		log.Fatalf("Failed to ping DB: %v", err)

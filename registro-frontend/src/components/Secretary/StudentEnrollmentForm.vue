@@ -1,7 +1,8 @@
 <template>
-  <q-card style="min-width: 800px; max-width: 90vw;">
-    <q-card-section>
+  <q-card style="width: min(800px, 95vw); max-width: 95vw;">
+    <q-card-section class="row items-center justify-between">
       <div class="text-h6">{{ t('studentsPage.newEnrollment') || 'Nuova Iscrizione Studente' }}</div>
+      <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
     </q-card-section>
 
     <q-card-section class="q-pt-none">

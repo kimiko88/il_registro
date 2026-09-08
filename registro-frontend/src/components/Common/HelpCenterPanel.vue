@@ -235,7 +235,7 @@
                 <q-icon name="arrow_back" size="18px" />
                 <span>{{ t('help.categories') }}</span>
               </button>
-              <q-btn flat round dense icon="close" size="sm" color="grey-5" @click="activeGuide = null" />
+              <q-btn flat round dense icon="close" size="sm" color="grey-5" :aria-label="t('common.close') || 'Chiudi guida'" @click="activeGuide = null" />
             </div>
 
             <!-- Article header -->

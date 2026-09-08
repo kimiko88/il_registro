@@ -3,15 +3,15 @@
     <!-- Header -->
     <div class="row items-center justify-between q-mb-lg">
       <div>
-        <h1 class="text-h4 text-weight-bold text-slate-800 q-ma-none">Gestione Certificati</h1>
+        <h1 class="text-h4 text-weight-bold text-slate-800 q-ma-none">{{ t('certificatesPage.title') }}</h1>
         <p class="text-subtitle1 text-slate-500 q-mb-none">
-          Emissione e archiviazione certificati scolastici ufficiali
+          {{ t('certificatesPage.subtitle') }}
         </p>
       </div>
       <q-btn
         color="primary"
         icon="workspace_premium"
-        label="Genera Nuovo Certificato"
+        :label="t('certificatesPage.generateNew')"
         no-caps
         class="shadow-sm rounded-lg q-px-md"
         @click="openGenerateDialog"
@@ -25,7 +25,7 @@
           <q-select
             v-model="filters.type"
             :options="typeFilterOptions"
-            label="Tipo Certificato"
+            :label="t('certificatesPage.filterType')"
             outlined
             dense
             emit-value
@@ -36,7 +36,7 @@
         <div class="col-12 col-md-4">
           <q-input
             v-model="filters.studentName"
-            label="Cerca studente..."
+            :label="t('certificatesPage.filterStudent')"
             outlined
             dense
             clearable
@@ -57,7 +57,7 @@
           />
         </div>
         <div class="col-12 col-md-2 text-right">
-          <q-btn flat icon="refresh" label="Ricarica" no-caps color="primary" @click="loadCertificates" />
+          <q-btn flat icon="refresh" :label="t('common.refresh') || 'Ricarica'" no-caps color="primary" @click="loadCertificates" />
         </div>
       </q-card-section>
     </q-card>
@@ -71,7 +71,7 @@
           row-key="id"
           :loading="certStore.loading"
           flat
-          no-data-label="Nessun certificato emesso"
+          :no-data-label="t('common.noData') || 'Nessun certificato emesso'"
         >
           <template #body-cell-type="props">
             <q-td :props="props">
@@ -100,7 +100,8 @@
                 dense
                 color="primary"
                 icon="picture_as_pdf"
-                title="Scarica PDF"
+                :title="t('common.download') || 'Scarica PDF'"
+                :aria-label="t('common.download') || 'Scarica PDF'"
                 @click="downloadCert(props.row.id)"
               />
               <q-btn
@@ -109,7 +110,8 @@
                 dense
                 color="negative"
                 icon="cancel"
-                title="Annulla Certificato"
+                :title="t('common.delete') || 'Annulla Certificato'"
+                :aria-label="t('common.delete') || 'Annulla Certificato'"
                 @click="confirmDelete(props.row)"
               />
             </q-td>
@@ -120,20 +122,20 @@
 
     <!-- Dialog Genera Certificato (Multi-step) -->
     <q-dialog v-model="showGenerateDialog" persistent>
-      <q-card style="min-width: 600px; max-width: 750px" class="rounded-xl overflow-hidden bg-white shadow-24">
+      <q-card style="width: min(650px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden bg-white shadow-24">
         <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
           <div class="text-h6 text-weight-bold row items-center">
             <q-icon name="workspace_premium" class="q-mr-xs" />
-            Generazione Certificato Scolastico
+            {{ t('certificatesPage.generateNew') }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-none">
           <q-stepper v-model="step" animated color="primary" flat>
             <!-- Step 1: Tipo Certificato -->
-            <q-step :name="1" title="Tipo" icon="bookmark" :done="step > 1">
-              <div class="text-subtitle1 text-weight-bold q-mb-sm">Seleziona il tipo di certificato</div>
+            <q-step :name="1" :title="t('certificatesPage.step1Title')" icon="bookmark" :done="step > 1">
+              <div class="text-subtitle1 text-weight-bold q-mb-sm">{{ t('certificatesPage.step1Title') }}</div>
               <div class="q-gutter-sm">
                 <q-card
                   v-for="opt in typeOptions"
@@ -155,17 +157,17 @@
               </div>
 
               <div class="row justify-end q-mt-md">
-                <q-btn color="primary" label="Avanti" no-caps @click="step = 2" :disable="!form.type" />
+                <q-btn color="primary" :label="t('common.next') || 'Avanti'" no-caps @click="step = 2" :disable="!form.type" />
               </div>
             </q-step>
 
             <!-- Step 2: Seleziona Studente -->
-            <q-step :name="2" title="Studente" icon="person" :done="step > 2">
-              <div class="text-subtitle1 text-weight-bold q-mb-sm">Cerca e seleziona lo studente</div>
+            <q-step :name="2" :title="t('certificatesPage.step2Title')" icon="person" :done="step > 2">
+              <div class="text-subtitle1 text-weight-bold q-mb-sm">{{ t('certificatesPage.step2Title') }}</div>
               <q-select
                 v-model="selectedStudent"
                 :options="studentOptions"
-                label="Digita per cercare studente (Cognome / Nome)"
+                :label="t('certificatesPage.filterStudent')"
                 outlined
                 use-input
                 input-debounce="300"
@@ -174,7 +176,7 @@
               >
                 <template #no-option>
                   <q-item>
-                    <q-item-section class="text-grey">Nessuno studente trovato</q-item-section>
+                    <q-item-section class="text-grey">{{ t('common.noData') || 'Nessuno studente trovato' }}</q-item-section>
                   </q-item>
                 </template>
               </q-select>
@@ -185,13 +187,13 @@
               </div>
 
               <div class="row justify-between q-mt-md">
-                <q-btn flat label="Indietro" color="slate-600" no-caps @click="step = 1" />
-                <q-btn color="primary" label="Avanti" no-caps @click="step = 3" :disable="!selectedStudent" />
+                <q-btn flat :label="t('common.back') || 'Indietro'" color="slate-600" no-caps @click="step = 1" />
+                <q-btn color="primary" :label="t('common.next') || 'Avanti'" no-caps @click="step = 3" :disable="!selectedStudent" />
               </div>
             </q-step>
 
             <!-- Step 3: Dettagli & Note -->
-            <q-step :name="3" title="Dettagli" icon="tune" :done="step > 3">
+            <q-step :name="3" :title="t('certificatesPage.step3Title')" icon="tune" :done="step > 3">
               <div class="q-gutter-md">
                 <q-input
                   v-model="form.academic_year"
@@ -207,24 +209,23 @@
                   rows="3"
                   outlined
                   dense
-                  hint="Aggiungi dettagli specifici se richiesti"
                 />
               </div>
 
               <div class="row justify-between q-mt-lg">
-                <q-btn flat label="Indietro" color="slate-600" no-caps @click="step = 2" />
-                <q-btn color="primary" label="Riepilogo" no-caps @click="step = 4" />
+                <q-btn flat :label="t('common.back') || 'Indietro'" color="slate-600" no-caps @click="step = 2" />
+                <q-btn color="primary" :label="t('certificatesPage.summaryTitle') || 'Riepilogo'" no-caps @click="step = 4" />
               </div>
             </q-step>
 
             <!-- Step 4: Riepilogo & Generazione -->
-            <q-step :name="4" title="Conferma" icon="check_circle">
+            <q-step :name="4" :title="t('certificatesPage.step4Title')" icon="check_circle">
               <div class="bg-slate-50 q-pa-lg rounded-xl bordered q-mb-md">
                 <div class="row q-col-gutter-sm">
-                  <div class="col-6 text-caption text-slate-500">Tipo Certificato:</div>
+                  <div class="col-6 text-caption text-slate-500">{{ t('certificatesPage.colType') }}:</div>
                   <div class="col-6 text-weight-bold">{{ getTypeLabel(form.type) }}</div>
 
-                  <div class="col-6 text-caption text-slate-500">Studente:</div>
+                  <div class="col-6 text-caption text-slate-500">{{ t('certificatesPage.colStudent') }}:</div>
                   <div class="col-6 text-weight-bold">{{ selectedStudent?.label }}</div>
 
                   <div class="col-6 text-caption text-slate-500">Anno Accademico:</div>
@@ -236,11 +237,11 @@
               </div>
 
               <div class="row justify-between q-mt-lg">
-                <q-btn flat label="Indietro" color="slate-600" no-caps @click="step = 3" />
+                <q-btn flat :label="t('common.back') || 'Indietro'" color="slate-600" no-caps @click="step = 3" />
                 <q-btn
                   color="positive"
                   icon="picture_as_pdf"
-                  label="Genera e Scarica PDF"
+                  :label="t('certificatesPage.generateAndDownload')"
                   no-caps
                   class="q-px-lg shadow-sm"
                   :loading="generating"
@@ -286,30 +287,30 @@ const form = reactive({
 const selectedStudent = ref(null);
 const rawStudents = ref([]);
 
-const typeFilterOptions = [
-  { label: 'Tutti i tipi', value: 'all' },
-  { label: 'Iscrizione', value: 'iscrizione' },
-  { label: 'Frequenza', value: 'frequenza' },
-  { label: 'Promozione', value: 'promozione' },
-  { label: 'Condotta', value: 'condotta' }
-];
+const typeFilterOptions = computed(() => [
+  { label: t('certificatesPage.allTypes'), value: 'all' },
+  { label: t('certificatesPage.types.iscrizione'), value: 'iscrizione' },
+  { label: t('certificatesPage.types.frequenza'), value: 'frequenza' },
+  { label: t('certificatesPage.types.promozione'), value: 'promozione' },
+  { label: t('certificatesPage.types.condotta'), value: 'condotta' }
+]);
 
-const typeOptions = [
-  { value: 'iscrizione', label: 'Certificato di Iscrizione', description: 'Attesta la regolare iscrizione per l\'anno scolastico in corso.' },
-  { value: 'frequenza', label: 'Certificato di Frequenza', description: 'Attesta la regolare frequenza delle lezioni durante l\'anno.' },
-  { value: 'promozione', label: 'Certificato di Promozione', description: 'Attesta il superamento della classe e la promozione alla classe successiva.' },
-  { value: 'condotta', label: 'Certificato di Condotta', description: 'Attesta la buona condotta e il comportamento dello studente.' }
-];
+const typeOptions = computed(() => [
+  { value: 'iscrizione', label: t('certificatesPage.types.iscrizione'), description: t('certificatesPage.descriptions.iscrizione') },
+  { value: 'frequenza', label: t('certificatesPage.types.frequenza'), description: t('certificatesPage.descriptions.frequenza') },
+  { value: 'promozione', label: t('certificatesPage.types.promozione'), description: t('certificatesPage.descriptions.promozione') },
+  { value: 'condotta', label: t('certificatesPage.types.condotta'), description: t('certificatesPage.descriptions.condotta') }
+]);
 
-const columns = [
-  { name: 'protocol_no', label: 'N° Protocollo', field: 'protocol_no', align: 'left', sortable: true },
-  { name: 'student_name', label: 'Studente', field: 'student_name', align: 'left', sortable: true },
-  { name: 'class_name', label: 'Classe', field: 'class_name', align: 'left', sortable: true },
-  { name: 'type', label: 'Tipo', field: 'type', align: 'center', sortable: true },
-  { name: 'issued_at', label: 'Data Emissione', field: 'issued_at', align: 'left', sortable: true },
-  { name: 'issued_by_name', label: 'Emesso Da', field: 'issued_by_name', align: 'left' },
-  { name: 'actions', label: 'Azioni', field: 'actions', align: 'center' }
-];
+const columns = computed(() => [
+  { name: 'protocol_no', label: t('certificatesPage.colProtocol'), field: 'protocol_no', align: 'left', sortable: true },
+  { name: 'student_name', label: t('certificatesPage.colStudent'), field: 'student_name', align: 'left', sortable: true },
+  { name: 'class_name', label: t('certificatesPage.colClass'), field: 'class_name', align: 'left', sortable: true },
+  { name: 'type', label: t('certificatesPage.colType'), field: 'type', align: 'center', sortable: true },
+  { name: 'issued_at', label: t('certificatesPage.colIssuedAt'), field: 'issued_at', align: 'left', sortable: true },
+  { name: 'issued_by_name', label: t('certificatesPage.colIssuedBy'), field: 'issued_by_name', align: 'left' },
+  { name: 'actions', label: t('certificatesPage.colActions'), field: 'actions', align: 'center' }
+]);
 
 const filteredCertificates = computed(() => {
   let list = certStore.certificates;
@@ -329,7 +330,7 @@ const loadCertificates = async () => {
   try {
     await certStore.fetchCertificates(filters);
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento dei certificati' });
+    $q.notify({ type: 'negative', message: t('certificatesPage.loadError') || 'Errore nel caricamento dei certificati' });
   }
 };
 
@@ -378,14 +379,14 @@ const handleGenerate = async () => {
       notes: form.notes
     };
     const res = await certStore.generateCertificate(payload);
-    $q.notify({ type: 'positive', message: 'Certificato generato con successo!' });
+    $q.notify({ type: 'positive', message: t('certificatesPage.generateSuccess') || 'Certificato generato con successo!' });
     showGenerateDialog.value = false;
 
     if (res?.id) {
       await certStore.downloadPDF(res.id);
     }
   } catch (e) {
-    $q.notify({ type: 'negative', message: 'Errore durante la generazione del certificato' });
+    $q.notify({ type: 'negative', message: t('certificatesPage.generateError') || 'Errore durante la generazione del certificato' });
   } finally {
     generating.value = false;
   }
@@ -416,14 +417,8 @@ const confirmDelete = (row) => {
   });
 };
 
-const getTypeLabel = (t) => {
-  switch (t) {
-    case 'iscrizione': return 'Iscrizione';
-    case 'frequenza': return 'Frequenza';
-    case 'promozione': return 'Promozione';
-    case 'condotta': return 'Condotta';
-    default: return t;
-  }
+const getTypeLabel = (tVal) => {
+  return t('certificatesPage.types.' + tVal) || tVal;
 };
 
 const getTypeColor = (t) => {

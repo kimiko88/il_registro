@@ -73,91 +73,210 @@
       </div>
     </div>
 
-    <!-- Table of Substitutions -->
-    <q-card flat bordered class="rounded-xl bg-white shadow-soft overflow-hidden">
-      <q-table
-        :rows="substitutions"
-        :columns="columns"
-        row-key="id"
-        flat
-        :loading="loading"
-        class="bg-transparent"
-        :pagination="{ rowsPerPage: 10 }"
+    <!-- Navigation Tabs -->
+    <div class="row items-center justify-between q-mb-md">
+      <q-tabs
+        v-model="activeTab"
+        dense
+        class="text-slate-600 bg-white rounded-lg shadow-xs border border-slate-200"
+        active-color="primary"
+        indicator-color="primary"
+        align="left"
       >
-        <template v-slot:body-cell-hour="props">
-          <q-td :props="props">
-            <q-badge color="indigo-7" class="q-px-sm q-py-xs text-weight-bold">
-              {{ props.value }}ª ora
-            </q-badge>
-          </q-td>
-        </template>
+        <q-tab name="board" icon="view_week" label="Tabellone Orario Live (1ª-6ª Ora)" />
+        <q-tab name="table" icon="table_chart" label="Elenco Dettagliato" />
+      </q-tabs>
+    </div>
 
-        <template v-slot:body-cell-status="props">
-          <q-td :props="props">
-            <q-chip
-              dense
-              :color="statusColor(props.value)"
-              text-color="white"
-              class="text-weight-bold"
-            >
-              {{ statusLabel(props.value) }}
-            </q-chip>
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-actions="props">
-          <q-td :props="props" auto-width>
-            <div class="row q-gutter-xs">
-              <q-btn
-                color="primary"
-                size="sm"
-                icon="person_search"
-                label="Assegna Docente"
-                no-caps
-                class="rounded-lg"
-                @click="openAssignDialog(props.row)"
-              />
-              <q-btn
-                color="secondary"
-                size="sm"
-                icon="edit"
-                flat round dense
-                @click="openEditDialog(props.row)"
-              >
-                <q-tooltip>Modifica Sostituzione</q-tooltip>
-              </q-btn>
-              <q-btn
-                color="negative"
-                size="sm"
-                icon="delete"
-                flat round dense
-                @click="confirmDeleteSub(props.row)"
-              >
-                <q-tooltip>Elimina Sostituzione</q-tooltip>
-              </q-btn>
+    <q-tab-panels v-model="activeTab" animated class="bg-transparent">
+      <!-- PANEL 1: Tabellone Visuale Sostituzioni -->
+      <q-tab-panel name="board" class="q-pa-none">
+        <q-card flat bordered class="rounded-xl bg-white shadow-soft q-pa-lg overflow-auto">
+          <div class="row items-center justify-between q-mb-lg">
+            <div>
+              <div class="text-h6 text-weight-bold text-slate-800">
+                Tabellone Giornaliero Sostituzioni · {{ selectedDate }}
+              </div>
+              <div class="text-caption text-slate-500">
+                Quadro d'unione orario: monitora le classi con ore scoperte e assegna i sostituti con 1 click
+              </div>
             </div>
-          </q-td>
-        </template>
-
-        <template v-slot:no-data>
-          <div class="full-width column flex-center q-pa-xl text-slate-400">
-            <q-icon name="swap_horiz" size="64px" class="opacity-30" />
-            <div class="text-h6 q-mt-md">Nessuna sostituzione per la data selezionata</div>
-            <p class="text-caption">Clicca su "Nuova Sostituzione" per creare una richiesta di supplenza.</p>
+            <div class="row q-gutter-sm items-center">
+              <q-badge color="red-1" text-color="negative" label="⚠️ Scoperta" class="q-px-sm q-py-xs font-bold" />
+              <q-badge color="emerald-1" text-color="positive" label="✓ Coperta" class="q-px-sm q-py-xs font-bold" />
+            </div>
           </div>
-        </template>
-      </q-table>
-    </q-card>
+
+          <!-- Empty State -->
+          <div v-if="boardClasses.length === 0" class="text-center q-py-xl text-slate-400">
+            <q-icon name="check_circle" size="48px" color="positive" class="q-mb-sm" />
+            <div class="text-subtitle1 text-weight-medium text-slate-700">Tutte le cattedre sono coperte o regolari!</div>
+            <div class="text-caption">Nessuna richiesta di supplenza aperta per la data {{ selectedDate }}</div>
+          </div>
+
+          <!-- Matrix Table -->
+          <div v-else class="matrix-container">
+            <table class="matrix-table full-width">
+              <thead>
+                <tr>
+                  <th class="matrix-header-cell class-col">Classe</th>
+                  <th v-for="h in activeHours" :key="h" class="matrix-header-cell hour-col">
+                    {{ h }}ª Ora
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="cls in boardClasses" :key="cls.id">
+                  <td class="matrix-cell class-label-cell">
+                    <span class="text-weight-bolder text-slate-800">{{ cls.label || cls.name || cls.id.substring(0,4) }}</span>
+                  </td>
+                  <td v-for="h in activeHours" :key="h" class="matrix-cell slot-cell">
+                    <div v-if="getSubForSlot(cls.id, h)" class="sub-slot-wrapper">
+                      <!-- UNASSIGNED -->
+                      <div
+                        v-if="!getSubForSlot(cls.id, h).substitute_teacher_id || getSubForSlot(cls.id, h).status === 'pending'"
+                        class="slot-card unassigned-card cursor-pointer"
+                        @click="openAssignDialog(getSubForSlot(cls.id, h))"
+                      >
+                        <div class="row items-center justify-between text-caption font-bold text-red-700">
+                          <span>⚠️ SCOPERTA</span>
+                          <q-icon name="bolt" size="14px" />
+                        </div>
+                        <div class="text-caption text-slate-700 ellipsis q-mt-xs font-semibold">
+                          {{ getAbsentTeacherName(getSubForSlot(cls.id, h)) }}
+                        </div>
+                        <div class="text-caption text-slate-500 ellipsis text-xs">
+                          {{ getSubjectName(getSubForSlot(cls.id, h)) }}
+                        </div>
+                        <q-btn
+                          size="xs"
+                          unelevated
+                          color="negative"
+                          label="Assegna ⚡"
+                          class="q-mt-xs full-width rounded-sm"
+                          @click.stop="openAssignDialog(getSubForSlot(cls.id, h))"
+                        />
+                      </div>
+
+                      <!-- ASSIGNED -->
+                      <div
+                        v-else
+                        class="slot-card assigned-card cursor-pointer"
+                        @click="openAssignDialog(getSubForSlot(cls.id, h))"
+                      >
+                        <div class="row items-center justify-between text-caption font-bold text-emerald-800">
+                          <span>✓ COPERTA</span>
+                          <q-icon name="verified" size="14px" />
+                        </div>
+                        <div class="text-caption text-emerald-900 ellipsis q-mt-xs font-semibold">
+                          {{ getSubstituteTeacherName(getSubForSlot(cls.id, h)) }}
+                        </div>
+                        <div class="text-caption text-emerald-700 ellipsis text-xs">
+                          sostituisce {{ getAbsentTeacherName(getSubForSlot(cls.id, h)) }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Regular slot -->
+                    <div v-else class="regular-slot">
+                      <span class="text-slate-300 text-caption font-medium">-</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </q-card>
+      </q-tab-panel>
+
+      <!-- PANEL 2: Table of Substitutions -->
+      <q-tab-panel name="table" class="q-pa-none">
+        <q-card flat bordered class="rounded-xl bg-white shadow-soft overflow-hidden">
+          <q-table
+            :rows="substitutions"
+            :columns="columns"
+            row-key="id"
+            flat
+            :loading="loading"
+            class="bg-transparent"
+            :pagination="{ rowsPerPage: 10 }"
+          >
+            <template v-slot:body-cell-hour="props">
+              <q-td :props="props">
+                <q-badge color="indigo-7" class="q-px-sm q-py-xs text-weight-bold">
+                  {{ props.value }}ª ora
+                </q-badge>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-status="props">
+              <q-td :props="props">
+                <q-chip
+                  dense
+                  :color="statusColor(props.value)"
+                  text-color="white"
+                  class="text-weight-bold"
+                >
+                  {{ statusLabel(props.value) }}
+                </q-chip>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-actions="props">
+              <q-td :props="props" auto-width>
+                <div class="row q-gutter-xs">
+                  <q-btn
+                    color="primary"
+                    size="sm"
+                    icon="person_search"
+                    label="Assegna Docente"
+                    no-caps
+                    class="rounded-lg"
+                    @click="openAssignDialog(props.row)"
+                  />
+                  <q-btn
+                    color="secondary"
+                    size="sm"
+                    icon="edit"
+                    flat round dense
+                    @click="openEditDialog(props.row)"
+                  >
+                    <q-tooltip>Modifica Sostituzione</q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    color="negative"
+                    size="sm"
+                    icon="delete"
+                    flat round dense
+                    @click="confirmDeleteSub(props.row)"
+                  >
+                    <q-tooltip>Elimina Sostituzione</q-tooltip>
+                  </q-btn>
+                </div>
+              </q-td>
+            </template>
+
+            <template v-slot:no-data>
+              <div class="full-width column flex-center q-pa-xl text-slate-400">
+                <q-icon name="swap_horiz" size="64px" class="opacity-30" />
+                <div class="text-h6 q-mt-md">Nessuna sostituzione per la data selezionata</div>
+                <p class="text-caption">Clicca su "Nuova Sostituzione" per creare una richiesta di supplenza.</p>
+              </div>
+            </template>
+          </q-table>
+        </q-card>
+      </q-tab-panel>
+    </q-tab-panels>
 
     <!-- Create / Edit Substitution Dialog -->
     <q-dialog v-model="showCreateDialog" persistent>
-      <q-card style="min-width: 500px" class="rounded-xl overflow-hidden shadow-24 bg-white">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24 bg-white">
         <q-card-section class="bg-primary text-white q-pa-lg row items-center justify-between">
           <div class="text-h6 text-weight-bold">
             <q-icon :name="isEditingSub ? 'edit' : 'add_circle'" class="q-mr-xs" />
             {{ isEditingSub ? 'Modifica Richiesta Sostituzione' : 'Nuova Richiesta Sostituzione' }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg space-y-4">
@@ -230,7 +349,7 @@
 
     <!-- Assign Substitute Dialog -->
     <q-dialog v-model="showAssignDialog" persistent>
-      <q-card style="min-width: 550px" class="rounded-xl overflow-hidden shadow-24 bg-white">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24 bg-white">
         <q-card-section class="bg-primary text-white q-pa-lg row items-center justify-between">
           <div>
             <div class="text-h6 text-weight-bold">Assegna Docente Sostituto</div>
@@ -238,7 +357,7 @@
               Ora {{ selectedSub.hour || selectedSub.hour_index || 1 }}ª · Classe {{ getClassName(selectedSub) }} · Data {{ selectedSub.date ? selectedSub.date.substring(0, 10) : '' }}
             </div>
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg">
@@ -317,6 +436,8 @@ const selectedDate = ref(new Date().toISOString().substring(0, 10))
 const loading = ref(false)
 const saving = ref(false)
 const loadingRecs = ref(false)
+const activeTab = ref('board')
+const activeHours = [1, 2, 3, 4, 5, 6]
 
 const substitutions = ref([])
 const teachers = ref([])
@@ -328,6 +449,22 @@ const showAssignDialog = ref(false)
 const selectedSub = ref(null)
 const selectedSubstituteId = ref(null)
 const recommendedTeachers = ref([])
+
+const boardClasses = computed(() => {
+  if (classes.value.length === 0) return []
+  const classIdsWithSubs = new Set(substitutions.value.map(s => s.class_id))
+  const relevant = classes.value.filter(c => classIdsWithSubs.has(c.id))
+  if (relevant.length > 0) {
+    return relevant
+  }
+  return classes.value.slice(0, 10)
+})
+
+const getSubForSlot = (classId, hour) => {
+  return substitutions.value.find(s =>
+    s.class_id === classId && (Number(s.hour) === hour || Number(s.hour_index) === hour)
+  )
+}
 
 const isEditingSub = ref(false)
 const editingSubId = ref(null)
@@ -576,5 +713,75 @@ function statusColor(s) {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+.font-bold {
+  font-weight: 600;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.matrix-container {
+  overflow-x: auto;
+}
+.matrix-table {
+  border-collapse: separate;
+  border-spacing: 6px;
+}
+.matrix-header-cell {
+  background-color: #f1f5f9;
+  color: #334155;
+  padding: 10px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 8px;
+}
+.class-col {
+  width: 140px;
+  text-align: left;
+}
+.hour-col {
+  min-width: 140px;
+}
+.matrix-cell {
+  vertical-align: top;
+}
+.class-label-cell {
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.slot-card {
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+.unassigned-card {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+}
+.unassigned-card:hover {
+  background-color: #fee2e2;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+.assigned-card {
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+.assigned-card:hover {
+  background-color: #d1fae5;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+.regular-slot {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px dashed #e2e8f0;
+}
+.text-xs {
+  font-size: 0.75rem;
 }
 </style>

@@ -4,12 +4,12 @@
     <div class="row items-center q-mb-xl justify-between">
       <div>
         <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
-          {{ $t('roleDashboards.teacherPanel') }}
+          {{ t('roleDashboards.teacherPanel') }}
         </h1>
-        <div class="text-subtitle1 text-slate-500 q-mt-sm">{{ $t('roleDashboards.welcomeTeacher', { name: teacherStore.fullName }) }}</div>
+        <div class="text-subtitle1 text-slate-500 q-mt-sm">{{ t('roleDashboards.welcomeTeacher', { name: teacherStore.fullName }) }}</div>
       </div>
       <div class="text-right">
-        <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">{{ $t('dashboardPage.todayDate') }}</div>
+        <div class="text-caption text-slate-400 text-uppercase letter-spacing-1">{{ t('dashboardPage.todayDate') }}</div>
         <div class="text-h6 text-outfit text-weight-bold text-slate-700">{{ todayDate }}</div>
       </div>
     </div>
@@ -24,10 +24,10 @@
             </q-avatar>
             <div>
               <div class="text-caption opacity-80 text-uppercase letter-spacing-1 text-weight-bold">
-                {{ $t('roleDashboards.quickSignBanner', { hour: currentHourLabel }) }}
+                {{ t('roleDashboards.quickSignBanner', { hour: currentHourLabel }) }}
               </div>
               <div class="text-h5 text-weight-bold">
-                {{ activeLesson ? `${activeLesson.class_name} — ${activeLesson.subject_name}` : $t('roleDashboards.selectClassPrompt') }}
+                {{ activeLesson ? `${activeLesson.class_name} — ${activeLesson.subject_name}` : t('roleDashboards.selectClassPrompt') }}
               </div>
             </div>
           </div>
@@ -36,7 +36,7 @@
             <q-btn
               color="positive"
               icon="draw"
-              :label="$t('roleDashboards.quickSignBtn')"
+              :label="t('roleDashboards.quickSignBtn')"
               size="lg"
               unelevated
               class="rounded-lg text-weight-bolder shadow-md"
@@ -55,8 +55,8 @@
           @click="$router.push('/teacher/agenda')"
         >
           <q-card-section>
-            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ $t('roleDashboards.nextLesson') }}</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">{{ nextLesson?.class_name || nextLesson?.class_id || $t('roleDashboards.none') }}</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ t('roleDashboards.nextLesson') }}</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ nextLesson?.class_name || nextLesson?.class_id || t('roleDashboards.none') }}</div>
             <div class="text-caption q-mt-xs">{{ nextLesson?.subject_name || nextLesson?.subject_id || '-' }}</div>
           </q-card-section>
           <q-icon name="schedule" class="card-bg-icon" />
@@ -69,9 +69,9 @@
           @click="$router.push('/teacher/attendance')"
         >
           <q-card-section>
-            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ $t('roleDashboards.toDo') }}</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">{{ $t('roleDashboards.revisions', { count: teacherStore.pendingJustifications }) }}</div>
-            <div class="text-caption q-mt-xs">{{ $t('roleDashboards.pendingJustifications') }}</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ t('roleDashboards.toDo') }}</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ t('roleDashboards.revisions', { count: teacherStore.pendingJustifications }) }}</div>
+            <div class="text-caption q-mt-xs">{{ t('roleDashboards.pendingJustifications') }}</div>
           </q-card-section>
           <q-icon name="pending_actions" class="card-bg-icon" />
         </q-card>
@@ -83,9 +83,9 @@
           @click="$router.push('/teacher/colloqui')"
         >
           <q-card-section>
-            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Colloqui</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">{{ teacherStore.upcomingColloqui }} Prenotazioni</div>
-            <div class="text-caption q-mt-xs">Controlla l'agenda</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ t('roleDashboards.colloquiTitle') }}</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ t('roleDashboards.colloquiBookings', { count: teacherStore.upcomingColloqui }) }}</div>
+            <div class="text-caption q-mt-xs">{{ t('roleDashboards.colloquiCheckAgenda') }}</div>
           </q-card-section>
           <q-icon name="people" class="card-bg-icon" />
         </q-card>
@@ -97,9 +97,9 @@
           @click="$router.push('/teacher/communications')"
         >
           <q-card-section>
-            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">Messaggi</div>
-            <div class="text-h4 text-weight-bold q-mt-sm">{{ unreadMessagesCount }} Nuovi</div>
-            <div class="text-caption q-mt-xs">Comunicazioni interne</div>
+            <div class="text-caption opacity-80 text-uppercase letter-spacing-1">{{ t('roleDashboards.messagesTitle') }}</div>
+            <div class="text-h4 text-weight-bold q-mt-sm">{{ t('roleDashboards.messagesNew', { count: unreadMessagesCount }) }}</div>
+            <div class="text-caption q-mt-xs">{{ t('roleDashboards.messagesInternal') }}</div>
           </q-card-section>
           <q-icon name="mail" class="card-bg-icon" />
         </q-card>
@@ -112,29 +112,29 @@
       <div class="col-12 col-md-8">
         <q-card class="q-mb-md">
           <q-card-section>
-            <div class="text-h6 q-mb-md">Azioni Rapide</div>
+            <div class="text-h6 q-mb-md">{{ t('roleDashboards.quickActionsTitle') }}</div>
             <div class="row q-col-gutter-sm">
               <div class="col-6 col-sm-3">
                 <q-btn
-                  push color="primary" label="Registra Voti" icon="grade"
+                  push color="primary" :label="t('roleDashboards.actionGrades')" icon="grade"
                   class="full-width" size="lg" to="/teacher/grades"
                 />
               </div>
               <div class="col-6 col-sm-3">
                 <q-btn
-                  push color="secondary" label="Presenze" icon="fact_check"
+                  push color="secondary" :label="t('roleDashboards.actionAttendance')" icon="fact_check"
                   class="full-width" size="lg" to="/teacher/attendance"
                 />
               </div>
               <div class="col-6 col-sm-3">
                 <q-btn
-                  push color="accent" label="Firma Doc" icon="draw"
+                  push color="accent" :label="t('roleDashboards.actionDocuments')" icon="draw"
                   class="full-width" size="lg" to="/teacher/documents"
                 />
               </div>
               <div class="col-6 col-sm-3">
                 <q-btn
-                  push color="info" label="Messaggi" icon="send"
+                  push color="info" :label="t('roleDashboards.actionMessages')" icon="send"
                   class="full-width" size="lg" to="/teacher/communications"
                 />
               </div>
@@ -145,7 +145,7 @@
         <!-- Notifications -->
         <q-card>
           <q-card-section>
-            <div class="text-h6">Notifiche & Attività</div>
+            <div class="text-h6">{{ t('roleDashboards.notificationsTitle') }}</div>
           </q-card-section>
           <q-list separator>
             <q-item v-for="note in teacherStore.notifications" :key="note.id" clickable v-ripple>
@@ -157,13 +157,13 @@
                 <q-item-label caption>{{ note.message }}</q-item-label>
               </q-item-section>
               <q-item-section side>
-                <q-btn flat round icon="close" size="sm" @click.stop="teacherStore.dismissNotification?.(note.id)" />
+                <q-btn flat round icon="close" size="sm" :aria-label="t('roleDashboards.dismissNotification')" @click.stop="teacherStore.dismissNotification?.(note.id)" />
               </q-item-section>
             </q-item>
             <q-item v-if="!teacherStore.notifications || teacherStore.notifications.length === 0">
               <q-item-section class="text-center text-grey-5 q-py-lg">
                 <q-icon name="notifications_none" size="32px" class="q-mb-sm" />
-                <div>Nessuna notifica recente</div>
+                <div>{{ t('roleDashboards.noRecentNotifications') }}</div>
               </q-item-section>
             </q-item>
           </q-list>
@@ -174,7 +174,7 @@
       <div class="col-12 col-md-4">
         <q-card class="full-height">
           <q-card-section class="bg-grey-2">
-            <div class="text-h6">Le Mie Classi</div>
+            <div class="text-h6">{{ t('roleDashboards.myClassesTitle') }}</div>
           </q-card-section>
           <q-list separator>
             <q-item v-for="cls in classesStore.classes" :key="cls.id" clickable @click="classesStore.selectClass(cls.id)" :active="cls.id === classesStore.selectedClassId" active-class="bg-blue-1 text-primary">
@@ -186,7 +186,12 @@
                 <q-item-label caption>{{ cls.academic_year }}</q-item-label>
               </q-item-section>
               <q-item-section side v-if="cls.coordinator_id">
-                <q-icon name="star" color="orange" title="Coordinatore" />
+                <q-icon name="star" color="orange" :title="t('roleDashboards.coordinatorBadge')" />
+              </q-item-section>
+            </q-item>
+            <q-item v-if="!classesStore.classes || classesStore.classes.length === 0">
+              <q-item-section class="text-center text-grey-5 q-py-md">
+                <div>{{ t('roleDashboards.noAssignedClasses') }}</div>
               </q-item-section>
             </q-item>
           </q-list>
@@ -199,14 +204,24 @@
 <script setup>
 import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useTeacherStore } from 'src/stores/teacher';
 import { useClassesStore } from 'src/stores/classes';
+import { normalizeLocale } from '@/utils/locale';
 
 const router = useRouter();
 const teacherStore = useTeacherStore();
 const classesStore = useClassesStore();
+const { t, locale } = useI18n();
 
-const todayDate = computed(() => new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }));
+const todayDate = computed(() => {
+  const loc = normalizeLocale(locale.value) || 'it-IT';
+  try {
+    return new Date().toLocaleDateString(loc, { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch {
+    return new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+});
 
 const nextLesson = computed(() => teacherStore.profile?.next_lesson || null);
 const unreadMessagesCount = computed(() => teacherStore.notifications.filter(n => !n.read).length);
@@ -223,14 +238,18 @@ const currentHourNumber = computed(() => {
   return 1;
 });
 
-const currentHourLabel = computed(() => `${currentHourNumber.value}ª Ora (${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })})`);
+const currentHourLabel = computed(() => {
+  const loc = normalizeLocale(locale.value) || 'it-IT';
+  const timeStr = new Date().toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
+  return t('roleDashboards.hourFormat', { hour: currentHourNumber.value, time: timeStr }) || `${currentHourNumber.value}ª Ora (${timeStr})`;
+});
 
 const activeLesson = computed(() => {
   if (nextLesson.value) {
     return {
       class_id: nextLesson.value.class_id,
       class_name: nextLesson.value.class_name || `Classe ${nextLesson.value.class_id}`,
-      subject_name: nextLesson.value.subject_name || 'Materia'
+      subject_name: nextLesson.value.subject_name || t('roleDashboards.subjectFallback') || 'Materia'
     };
   }
   if (classesStore.classes.length > 0) {
@@ -238,7 +257,7 @@ const activeLesson = computed(() => {
     return {
       class_id: firstCls.id,
       class_name: firstCls.name || `Classe ${firstCls.id}`,
-      subject_name: 'Lezione In Corso'
+      subject_name: t('roleDashboards.currentLessonFallback') || 'Lezione in Corso'
     };
   }
   return null;

@@ -20,7 +20,7 @@
           map-options
           outlined
           dense
-          bg-color="white"
+          :bg-color="$q.dark.isActive ? 'dark' : 'white'"
           style="min-width: 250px;"
           :label="$t('generalMeeting.selectMeeting')"
           @update:model-value="loadQueueTickets"
@@ -47,8 +47,8 @@
             <div v-if="currentMeetingTicket" class="q-mt-sm">
               <div class="text-h3 text-weight-bolder">#{{ currentMeetingTicket.ticket_number }}</div>
               <div class="text-h6 q-mt-xs">{{ currentMeetingTicket.parent_name }}</div>
-              <div class="text-caption text-blue-1">Studente: {{ currentMeetingTicket.student_name }}</div>
-              <div class="text-caption text-blue-2 q-mt-xs">Orario: {{ currentMeetingTicket.scheduled_time }}</div>
+              <div class="text-caption text-blue-1">{{ $t('generalMeeting.studentLabel') }} {{ currentMeetingTicket.student_name }}</div>
+              <div class="text-caption text-blue-2 q-mt-xs">{{ $t('generalMeeting.timeLabel') }} {{ currentMeetingTicket.scheduled_time }}</div>
             </div>
             <div v-else class="q-py-md text-center text-blue-2 text-italic">
               {{ $t('generalMeeting.noActiveMeeting') }}
@@ -74,8 +74,8 @@
             <div v-if="nextTicket" class="q-mt-sm">
               <div class="text-h3 text-weight-bolder text-secondary">#{{ nextTicket.ticket_number }}</div>
               <div class="text-h6 q-mt-xs">{{ nextTicket.parent_name }}</div>
-              <div class="text-caption text-grey-7">Studente: {{ nextTicket.student_name }}</div>
-              <div class="text-caption text-primary q-mt-xs">Previsto: {{ nextTicket.scheduled_time }}</div>
+              <div class="text-caption text-grey-7">{{ $t('generalMeeting.studentLabel') }} {{ nextTicket.student_name }}</div>
+              <div class="text-caption text-primary q-mt-xs">{{ $t('generalMeeting.estimatedTime') }} {{ nextTicket.scheduled_time }}</div>
             </div>
             <div v-else class="q-py-md text-center text-grey-6 text-italic">
               {{ $t('generalMeeting.queueEmpty') }}
@@ -102,20 +102,27 @@
             <div class="row q-mt-sm text-center">
               <div class="col-4">
                 <div class="text-h5 text-weight-bold text-primary">{{ tickets.length }}</div>
-                <div class="text-caption text-grey-7">Totale</div>
+                <div class="text-caption text-grey-7">{{ $t('generalMeeting.summary.total') }}</div>
               </div>
               <div class="col-4">
                 <div class="text-h5 text-weight-bold text-positive">{{ completedTicketsCount }}</div>
-                <div class="text-caption text-grey-7">Conclusi</div>
+                <div class="text-caption text-grey-7">{{ $t('generalMeeting.summary.completed') }}</div>
               </div>
               <div class="col-4">
                 <div class="text-h5 text-weight-bold text-warning">{{ waitingTicketsCount }}</div>
-                <div class="text-caption text-grey-7">In Attesa</div>
+                <div class="text-caption text-grey-7">{{ $t('generalMeeting.summary.waiting') }}</div>
               </div>
             </div>
           </q-card-section>
         </q-card>
       </div>
+    </div>
+
+    <!-- Skeleton Loader when loading tickets initially -->
+    <div v-if="loadingTickets && tickets.length === 0" class="q-gutter-sm q-mb-md">
+      <q-skeleton type="rect" height="52px" class="rounded-borders" />
+      <q-skeleton type="rect" height="52px" class="rounded-borders" />
+      <q-skeleton type="rect" height="52px" class="rounded-borders" />
     </div>
 
     <!-- Coda Biglietti Ricevimento -->
@@ -125,7 +132,7 @@
         :columns="ticketColumns"
         row-key="id"
         :loading="loadingTickets"
-        no-data-label="Nessun genitore in coda per questo ricevimento"
+        :no-data-label="$t('generalMeeting.noQueue')"
         flat
       >
         <template #body-cell-ticket_number="props">
@@ -201,9 +208,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import colloquiService from 'src/services/colloquiService'
 
+const { t } = useI18n()
 const $q = useQuasar()
 
 const selectedMeetingId = ref('')
@@ -227,15 +236,15 @@ const waitingTicketsCount = computed(() => {
   return tickets.value.filter(t => t.status === 'prenotato' || t.status === 'chiamato').length
 })
 
-const ticketColumns = [
-  { name: 'ticket_number', label: 'Biglietto', field: 'ticket_number', align: 'center', sortable: true },
-  { name: 'scheduled_time', label: 'Orario Stimato', field: 'scheduled_time', align: 'center' },
-  { name: 'parent_name', label: 'Genitore', field: 'parent_name', align: 'left', sortable: true },
-  { name: 'student_name', label: 'Studente', field: 'student_name', align: 'left' },
-  { name: 'status', label: 'Stato', field: 'status', align: 'center' },
-  { name: 'notes', label: 'Note Genitore', field: 'notes', align: 'left' },
-  { name: 'actions', label: 'Azioni Postazione', field: 'actions', align: 'right' }
-]
+const ticketColumns = computed(() => [
+  { name: 'ticket_number', label: t('generalMeeting.columns.ticket'), field: 'ticket_number', align: 'center', sortable: true },
+  { name: 'scheduled_time', label: t('generalMeeting.columns.scheduledTime'), field: 'scheduled_time', align: 'center' },
+  { name: 'parent_name', label: t('generalMeeting.columns.parent'), field: 'parent_name', align: 'left', sortable: true },
+  { name: 'student_name', label: t('generalMeeting.columns.student'), field: 'student_name', align: 'left' },
+  { name: 'status', label: t('generalMeeting.columns.status'), field: 'status', align: 'center' },
+  { name: 'notes', label: t('generalMeeting.columns.notes'), field: 'notes', align: 'left' },
+  { name: 'actions', label: t('generalMeeting.columns.actions'), field: 'actions', align: 'right' }
+])
 
 function getTicketBadgeColor(status) {
   switch (status) {
@@ -286,10 +295,10 @@ async function loadQueueTickets() {
 async function setTicketStatus(ticketId, status) {
   try {
     await colloquiService.updateTicketStatus(ticketId, { status })
-    $q.notify({ type: 'positive', message: 'Stato coda aggiornato' })
+    $q.notify({ type: 'positive', message: t('generalMeeting.statusUpdated') })
     loadQueueTickets()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore aggiornamento stato biglietto' })
+    $q.notify({ type: 'negative', message: t('generalMeeting.statusError') })
   }
 }
 

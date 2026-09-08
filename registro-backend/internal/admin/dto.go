@@ -195,3 +195,23 @@ type ErrorResponse struct {
 	Error   string `json:"error"`
 	Message string `json:"message,omitempty"`
 }
+
+// DataIntegrityIssue represents a detected anomaly or integrity problem
+type DataIntegrityIssue struct {
+	ID          string                   `json:"id"`
+	Category    string                   `json:"category"`
+	Severity    string                   `json:"severity"` // "high", "medium", "low"
+	Title       string                   `json:"title"`
+	Description string                   `json:"description"`
+	Count       int                      `json:"count"`
+	Items       []map[string]interface{} `json:"items"`
+}
+
+// DataIntegrityReport represents the complete diagnostic audit of school data
+type DataIntegrityReport struct {
+	Score        int                  `json:"score"`
+	HealthStatus string               `json:"health_status"` // "healthy", "warning", "critical"
+	TotalIssues  int                  `json:"total_issues"`
+	Checks       []DataIntegrityIssue `json:"checks"`
+	RunAt        time.Time            `json:"run_at"`
+}

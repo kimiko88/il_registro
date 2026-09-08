@@ -7,15 +7,15 @@ import (
 
 func TestLoadConfig_DefaultsAndEnv(t *testing.T) {
 	// Set custom environment variables for testing
-	os.Setenv("SERVER_PORT", "9090")
-	os.Setenv("SERVER_MODE", "debug")
-	os.Setenv("DB_HOST", "https://db.example.com")
-	os.Setenv("JWT_SECRET", "super-secret-key-123")
+	_ = os.Setenv("SERVER_PORT", "9090")
+	_ = os.Setenv("SERVER_MODE", "debug")
+	_ = os.Setenv("DB_HOST", "https://db.example.com")
+	_ = os.Setenv("JWT_SECRET", "super-secret-key-123")
 	defer func() {
-		os.Unsetenv("SERVER_PORT")
-		os.Unsetenv("SERVER_MODE")
-		os.Unsetenv("DB_HOST")
-		os.Unsetenv("JWT_SECRET")
+		_ = os.Unsetenv("SERVER_PORT")
+		_ = os.Unsetenv("SERVER_MODE")
+		_ = os.Unsetenv("DB_HOST")
+		_ = os.Unsetenv("JWT_SECRET")
 	}()
 
 	cfg, err := LoadConfig()
@@ -46,8 +46,8 @@ func TestLoadConfig_DefaultsAndEnv(t *testing.T) {
 }
 
 func TestLoadConfig_TrimsHttpPrefix(t *testing.T) {
-	os.Setenv("DB_HOST", "http://localhost")
-	defer os.Unsetenv("DB_HOST")
+	_ = os.Setenv("DB_HOST", "http://localhost")
+	defer func() { _ = os.Unsetenv("DB_HOST") }()
 
 	cfg, err := LoadConfig()
 	if err != nil {

@@ -145,3 +145,27 @@ func (s *Service) GetChildGradesAverage(ctx context.Context, parentUserID, stude
 	avg := weightedSum / totalWeight
 	return math.Round(avg*100) / 100, nil
 }
+
+func (s *Service) GetDashboardStats(ctx context.Context, parentUserID string) (*ParentDashboardStatsResponse, error) {
+	children, err := s.usersRepo.GetChildren(ctx, parentUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	var childUserIDs []string
+	for _, child := range children {
+		if child.UserID != "" {
+			childUserIDs = append(childUserIDs, child.UserID)
+		}
+	}
+
+	stats, err := s.repo.GetDashboardStats(ctx, parentUserID, childUserIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	stats.ChildrenCount = len(children)
+	stats.TotalChildren = len(children)
+
+	return stats, nil
+}

@@ -1,5 +1,5 @@
  <template>
-  <q-page class="q-pa-md bg-grey-1">
+  <q-page class="q-pa-md" :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-1 text-dark'">
 
     <!-- Header -->
     <div class="row items-center justify-between q-mb-md">
@@ -36,7 +36,7 @@
     </div>
 
     <!-- Substitution Info Banner -->
-    <q-banner v-if="isSubstitutionMode" class="bg-amber-1 text-amber-10 rounded-xl border border-amber-300 q-mb-md shadow-soft">
+    <q-banner v-if="isSubstitutionMode" class="rounded-xl border q-mb-md shadow-soft" :class="$q.dark.isActive ? 'bg-amber-10 text-amber-1 border-amber-8' : 'bg-amber-1 text-amber-10 border-amber-300'">
       <template v-slot:avatar>
         <q-icon name="swap_horiz" color="amber-9" size="28px" />
       </template>
@@ -98,28 +98,28 @@
     <!-- PCTO & Orientamento Hour Counters (solo tab lezioni) -->
     <div v-if="activeTab === 'lessons' && selectedClass" class="row q-col-gutter-sm q-mb-md">
       <div class="col-12 col-sm-6">
-        <q-card class="bg-deep-purple-1 shadow-1">
+        <q-card class="shadow-1" :class="$q.dark.isActive ? 'bg-deep-purple-10 text-white' : 'bg-deep-purple-1'">
           <q-card-section class="row items-center q-py-sm">
-            <q-icon name="work" color="deep-purple" class="q-mr-sm" size="28px" />
+            <q-icon name="work" color="deep-purple-3" class="q-mr-sm" size="28px" />
             <div>
-              <div class="text-caption text-grey-7 text-weight-bold">Ore PCTO Svolte</div>
-              <div class="text-h5 text-weight-bold text-deep-purple">
+              <div class="text-caption text-weight-bold" :class="$q.dark.isActive ? 'text-grey-3' : 'text-grey-7'">Ore PCTO Svolte</div>
+              <div class="text-h5 text-weight-bold" :class="$q.dark.isActive ? 'text-deep-purple-2' : 'text-deep-purple'">
                 {{ activityHours.pcto }}
-                <span class="text-caption text-grey-7">ore</span>
+                <span class="text-caption" :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'">ore</span>
               </div>
             </div>
           </q-card-section>
         </q-card>
       </div>
       <div class="col-12 col-sm-6">
-        <q-card class="bg-teal-1 shadow-1">
+        <q-card class="shadow-1" :class="$q.dark.isActive ? 'bg-teal-10 text-white' : 'bg-teal-1'">
           <q-card-section class="row items-center q-py-sm">
-            <q-icon name="explore" color="teal" class="q-mr-sm" size="28px" />
+            <q-icon name="explore" color="teal-3" class="q-mr-sm" size="28px" />
             <div>
-              <div class="text-caption text-grey-7 text-weight-bold">Ore Orientamento Svolte</div>
-              <div class="text-h5 text-weight-bold text-teal">
+              <div class="text-caption text-weight-bold" :class="$q.dark.isActive ? 'text-grey-3' : 'text-grey-7'">Ore Orientamento Svolte</div>
+              <div class="text-h5 text-weight-bold" :class="$q.dark.isActive ? 'text-teal-2' : 'text-teal'">
                 {{ activityHours.orientamento }}
-                <span class="text-caption text-grey-7">ore</span>
+                <span class="text-caption" :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'">ore</span>
               </div>
             </div>
           </q-card-section>
@@ -143,7 +143,7 @@
             <q-item-section>
               <div class="row items-center q-gutter-xs q-mb-xs">
                 <q-badge color="indigo" class="text-weight-bold text-caption">
-                  {{ lesson.hour || 1 }}Âª Ora ({{ lesson.duration || 1 }}h)
+                  {{ lesson.hour || 1 }}ª Ora ({{ lesson.duration || 1 }}h)
                 </q-badge>
                 <q-badge outline :color="getLessonTypeColor(lesson.type)">{{ lesson.type }}</q-badge>
                 <q-badge v-if="lesson.activity_type && lesson.activity_type !== 'standard'" :color="getActivityTypeColor(lesson.activity_type)">
@@ -227,7 +227,7 @@
 
     <!-- ─── Attività Libere Tab ─────────────────────────────────── -->
     <div v-if="activeTab === 'free'">
-      <q-banner class="bg-teal-1 text-teal-9 rounded-xl border border-teal-3 q-mb-md" dense>
+      <q-banner class="rounded-xl border q-mb-md" :class="$q.dark.isActive ? 'bg-teal-10 text-teal-1 border-teal-8' : 'bg-teal-1 text-teal-9 border-teal-3'" dense>
         <template v-slot:avatar><q-icon name="event_busy" color="teal-8" size="22px" /></template>
         <div class="text-weight-bold">Ore a Disposizione / Attività Non in Classe</div>
         <div class="text-caption">
@@ -285,13 +285,13 @@
 
     <!-- Lesson Details Dialog -->
     <q-dialog v-model="detailsDialog">
-      <q-card style="min-width: 460px">
+      <q-card style="width: min(500px, 95vw); max-width: 95vw;">
         <q-card-section class="row items-center justify-between bg-primary text-white">
           <div class="text-h6 row items-center">
             <q-icon name="menu_book" class="q-mr-sm" />
             Dettagli Lezione
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
         <q-card-section class="q-gutter-sm" v-if="selectedLesson">
           <div class="text-subtitle1 text-weight-bold text-primary">{{ selectedLesson.topic }}</div>
@@ -310,7 +310,7 @@
           <div><strong>Materia:</strong> {{ getSubjectName(selectedLesson.subject_id) || '-' }}</div>
           <div v-if="selectedLesson.notes" class="q-mt-sm">
             <strong>Note / Osservazioni:</strong>
-            <div class="text-grey-8 bg-grey-2 q-pa-sm rounded-borders q-mt-xs">{{ selectedLesson.notes }}</div>
+            <div class="q-pa-sm rounded-borders q-mt-xs" :class="$q.dark.isActive ? 'bg-grey-9 text-grey-3' : 'bg-grey-2 text-grey-8'">{{ selectedLesson.notes }}</div>
           </div>
         </q-card-section>
         <q-card-actions align="right">
@@ -324,283 +324,33 @@
       </q-card>
     </q-dialog>
 
-    <!-- New / Edit Lesson Dialog -->
-    <q-dialog v-model="lessonDialog" persistent>
-      <q-card style="min-width: 480px">
-        <q-card-section>
-          <div class="text-h6">
-            <q-icon name="menu_book" class="q-mr-xs" color="primary" />
-            {{ isEditingLesson ? 'Modifica Lezione' : 'Nuova Lezione' }}
-          </div>
-        </q-card-section>
-        <q-card-section class="q-gutter-md">
-          <q-select
-            v-model="newLesson.subject_id"
-            :options="availableSubjectOptions"
-            option-value="subject_id"
-            option-label="subject_name"
-            emit-value map-options
-            label="Materia *"
-            outlined dense
-            :rules="[v => !!v || 'Campo obbligatorio']"
-          />
-          <q-input
-            v-model="newLesson.date"
-            type="date"
-            label="Data *"
-            outlined dense
-            :rules="[v => !!v || 'Campo obbligatorio']"
-          />
-          <q-input
-            v-model="newLesson.topic"
-            label="Argomento della Lezione *"
-            outlined dense
-            placeholder="Es: Le equazioni di secondo grado o Supplenza docente assente"
-            :rules="[v => !!v || 'Campo obbligatorio']"
-          />
-          <div class="row q-col-gutter-sm">
-            <div class="col-12 col-md-6">
-              <q-input
-                v-model.number="newLesson.hour"
-                type="number"
-                label="Ora Lezione *"
-                outlined dense
-                min="1" max="10"
-                :rules="[v => !!v || 'Campo obbligatorio']"
-              />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-input
-                v-model.number="newLesson.duration"
-                type="number"
-                label="Durata (ore) *"
-                outlined dense
-                min="1" max="5"
-                :rules="[v => !!v || 'Campo obbligatorio']"
-              />
-            </div>
-          </div>
-          <q-select
-            v-model="newLesson.type"
-            :options="['Frontale', 'Supplenza', 'Laboratorio', 'Verifica', 'Discussione', 'Lavoro di gruppo', 'Altro']"
-            label="Tipo di Lezione *"
-            outlined dense
-            :rules="[v => !!v || 'Campo obbligatorio']"
-          />
-          <q-select
-            v-model="newLesson.activity_type"
-            :options="activityTypeOptions"
-            option-value="value"
-            option-label="label"
-            emit-value map-options
-            label="Tipologia Attività"
-            outlined dense
-          >
-            <template v-slot:option="scope">
-              <q-item v-bind="scope.itemProps">
-                <q-item-section avatar>
-                  <q-icon :name="scope.opt.icon" :color="scope.opt.color" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ scope.opt.label }}</q-item-label>
-                  <q-item-label caption>{{ scope.opt.caption }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-          <q-banner
-            v-if="isPctoOrOrientamento"
-            class="bg-blue-1 text-blue-9 rounded-borders q-mt-xs"
-            dense
-          >
-            <template v-slot:avatar><q-icon name="info" color="blue-7" /></template>
-            Per le attività {{ getActivityTypeLabel(newLesson.activity_type) }} non è possibile inserire valutazioni agli studenti.
-          </q-banner>
-          <q-toggle
-            v-model="newLesson.is_co_teaching"
-            label="Compresenza (docente co-presente in classe)"
-            color="deep-purple"
-            icon="people"
-          />
-          <q-input
-            v-model="newLesson.notes"
-            label="Note / Osservazioni interne"
-            type="textarea"
-            outlined dense
-            autogrow
-            placeholder="(Opzionale)"
-          />
-          <q-toggle
-            v-if="!isEditingLesson && !isPctoOrOrientamento"
-            v-model="assignHomeworkToo"
-            label="Assegna anche un compito per questa lezione"
-            color="orange"
-          />
-          <template v-if="assignHomeworkToo && !isEditingLesson">
-            <q-input
-              v-model="newLesson.homeworkDesc"
-              label="Descrizione Compito *"
-              type="textarea"
-              outlined dense
-              autogrow
-              placeholder="Es: Pagine 145-150, esercizi 12-18"
-            />
-            <q-input
-              v-model="newLesson.homeworkDue"
-              type="date"
-              label="Data Consegna *"
-              outlined dense
-            />
-          </template>
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="primary" :label="isEditingLesson ? 'Aggiorna' : 'Salva'" :loading="saving" @click="saveLesson" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <!-- Modals for Lessons, Homework and Free Activities -->
+    <LessonFormDialog
+      v-model="lessonDialog"
+      :is-editing="isEditingLesson"
+      :initial-data="newLesson"
+      :available-subject-options="availableSubjectOptions"
+      :activity-type-options="activityTypeOptions"
+      :saving="saving"
+      @save="saveLesson"
+    />
 
-    <!-- New Homework Dialog -->
-    <q-dialog v-model="homeworkDialog" persistent>
-      <q-card style="min-width: 420px">
-        <q-card-section>
-          <div class="text-h6">
-            <q-icon name="assignment" class="q-mr-xs" color="orange" />
-            Assegna Compito
-          </div>
-        </q-card-section>
-        <q-card-section class="q-gutter-md">
-          <q-select
-            v-model="newHomework.subject_id"
-            :options="availableSubjectOptions"
-            option-value="subject_id"
-            option-label="subject_name"
-            emit-value map-options
-            label="Materia *"
-            outlined dense
-            :rules="[v => !!v || 'Campo obbligatorio']"
-          />
-          <q-input
-            v-model="newHomework.description"
-            label="Descrizione Compito *"
-            type="textarea"
-            outlined dense
-            autogrow
-            :rules="[v => !!v || 'Campo obbligatorio']"
-          />
-          <q-input
-            v-model="newHomework.dueDate"
-            type="date"
-            label="Data di Consegna *"
-            outlined dense
-            :rules="[v => !!v || 'Campo obbligatorio']"
-          />
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="orange" text-color="white" label="Assegna" :loading="saving" @click="saveHomework" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <HomeworkFormDialog
+      v-model="homeworkDialog"
+      :initial-data="newHomework"
+      :available-subject-options="availableSubjectOptions"
+      :saving="saving"
+      @save="saveHomework"
+    />
 
-    <!-- New / Edit Free Activity Dialog -->
-    <q-dialog v-model="freeActivityDialog" persistent>
-      <q-card style="min-width: 480px; max-width: 600px">
-        <q-card-section class="bg-teal-8 text-white row items-center">
-          <q-icon name="event_busy" class="q-mr-sm" size="24px" />
-          <span class="text-h6">{{ isEditingFreeActivity ? 'Modifica Attività Libera' : 'Nuova Attività Libera' }}</span>
-          <q-space />
-          <q-btn flat round dense icon="close" v-close-popup />
-        </q-card-section>
-        <q-card-section class="q-gutter-md q-pt-md">
-          <q-banner class="bg-teal-1 text-teal-9 rounded-borders" dense>
-            <template v-slot:avatar><q-icon name="info" color="teal-7" /></template>
-            Usa questo form per registrare ore in cui non sei in classe:
-            classe in gita, disponibilità, riunione, formazione, etc.
-          </q-banner>
-          <q-input
-            v-model="newFreeActivity.date"
-            type="date"
-            label="Data *"
-            outlined dense
-            :rules="[v => !!v || 'Campo obbligatorio']"
-          />
-          <div class="row q-col-gutter-sm">
-            <div class="col-12 col-md-6">
-              <q-select
-                v-model="newFreeActivity.start_hour"
-                :options="[1,2,3,4,5,6,7,8]"
-                label="Ora di Inizio *"
-                outlined dense
-                :rules="[v => !!v || 'Campo obbligatorio']"
-              >
-                <template v-slot:prepend><q-icon name="schedule" /></template>
-              </q-select>
-            </div>
-            <div class="col-12 col-md-6">
-              <q-select
-                v-model="newFreeActivity.duration"
-                :options="[1,2,3,4,5,6]"
-                label="Durata (ore) *"
-                outlined dense
-                :rules="[v => !!v || 'Campo obbligatorio']"
-              >
-                <template v-slot:prepend><q-icon name="timelapse" /></template>
-              </q-select>
-            </div>
-          </div>
-          <q-select
-            v-model="newFreeActivity.activity_type"
-            :options="freeActivityTypeOptions"
-            option-value="value"
-            option-label="label"
-            emit-value map-options
-            label="Tipo di Attività *"
-            outlined dense
-          >
-            <template v-slot:option="scope">
-              <q-item v-bind="scope.itemProps">
-                <q-item-section avatar>
-                  <q-icon :name="scope.opt.icon" :color="scope.opt.color" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ scope.opt.label }}</q-item-label>
-                  <q-item-label caption>{{ scope.opt.caption }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-          <q-input
-            v-model="newFreeActivity.description"
-            label="Descrizione *"
-            outlined dense
-            autogrow
-            placeholder="Es: Classe in gita a Roma — ore a disposizione, riunione dipartimento, etc."
-            :rules="[v => !!v || 'Campo obbligatorio']"
-          />
-          <q-input
-            v-model="newFreeActivity.notes"
-            label="Note aggiuntive"
-            type="textarea"
-            outlined dense
-            autogrow
-            placeholder="(Opzionale)"
-          />
-        </q-card-section>
-        <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn
-            color="teal"
-            text-color="white"
-            :label="isEditingFreeActivity ? 'Aggiorna' : 'Salva Attività'"
-            :loading="saving"
-            icon="save"
-            @click="saveFreeActivity"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
+    <FreeActivityDialog
+      v-model="freeActivityDialog"
+      :is-editing="isEditingFreeActivity"
+      :initial-data="newFreeActivity"
+      :free-activity-type-options="freeActivityTypeOptions"
+      :saving="saving"
+      @save="saveFreeActivity"
+    />
   </q-page>
 </template>
 
@@ -608,14 +358,19 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar, date } from 'quasar'
+import { useAuthStore } from '@/stores/auth'
 import { useClassesStore } from '@/stores/classes'
 import { useGradesStore } from '@/stores/grades'
-import { useAuthStore } from '@/stores/auth'
 import { lessonService } from '@/services/lessonService'
 import { teacherActivityService } from '@/services/teacherActivityService'
+import { useOfflineSync } from '@/composables/useOfflineSync'
+import LessonFormDialog from './LessonFormDialog.vue'
+import HomeworkFormDialog from './HomeworkFormDialog.vue'
+import FreeActivityDialog from './FreeActivityDialog.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()
+const { executeWithOfflineQueue } = useOfflineSync()
 const classesStore = useClassesStore()
 const gradesStore = useGradesStore()
 const authStore = useAuthStore()
@@ -707,26 +462,28 @@ const openEditFreeActivity = (act) => {
   freeActivityDialog.value = true
 }
 
-const saveFreeActivity = async () => {
-  if (!newFreeActivity.value.description || !newFreeActivity.value.date) {
-    $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' })
-    return
-  }
+const saveFreeActivity = async (formData) => {
   saving.value = true
   try {
     const payload = {
-      date: newFreeActivity.value.date,
-      start_hour: newFreeActivity.value.start_hour,
-      duration: newFreeActivity.value.duration,
-      activity_type: newFreeActivity.value.activity_type || 'disponibilita',
-      description: newFreeActivity.value.description,
-      notes: newFreeActivity.value.notes || ''
+      date: formData.date,
+      start_hour: formData.start_hour,
+      duration: formData.duration,
+      activity_type: formData.activity_type || 'disponibilita',
+      description: formData.description,
+      notes: formData.notes || ''
     }
     if (isEditingFreeActivity.value && editingFreeActivityId.value) {
-      await teacherActivityService.update(editingFreeActivityId.value, payload)
+      await executeWithOfflineQueue(
+        { url: `/teacher-activities/${editingFreeActivityId.value}`, method: 'put', data: payload },
+        { title: `Modifica Attività Libera - ${payload.description}` }
+      )
       $q.notify({ type: 'positive', message: 'Attività aggiornata con successo' })
     } else {
-      await teacherActivityService.create(payload)
+      await executeWithOfflineQueue(
+        { url: '/teacher-activities', method: 'post', data: payload },
+        { title: `Registra Attività Libera - ${payload.description}` }
+      )
       $q.notify({ type: 'positive', message: 'Attività registrata con successo' })
     }
     freeActivityDialog.value = false
@@ -813,11 +570,6 @@ const getActivityTypeLabel = (type) => {
   const opt = activityTypeOptions.find(o => o.value === type)
   return opt ? opt.label : type
 }
-const isPctoOrOrientamento = computed(() =>
-  newLesson.value.activity_type === 'pcto' ||
-  newLesson.value.activity_type === 'orientamento' ||
-  newLesson.value.activity_type === 'pcto_orientamento'
-)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const isCivicaSubject = (s) => {
@@ -1100,40 +852,49 @@ const openNewHomework = () => {
   homeworkDialog.value = true
 }
 
-const saveLesson = async () => {
-  if (!newLesson.value.topic || !newLesson.value.date || !newLesson.value.type || !newLesson.value.subject_id) {
-    $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' })
-    return
-  }
+const saveLesson = async (formData) => {
   saving.value = true
   try {
     const lessonPayload = {
       class_id: selectedClass.value,
-      subject_id: newLesson.value.subject_id === 'supplenza' ? null : newLesson.value.subject_id,
-      date: newLesson.value.date,
-      hour: newLesson.value.hour,
-      duration: newLesson.value.duration,
-      topic: newLesson.value.topic,
-      type: newLesson.value.type,
-      activity_type: newLesson.value.activity_type || 'standard',
-      is_co_teaching: newLesson.value.is_co_teaching,
-      notes: newLesson.value.notes
+      subject_id: formData.subject_id === 'supplenza' ? null : formData.subject_id,
+      date: formData.date,
+      hour: formData.hour,
+      duration: formData.duration,
+      topic: formData.topic,
+      type: formData.type,
+      activity_type: formData.activity_type || 'standard',
+      is_co_teaching: formData.is_co_teaching,
+      notes: formData.notes
     }
 
     if (isEditingLesson.value && editingLessonId.value) {
-      await lessonService.updateLesson(editingLessonId.value, lessonPayload)
+      await executeWithOfflineQueue(
+        { url: `/lessons/${editingLessonId.value}`, method: 'put', data: lessonPayload },
+        { title: `Modifica Lezione - ${lessonPayload.topic}` }
+      )
       $q.notify({ type: 'positive', message: 'Lezione aggiornata con successo' })
     } else {
-      const lessonRes = await lessonService.createLesson(lessonPayload)
+      const lessonRes = await executeWithOfflineQueue(
+        { url: '/lessons', method: 'post', data: lessonPayload },
+        { title: `Firma Lezione - ${lessonPayload.topic}` }
+      )
 
-      if (assignHomeworkToo.value && newLesson.value.homeworkDesc) {
-        await lessonService.createHomework({
-          class_id: selectedClass.value,
-          subject_id: newLesson.value.subject_id === 'supplenza' ? null : newLesson.value.subject_id,
-          lesson_id: lessonRes.data?.id,
-          due_date: newLesson.value.homeworkDue,
-          description: newLesson.value.homeworkDesc
-        })
+      if (formData.assignHomework && formData.homeworkDesc) {
+        await executeWithOfflineQueue(
+          {
+            url: '/homeworks',
+            method: 'post',
+            data: {
+              class_id: selectedClass.value,
+              subject_id: formData.subject_id === 'supplenza' ? null : formData.subject_id,
+              lesson_id: lessonRes?.data?.id,
+              due_date: formData.homeworkDue,
+              description: formData.homeworkDesc
+            }
+          },
+          { title: `Assegna Compito - ${formData.homeworkDesc}` }
+        )
       }
       $q.notify({ type: 'positive', message: 'Lezione registrata con successo' })
     }
@@ -1147,19 +908,22 @@ const saveLesson = async () => {
   }
 }
 
-const saveHomework = async () => {
-  if (!newHomework.value.description || !newHomework.value.dueDate || !newHomework.value.subject_id) {
-    $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' })
-    return
-  }
+const saveHomework = async (formData) => {
   saving.value = true
   try {
-    await lessonService.createHomework({
-      class_id: selectedClass.value,
-      subject_id: newHomework.value.subject_id === 'supplenza' ? null : newHomework.value.subject_id,
-      due_date: newHomework.value.dueDate,
-      description: newHomework.value.description
-    })
+    await executeWithOfflineQueue(
+      {
+        url: '/homeworks',
+        method: 'post',
+        data: {
+          class_id: selectedClass.value,
+          subject_id: formData.subject_id === 'supplenza' ? null : formData.subject_id,
+          due_date: formData.dueDate,
+          description: formData.description
+        }
+      },
+      { title: `Assegna Compito - ${formData.description}` }
+    )
     $q.notify({ type: 'positive', message: 'Compito assegnato con successo' })
     homeworkDialog.value = false
     await fetchHomeworks()

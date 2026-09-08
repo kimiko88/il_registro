@@ -108,7 +108,7 @@ func (r *postgresRepository) GetRecord(ctx context.Context, studentID, classID s
 	if err != nil {
 		return nil, err
 	}
-	defer gRows.Close()
+	defer func() { _ = gRows.Close() }()
 
 	for gRows.Next() {
 		var g ScrutinyGrade
@@ -137,7 +137,7 @@ func (r *postgresRepository) ListRecordsByClass(ctx context.Context, classID str
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var res []ScrutinyRecord
 	for rows.Next() {
@@ -243,7 +243,7 @@ func (r *postgresRepository) GetDeficienciesByStudent(ctx context.Context, stude
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var res []StudentDeficiency
 	for rows.Next() {
@@ -291,7 +291,7 @@ func (r *postgresRepository) GetDeficienciesByClass(ctx context.Context, classID
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var res []StudentDeficiency
 	for rows.Next() {

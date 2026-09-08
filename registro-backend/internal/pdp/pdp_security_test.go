@@ -84,6 +84,9 @@ func (m *mockUserRepoForPdp) BulkDelete(ctx context.Context, ids []string) (int,
 func (m *mockUserRepoForPdp) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
 	return nil
 }
+func (m *mockUserRepoForPdp) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
+	return 0, nil
+}
 
 type mockPdpRepoForSecTest struct {
 	plans map[string]*PdpPlan

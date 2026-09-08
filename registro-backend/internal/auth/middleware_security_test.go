@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"registro-backend/internal/users"
 	"registro-backend/pkg/jwt"
@@ -81,6 +82,9 @@ func (m *DummyUserRepo) GetFascicoloSummary(ctx context.Context, studentID strin
 func (m *DummyUserRepo) IsActive(ctx context.Context, id string) (bool, error) {
 	args := m.Called(ctx, id)
 	return args.Bool(0), args.Error(1)
+}
+func (m *DummyUserRepo) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
+	return 0, nil
 }
 func (m *DummyUserRepo) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
 	return nil

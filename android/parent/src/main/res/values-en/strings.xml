@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Register - Parent</string>
+    <string name="parent_dashboard_title">Family Portal</string>
+    <string name="my_children">My Children</string>
+    <string name="child_grades">Child Grades</string>
+    <string name="pending_absences">Absences to Justify</string>
+    <string name="book_colloqui">Book Parent-Teacher Meeting</string>
+    <string name="switch_child">Switch Child</string>
+    <string name="justify_absence">Justify Absence</string>
+    <string name="book_colloquio">Book Meeting</string>
+    <string name="pending_justifications">Pending Justifications</string>
+    <string name="no_pending_justifications">No pending absences to justify</string>
+    <string name="login_subtitle">Log in to the parent portal</string>
+    <string name="email_label">Parent Email</string>
+    <string name="password_label">Password</string>
+    <string name="btn_login">LOG IN TO PORTAL</string>
+    <string name="err_enter_credentials">Enter email and password</string>
+    <string name="logout">Log out</string>
+    <string name="child_attendance">Attendance</string>
+    <string name="upcoming_colloqui">Upcoming Meetings</string>
+    <string name="sign_hour">Confirm</string>
+    <string name="communications">Communications</string>
+    <string name="no_circulars">No circulars or communications available</string>
+    <string name="no_children_found">No associated student found</string>
+    <string name="no_grades">No grades available</string>
+    <string name="status_justified">Justified</string>
+    <string name="colloquio_confirmed">Booked</string>
+    <string name="btn_justify">Justify</string>
+    <string name="err_login_failed">Login failed</string>
+    <string name="no_data">No data available</string>
+</resources>

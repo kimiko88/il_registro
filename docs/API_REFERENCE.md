@@ -33,6 +33,12 @@ Questo documento descrive gli endpoint REST e le connessioni WebSocket del backe
 - [Ricevimento Generale Scuola-Famiglia](#ricevimento-generale-scuola-famiglia)
 - [Corsi di Recupero & Debiti (PAI)](#corsi-di-recupero--debiti-pai)
 - [Credito Scolastico Triennio](#credito-scolastico-triennio)
+- [Cloud-Native Health & Kubernetes Probes](#cloud-native-health--kubernetes-probes)
+- [Registro Personale Docente & Giornale Mensile (PDF)](#registro-personale-docente--giornale-mensile-pdf)
+- [Verifica Congruità Dati Scolastici & Diagnostic](#verifica-congruità-dati-scolastici--diagnostic)
+- [Agenda & Completamento Compiti Studente (To-Do)](#agenda--completamento-compiti-studente-to-do)
+- [Analytics Anti-Dispersione & GDPR Retention](#analytics-anti-dispersione--gdpr-retention)
+- [Documentazione Interattiva Swagger UI & OpenAPI](#documentazione-interattiva-swagger-ui--openapi)
 - [WebSocket Notifiche](#websocket-notifiche)
 - [Codici di Errore Strutturati](#codici-di-errore-strutturati)
 - [Struttura Risposte](#struttura-risposte)
@@ -378,6 +384,172 @@ Calcolo automatico della fascia di credito scolastico (D.Lgs. 62/2017) in base a
 
 ### `POST /api/v1/credits/allocations`
 Attribuzione del credito scolastico da parte del Consiglio di Classe con motivazione e punti integrativi.
+
+---
+
+## Cloud-Native Health & Kubernetes Probes
+
+### `GET /live` e `GET /api/v1/live`
+
+Liveness probe standard per orchestratori (Kubernetes, Docker Swarm). Risponde immediatamente verificando che il server HTTP sia attivo e responsivo.
+
+**Response `200 OK`:**
+```json
+{
+  "status": "alive"
+}
+```
+
+### `GET /ready` e `GET /api/v1/ready`
+
+Readiness probe con deep dependency check concorrente (timeout 2s). Verifica lo stato e la latenza in millisecondi di PostgreSQL e Redis, conteggia le goroutine attive e monitora la memoria heap allocata (MB).
+
+**Response `200 OK`:**
+```json
+{
+  "status": "ready",
+  "checks": {
+    "database": {
+      "status": "ok",
+      "latency_ms": 2
+    },
+    "redis": {
+      "status": "ok",
+      "latency_ms": 1
+    }
+  },
+  "runtime": {
+    "goroutines": 34,
+    "memory_alloc_mb": 42.5
+  }
+}
+```
+
+---
+
+## Registro Personale Docente & Giornale Mensile (PDF)
+
+### `GET /api/v1/teachers/registro-personale/pdf`
+
+Genera ed esporta il **Registro Personale del Docente** in formato PDF vettoriale per la conservazione annuale agli atti di fine anno. Richiede i query parameter `class_id` e `subject_id`.
+
+**Query Parameters:**
+- `class_id`: ID UUID della classe (obbligatorio).
+- `subject_id`: ID UUID della materia (obbligatorio).
+
+**Response `200 OK`:**
+- `Content-Type: application/pdf`
+- `Content-Disposition: attachment; filename="registro_personale_<materia>_<classe>.pdf"`
+- Contenuto: documento A4 ufficiale con testata ministeriale, griglia voti cronologica divisa per quadrimestre (scritti, orali, pratici, media pesata), computo assenze per materia, verbale delle lezioni firmate e blocco firma del docente.
+
+### `GET /api/v1/classes/:id/giornale-mensile/pdf`
+
+Genera il **Giornale di Classe Ufficiale del Mese** in formato PDF vettoriale con verbale delle lezioni, firme orarie e matrice presenze.
+
+**Query Parameters:**
+- `year`: Anno di riferimento (es. `2026`).
+- `month`: Mese di riferimento (`1` - `12`).
+
+**Response `200 OK`:**
+- `Content-Type: application/pdf`
+- `Content-Disposition: attachment; filename="giornale_classe_<classe>_<anno>_<mese>.pdf"`
+- Contenuto: matrice presenze giornaliere per studente con sigle ministeriali (P, A, R, U, G), registro lezioni e firme di ciascun docente, registro note disciplinari e blocco convalida coordinatore/dirigente.
+
+---
+
+## Verifica Congruità Dati Scolastici & Diagnostic
+
+### `GET /api/v1/admin/data-integrity`
+
+Esegue una scansione preventiva e diagnostica della base dati scolastica dell'istituto alla ricerca di incoerenze o anomalie relazionali. Accessibile a dirigenti, segreteria e amministratori.
+
+**Response `200 OK`:**
+```json
+{
+  "scanned_at": "2026-09-06T18:00:00Z",
+  "status": "clean",
+  "summary": {
+    "total_issues": 0,
+    "critical_errors": 0,
+    "warnings": 0,
+    "info": 0
+  },
+  "issues": {
+    "orphaned_students": [],
+    "uncoordinated_classes": [],
+    "overlapping_lessons": [],
+    "weekend_grades": [],
+    "unlinked_guardians": []
+  }
+}
+```
+
+---
+
+## Agenda & Completamento Compiti Studente (To-Do)
+
+### `POST /api/v1/agenda/:id/complete`
+
+Marca un compito o evento dell'agenda come completato dallo studente autenticato (o genitore per conto del figlio).
+
+**Response `200 OK`:**
+```json
+{
+  "message": "compito segnato come completato"
+}
+```
+
+### `DELETE /api/v1/agenda/:id/complete`
+
+Rimuove lo stato di completamento del compito, riportandolo nello stato "Da svolgere".
+
+**Response `200 OK`:**
+```json
+{
+  "message": "completamento rimosso"
+}
+```
+
+---
+
+## Analytics Anti-Dispersione & GDPR Retention
+
+### `GET /api/v1/reports/dropout-risk`
+
+Calcola l'indice di rischio dispersione scolastica in tempo reale aggregando:
+- Tasso assenze rispetto alla soglia critica del 25% (art. 14 c. 7 DPR 122/2009).
+- Trend voti con 3 o più materie insufficienti (media < 5.0).
+- Frequenza anomala di ritardi o uscite anticipate.
+
+**Query Parameters:**
+- `class_id` (opzionale): filtra per specifica classe.
+
+### `GET /api/v1/reports/dropout-risk/export`
+
+Esporta il piano di supporto e la tabella di riepilogo studenti a rischio in formato CSV conforme.
+
+### `POST /api/v1/admin/gdpr/retention`
+
+Esegue la pseudonimizzazione irreversibile dei dati anagrafici e di contatto degli studenti diplomati o disattivati da oltre N anni (default: 5 anni), preservando lo storico voti per l'obbligo di conservazione documentale.
+
+**Request Body:**
+```json
+{
+  "retention_years": 5
+}
+```
+
+---
+
+## Documentazione Interattiva Swagger UI & OpenAPI
+
+### `GET /swagger` e `GET /swagger/index.html`
+
+Interfaccia web interattiva Swagger UI per esplorare, testare ed eseguire richieste verso le API di `il_registro`.
+
+### `GET /swagger/doc.json`
+
+Specifica OpenAPI 3.0 completa delle API in formato JSON standard (disponibile anche come specifica YAML in `docs/openapi.yaml`).
 
 ---
 

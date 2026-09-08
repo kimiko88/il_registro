@@ -70,7 +70,7 @@ func getTestDB(t *testing.T) *sql.DB {
 
 func TestScuolaDiProvaWorkflow(t *testing.T) {
 	db := getTestDB(t)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	ctx := context.Background()
 
 	// Seed / Update Scuola di Prova data

@@ -525,3 +525,40 @@ func TestHandler_GetSystemHealth(t *testing.T) {
 	assert.Contains(t, resp, "services")
 	assert.Contains(t, resp, "metrics")
 }
+
+func TestHandler_CheckDataIntegrity(t *testing.T) {
+	handler, mockRepo := setupTestHandler()
+	mockRepo.On("CheckDataIntegrity", mock.Anything, (*string)(nil)).Return(&DataIntegrityReport{
+		Score:        95,
+		HealthStatus: "healthy",
+		TotalIssues:  1,
+		Checks: []DataIntegrityIssue{
+			{
+				ID:       "orphaned_students",
+				Category: "students",
+				Severity: "high",
+				Title:    "Studenti senza classe assegnata",
+				Count:    1,
+				Items: []map[string]interface{}{
+					{"id": "s-1", "name": "Mario Rossi", "email": "mario@example.com"},
+				},
+			},
+		},
+		RunAt: time.Now(),
+	}, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("GET", "/admin/data-integrity", nil)
+
+	handler.CheckDataIntegrity(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp DataIntegrityReport
+	err := json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Equal(t, 95, resp.Score)
+	assert.Equal(t, "healthy", resp.HealthStatus)
+	assert.Equal(t, 1, resp.TotalIssues)
+	assert.Len(t, resp.Checks, 1)
+}

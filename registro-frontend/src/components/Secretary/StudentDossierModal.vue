@@ -6,7 +6,7 @@
           <q-icon name="folder_shared" size="28px" class="q-mr-sm" />
           <div class="text-h6">{{ t('studentsPage.studentDossier') || 'Fascicolo Personale Studente (Storico Multi-Anno)' }}</div>
         </div>
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
       </q-card-section>
 
       <q-card-section class="q-pa-md">

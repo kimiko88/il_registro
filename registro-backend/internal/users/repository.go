@@ -43,6 +43,7 @@ type Repository interface {
 	HardDelete(ctx context.Context, id string) error // Actual DB delete
 	RevokeAllUserTokens(ctx context.Context, userID string) error
 	ClearTempMFASecret(ctx context.Context, userID string) error
+	ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error)
 
 	// Relationships
 	IsGuardian(ctx context.Context, parentUserID string, studentUserID string) (bool, error)
@@ -82,7 +83,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentUserID strin
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var children []StudentChild
 	for rows.Next() {
@@ -422,7 +423,7 @@ func (r *PostgresRepository) List(ctx context.Context, filter UserFilter) ([]Use
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var users []User
 	for rows.Next() {
@@ -471,7 +472,7 @@ func (r *PostgresRepository) ListByIDs(ctx context.Context, ids []string) ([]Use
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var users []User
 	for rows.Next() {
@@ -515,7 +516,7 @@ func (r *PostgresRepository) GetAuditLogs(ctx context.Context, userID string, li
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var l AuditLog
@@ -537,12 +538,12 @@ func (r *PostgresRepository) BulkCreate(ctx context.Context, users []User) (int,
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	// Prepare COPY statement
-	stmt, err := tx.PrepareContext(ctx, pq.CopyIn("users", "id", "email", "password_hash", "first_name", "last_name", "fiscal_code", "role", "created_at", "updated_at"))
+	// Use raw COPY statement instead of deprecated pq.CopyIn helper
+	stmt, err := tx.PrepareContext(ctx, "COPY users (id, email, password_hash, first_name, last_name, fiscal_code, role, created_at, updated_at) FROM STDIN")
 	if err != nil {
 		return 0, nil, err
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	var errs []string
 	count := 0
@@ -656,7 +657,7 @@ func (r *PostgresRepository) GetStudentsByClass(ctx context.Context, classID str
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var users []User
 	for rows.Next() {
@@ -705,7 +706,7 @@ func (r *PostgresRepository) GetGuardians(ctx context.Context, studentProfileID 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var guardians []GuardianInfo
 	for rows.Next() {
@@ -733,7 +734,7 @@ func (r *PostgresRepository) GetPasswordHistory(ctx context.Context, userID stri
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var history []string
 	for rows.Next() {
@@ -795,4 +796,41 @@ func (r *PostgresRepository) GetFascicoloSummary(ctx context.Context, studentID 
 		"notes_count":     notesCount,
 		"pcto_hours":      pctoHours,
 	}, nil
+}
+
+func (r *PostgresRepository) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
+	query := `
+		UPDATE users
+		SET first_name = 'Anonimo',
+		    last_name = 'Studente-' || SUBSTRING(MD5(id::text || NOW()::text), 1, 8),
+		    email = 'anon_' || SUBSTRING(MD5(id::text || NOW()::text), 1, 10) || '@retention.local',
+		    fiscal_code = NULL,
+		    phone_number = NULL,
+		    job_title = NULL,
+		    password_hash = '',
+		    mfa_secret = '',
+		    mfa_enabled = false,
+		    is_active = false,
+		    email_verified = false,
+		    deleted_at = COALESCE(deleted_at, NOW()),
+		    pseudonymized_at = NOW(),
+		    updated_at = NOW()
+		WHERE role = 'student'
+		  AND pseudonymized_at IS NULL
+		  AND ($1::uuid IS NULL OR school_id = $1::uuid)
+		  AND (
+		    (deleted_at IS NOT NULL AND deleted_at <= $2)
+		    OR (is_active = false AND updated_at <= $2)
+		    OR (created_at <= $2 AND is_active = false)
+		  )
+	`
+	res, err := r.db.ExecContext(ctx, query, schoolID, cutoffDate)
+	if err != nil {
+		return 0, err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return int(rows), nil
 }

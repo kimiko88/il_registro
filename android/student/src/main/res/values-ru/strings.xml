@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Журнал - Ученик</string>
+    <string name="dashboard_title">Моя панель</string>
+    <string name="welcome_student">Привет, %1$s!</string>
+    <string name="grades_title">Мои оценки</string>
+    <string name="agenda_title">Домашние задания и расписание</string>
+    <string name="attendance_title">Посещаемость и пропуски</string>
+    <string name="report_card_title">Мой табель успеваемости</string>
+    <string name="gpa_average">Средний балл</string>
+    <string name="recent_grades">Последние оценки</string>
+    <string name="today_lessons">Расписание на сегодня</string>
+    <string name="absences_count">Всего пропусков</string>
+    <string name="lates_count">Всего опозданий</string>
+    <string name="no_data">Нет данных</string>
+    <string name="login_subtitle">Войдите в свой аккаунт</string>
+    <string name="email_label">Email ученика</string>
+    <string name="password_label">Пароль</string>
+    <string name="btn_login">ВОЙТИ</string>
+    <string name="err_enter_credentials">Введите email и пароль</string>
+    <string name="logout">Выйти</string>
+    <string name="settings">Настройки</string>
+    <string name="badges_title">Мои значки</string>
+    <string name="pcto_title">Производственная практика (PCTO)</string>
+    <string name="restriction_server_url_title">URL школьного сервера (MDM)</string>
+    <string name="restriction_server_url_desc">Адрес сервера, настроенный через MDM</string>
+    <string name="restriction_school_code_title">Официальный код школы</string>
+    <string name="restriction_school_code_desc">Идентификационный код учебного заведения</string>
+    <string name="restriction_kiosk_mode_title">Режим экзаменационного киоска / Общий планшет</string>
+    <string name="restriction_kiosk_mode_desc">Отключает внешнюю навигацию и блокирует приложение</string>
+</resources>

@@ -1,6 +1,7 @@
 package lessons
 
 import (
+	"context"
 	"database/sql"
 )
 
@@ -139,7 +140,7 @@ func (r *repository) GetLessonsByGroup(groupID string, date string) ([]Lesson, e
 }
 
 func (r *repository) scanLessons(query string, args ...interface{}) ([]Lesson, error) {
-	rows, err := r.db.Query(query, args...)
+	rows, err := r.db.QueryContext(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +240,7 @@ func (r *repository) GetHomeworkByClass(classID string, fromDate ...string) ([]H
 		args = append(args, fromDate[0])
 	}
 	query += " ORDER BY ch.due_date ASC"
-	rows, err := r.db.Query(query, args...)
+	rows, err := r.db.QueryContext(context.Background(), query, args...)
 	if err != nil {
 		return nil, err
 	}

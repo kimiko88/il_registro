@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Registro - Genitore</string>
+    <string name="parent_dashboard_title">Registro Famiglie</string>
+    <string name="my_children">I Miei Figli</string>
+    <string name="child_grades">Voti Figlio</string>
+    <string name="pending_absences">Assenze da Giustificare</string>
+    <string name="book_colloqui">Prenota Colloquio</string>
+    <string name="switch_child">Cambia Figlio</string>
+    <string name="justify_absence">Giustifica Assenza</string>
+    <string name="book_colloquio">Prenota Colloquio</string>
+    <string name="pending_justifications">Giustificazioni in Sospeso</string>
+    <string name="no_pending_justifications">Nessuna assenza da giustificare</string>
+    <string name="login_subtitle">Accedi al portale genitori</string>
+    <string name="email_label">Email Genitore</string>
+    <string name="password_label">Password</string>
+    <string name="btn_login">ACCEDI AL PORTALE</string>
+    <string name="err_enter_credentials">Inserisci email e password</string>
+    <string name="logout">Disconnetti</string>
+    <string name="child_attendance">Presenze</string>
+    <string name="upcoming_colloqui">Prossimi Colloqui</string>
+    <string name="sign_hour">Conferma</string>
+    <string name="communications">Comunicazioni</string>
+    <string name="no_circulars">Nessuna circolare o comunicazione presente</string>
+    <string name="no_children_found">Nessun alunno associato o disponibile</string>
+    <string name="no_grades">Nessun voto disponibile</string>
+    <string name="status_justified">Giustificata</string>
+    <string name="colloquio_confirmed">Prenotato</string>
+    <string name="btn_justify">Giustifica</string>
+    <string name="err_login_failed">Errore di accesso</string>
+    <string name="no_data">Nessun dato disponibile</string>
+</resources>

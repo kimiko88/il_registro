@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
+import { useErrorStore } from '@/stores/error';
 
 export const getBaseURL = () => {
     const rawUrl = import.meta.env.VITE_API_URL;
@@ -12,6 +13,37 @@ export const getBaseURL = () => {
     }
     return `${cleaned}/api/v1`;
 };
+
+/**
+ * Genera un UUID v4 per le chiavi di idempotenza.
+ * Usa crypto.randomUUID() se disponibile, con fallback manuale.
+ */
+function _generateIdempotencyKey() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+}
+
+/**
+ * Endpoint critici su cui viene aggiunto automaticamente l'header Idempotency-Key.
+ * Il backend può usare questa chiave per deduplicare richieste duplicate
+ * (doppio click, retry di rete) e restituire la risposta già elaborata.
+ */
+const IDEMPOTENT_ENDPOINTS = [
+    '/grades',
+    '/grades/bulk',
+    '/attendance',
+    '/class-tests',
+    '/payments',
+    '/signatures',
+    '/firme',
+    '/verbali',
+];
 
 const api = axios.create({
     baseURL: getBaseURL(),
@@ -71,6 +103,20 @@ api.interceptors.request.use(
                 config.url = '/' + config.url.substring('api/v1/'.length);
             }
         }
+
+        // ── Idempotency-Key automatico su POST/PUT/PATCH critici ────────────
+        // Aggiunto solo se l'header non è già presente (es. impostato da useIdempotency).
+        // Previene doppi inserimenti su retry di rete (timeout, 502/503) senza
+        // che ogni service call debba gestirlo manualmente.
+        const method = (config.method || '').toLowerCase();
+        if (['post', 'put', 'patch'].includes(method) && !config.headers['Idempotency-Key']) {
+            const url = config.url || '';
+            const isIdempotentEndpoint = IDEMPOTENT_ENDPOINTS.some(ep => url.includes(ep));
+            if (isIdempotentEndpoint) {
+                config.headers['Idempotency-Key'] = _generateIdempotencyKey();
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         return config;
     },
@@ -151,8 +197,35 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error?.config;
 
+        // ── Automatic retry for transient server errors ──────────────────────
+        // Retry up to 2 times on 502/503/504 and network timeouts.
+        // Skip: auth endpoints (avoid loops), 4xx (client errors), already-retried requests.
+        if (originalRequest && !originalRequest._retryCount) {
+            originalRequest._retryCount = 0;
+        }
+        const isRetryable =
+            originalRequest &&
+            !originalRequest._isRetryRequest &&
+            (originalRequest._retryCount || 0) < 2 &&
+            !originalRequest.url?.includes('/auth/') &&
+            (
+                error.code === 'ECONNABORTED' ||
+                (error.response?.status >= 502 && error.response?.status <= 504)
+            );
+
+        if (isRetryable) {
+            originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+            originalRequest._isRetryRequest = true;
+            const delay = 500 * originalRequest._retryCount; // 500ms, then 1000ms
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return api(originalRequest);
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         if (!error.response) {
             error.userMessage = appI18n?.global?.t ? appI18n.global.t('errors.connectionError') : 'Errore di connessione al server. Verifica la tua connessione e riprova.';
+            // Report network errors to error store
+            try { useErrorStore().reportError(error, error.userMessage); } catch { /* Pinia not ready */ }
             return Promise.reject(error);
         }
 
@@ -160,10 +233,13 @@ api.interceptors.response.use(
 
         if (error.response.status === 403) {
             error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.forbidden') : 'Non disponi dei permessi necessari per completare questa operazione.');
+            try { useErrorStore().reportError(error, error.userMessage); } catch { /* Pinia not ready */ }
         } else if (error.response.status === 429) {
             error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.rateLimit') : 'Troppi tentativi di accesso. Riprova tra un minuto.');
+            try { useErrorStore().reportError(error, error.userMessage); } catch { /* Pinia not ready */ }
         } else if (error.response.status >= 500) {
             error.userMessage = serverMsg || (appI18n?.global?.t ? appI18n.global.t('errors.serverError') : 'Si è verificato un errore sul server. Riprova più tardi.');
+            try { useErrorStore().reportError(error, error.userMessage); } catch { /* Pinia not ready */ }
         } else if (serverMsg && typeof serverMsg === 'string') {
             error.userMessage = serverMsg;
         }

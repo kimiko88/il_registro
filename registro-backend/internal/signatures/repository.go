@@ -35,7 +35,7 @@ func (r *repository) FindByDocumentID(ctx context.Context, docID string) ([]Sign
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var sigs []Signature
 	for rows.Next() {

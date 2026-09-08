@@ -99,6 +99,9 @@ func (m *mockUserRepoForParentTest) BulkDelete(ctx context.Context, ids []string
 func (m *mockUserRepoForParentTest) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
 	return nil
 }
+func (m *mockUserRepoForParentTest) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
+	return 0, nil
+}
 
 type mockGradesRepoForParentTest struct{ mock.Mock }
 

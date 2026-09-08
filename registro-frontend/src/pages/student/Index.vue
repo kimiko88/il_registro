@@ -10,7 +10,7 @@
         <q-badge color="red" floating v-if="studentStore.notifications.length">{{ studentStore.notifications.length }}</q-badge>
         <q-menu>
              <q-list style="min-width: 300px">
-                 <q-item-label header>Notifiche</q-item-label>
+                 <q-item-label header>{{ $t('dashboardPage.notifications') || 'Notifiche' }}</q-item-label>
                  <q-item v-for="n in studentStore.notifications" :key="n.id" clickable v-close-popup>
                      <q-item-section avatar><q-icon :name="n.icon || 'notifications'" :color="n.color || 'primary'" /></q-item-section>
                      <q-item-section>
@@ -109,6 +109,14 @@
 
     <!-- Main Content Area -->
     <div class="row q-col-gutter-lg">
+      <!-- Analytics Charts: Grade Trend & Presence -->
+      <div class="col-12 q-mb-md">
+        <GradeAnalyticsCharts
+          :grades="allStudentGrades"
+          :attendance-rate="attendanceRate"
+        />
+      </div>
+
       <!-- Recent Grades -->
       <div class="col-12 col-md-8">
         <q-card class="glass-card shadow-soft q-mb-lg overflow-hidden">
@@ -137,46 +145,10 @@
           </q-list>
         </q-card>
         
-        <!-- Upcoming Events & Homework from Agenda -->
-        <q-card class="glass-card shadow-soft overflow-hidden">
-            <q-card-section class="row items-center justify-between q-pa-lg">
-                <div>
-                    <div class="text-h5 text-weight-bold text-outfit row items-center">
-                        <q-icon name="assignment" color="primary" class="q-mr-sm" size="24px" />
-                        <span>{{ $t('agendaPage.dueHomework') || 'Compiti & Verifiche in Arrivo' }}</span>
-                    </div>
-                    <div class="text-caption text-slate-500 q-mt-xs">{{ $t('agendaPage.organizeStudy') || 'Organizza le tue prossime scadenze di studio' }}</div>
-                </div>
-                <q-btn flat :label="$t('common.viewAll') || 'Vedi Tutti'" color="primary" to="/student/homework" no-caps />
-            </q-card-section>
-            <q-separator color="white" style="opacity: 0.1" />
-
-            <q-list separator>
-                <q-item v-for="event in upcomingEvents" :key="event.id" class="q-py-md cursor-pointer hover:bg-slate-50" @click="$router.push('/student/homework')">
-                    <q-item-section avatar>
-                        <q-avatar :color="event.color ? `${event.color}-1` : 'primary-1'" :text-color="event.color || 'primary'" :icon="event.icon || 'assignment'" size="42px" />
-                    </q-item-section>
-                    <q-item-section>
-                        <q-item-label class="text-weight-bold text-slate-800 text-subtitle1">{{ event.title }}</q-item-label>
-                        <q-item-label caption class="text-slate-500">
-                            <span>{{ $t('agendaPage.due') || 'Scadenza' }}: {{ formatEventDate(event.start_date || event.date) }}</span>
-                            <span v-if="event.start_time || event.time"> • Ore {{ event.start_time || event.time }}</span>
-                            <span v-if="event.subject_name"> • {{ event.subject_name }}</span>
-                        </q-item-label>
-                    </q-item-section>
-                    <q-item-section side v-if="event.type">
-                        <q-chip :color="event.color || 'primary'" text-color="white" size="sm" class="text-weight-bold uppercase">{{ event.type }}</q-chip>
-                    </q-item-section>
-                </q-item>
-                <q-item v-if="!upcomingEvents.length">
-                    <q-item-section class="text-center text-slate-500 q-py-xl">
-                        <q-icon name="task_alt" size="48px" color="positive" class="q-mb-sm opacity-80" />
-                        <div class="text-subtitle1 text-weight-bold">{{ $t('agendaPage.noPendingHomework') || 'Nessun compito o verifica in arrivo' }}</div>
-                        <div class="text-caption">{{ $t('agendaPage.allCaughtUp') || 'Sei in pari con tutte le attività!' }}</div>
-                    </q-item-section>
-                </q-item>
-            </q-list>
-        </q-card>
+        <!-- Interactive Homework Planner & Digital Diary -->
+        <div class="q-mb-lg">
+          <HomeworkPlanner />
+        </div>
       </div>
 
       <!-- Quick Actions Sidebar -->
@@ -206,7 +178,7 @@
                  <q-item>
                      <q-item-section avatar><q-icon name="wifi" color="green" /></q-item-section>
                      <q-item-section>
-                         <q-item-label>Online</q-item-label>
+                         <q-item-label>{{ $t('dashboardPage.online') || 'Online' }}</q-item-label>
                          <q-item-label caption>{{ $t('dashboardPage.syncedNow') || 'Sincronizzato adesso' }}</q-item-label>
                      </q-item-section>
                  </q-item>
@@ -225,10 +197,13 @@ import { gradeService } from 'src/services/gradeService'
 import { attendanceService } from 'src/services/attendanceService'
 import { pctoService } from 'src/services/pctoService'
 import { communicationService } from 'src/services/communicationService'
+import dashboardService from 'src/services/dashboardService'
 import adminService from 'src/services/adminService'
 import api from 'src/services/api'
+import GradeAnalyticsCharts from '@/components/Student/GradeAnalyticsCharts.vue'
+import HomeworkPlanner from '@/components/Student/HomeworkPlanner.vue'
 
-const { t } = useI18n();
+const { t, locale: currentLocale } = useI18n();
 const studentStore = useStudentStore();
 
 const averageGrade = ref('-')
@@ -236,6 +211,7 @@ const attendanceRate = ref(100)
 const pctoHours = ref(0)
 const unreadMessages = ref(0)
 const subjects = ref([])
+const allStudentGrades = ref([])
 
 const recentGrades = ref([])
 const upcomingEvents = ref([])
@@ -246,11 +222,6 @@ const getGradeColor = (val) => {
     if (v >= 8) return 'green-6';
     if (v >= 6) return 'orange-6';
     return 'red-6';
-}
-
-const formatEventDate = (dateStr) => {
-    if (!dateStr) return ''
-    return new Date(dateStr).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' })
 }
 
 const getSubjectName = (id) => {
@@ -279,7 +250,22 @@ const fetchSubjects = async () => {
 
 const fetchDashboardData = async () => {
     try {
-        // Grades
+        // Fast aggregated stats from backend
+        try {
+            const stats = await dashboardService.getDashboardStats('student')
+            if (stats) {
+                if (stats.average_grade != null && stats.average_grade > 0) {
+                    averageGrade.value = Number(stats.average_grade).toFixed(1)
+                }
+                if (stats.presence_rate != null || stats.attendance_rate != null) {
+                    attendanceRate.value = Math.round(stats.presence_rate ?? stats.attendance_rate)
+                }
+            }
+        } catch {
+            // Non-blocking fallback
+        }
+
+        // Detailed Grades
         const gradesRes = await gradeService.getMyGrades()
         const allGrades = []
         if (gradesRes.data && gradesRes.data.semesters) {
@@ -291,16 +277,21 @@ const fetchDashboardData = async () => {
         if (validGrades.length > 0) {
             const sum = validGrades.reduce((acc, g) => acc + Number(g.grade_value), 0)
             averageGrade.value = (sum / validGrades.length).toFixed(1)
-        } else {
+        } else if (averageGrade.value === '-') {
             averageGrade.value = '-'
         }
         
         allGrades.sort((a, b) => new Date(b.date) - new Date(a.date))
+        allStudentGrades.value = allGrades.map(g => ({
+            ...g,
+            subject: getSubjectName(g.subject_id),
+            grade_value: g.grade_value
+        }))
         recentGrades.value = allGrades.slice(0, 5).map(g => ({
             id: g.id,
             subject: getSubjectName(g.subject_id),
             value: g.grade_value === -1 ? 'A' : g.grade_value,
-            date: new Date(g.date).toLocaleDateString('it-IT'),
+            date: new Date(g.date).toLocaleDateString(currentLocale.value || 'it-IT'),
             type: g.grade_type,
             description: g.description
         }))

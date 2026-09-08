@@ -80,7 +80,7 @@ func (r *feqRepo) FindQualifiedByDocumentID(ctx context.Context, docID string) (
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var result []QualifiedSignature
 	for rows.Next() {
 		var s QualifiedSignature

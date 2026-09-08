@@ -24,7 +24,7 @@ func main() {
 	}
 
 	client := pdfworker.NewClient(redisAddr)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// Handler functions for PDF generation
 	scrutinyHandlerFunc := func(ctx context.Context, payload pdfworker.ScrutinyPdfPayload) ([]byte, error) {

@@ -5,6 +5,24 @@ import { useAuthStore } from './auth';
 import { useChildrenStore } from './children';
 import { i18n } from '@/i18n';
 
+function saveAttendanceCache(classId, date, records) {
+    try {
+        if (typeof localStorage !== 'undefined' && classId && date && Array.isArray(records)) {
+            localStorage.setItem(`registro_attendance_${classId}_${date}`, JSON.stringify(records));
+        }
+    } catch { /* storage quota */ }
+}
+
+function loadAttendanceCache(classId, date) {
+    try {
+        if (typeof localStorage === 'undefined' || !classId || !date) return null;
+        const raw = localStorage.getItem(`registro_attendance_${classId}_${date}`);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
+
 export const useAttendanceStore = defineStore('attendance', {
     state: () => ({
         records: [],
@@ -12,6 +30,9 @@ export const useAttendanceStore = defineStore('attendance', {
         error: null,
         justifications: [], // Pending justification requests
         _requestId: 0,
+        // Tracked to allow reconnect-refresh in websocket.js
+        currentClassId: null,
+        currentDate: null,
     }),
 
     getters: {
@@ -33,6 +54,9 @@ export const useAttendanceStore = defineStore('attendance', {
         async fetchDailyAttendance(classId, date) {
             this.loading = true;
             this.error = null;
+            // Track context so reconnect-refresh (websocket.js) can re-call correctly.
+            this.currentClassId = classId;
+            this.currentDate = date;
             const currentReqId = ++this._requestId;
             try {
                 const response = await attendanceService.getByClass(classId, date);
@@ -47,17 +71,30 @@ export const useAttendanceStore = defineStore('attendance', {
                         notes: r.notes || '',
                         time: r.entry_time || ''
                     }));
+                    saveAttendanceCache(classId, date, this.records);
                 }
             } catch (err) {
                 if (currentReqId === this._requestId) {
-                    const t = i18n?.global?.t;
-                    this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore durante il recupero delle presenze');
+                    const cached = loadAttendanceCache(classId, date);
+                    if (cached && Array.isArray(cached) && cached.length > 0) {
+                        this.records = cached;
+                    } else {
+                        const t = i18n?.global?.t;
+                        this.error = err.response?.data?.error || err.message || (t ? t('common.error') : 'Errore durante il recupero delle presenze');
+                    }
                     console.error("Error fetching daily attendance:", err);
                 }
             } finally {
                 if (currentReqId === this._requestId) {
                     this.loading = false;
                 }
+            }
+        },
+
+        // Alias used by websocket.js reconnect-refresh (keeps last-known classId + date).
+        async fetchAttendance(classId) {
+            if (classId && this.currentDate) {
+                return this.fetchDailyAttendance(classId, this.currentDate);
             }
         },
 

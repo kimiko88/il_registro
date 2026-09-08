@@ -38,6 +38,7 @@
       >
         <q-tab name="rubrics" icon="menu_book" :label="t('rubricsPage.title')" />
         <q-tab name="assessments" icon="history_edu" :label="t('nav.competencies')" />
+        <q-tab name="descriptive" icon="auto_stories" label="Valutazione Descrittiva (O.M. 172/2020)" />
       </q-tabs>
 
       <q-separator />
@@ -141,169 +142,180 @@
             </q-item>
           </q-list>
         </q-tab-panel>
+
+        <!-- TAB 3: MATRICE DESCRITTIVA O.M. 172/2020 -->
+        <q-tab-panel name="descriptive" class="q-pa-none">
+          <DescriptiveEvaluationMatrix />
+        </q-tab-panel>
       </q-tab-panels>
     </q-card>
 
     <!-- Dialog 1: Create Rubric -->
     <q-dialog v-model="createRubricDialog">
-      <q-card style="min-width: 600px; max-width: 800px" class="rounded-xl overflow-hidden">
-        <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
-          <div class="text-h6 text-weight-bold">Nuova Rubrica Valutativa</div>
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
+      <q-card style="width: min(700px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
+        <q-form @submit="saveRubric" greedy>
+          <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
+            <div class="text-h6 text-weight-bold">Nuova Rubrica Valutativa</div>
+            <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
+          </q-card-section>
 
-        <q-card-section class="q-pa-md space-y-4 max-h-70vh overflow-y-auto">
-          <div class="row q-col-gutter-sm">
-            <div class="col-12 col-sm-8">
-              <q-input v-model="rubricForm.title" label="Titolo Rubrica *" outlined dense :rules="[val => !!val || 'Titolo obbligatorio']" />
-            </div>
-            <div class="col-12 col-sm-4">
-              <q-select
-                v-model="rubricForm.subject_id"
-                :options="subjectOptions"
-                option-value="value"
-                option-label="label"
-                emit-value
-                map-options
-                label="Materia *"
-                outlined
-                dense
-                :rules="[val => !!val || 'Materia obbligatoria']"
-              />
-            </div>
-          </div>
-
-          <q-input v-model="rubricForm.description" label="Descrizione Rubrica" outlined dense type="textarea" rows="2" />
-
-          <!-- Dynamic Criteria Section -->
-          <div class="border border-slate-200 rounded-xl q-pa-md bg-slate-50">
-            <div class="row items-center justify-between q-mb-sm">
-              <div class="text-subtitle1 text-weight-bold text-slate-800">Criteri di Valutazione</div>
-              <q-btn color="primary" size="sm" icon="add" label="Aggiungi Criterio" no-caps @click="addCriterion" />
+          <q-card-section class="q-pa-md space-y-4 max-h-70vh overflow-y-auto">
+            <div class="row q-col-gutter-sm">
+              <div class="col-12 col-sm-8">
+                <q-input v-model="rubricForm.title" :label="t('common.title') || 'Titolo Rubrica *'" outlined dense :rules="[val => !!val || t('common.requiredField') || 'Titolo obbligatorio']" />
+              </div>
+              <div class="col-12 col-sm-4">
+                <q-select
+                  v-model="rubricForm.subject_id"
+                  :options="subjectOptions"
+                  option-value="value"
+                  option-label="label"
+                  emit-value
+                  map-options
+                  :label="t('common.subject') || 'Materia *'"
+                  outlined
+                  dense
+                  :rules="[val => !!val || t('common.requiredField') || 'Materia obbligatoria']"
+                />
+              </div>
             </div>
 
-            <div v-for="(crit, cIdx) in rubricForm.criteria" :key="cIdx" class="bg-white p-3 rounded-lg border border-slate-200 q-mb-sm">
-              <div class="row items-center justify-between q-mb-xs">
-                <div class="text-weight-bold text-slate-700">Criterio {{ cIdx + 1 }}</div>
-                <q-btn flat dense icon="delete" color="negative" size="xs" @click="removeCriterion(cIdx)" v-if="rubricForm.criteria.length > 1" />
+            <q-input v-model="rubricForm.description" :label="t('common.description') || 'Descrizione Rubrica'" outlined dense type="textarea" rows="2" />
+
+            <!-- Dynamic Criteria Section -->
+            <div class="border border-slate-200 rounded-xl q-pa-md bg-slate-50">
+              <div class="row items-center justify-between q-mb-sm">
+                <div class="text-subtitle1 text-weight-bold text-slate-800">Criteri di Valutazione</div>
+                <q-btn color="primary" size="sm" icon="add" label="Aggiungi Criterio" no-caps @click="addCriterion" />
               </div>
 
-              <div class="row q-col-gutter-xs q-mb-xs">
-                <div class="col-8">
-                  <q-input v-model="crit.name" label="Nome Criterio *" dense outlined />
+              <div v-for="(crit, cIdx) in rubricForm.criteria" :key="cIdx" class="bg-white p-3 rounded-lg border border-slate-200 q-mb-sm">
+                <div class="row items-center justify-between q-mb-xs">
+                  <div class="text-weight-bold text-slate-700">Criterio {{ cIdx + 1 }}</div>
+                  <q-btn flat dense icon="delete" color="negative" size="xs" @click="removeCriterion(cIdx)" v-if="rubricForm.criteria.length > 1" />
                 </div>
-                <div class="col-4">
-                  <q-input v-model.number="crit.max_score" type="number" label="Punti Max" dense outlined />
-                </div>
-              </div>
 
-              <!-- Levels for Criterion -->
-              <div class="q-pl-sm border-l-2 border-primary mt-2 space-y-1">
-                <div class="row items-center justify-between text-caption text-slate-500">
-                  <span>Livelli di prestazione</span>
-                  <q-btn flat size="xs" color="primary" icon="add" label="Livello" @click="addLevel(cIdx)" />
-                </div>
-                <div v-for="(lvl, lIdx) in crit.levels" :key="lIdx" class="row q-col-gutter-xs items-center">
-                  <div class="col-5">
-                    <q-input v-model="lvl.label" label="Label (es. Avanzato)" dense outlined />
+                <div class="row q-col-gutter-xs q-mb-xs">
+                  <div class="col-8">
+                    <q-input v-model="crit.name" label="Nome Criterio *" dense outlined :rules="[val => !!val || t('common.requiredField') || 'Nome criterio obbligatorio']" />
                   </div>
                   <div class="col-4">
-                    <q-input v-model.number="lvl.score" type="number" label="Punti" dense outlined />
+                    <q-input v-model.number="crit.max_score" type="number" label="Punti Max" dense outlined />
                   </div>
-                  <div class="col-3 text-right">
-                    <q-btn flat dense icon="close" color="grey" size="xs" @click="removeLevel(cIdx, lIdx)" v-if="crit.levels.length > 1" />
+                </div>
+
+                <!-- Levels for Criterion -->
+                <div class="q-pl-sm border-l-2 border-primary mt-2 space-y-1">
+                  <div class="row items-center justify-between text-caption text-slate-500">
+                    <span>Livelli di prestazione</span>
+                    <q-btn flat size="xs" color="primary" icon="add" label="Livello" @click="addLevel(cIdx)" />
+                  </div>
+                  <div v-for="(lvl, lIdx) in crit.levels" :key="lIdx" class="row q-col-gutter-xs items-center">
+                    <div class="col-5">
+                      <q-input v-model="lvl.label" label="Label (es. Avanzato)" dense outlined />
+                    </div>
+                    <div class="col-4">
+                      <q-input v-model.number="lvl.score" type="number" label="Punti" dense outlined />
+                    </div>
+                    <div class="col-3 text-right">
+                      <q-btn flat dense icon="close" color="grey" size="xs" @click="removeLevel(cIdx, lIdx)" v-if="crit.levels.length > 1" />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </q-card-section>
+          </q-card-section>
 
-        <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="primary" label="Crea Rubrica" :loading="savingRubric" @click="saveRubric" />
-        </q-card-actions>
+          <q-card-actions align="right" class="q-pa-md">
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" v-close-popup />
+            <q-btn color="primary" type="submit" label="Crea Rubrica" :loading="savingRubric" />
+          </q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
 
     <!-- Dialog 2: Assess Student -->
     <q-dialog v-model="assessmentDialog">
-      <q-card style="min-width: 550px; max-width: 700px" class="rounded-xl overflow-hidden">
-        <q-card-section class="bg-positive text-white row items-center justify-between q-py-md">
-          <div>
-            <div class="text-h6 text-weight-bold">Valutazione con Rubrica</div>
-            <div class="text-caption">{{ targetRubric?.title }}</div>
-          </div>
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-card-section class="q-pa-md space-y-4 max-h-70vh overflow-y-auto">
-          <!-- Class & Student Select -->
-          <div class="row q-col-gutter-sm">
-            <div class="col-12 col-sm-6">
-              <q-select
-                v-model="assessmentForm.class_id"
-                :options="classOptions"
-                label="Classe *"
-                outlined dense
-                emit-value map-options
-                @update:model-value="onAssessmentClassChange"
-              />
+      <q-card style="width: min(650px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
+        <q-form @submit="saveAssessment" greedy>
+          <q-card-section class="bg-positive text-white row items-center justify-between q-py-md">
+            <div>
+              <div class="text-h6 text-weight-bold">Valutazione con Rubrica</div>
+              <div class="text-caption">{{ targetRubric?.title }}</div>
             </div>
-            <div class="col-12 col-sm-6">
-              <q-select
-                v-model="assessmentForm.student_id"
-                :options="assessmentStudentOptions"
-                label="Studente *"
-                outlined dense
-                emit-value map-options
-              />
-            </div>
-          </div>
+            <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
+          </q-card-section>
 
-          <!-- Loading indicator -->
-          <div v-if="loadingRubricDetails" class="text-center q-pa-lg">
-            <q-spinner-dots color="positive" size="40px" />
-          </div>
-
-          <!-- Dynamic Criteria Assessment Toggles -->
-          <template v-else>
-            <div v-for="crit in targetRubric?.criteria" :key="crit.id" class="border border-slate-200 rounded-xl q-pa-md bg-slate-50">
-              <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-xs">{{ crit.name }}</div>
-              <div class="text-caption text-slate-500 q-mb-sm" v-if="crit.description">{{ crit.description }}</div>
-
-              <div v-if="!crit.levels || crit.levels.length === 0" class="text-caption text-amber-900 bg-amber-100 q-pa-sm rounded-lg">
-                ⚠️ Nessun livello di valutazione definito per questo criterio.
+          <q-card-section class="q-pa-md space-y-4 max-h-70vh overflow-y-auto">
+            <!-- Class & Student Select -->
+            <div class="row q-col-gutter-sm">
+              <div class="col-12 col-sm-6">
+                <q-select
+                  v-model="assessmentForm.class_id"
+                  :options="classOptions"
+                  :label="t('common.class') || 'Classe *'"
+                  outlined dense
+                  emit-value map-options
+                  :rules="[val => !!val || t('common.requiredField') || 'Seleziona una classe']"
+                  @update:model-value="onAssessmentClassChange"
+                />
               </div>
-              <div v-else class="row q-gutter-xs">
-                <q-btn
-                  v-for="lvl in crit.levels" :key="lvl.id"
-                  :unelevated="getSelectedLevelId(crit.id) === lvl.id"
-                  :outline="getSelectedLevelId(crit.id) !== lvl.id"
-                  :color="getLevelBtnColor(lvl.score, crit.max_score)"
-                  no-caps size="sm" class="q-px-sm"
-                  @click="selectCriterionLevel(crit.id, lvl.id, lvl.score)"
-                >
-                  {{ lvl.label }} ({{ lvl.score }} pt)
-                </q-btn>
+              <div class="col-12 col-sm-6">
+                <q-select
+                  v-model="assessmentForm.student_id"
+                  :options="assessmentStudentOptions"
+                  :label="t('common.student') || 'Studente *'"
+                  outlined dense
+                  emit-value map-options
+                  :rules="[val => !!val || t('common.requiredField') || 'Seleziona uno studente']"
+                />
               </div>
             </div>
-          </template>
 
-          <!-- Total Score Summary Banner -->
-          <div class="bg-green-50 border border-green-200 rounded-xl q-pa-md row items-center justify-between">
-            <span class="text-weight-bold text-slate-800">Punteggio Totale Calcolato:</span>
-            <span class="text-h4 text-weight-bold text-positive">{{ computedTotalScore }} pt</span>
-          </div>
+            <!-- Loading indicator -->
+            <div v-if="loadingRubricDetails" class="text-center q-pa-lg">
+              <q-spinner-dots color="positive" size="40px" />
+            </div>
 
-          <!-- Notes -->
-          <q-input v-model="assessmentForm.notes" label="Note ed Osservazioni" outlined dense type="textarea" rows="2" />
-        </q-card-section>
+            <!-- Dynamic Criteria Assessment Toggles -->
+            <template v-else>
+              <div v-for="crit in targetRubric?.criteria" :key="crit.id" class="border border-slate-200 rounded-xl q-pa-md bg-slate-50">
+                <div class="text-subtitle1 text-weight-bold text-slate-800 q-mb-xs">{{ crit.name }}</div>
+                <div class="text-caption text-slate-500 q-mb-sm" v-if="crit.description">{{ crit.description }}</div>
 
-        <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="positive" label="Salva Valutazione" :loading="savingAssessment" @click="saveAssessment" />
-        </q-card-actions>
+                <div v-if="!crit.levels || crit.levels.length === 0" class="text-caption text-amber-900 bg-amber-100 q-pa-sm rounded-lg">
+                  ⚠️ Nessun livello di valutazione definito per questo criterio.
+                </div>
+                <div v-else class="row q-gutter-xs">
+                  <q-btn
+                    v-for="lvl in crit.levels" :key="lvl.id"
+                    :unelevated="getSelectedLevelId(crit.id) === lvl.id"
+                    :outline="getSelectedLevelId(crit.id) !== lvl.id"
+                    :color="getLevelBtnColor(lvl.score, crit.max_score)"
+                    no-caps size="sm" class="q-px-sm"
+                    @click="selectCriterionLevel(crit.id, lvl.id, lvl.score)"
+                  >
+                    {{ lvl.label }} ({{ lvl.score }} pt)
+                  </q-btn>
+                </div>
+              </div>
+            </template>
+
+            <!-- Total Score Summary Banner -->
+            <div class="bg-green-50 border border-green-200 rounded-xl q-pa-md row items-center justify-between">
+              <span class="text-weight-bold text-slate-800">Punteggio Totale Calcolato:</span>
+              <span class="text-h4 text-weight-bold text-positive">{{ computedTotalScore }} pt</span>
+            </div>
+
+            <!-- Notes -->
+            <q-input v-model="assessmentForm.notes" label="Note ed Osservazioni" outlined dense type="textarea" rows="2" />
+          </q-card-section>
+
+          <q-card-actions align="right" class="q-pa-md">
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" v-close-popup />
+            <q-btn color="positive" type="submit" label="Salva Valutazione" :loading="savingAssessment" />
+          </q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
   </q-page>
@@ -317,6 +329,7 @@ import { useRubricsStore } from '@/stores/rubrics'
 import { useClassesStore } from '@/stores/classes'
 import { useGradesStore } from '@/stores/grades'
 import api from 'src/services/api'
+import DescriptiveEvaluationMatrix from '@/components/Teacher/DescriptiveEvaluationMatrix.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()
@@ -440,10 +453,6 @@ function removeLevel(cIdx, lIdx) {
 }
 
 async function saveRubric() {
-  if (!rubricForm.title || !rubricForm.subject_id) {
-    $q.notify({ type: 'warning', message: 'Titolo e Materia sono obbligatori' })
-    return
-  }
   savingRubric.value = true
   try {
     await rubricsStore.createRubric({
@@ -531,10 +540,6 @@ function getLevelBtnColor(score, maxScore) {
 }
 
 async function saveAssessment() {
-  if (!assessmentForm.student_id || !assessmentForm.class_id) {
-    $q.notify({ type: 'warning', message: 'Seleziona classe e studente' })
-    return
-  }
   savingAssessment.value = true
   try {
     const scoresArr = Object.entries(assessmentForm.scores).map(([critId, val]) => ({

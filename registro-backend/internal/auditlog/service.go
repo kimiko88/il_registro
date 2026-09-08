@@ -82,12 +82,12 @@ func (s *service) ExportCSV(ctx context.Context, p FilterParams) ([]byte, error)
 
 	var sb strings.Builder
 	if total > truncationLimit {
-		sb.WriteString(fmt.Sprintf("# WARNING: Export truncated to %d records (total matching: %d). Narrow filter criteria for more records.\n", truncationLimit, total))
+		fmt.Fprintf(&sb, "# WARNING: Export truncated to %d records (total matching: %d). Narrow filter criteria for more records.\n", truncationLimit, total)
 	}
 	sb.WriteString("ID,Data/Ora,Utente,Ruolo,Azione,Tipo Entita,ID Entita,IP,Dettagli\n")
 	for _, ev := range data {
 		// Bug 121: sanitize all CSV fields to prevent formula injection
-		sb.WriteString(fmt.Sprintf("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
+		fmt.Fprintf(&sb, "\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
 			sanitizeCSVField(ev.ID),
 			sanitizeCSVField(ev.CreatedAt.Format("2006-01-02 15:04:05")),
 			sanitizeCSVField(ev.ActorName),
@@ -97,7 +97,7 @@ func (s *service) ExportCSV(ctx context.Context, p FilterParams) ([]byte, error)
 			sanitizeCSVField(ev.EntityID),
 			sanitizeCSVField(ev.IPAddress),
 			sanitizeCSVField(ev.Details),
-		))
+		)
 	}
 	return []byte(sb.String()), nil
 }

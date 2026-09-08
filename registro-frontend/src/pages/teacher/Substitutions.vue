@@ -142,13 +142,13 @@
 
     <!-- Attendance Modal for Substitution -->
     <q-dialog v-model="attendanceDialog">
-      <q-card style="min-width: 500px; max-width: 650px" class="rounded-xl overflow-hidden">
+      <q-card style="width: min(650px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden">
         <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
           <div>
             <div class="text-h6 text-weight-bold">Appello Sostituzione</div>
             <div class="text-caption">Classe {{ currentSub?.class_name || currentSub?.class_id }} · Data {{ formatDate(currentSub?.date) }}</div>
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md max-h-60vh overflow-y-auto">

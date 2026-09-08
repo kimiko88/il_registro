@@ -18,6 +18,7 @@ type Repository interface {
 	ListVerbali(ctx context.Context, meetingID string, userID string) ([]*MeetingVerbale, error)
 	SignVerbale(ctx context.Context, verbaleID, userID, ipAddress string) error
 	GetSignatures(ctx context.Context, verbaleID string) ([]VerbaleSignature, error)
+	ClassBelongsToSchool(ctx context.Context, classID, schoolID string) (bool, error)
 }
 
 type PostgresRepository struct {
@@ -53,7 +54,7 @@ func (r *PostgresRepository) ListMeetings(ctx context.Context, schoolID, classID
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var meetings []*CouncilMeeting
 	for rows.Next() {
@@ -139,7 +140,7 @@ func (r *PostgresRepository) ListVerbali(ctx context.Context, meetingID string, 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []*MeetingVerbale
 	for rows.Next() {
@@ -184,7 +185,7 @@ func (r *PostgresRepository) GetSignatures(ctx context.Context, verbaleID string
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var sigs []VerbaleSignature
 	for rows.Next() {
@@ -195,4 +196,14 @@ func (r *PostgresRepository) GetSignatures(ctx context.Context, verbaleID string
 		sigs = append(sigs, s)
 	}
 	return sigs, rows.Err()
+}
+
+func (r *PostgresRepository) ClassBelongsToSchool(ctx context.Context, classID, schoolID string) (bool, error) {
+	if r.db == nil || classID == "" || schoolID == "" {
+		return false, nil
+	}
+	var exists bool
+	query := `SELECT EXISTS(SELECT 1 FROM classes WHERE id = $1::uuid AND school_id = $2::uuid AND deleted_at IS NULL)`
+	err := r.db.QueryRowContext(ctx, query, classID, schoolID).Scan(&exists)
+	return exists, err
 }

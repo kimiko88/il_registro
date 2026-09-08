@@ -94,11 +94,12 @@ func (s *Service) GetTripByID(ctx context.Context, id string) (*EducationalTrip,
 // Bug 131: when the actor is a parent, verifies guardianship before recording consent.
 func (s *Service) SubmitConsent(ctx context.Context, actorID, actorRole, ipAddress string, req SubmitConsentRequest) error {
 	var parentID *string
-	if actorRole == "student" {
+	switch actorRole {
+	case "student":
 		if actorID != req.StudentID {
 			return errors.New("unauthorized: cannot submit consent for another student")
 		}
-	} else if actorRole == "parent" {
+	case "parent":
 		// Bug 131: verify guardianship
 		if s.userRepo != nil {
 			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, req.StudentID)

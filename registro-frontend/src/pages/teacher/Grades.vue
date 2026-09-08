@@ -1,5 +1,5 @@
 <template>
-  <q-page class="q-pa-md bg-grey-1">
+  <q-page class="q-pa-md" :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-1 text-dark'">
     <!-- Sticky Header for Context -->
     <q-card class="sticky-header q-mb-md shadow-2">
       <q-card-section class="row items-center justify-between wrap q-gutter-sm q-pb-none">
@@ -42,6 +42,7 @@
                 aria-label="Modalità visualizzazione"
                 :options="[
                     {label: 'Registro', value: 'table'},
+                    {label: 'Griglia', value: 'matrix'},
                     {label: 'Statistiche', value: 'stats'},
                     {label: 'Storico', value: 'history'}
                 ]"
@@ -55,7 +56,7 @@
       </q-card-section>
       <q-separator />
       <!-- Global Controls / Filters -->
-      <q-card-section class="q-pt-sm q-pb-sm bg-grey-1" v-if="viewMode === 'table'">
+      <q-card-section class="q-pt-sm q-pb-sm" :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-1'" v-if="viewMode === 'table'">
           <div class="row items-center q-gutter-md">
              <q-input dense v-model="filterDate" type="date" label="Data Voto" outlined style="max-width: 150px" />
              <q-select
@@ -72,7 +73,7 @@
     </q-card>
 
     <!-- Substitution Non-Titolare Warning Banner -->
-    <q-banner v-if="selectedClassId && !isAssignedClass" class="bg-amber-1 text-amber-10 rounded-xl border border-amber-300 q-mb-md shadow-soft">
+    <q-banner v-if="selectedClassId && !isAssignedClass" class="rounded-xl border q-mb-md shadow-soft" :class="$q.dark.isActive ? 'bg-amber-10 text-amber-1 border-amber-8' : 'bg-amber-1 text-amber-10 border-amber-300'">
       <template v-slot:avatar>
         <q-icon name="lock" color="amber-9" size="28px" />
       </template>
@@ -99,7 +100,7 @@
                      />
                 </div>
                 <div class="col-12 col-md-3" v-if="showRubric && isAssignedClass">
-                     <q-card class="bg-white">
+                     <q-card :class="$q.dark.isActive ? 'bg-dark border border-grey-8' : 'bg-white'">
                         <q-card-section class="bg-primary text-white text-subtitle2">Rubrica Valutazione</q-card-section>
                         <q-list separator dense>
                             <q-item><q-item-section><q-item-label>10 - Eccellente</q-item-label><q-item-label caption>Comprensione completa, esposizione brillante.</q-item-label></q-item-section></q-item>
@@ -116,6 +117,23 @@
                      </q-card>
                 </div>
             </div>
+        </div>
+
+        <!-- Matrix View -->
+        <div v-show="viewMode === 'matrix'">
+          <GradeMatrixGrid
+            v-if="isAssignedClass && selectedClassId && selectedSubject"
+            :students-list="matrixStudentsList"
+            :subject-id="String(selectedSubject)"
+            :class-id="String(selectedClassId)"
+            @saved="refreshGrades"
+          />
+          <div v-else-if="!isAssignedClass" class="text-center q-pa-xl text-grey-7">
+            L'inserimento voti in griglia è riservato ai docenti titolari.
+          </div>
+          <div v-else class="text-center q-pa-xl text-grey-7">
+            Seleziona una classe e una materia per visualizzare la griglia valutazioni.
+          </div>
         </div>
 
         <!-- Stats View -->
@@ -135,25 +153,25 @@
                 <q-card-section v-if="loadingTests" class="q-pa-md">
                     <SkeletonTable :rows="6" :cols="4" />
                 </q-card-section>
-                <q-card-section v-else-if="classTests.length === 0" class="text-center q-pa-xl text-slate-600">
+                <q-card-section v-else-if="classTests.length === 0" class="text-center q-pa-xl" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-600'">
                     <q-icon name="quiz" size="64px" color="grey-5" class="q-mb-md" />
-                    <div class="text-h6 text-weight-bold">Nessuna verifica trovata</div>
-                    <div class="text-caption text-grey-7 q-mb-md">Non ci sono ancora verifiche o prove registrate per questa materia.</div>
-                    <q-btn icon="add" label="Crea la Prima Verifica" color="primary" unelevated no-caps @click="openTestDialog" />
+                    <div class="text-h6 text-weight-bold">{{ t('gradesPage.noTestsFound') }}</div>
+                    <div class="text-caption q-mb-md" :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'">{{ t('gradesPage.noTestsFoundDesc') }}</div>
+                    <q-btn icon="add" :label="t('gradesPage.createFirstTest')" color="primary" unelevated no-caps @click="openTestDialog" />
                 </q-card-section>
                 <q-list separator v-else>
                     <q-item v-for="test in classTests" :key="test.id" class="q-py-md">
                         <q-item-section>
                             <q-item-label class="text-weight-bold text-subtitle1">{{ test.title }}</q-item-label>
                             <q-item-label caption class="row items-center q-gutter-x-sm">
-                                <span>Data: {{ formatDate(test.date) }}</span>
+                                <span>{{ t('gradesPage.date') }}: {{ formatDate(test.date) }}</span>
                                 <span>|</span>
-                                <span>Tipo: {{ test.evaluation_type === 'Written' ? 'Scritto' : (test.evaluation_type === 'Oral' ? 'Orale' : 'Pratico') }}</span>
+                                <span>{{ t('gradesPage.gradeType') }}: {{ test.evaluation_type === 'Written' ? 'Scritto' : (test.evaluation_type === 'Oral' ? 'Orale' : 'Pratico') }}</span>
                             </q-item-label>
-                            <q-item-label class="text-caption text-grey-8 q-mt-xs" v-if="test.teacher_notes">
+                            <q-item-label class="text-caption q-mt-xs" :class="$q.dark.isActive ? 'text-grey-3' : 'text-grey-8'" v-if="test.teacher_notes">
                                 <strong>Note Docente:</strong> {{ test.teacher_notes }}
                             </q-item-label>
-                            <q-item-label class="text-caption text-grey-8" v-if="test.parent_notes">
+                            <q-item-label class="text-caption" :class="$q.dark.isActive ? 'text-grey-3' : 'text-grey-8'" v-if="test.parent_notes">
                                 <strong>Note Genitori:</strong> {{ test.parent_notes }}
                             </q-item-label>
                         </q-item-section>
@@ -166,15 +184,15 @@
                     </q-item>
                 </q-list>
             </q-card>
-            <div v-else class="text-center q-pa-xl text-grey-7">La cronologia verifiche è riservata ai docenti titolari.</div>
+            <div v-else class="text-center q-pa-xl" :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'">La cronologia verifiche è riservata ai docenti titolari.</div>
         </div>
 
     </div>
     <div v-else class="text-center q-pa-xl column items-center">
         <q-icon name="school" size="96px" color="primary" class="q-mb-md opacity-80" />
-        <div class="text-h5 text-weight-bold q-mb-xs">Seleziona una classe per iniziare</div>
-        <div class="text-subtitle2 text-grey-7 q-mb-lg" style="max-width: 480px;">
-          Scegli una classe dal menu in alto per accedere al registro:
+        <div class="text-h5 text-weight-bold q-mb-xs">{{ t('gradesPage.selectClassPrompt') }}</div>
+        <div class="text-subtitle2 q-mb-lg" :class="$q.dark.isActive ? 'text-grey-4' : 'text-grey-7'" style="max-width: 480px;">
+          {{ t('gradesPage.selectClassSub') }}
         </div>
         <div class="row q-gutter-sm justify-center" v-if="classesStore.classes && classesStore.classes.length > 0">
           <q-btn
@@ -205,244 +223,17 @@
             </q-card-actions>
         </q-card>
     </q-dialog>
-
-    <!-- Create Class Test Dialog (Bulk) -->
-    <q-dialog v-model="showTestDialog" persistent max-width="96vw">
-      <q-card style="width: 1200px; max-width: 96vw; max-height: 92vh; overflow-y: auto;">
-        <q-card-section class="bg-primary text-white row items-center">
-          <div class="text-h6 text-weight-bold">Crea Nuova Verifica</div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-card-section class="q-pa-md">
-          <q-form @submit.prevent="submitTest">
-            <div class="row q-col-gutter-lg">
-              <!-- Test Details -->
-              <div class="col-12 col-md-4">
-                <div class="text-subtitle1 q-mb-md text-weight-bold text-primary">Dettagli Verifica</div>
-                <q-input
-                  v-model="testForm.title"
-                  label="Titolo Verifica *"
-                  outlined
-                  dense
-                  :rules="[val => !!val || 'Campo obbligatorio']"
-                  class="q-mb-sm"
-                />
-                <q-input
-                  v-model="testForm.date"
-                  type="date"
-                  label="Data Verifica *"
-                  outlined
-                  dense
-                  class="q-mb-sm"
-                />
-
-                <!-- Overlapping Test Alert -->
-                <q-banner v-if="overlappingTestsCount >= 2" rounded dense class="bg-amber-1 text-amber-9 border border-amber-3 q-mb-sm">
-                  <template v-slot:avatar>
-                    <q-icon name="warning" color="amber-9" />
-                  </template>
-                  Attenzione: La classe ha già <strong>{{ overlappingTestsCount }} verifiche</strong> in programma il {{ testForm.date }}! (Max raccomandato: 2)
-                </q-banner>
-                <q-select
-                  v-model="testForm.evaluationType"
-                  :options="['Scritto', 'Orale', 'Pratico']"
-                  label="Tipo Valutazione *"
-                  outlined
-                  dense
-                  class="q-mb-md"
-                />
-                <q-input
-                  v-model="testForm.teacherNotes"
-                  type="textarea"
-                  label="Testo per il docente (Note Interne)"
-                  outlined
-                  dense
-                  rows="3"
-                  class="q-mb-sm"
-                />
-                <q-input
-                  v-model="testForm.parentNotes"
-                  type="textarea"
-                  label="Testo visualizzato dai genitori"
-                  outlined
-                  dense
-                  rows="3"
-                  class="q-mb-sm"
-                />
-              </div>
-
-              <!-- Student Grades -->
-              <div class="col-12 col-md-8">
-                <div class="text-subtitle1 q-mb-xs text-weight-bold text-primary row items-center justify-between">
-                  <div>Voti Alunni ({{ filledTestGradesCount }}/{{ testForm.grades.length }} inseriti)</div>
-                  <div class="row items-center q-gutter-x-xs">
-                    <q-btn icon="block" size="sm" outline color="warning" label="Segna tutti assenti" @click="markAllAbsent(testForm)" />
-                  </div>
-                </div>
-                <q-linear-progress :value="testForm.grades.length ? filledTestGradesCount / testForm.grades.length : 0" color="primary" class="q-mb-sm" />
-                
-                <q-scroll-area style="height: 420px;" tabindex="0" aria-label="Lista inserimento voti alunni" class="border-grey rounded-borders q-pa-sm bg-grey-2">
-                  <q-list separator>
-                    <q-item v-for="(student, idx) in testForm.grades" :key="student.student_id" class="q-py-sm">
-                      <q-item-section>
-                        <q-item-label class="text-weight-bold">{{ student.full_name }}</q-item-label>
-                      </q-item-section>
-                      <q-item-section side style="width: 390px">
-                        <div class="row items-center q-gutter-sm no-wrap">
-                          <q-select
-                            v-model="student.grade_value"
-                            :options="gradeOptions"
-                            emit-value
-                            map-options
-                            label="Voto"
-                            outlined
-                            dense
-                            style="width: 110px"
-                            :bg-color="getGradeColor(student.grade_value)"
-                            placeholder="-"
-                            :ref="el => setGradeInputRef(el, idx)"
-                            @keydown.enter.prevent="focusNextStudent(idx)"
-                          />
-                          <q-input
-                            v-model="student.notes"
-                            label="Note personali"
-                            outlined
-                            dense
-                            class="col"
-                            placeholder="Note..."
-                            @keydown.enter.prevent="focusNextStudent(idx)"
-                          />
-                        </div>
-                      </q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-scroll-area>
-              </div>
-            </div>
-
-            <q-card-actions align="right" class="q-mt-md q-px-none">
-              <q-btn flat label="Annulla" v-close-popup color="grey-7" />
-              <q-btn type="submit" label="Salva Verifica e Voti" color="primary" :loading="loading" />
-            </q-card-actions>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
-
-    <!-- Edit Class Test Dialog (Bulk) -->
-    <q-dialog v-model="showEditTestDialog" persistent max-width="96vw">
-      <q-card style="width: 1200px; max-width: 96vw; max-height: 92vh; overflow-y: auto;">
-        <q-card-section class="bg-primary text-white row items-center">
-          <div class="text-h6 text-weight-bold">Modifica Verifica in Blocco</div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-card-section class="q-pa-md">
-          <q-form @submit.prevent="submitEditTest">
-            <div class="row q-col-gutter-lg">
-              <!-- Test Details -->
-              <div class="col-12 col-md-4 q-gutter-y-md">
-                <q-input
-                  v-model="editTestForm.title"
-                  label="Titolo Verifica"
-                  outlined
-                  dense
-                  :rules="[val => !!val || 'Campo obbligatorio']"
-                />
-                <q-input
-                  v-model="editTestForm.date"
-                  type="date"
-                  label="Data Verifica"
-                  outlined
-                  dense
-                  :rules="[val => !!val || 'Campo obbligatorio']"
-                />
-                <q-select
-                  v-model="editTestForm.evaluationType"
-                  :options="['Scritto', 'Orale', 'Pratico']"
-                  label="Tipo Valutazione"
-                  outlined
-                  dense
-                  :rules="[val => !!val || 'Campo obbligatorio']"
-                />
-                <q-input
-                  v-model="editTestForm.teacherNotes"
-                  type="textarea"
-                  label="Note Interne (solo docente)"
-                  outlined
-                  dense
-                  rows="3"
-                />
-                <q-input
-                  v-model="editTestForm.parentNotes"
-                  type="textarea"
-                  label="Note per i Genitori (visibili in bacheca)"
-                  outlined
-                  dense
-                  rows="3"
-                />
-              </div>
-
-              <!-- Student Grades -->
-              <div class="col-12 col-md-8">
-                <div class="text-subtitle1 q-mb-xs text-weight-bold text-primary row items-center justify-between">
-                  <div>Voti Alunni ({{ filledEditTestGradesCount }}/{{ editTestForm.grades.length }} inseriti)</div>
-                  <div class="row items-center q-gutter-x-xs">
-                    <q-btn icon="block" size="sm" outline color="warning" label="Segna tutti assenti" @click="markAllAbsent(editTestForm)" />
-                  </div>
-                </div>
-                <q-linear-progress :value="editTestForm.grades.length ? filledEditTestGradesCount / editTestForm.grades.length : 0" color="primary" class="q-mb-sm" />
-                
-                <q-scroll-area style="height: 420px;" tabindex="0" aria-label="Lista modifica voti alunni" class="border-grey rounded-borders q-pa-sm bg-grey-2">
-                  <q-list separator>
-                    <q-item v-for="(student, idx) in editTestForm.grades" :key="student.student_id" class="q-py-sm">
-                      <q-item-section>
-                        <q-item-label class="text-weight-bold">{{ student.full_name }}</q-item-label>
-                      </q-item-section>
-                      <q-item-section side style="width: 390px">
-                        <div class="row items-center q-gutter-sm no-wrap">
-                          <q-select
-                            v-model="student.grade_value"
-                            :options="gradeOptions"
-                            emit-value
-                            map-options
-                            label="Voto"
-                            outlined
-                            dense
-                            style="width: 110px"
-                            :bg-color="getGradeColor(student.grade_value)"
-                            placeholder="-"
-                            :ref="el => setEditGradeInputRef(el, idx)"
-                            @keydown.enter.prevent="focusNextEditStudent(idx)"
-                          />
-                          <q-input
-                            v-model="student.notes"
-                            label="Note personali"
-                            outlined
-                            dense
-                            class="col"
-                            placeholder="Note..."
-                            @keydown.enter.prevent="focusNextEditStudent(idx)"
-                          />
-                        </div>
-                      </q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-scroll-area>
-              </div>
-            </div>
-
-            <q-card-actions align="right" class="q-mt-md q-px-none">
-              <q-btn flat label="Annulla" v-close-popup color="grey-7" />
-              <q-btn type="submit" label="Salva Modifiche Verifica" color="primary" :loading="loading" />
-            </q-card-actions>
-          </q-form>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+    <!-- Class Test Bulk Dialog (Create / Edit) -->
+    <ClassTestBulkDialog
+      v-model="showTestDialog"
+      :is-edit="isEditTest"
+      :test-data="testForm"
+      :class-id="selectedClassId"
+      :subject-id="selectedSubject"
+      :overlapping-tests-count="overlappingTestsCount"
+      :grade-options="gradeOptions"
+      @saved="refreshGrades"
+    />
 
   </q-page>
 </template>
@@ -455,12 +246,14 @@ import { useGradesStore } from '@/stores/grades';
 import { useAuthStore } from '@/stores/auth';
 import GradeEntry from '@/components/Teacher/GradeEntry.vue';
 import GradeStatistics from '@/components/Teacher/GradeStatistics.vue';
+import GradeMatrixGrid from '@/components/Teacher/GradeMatrixGrid.vue';
+import ClassTestBulkDialog from '@/components/Teacher/ClassTestBulkDialog.vue';
 import { gradeService } from '@/services/gradeService';
 import { useQuasar, date } from 'quasar';
 import SkeletonTable from '@/components/Common/SkeletonTable.vue';
 import { useUndoToast } from '@/composables/useUndoToast';
 import { useSchoolYearStore } from '@/stores/schoolYear';
-import { ITALIAN_GRADE_OPTIONS, gradeToNumeric, formatGrade, getGradeColor } from '@/utils/gradeUtils';
+import { ITALIAN_GRADE_OPTIONS, formatGrade } from '@/utils/gradeUtils';
 
 const $q = useQuasar();
 const { t } = useI18n();
@@ -534,7 +327,7 @@ const showImportDialog = ref(false);
 const importFile = ref(null);
 
 const showTestDialog = ref(false);
-const loading = ref(false);
+const isEditTest = ref(false);
 const testForm = ref({
     title: '',
     date: date.formatDate(Date.now(), 'YYYY-MM-DD'),
@@ -544,14 +337,12 @@ const testForm = ref({
     grades: []
 });
 
-const filledTestGradesCount = computed(() => {
-    if (!testForm.value || !testForm.value.grades) return 0;
-    return testForm.value.grades.filter(g => g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '').length;
-});
-
-const filledEditTestGradesCount = computed(() => {
-    if (!editTestForm.value || !editTestForm.value.grades) return 0;
-    return editTestForm.value.grades.filter(g => g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '').length;
+const matrixStudentsList = computed(() => {
+    return (gradesStore.grades?.students || []).map(s => ({
+        id: s.student_id,
+        first_name: s.first_name,
+        last_name: s.last_name
+    }));
 });
 
 const overlappingTestsCount = computed(() => {
@@ -562,70 +353,28 @@ const overlappingTestsCount = computed(() => {
 
 const openTestDialog = () => {
     if (!isAssignedClass.value) {
-        $q.notify({ type: 'warning', message: 'Non hai i permessi per inserire verifiche in una classe non tua' });
+        $q.notify({ type: 'warning', message: t('gradesPage.noPermissionNotOwner') || 'Non hai i permessi per inserire verifiche in una classe non tua' });
         return;
     }
     if (!gradesStore.grades || !gradesStore.grades.students || gradesStore.grades.students.length === 0) {
-        $q.notify({ type: 'warning', message: 'Nessun alunno caricato per questa classe' });
+        $q.notify({ type: 'warning', message: t('gradesPage.noStudentsInClass') || 'Nessun alunno caricato per questa classe' });
         return;
     }
+    isEditTest.value = false;
     testForm.value = {
         title: '',
         date: date.formatDate(Date.now(), 'YYYY-MM-DD'),
         evaluationType: 'Scritto',
         teacherNotes: '',
         parentNotes: '',
-        grades: gradesStore.grades.students.map(s => ({
+        grades: (gradesStore.grades?.students || []).map(s => ({
             student_id: s.student_id,
             full_name: s.full_name,
             grade_value: null,
             notes: ''
         }))
     };
-    gradeInputRefs.value = [];
     showTestDialog.value = true;
-};
-
-const submitTest = async () => {
-    if (!isAssignedClass.value || loading.value) return;
-    loading.value = true;
-    try {
-        const payload = {
-            class_id: selectedClassId.value,
-            subject_id: selectedSubject.value,
-            title: testForm.value.title,
-            date: testForm.value.date,
-            teacher_notes: testForm.value.teacherNotes,
-            parent_notes: testForm.value.parentNotes,
-            evaluation_type: testForm.value.evaluationType === 'Scritto' ? 'Written' : (testForm.value.evaluationType === 'Orale' ? 'Oral' : 'Practical'),
-            grades: testForm.value.grades
-                .filter(g => g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '')
-                .map(g => ({
-                    student_id: g.student_id,
-                    grade_value: gradeToNumeric(g.grade_value),
-                    notes: g.notes
-                }))
-        };
-
-        await gradeService.createTestWithGrades(payload);
-        showTestDialog.value = false;
-        await refreshGrades();
-        
-        $q.notify({
-            type: 'positive',
-            message: `✓ Verifica "${testForm.value.title}" e ${payload.grades.length} voti salvati con successo!`,
-            icon: 'check_circle',
-            position: 'bottom-right'
-        });
-    } catch (err) {
-        console.error(err);
-        $q.notify({
-            type: 'negative',
-            message: 'Errore nel salvataggio della verifica'
-        });
-    } finally {
-        loading.value = false;
-    }
 };
 
 watch(() => schoolYearStore.selectedSchoolYear, async (newSY) => {
@@ -664,17 +413,6 @@ const refreshGrades = async () => {
 
 const classTests = ref([]);
 const loadingTests = ref(false);
-const showEditTestDialog = ref(false);
-const editTestForm = ref({
-    id: '',
-    title: '',
-    date: '',
-    evaluationType: '',
-    teacherNotes: '',
-    parentNotes: '',
-    grades: []
-});
-
 const fetchTests = async () => {
     if (!selectedClassId.value || !selectedSubject.value || !isAssignedClass.value) return;
     loadingTests.value = true;
@@ -708,7 +446,8 @@ const openEditTestDialog = (test) => {
         };
     });
 
-    editTestForm.value = {
+    isEditTest.value = true;
+    testForm.value = {
         id: test.id,
         title: test.title,
         date: test.date ? test.date.split('T')[0] : '',
@@ -717,74 +456,7 @@ const openEditTestDialog = (test) => {
         parentNotes: test.parent_notes || '',
         grades: gradesList
     };
-    editGradeInputRefs.value = [];
-    showEditTestDialog.value = true;
-};
-
-const submitEditTest = async () => {
-    if (!isAssignedClass.value) return;
-    loading.value = true;
-    try {
-        const payload = {
-            title: editTestForm.value.title,
-            date: editTestForm.value.date,
-            teacher_notes: editTestForm.value.teacherNotes,
-            parent_notes: editTestForm.value.parentNotes,
-            evaluation_type: editTestForm.value.evaluationType === 'Scritto' ? 'Written' : (editTestForm.value.evaluationType === 'Orale' ? 'Oral' : 'Practical'),
-            grades: editTestForm.value.grades
-                .filter(g => g.grade_value !== null && g.grade_value !== undefined && g.grade_value !== '')
-                .map(g => ({
-                    student_id: g.student_id,
-                    grade_id: g.grade_id ?? null,
-                    grade_value: gradeToNumeric(g.grade_value),
-                    notes: g.notes
-                }))
-        };
-
-        await gradesStore.updateClassTest(editTestForm.value.id, payload);
-        $q.notify({ type: 'positive', message: 'Verifica modificata con successo!' });
-        showEditTestDialog.value = false;
-        await refreshGrades();
-    } catch (err) {
-        console.error(err);
-        $q.notify({ type: 'negative', message: 'Errore durante la modifica della verifica' });
-    } finally {
-        loading.value = false;
-    }
-};
-
-const gradeInputRefs = ref([]);
-const editGradeInputRefs = ref([]);
-
-const setGradeInputRef = (el, idx) => {
-    if (el) gradeInputRefs.value[idx] = el;
-};
-
-const setEditGradeInputRef = (el, idx) => {
-    if (el) editGradeInputRefs.value[idx] = el;
-};
-
-const focusNextStudent = (idx) => {
-    if (gradeInputRefs.value && gradeInputRefs.value[idx + 1]) {
-        const next = gradeInputRefs.value[idx + 1];
-        if (next.focus) next.focus();
-    }
-};
-
-const focusNextEditStudent = (idx) => {
-    if (editGradeInputRefs.value && editGradeInputRefs.value[idx + 1]) {
-        const next = editGradeInputRefs.value[idx + 1];
-        if (next.focus) next.focus();
-    }
-};
-
-const markAllAbsent = (formObj) => {
-    if (!formObj || !formObj.grades) return;
-    formObj.grades.forEach(g => {
-        g.grade_value = null;
-        g.notes = 'Assente';
-    });
-    $q.notify({ type: 'info', message: 'Tutti gli alunni segnati come assenti', timeout: 1500 });
+    showTestDialog.value = true;
 };
 
 const deleteTestConfirm = async (testOrId) => {
@@ -794,21 +466,22 @@ const deleteTestConfirm = async (testOrId) => {
     const totalGrades = test && test.grade_count ? test.grade_count : (test && test.grades ? test.grades.length : 'tutti i');
 
     $q.dialog({
-        title: 'Conferma Eliminazione Verifica',
-        message: `Sei sicuro di voler eliminare la verifica "${testTitle}"? Verranno eliminati permanentemente ${totalGrades} voti collegati. L'operazione non è reversibile.`,
-        cancel: { label: 'Annulla', flat: true },
-        ok: { label: 'Elimina', color: 'negative' },
+        title: t('gradesPage.deleteTestConfirmTitle') || 'Conferma Eliminazione Verifica',
+        message: t('gradesPage.deleteTestConfirmMsg', { title: testTitle, count: totalGrades })
+          || `Sei sicuro di voler eliminare la verifica "${testTitle}"? Verranno eliminati permanentemente ${totalGrades} voti collegati. L'operazione non è reversibile.`,
+        cancel: { label: t('common.cancel') || 'Annulla', flat: true },
+        ok: { label: t('common.delete') || 'Elimina', color: 'negative' },
         persistent: true
     }).onOk(async () => {
         const id = test ? test.id : testOrId;
         try {
             await gradesStore.deleteClassTest(id);
-            $q.notify({ type: 'positive', message: 'Verifica eliminata con successo!' });
+            $q.notify({ type: 'positive', message: t('gradesPage.deleteTestSuccess') || 'Verifica eliminata con successo!' });
             await refreshGrades();
             if (viewMode.value === 'history') await fetchTests();
         } catch (err) {
             console.error(err);
-            $q.notify({ type: 'negative', message: 'Errore durante l\'eliminazione della verifica' });
+            $q.notify({ type: 'negative', message: t('gradesPage.deleteTestError') || 'Errore durante l\'eliminazione della verifica' });
         }
     });
 };

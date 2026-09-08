@@ -53,11 +53,10 @@ jobs:
         env:
           NODE_OPTIONS: "--disable-warning=ExperimentalWarning"
       - run: npm ci
-      - run: npm run test:unit
-      # - run: npm run test:coverage # Uncomment when configured
+      - run: npm run test:coverage
       - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./registro-frontend/coverage/coverage-final.json
+          files: ./registro-frontend/coverage/lcov.info
           flags: frontend
           fail_ci_if_error: false

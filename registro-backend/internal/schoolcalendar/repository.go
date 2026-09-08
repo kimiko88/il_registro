@@ -1,6 +1,7 @@
 package schoolcalendar
 
 import (
+	"context"
 	"database/sql"
 	"time"
 )
@@ -63,16 +64,16 @@ func (r *repository) AddNonTeachingDay(d *NonTeachingDay) error {
 }
 
 func (r *repository) DeleteNonTeachingDay(schoolID, id string) error {
-	_, err := r.db.Exec(`DELETE FROM school_non_teaching_days WHERE id=$1::uuid AND school_id=$2`, id, schoolID)
+	_, err := r.db.ExecContext(context.Background(), `DELETE FROM school_non_teaching_days WHERE id=$1::uuid AND school_id=$2`, id, schoolID)
 	return err
 }
 
 func (r *repository) ListNonTeachingDays(schoolID string) ([]NonTeachingDay, error) {
-	rows, err := r.db.Query(`SELECT id, school_id, date, label FROM school_non_teaching_days WHERE school_id=$1 ORDER BY date ASC`, schoolID)
+	rows, err := r.db.QueryContext(context.Background(), `SELECT id, school_id, date, label FROM school_non_teaching_days WHERE school_id=$1 ORDER BY date ASC`, schoolID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var res []NonTeachingDay
 	for rows.Next() {
 		var d NonTeachingDay
@@ -98,7 +99,7 @@ func (r *repository) CountTeachingDays(schoolID string, from, to time.Time) (int
 				SELECT date FROM school_non_teaching_days WHERE school_id = $3
 			)`
 	var count int
-	err := r.db.QueryRow(query, from, to, schoolID).Scan(&count)
+	err := r.db.QueryRowContext(context.Background(), query, from, to, schoolID).Scan(&count)
 	return count, err
 }
 
@@ -112,7 +113,7 @@ func (r *repository) CreateAcademicPeriod(p *AcademicPeriod) error {
 	if p.AcademicYearID != nil && *p.AcademicYearID != "" {
 		yearUUID = *p.AcademicYearID
 	}
-	return r.db.QueryRow(query, p.SchoolID, yearUUID, p.Name, p.Code, p.StartDate, p.EndDate, p.IsCurrent).Scan(&p.ID, &p.CreatedAt)
+	return r.db.QueryRowContext(context.Background(), query, p.SchoolID, yearUUID, p.Name, p.Code, p.StartDate, p.EndDate, p.IsCurrent).Scan(&p.ID, &p.CreatedAt)
 }
 
 func (r *repository) ListAcademicPeriods(schoolID string) ([]AcademicPeriod, error) {
@@ -122,11 +123,11 @@ func (r *repository) ListAcademicPeriods(schoolID string) ([]AcademicPeriod, err
 		WHERE school_id = $1::uuid
 		ORDER BY start_date ASC
 	`
-	rows, err := r.db.Query(query, schoolID)
+	rows, err := r.db.QueryContext(context.Background(), query, schoolID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []AcademicPeriod
 	for rows.Next() {

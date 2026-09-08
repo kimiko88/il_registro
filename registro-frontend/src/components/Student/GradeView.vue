@@ -10,9 +10,7 @@
     >
       <template v-slot:body-cell-value="props">
         <q-td :props="props">
-          <q-badge :color="getGradeColor(props.value)">
-            {{ props.value }}
-          </q-badge>
+          <GradeBadge :value="props.value" />
         </q-td>
       </template>
     </q-table>
@@ -23,6 +21,7 @@
 import { onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useApi } from '@/composables/useApi'
+import GradeBadge from '@/components/Common/GradeBadge.vue'
 
 const { t } = useI18n()
 const { data: grades, loading } = useApi('/grades')
@@ -42,8 +41,4 @@ onMounted(() => {
   ]
 })
 
-function getGradeColor(grade) {
-  if (grade >= 6) return 'positive'
-  return 'negative'
-}
 </script>

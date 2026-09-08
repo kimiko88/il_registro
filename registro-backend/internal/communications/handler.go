@@ -325,7 +325,7 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "allegato mancante"})
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Validate size + magic bytes Content-Type check
 	if err := upload.ValidateUpload(file, header); err != nil {

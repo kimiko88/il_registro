@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import routes from './routes'
 import { authGuard } from './guards'
 import { setApiRouter } from '@/services/api'
+import { i18n } from '@/i18n'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -12,13 +13,25 @@ if (typeof setApiRouter === 'function') {
     setApiRouter(router)
 }
 
-router.beforeEach(authGuard)
+router.beforeEach((to, from) => authGuard(to, from))
 
 router.afterEach((to) => {
     const base = 'Registro Elettronico'
-    const pageTitle = to.meta?.title
-    if (pageTitle) {
-        document.title = `${pageTitle} — ${base}`
+    let resolvedTitle = ''
+
+    if (to.meta?.titleKey && typeof i18n?.global?.t === 'function') {
+        const translated = i18n.global.t(to.meta.titleKey)
+        if (translated && translated !== to.meta.titleKey) {
+            resolvedTitle = translated
+        }
+    }
+
+    if (!resolvedTitle && to.meta?.title) {
+        resolvedTitle = to.meta.title
+    }
+
+    if (resolvedTitle) {
+        document.title = `${resolvedTitle} — ${base}`
         return
     }
 

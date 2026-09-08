@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file guards.test.js
  * Tests: T01-T08 per authGuard (see implementation_plan.md)
  */
@@ -119,3 +119,24 @@ describe('T08 — route without meta.roles', () => {
     expect(await runGuard(to)).toBeUndefined()
   })
 })
+
+// T09 — Vue Router return-value navigation guard contract (no next callback)
+describe('T09 — Modern Vue Router navigation guard contract (VUE_ROUTER_R0025)', () => {
+  it('has function.length <= 2 to prevent Vue Router deprecated next() warning', () => {
+    expect(authGuard.length).toBeLessThanOrEqual(2)
+  })
+
+  it('returns redirect location directly when called without next argument', async () => {
+    const to = { path: '/admin/dashboard', meta: { requiresAuth: true, roles: ['admin'] }, matched: [] }
+    const result = await authGuard(to, { path: '/' })
+    expect(result).toEqual({ path: '/login', query: { reason: 'session_expired' } })
+  })
+
+  it('returns undefined to proceed when navigation is allowed without next argument', async () => {
+    Object.assign(mockAuthStore, { isAuthenticated: true, userRole: 'admin', token: makeToken() })
+    const to = { path: '/admin/dashboard', meta: { requiresAuth: true, roles: ['admin', 'superadmin'] }, matched: [] }
+    const result = await authGuard(to, { path: '/' })
+    expect(result).toBeUndefined()
+  })
+})
+

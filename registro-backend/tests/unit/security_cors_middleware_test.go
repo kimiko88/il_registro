@@ -15,8 +15,8 @@ func TestSecurity_CORSMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	t.Run("Allows authorized origin from whitelist and sets credentials header", func(t *testing.T) {
-		os.Setenv("ALLOWED_ORIGINS", "http://localhost:5173,https://app.scuola.it")
-		defer os.Unsetenv("ALLOWED_ORIGINS")
+		_ = os.Setenv("ALLOWED_ORIGINS", "http://localhost:5173,https://app.scuola.it")
+		defer func() { _ = os.Unsetenv("ALLOWED_ORIGINS") }()
 
 		r := gin.New()
 		r.Use(middleware.CORSMiddleware())
@@ -37,8 +37,8 @@ func TestSecurity_CORSMiddleware(t *testing.T) {
 	})
 
 	t.Run("Does not set Access-Control-Allow-Origin header for unauthorized origin", func(t *testing.T) {
-		os.Setenv("ALLOWED_ORIGINS", "http://localhost:5173")
-		defer os.Unsetenv("ALLOWED_ORIGINS")
+		_ = os.Setenv("ALLOWED_ORIGINS", "http://localhost:5173")
+		defer func() { _ = os.Unsetenv("ALLOWED_ORIGINS") }()
 
 		r := gin.New()
 		r.Use(middleware.CORSMiddleware())
@@ -73,8 +73,8 @@ func TestSecurity_CORSMiddleware(t *testing.T) {
 	})
 
 	t.Run("Rejects non-http and non-https origins configured in ALLOWED_ORIGINS", func(t *testing.T) {
-		os.Setenv("ALLOWED_ORIGINS", "javascript:alert(1),data:text/html;base64,abc,https://valid.school.it")
-		defer os.Unsetenv("ALLOWED_ORIGINS")
+		_ = os.Setenv("ALLOWED_ORIGINS", "javascript:alert(1),data:text/html;base64,abc,https://valid.school.it")
+		defer func() { _ = os.Unsetenv("ALLOWED_ORIGINS") }()
 
 		r := gin.New()
 		r.Use(middleware.CORSMiddleware())

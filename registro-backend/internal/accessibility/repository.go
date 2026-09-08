@@ -55,7 +55,7 @@ func (r *postgresRepository) List(ctx context.Context, schoolID, status string, 
 		argIndex++
 	}
 
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM accessibility_feedbacks WHERE %s", fmt.Sprintf("%s", whereClauses[0]))
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM accessibility_feedbacks WHERE %s", whereClauses[0])
 	if len(whereClauses) > 1 {
 		countQuery = fmt.Sprintf("SELECT COUNT(*) FROM accessibility_feedbacks WHERE %s", joinClauses(whereClauses))
 	}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Registro - Docente</string>
+    <string name="teacher_dashboard_title">Portal Docente</string>
+    <string name="take_attendance">Pasar Lista</string>
+    <string name="add_grade">Añadir Nota</string>
+    <string name="scrutiny_board">Evaluación Final</string>
+    <string name="sign_hour">Firmar Hora de Clase</string>
+    <string name="lesson_topic">Tema de la Clase</string>
+    <string name="select_class">Seleccionar Clase</string>
+    <string name="login_subtitle">Accede a tu escritorio docente</string>
+    <string name="email_label">Correo Docente</string>
+    <string name="password_label">Contraseña</string>
+    <string name="btn_login">ACCEDER AL REGISTRO</string>
+    <string name="err_enter_credentials">Introduce correo y contraseña</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="present">Presente</string>
+    <string name="absent">Ausente</string>
+    <string name="late">Retraso</string>
+    <string name="my_classes_title">Mis Clases</string>
+    <string name="lesson_signed">Clase Firmada</string>
+</resources>

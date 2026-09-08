@@ -24,8 +24,6 @@ func NewService(repo Repository) *Service {
 }
 
 // CreateMeeting creates a new council meeting.
-// Bug 140: verifying ClassID belongs to schoolID requires ClassBelongsToSchool in Repository.
-// TODO: add ClassBelongsToSchool(ctx, classID, schoolID) to Repository and call it here.
 func (s *Service) CreateMeeting(ctx context.Context, actorID, schoolID string, req CreateMeetingRequest) (*CouncilMeeting, error) {
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id required")
@@ -33,6 +31,16 @@ func (s *Service) CreateMeeting(ctx context.Context, actorID, schoolID string, r
 	d, err := time.Parse("2006-01-02", req.Date)
 	if err != nil {
 		return nil, fmt.Errorf("invalid date format: use YYYY-MM-DD")
+	}
+
+	if req.ClassID != "" {
+		belongs, err := s.repo.ClassBelongsToSchool(ctx, req.ClassID, schoolID)
+		if err != nil {
+			return nil, fmt.Errorf("error verifying class tenant association: %w", err)
+		}
+		if !belongs {
+			return nil, fmt.Errorf("class %s does not belong to school %s", req.ClassID, schoolID)
+		}
 	}
 
 	m := &CouncilMeeting{
@@ -104,13 +112,8 @@ func (s *Service) SignVerbale(ctx context.Context, verbaleID, userID, ipAddress 
 	}
 
 	// Bug 139: verify the signer is secretary or president
-	isAuthorized := false
-	if v.SecretaryID != nil && *v.SecretaryID == userID {
-		isAuthorized = true
-	}
-	if v.PresidentID != nil && *v.PresidentID == userID {
-		isAuthorized = true
-	}
+	isAuthorized := (v.SecretaryID != nil && *v.SecretaryID == userID) ||
+		(v.PresidentID != nil && *v.PresidentID == userID)
 	// NOTE: for full participant list verification, add ParticipantIDs to MeetingVerbale
 	// and verify: for _, pid := range v.ParticipantIDs { if pid == userID { isAuthorized = true } }
 	if !isAuthorized {

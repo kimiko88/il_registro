@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Register - Student</string>
+    <string name="dashboard_title">My Dashboard</string>
+    <string name="welcome_student">Hello, %1$s!</string>
+    <string name="grades_title">My Grades</string>
+    <string name="agenda_title">Homework &amp; Agenda</string>
+    <string name="attendance_title">Attendance &amp; Absences</string>
+    <string name="report_card_title">My Report Card</string>
+    <string name="gpa_average">Overall GPA</string>
+    <string name="recent_grades">Recent Grades</string>
+    <string name="today_lessons">Today\'s Lessons Schedule</string>
+    <string name="absences_count">Total Absences</string>
+    <string name="lates_count">Total Delays</string>
+    <string name="no_data">No data available</string>
+    <string name="login_subtitle">Log in to your account</string>
+    <string name="email_label">Student Email</string>
+    <string name="password_label">Password</string>
+    <string name="btn_login">LOG IN</string>
+    <string name="err_enter_credentials">Enter email and password</string>
+    <string name="logout">Log out</string>
+    <string name="settings">Settings</string>
+    <string name="badges_title">My Badges</string>
+    <string name="pcto_title">Work-Study (PCTO)</string>
+    <string name="restriction_server_url_title">School Server URL (MDM)</string>
+    <string name="restriction_server_url_desc">Backend server endpoint URL deployed via MDM</string>
+    <string name="restriction_school_code_title">School Ministry Code</string>
+    <string name="restriction_school_code_desc">Official school identification code</string>
+    <string name="restriction_kiosk_mode_title">Exam Kiosk / Shared Tablet Mode</string>
+    <string name="restriction_kiosk_mode_desc">Disables external navigation and locks app</string>
+</resources>

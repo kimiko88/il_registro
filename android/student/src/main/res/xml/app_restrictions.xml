@@ -1,0 +1,22 @@
+<restrictions xmlns:android="http://schemas.android.com/apk/res/android">
+    <restriction
+        android:key="server_url"
+        android:title="@string/restriction_server_url_title"
+        android:restrictionType="string"
+        android:description="@string/restriction_server_url_desc"
+        android:defaultValue="https://registro.scuola.it/api/v1" />
+
+    <restriction
+        android:key="school_code"
+        android:title="@string/restriction_school_code_title"
+        android:restrictionType="string"
+        android:description="@string/restriction_school_code_desc"
+        android:defaultValue="" />
+
+    <restriction
+        android:key="kiosk_mode_enabled"
+        android:title="@string/restriction_kiosk_mode_title"
+        android:restrictionType="bool"
+        android:description="@string/restriction_kiosk_mode_desc"
+        android:defaultValue="false" />
+</restrictions>

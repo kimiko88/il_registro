@@ -91,7 +91,7 @@ func (r *PostgresRepository) List(ctx context.Context, params *ListParams) ([]*S
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var schools []*School
 	for rows.Next() {
@@ -103,6 +103,9 @@ func (r *PostgresRepository) List(ctx context.Context, params *ListParams) ([]*S
 			return nil, 0, err
 		}
 		schools = append(schools, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
 	}
 	return schools, total, nil
 }

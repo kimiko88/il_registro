@@ -196,12 +196,13 @@ func (m *mockUserRepo) GetFascicoloSummary(_ context.Context, _ string, _ bool) 
 }
 func (m *mockUserRepo) IsActive(_ context.Context, _ string) (bool, error)    { return true, nil }
 func (m *mockUserRepo) ChangePasswordTx(_ context.Context, _, _ string) error { return nil }
+func (m *mockUserRepo) ApplyDataRetention(_ context.Context, _ *string, _ time.Time) (int, error) {
+	return 0, nil
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-func strPtr(s string) *string { return &s }
 
 func makeService(r *mockRepo, u *mockUserRepo) Service {
 	return NewService(r, u, nil, nil)

@@ -9,11 +9,21 @@ import (
 	"net/http"
 )
 
-type Service struct {
-	repo *Repository
+type RepositoryInterface interface {
+	Create(ctx context.Context, plan *UdaPlan) error
+	ListByClass(ctx context.Context, classID string) ([]*UdaPlan, error)
+	GetByID(ctx context.Context, id string) (*UdaPlan, error)
+	ListBySchool(ctx context.Context, schoolID string) ([]*UdaPlan, error)
+	ListAll(ctx context.Context) ([]*UdaPlan, error)
+	Update(ctx context.Context, id string, req UpdateUdaRequest) (*UdaPlan, error)
+	Delete(ctx context.Context, id string) error
 }
 
-func NewService(repo *Repository) *Service {
+type Service struct {
+	repo RepositoryInterface
+}
+
+func NewService(repo RepositoryInterface) *Service {
 	return &Service{repo: repo}
 }
 

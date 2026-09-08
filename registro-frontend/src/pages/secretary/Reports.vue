@@ -76,7 +76,7 @@
 
     <!-- Parameter Dialog -->
     <q-dialog v-model="showDialog">
-      <q-card style="min-width: 400px" class="rounded-xl overflow-hidden shadow-24 bg-white">
+      <q-card style="width: min(450px, 95vw); max-width: 95vw;" class="rounded-xl overflow-hidden shadow-24 bg-white">
         <q-card-section class="bg-gradient-premium text-white q-pa-lg">
           <div class="text-h6 text-weight-bold">{{ currentReportTitle }}</div>
           <div class="text-caption opacity-80">Seleziona i parametri per generare il report.</div>
@@ -99,7 +99,7 @@
     <q-dialog v-model="showPreview" full-width full-height>
       <q-card class="column no-wrap bg-slate-100 rounded-xl overflow-hidden shadow-24">
         <q-toolbar class="bg-white border-b border-slate-200 q-px-xl q-py-md">
-          <q-btn flat round dense icon="close" v-close-popup color="slate-500" />
+          <q-btn flat round dense icon="close" v-close-popup color="slate-500" :aria-label="$t('common.close') || 'Chiudi'" />
           <q-toolbar-title class="text-weight-bold text-slate-800 text-outfit">Anteprima: {{ currentReportTitle }}</q-toolbar-title>
           <div class="row q-gutter-sm">
             <q-btn unelevated color="primary" icon="print" label="Stampa / PDF" class="rounded-lg q-px-lg shadow-sm" no-caps @click="printReport" />
@@ -184,8 +184,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useQuasar, exportFile } from 'quasar'
+import { useQuasar } from 'quasar'
 import { useAuthStore } from '@/stores/auth'
+import { useTableExport } from '@/composables/useTableExport'
 import adminService from '@/services/adminService'
 import { gradeService } from '@/services/gradeService'
 import { attendanceService } from '@/services/attendanceService'
@@ -194,6 +195,7 @@ import api from '@/services/api'
 const $q = useQuasar()
 const { t } = useI18n()
 const authStore = useAuthStore()
+const { exportTableCsv } = useTableExport()
 
 // ── School name from auth store (not hardcoded) ───────────────
 const schoolName = computed(() => authStore.user?.school_name || authStore.user?.schoolName || 'Istituto Scolastico')
@@ -402,27 +404,12 @@ const printReport = () => {
 }
 
 const downloadCSV = () => {
-  if (reportData.value.length === 0) {
-    $q.notify({ type: 'warning', message: 'Nessun dato da esportare.' })
-    return
-  }
-
-  // Build CSV from reportColumns and reportData
-  const cols = reportColumns.value
-  const header = cols.map(c => c.label).join(';')
-  const rows = reportData.value.map(row =>
-    cols.map(c => {
-      const val = typeof c.field === 'function' ? c.field(row) : (row[c.field] ?? '')
-      return `"${String(val).replace(/"/g, '""')}"`
-    }).join(';')
-  )
-  const content = [header, ...rows].join('\n')
-  const status = exportFile(`report_${currentReport.value}_${info.value.class_id}.csv`, content, 'text/csv')
-  if (status === true) {
-    $q.notify({ type: 'positive', message: 'Report CSV scaricato con successo', icon: 'download' })
-  } else {
-    $q.notify({ type: 'negative', message: 'Impossibile scaricare il file' })
-  }
+  exportTableCsv({
+    filename: `report_${currentReport.value}_${info.value.class_id}.csv`,
+    columns: reportColumns.value,
+    rows: reportData.value,
+    delimiter: ';'
+  })
 }
 
 defineExpose({ openReport, currentReport, showDialog, showPreview, info })

@@ -87,7 +87,7 @@ func (r *repository) ListDiaryEntries(ctx context.Context, schoolID, studentID, 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []SupportDiaryEntry
 	for rows.Next() {
@@ -156,7 +156,7 @@ func (r *repository) ListPeiGoals(ctx context.Context, schoolID, studentID strin
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []SupportPeiGoal
 	for rows.Next() {

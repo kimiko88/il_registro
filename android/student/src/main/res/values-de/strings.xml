@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Klassenbuch - Schüler</string>
+    <string name="dashboard_title">Mein Dashboard</string>
+    <string name="welcome_student">Hallo, %1$s!</string>
+    <string name="grades_title">Meine Noten</string>
+    <string name="agenda_title">Hausaufgaben &amp; Termine</string>
+    <string name="attendance_title">Anwesenheit &amp; Fehlzeiten</string>
+    <string name="report_card_title">Mein Zeugnis</string>
+    <string name="gpa_average">Gesamtdurchschnitt</string>
+    <string name="recent_grades">Neueste Noten</string>
+    <string name="today_lessons">Heutiger Stundenplan</string>
+    <string name="absences_count">Gesamte Fehlzeiten</string>
+    <string name="lates_count">Gesamte Verspätungen</string>
+    <string name="no_data">Keine Daten verfügbar</string>
+    <string name="login_subtitle">In Ihrem Konto anmelden</string>
+    <string name="email_label">Schüler-E-Mail</string>
+    <string name="password_label">Passwort</string>
+    <string name="btn_login">ANMELDEN</string>
+    <string name="err_enter_credentials">E-Mail und Passwort eingeben</string>
+    <string name="logout">Abmelden</string>
+    <string name="settings">Einstellungen</string>
+    <string name="badges_title">Meine Abzeichen</string>
+    <string name="pcto_title">Praktikumswege (PCTO)</string>
+    <string name="restriction_server_url_title">Schulserver-URL (MDM)</string>
+    <string name="restriction_server_url_desc">Über MDM bereitgestellte Server-URL</string>
+    <string name="restriction_school_code_title">Amtliche Schulnummer</string>
+    <string name="restriction_school_code_desc">Offizieller Identifikationscode der Schule</string>
+    <string name="restriction_kiosk_mode_title">Kiosk-Modus für Prüfungen / Geteiltes Tablet</string>
+    <string name="restriction_kiosk_mode_desc">Deaktiviert externe Navigation und sperrt die App</string>
+</resources>

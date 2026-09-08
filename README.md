@@ -2,12 +2,14 @@
 
 > 🏛️ Un registro elettronico **pubblico, aperto e gratuito** per la scuola italiana — ideato e realizzato da un docente, per la scuola pubblica.
 
-> ⚠️ **Stato del progetto: Beta funzionante** — Il progetto è attualmente in fase di sviluppo attivo. Le funzionalità principali sono operative e testabili tramite la demo online, ma **non è ancora consigliato per l'uso in produzione** in ambienti scolastici reali. API, struttura del database e configurazioni potrebbero subire modifiche prima del rilascio stabile.
+> ⚠️ **Stato del progetto**:
+> - **Piattaforma Web (Backend Go + Frontend Vue 3)**: **Beta funzionante** — Le funzionalità principali sono operative e testabili tramite la demo online, ma non è ancora consigliata per l'uso in produzione reale.
+> - **Applicazioni Mobile Native (Android & iOS)**: **Fase Alpha (Non stabile e incompleta)** — Attualmente in fase di sviluppo attivo e testing iniziale, **non stabili, incomplete e NON idonee all'uso in produzione**.
 
 🇮🇹 **Versione Italiana** | 🇬🇧 **[English Version](./README_EN.md)**
 
 **Online Demo**: [https://registro-scuola.netlify.app](https://registro-scuola.netlify.app)
-**Demo accounts & passwords**: [example_accounts.md](./docs/example_accounts.md)
+**Demo accounts & passwords**: [example_account.md](./docs/example_account.md)
 _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbero essere state modificate per motivi di sicurezza.
 
 [![Discord Members](https://img.shields.io/discord/426912293134270465.svg?label=Discord&logo=discord)](https://discord.gg/Qh5XjQxwb)
@@ -18,7 +20,8 @@ _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbe
 [![Google Antigravity](https://img.shields.io/badge/IDE-Google%20Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
 [![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-4285F4?logo=google&logoColor=white)](https://gemini.google.com)
 [![Anthropic Claude](https://img.shields.io/badge/AI-Anthropic%20Claude-D97757?logo=anthropic&logoColor=white)](https://anthropic.com)
-[![Status](https://img.shields.io/badge/status-beta%20funzionante-yellow)](https://github.com/kimiko88/il_registro)
+[![Status](https://img.shields.io/badge/status-web%20beta%20%7C%20mobile%20alpha-orange)](https://github.com/kimiko88/il_registro)
+[![codecov](https://codecov.io/github/kimiko88/il_registro/graph/badge.svg?token=2946K0BLDX)](https://codecov.io/github/kimiko88/il_registro)
 
 ---
 
@@ -98,6 +101,8 @@ Il progetto è organizzato come **monorepo** con backend Go e frontend Vue 3:
 il_registro/
 ├── registro-backend/    # API REST in Go (Gin + PostgreSQL + Redis)
 ├── registro-frontend/   # SPA/PWA in Vue 3 + Quasar
+├── android/             # App Native Android (Kotlin Compose: :student, :parent, :teacher, :secretary) [Alpha]
+├── ios/                 # App Native iOS (SwiftUI, Xcode + SPM: Studente, Docente, Genitore, Segreteria) [Alpha]
 ├── docs/                # Documentazione tecnica dettagliata
 ├── .github/workflows/   # Pipeline CI/CD
 ├── CHANGELOG.md         # Storico delle versioni
@@ -115,18 +120,23 @@ il_registro è pensato per essere **auto-ospitato da scuole, Comuni, Regioni o d
 
 | Area                      | Funzionalità                                                                                                                              |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| **Autenticazione & SSO**  | JWT (access 15min + refresh rotation), MFA TOTP, SPID, CIE, **Google Workspace & MS Teams SSO**                                           |
+| **App Mobile Native (Alpha)** | **Android & iOS Native (Fase Alpha non stabile e incompleta)** per Studente, Genitore, Docente e Segreteria (Kotlin Compose & SwiftUI, biometria, offline, 11 lingue) |
+| **Autenticazione & SSO**  | JWT (access 15min + refresh rotation), MFA TOTP, **Google Workspace & MS Teams SSO**, OAuth2/OIDC                                        |
 | **Ruoli**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                        |
-| **Voti & Valutazioni**    | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, misure compensative BES/DSA                      |
-| **Presenze & Lezioni**    | Registro giornaliero, **Firma Ora 1-Click**, assenze, ritardi, giustificazioni, alert assenteismo                                         |
+| **Voti & Valutazioni**    | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, **Matrice Descrittiva O.M. 172/2020 (4 livelli ministeriali)**, misure BES/DSA |
+| **Presenze & Lezioni**    | Registro giornaliero, **Firma Ora 1-Click**, firma rapida lezioni consecutive (2-3h), copia argomenti ultima lezione, alert assenteismo  |
+| **Atti Ufficiali (PDF)**  | **Registro Personale del Docente PDF** (quadrimestri, medie pesate, lezioni), **Giornale di Classe Mensile PDF** con matrice presenze codificata (P, A, R, U, G) |
+| **Diagnostica & Linter**  | **Data Integrity Scanner**: controllo preventivo incongruenze relazionali (studenti orfani, classi senza coordinatore, lezioni sovrapposte) |
+| **Supplenze & Dispatcher**| **Tabellone Orario Live (1ª-6ª Ora)** con visualizzazione classi scoperte e raccomandazione automatica supplenti con assegnazione 1-click |
+| **Portale Famiglia & Studente** | **Monitoraggio Limite Assenze 25% (DPR 122/2009)** con calcolo ore residue, **Planner Compiti & To-Do List** sincronizzato via API |
+| **Scrutini & Differiti**  | Tabellone scrutinio, delibere condotta, credito scolastico, **Scrutinio Differito (saldo debiti formativi)**                              |
 | **PDP / PEI (BES & DSA)** | **Gestione Piani Didattici Personalizzati**, misure compensative/dispensative, firma/approvazione digitale genitore e protezione diagnosi |
-| **Business Intelligence** | **Dashboard Dispersione Scolastica & Assenteismo**, report andamento 1° vs 2° Quadrimestre per la dirigenza                               |
+| **Business Intelligence** | **Dashboard Dispersione Scolastica & Early Warning (DPR 122/2009)**, export piano di supporto CSV, report andamento quadrimestri          |
+| **Cloud-Native & Resilienza** | **Kubernetes Probes (`/live`, `/ready`)** con deep dependency check (DB, Redis, goroutine, RAM), **Circuit Breaker** su integrazioni esterne |
 | **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: sincronizzazione automatica compiti, voti e classi                                                |
-| **Comunicazioni**         | Circolari, comunicazioni urgenti con **Presa d'Atto obbligatoria**, notifiche real-time WebSocket                                         |
+| **Comunicazioni**         | Circolari, comunicazioni urgenti con **Presa d'Atto obbligatoria**, notifiche real-time WebSocket e Web Push                              |
 | **Accessibilità & UX**    | **Font DSA OpenDyslexic**, alto contrasto, **Ricerca Globale `Ctrl+K`**, **Toast & Undo (15s)**, Timeline del Giorno, Skeleton screens    |
-| **Scrutini**              | Pagelle, voti di condotta, crediti scolastici                                                                                             |
-| **PCTO & Orari**          | Tracciamento ore alternanza scuola-lavoro, orario scolastico e gestione colloqui                                                          |
-| **PWA & Mobile**          | Installabile su dispositivi mobili, supporto offline                                                                                      |
+| **PWA & Offline Outbox**  | Installabile su desktop/mobile (PWA), **Coda Outbox Offline** per operazioni docente con sync FIFO automatico                             |
 
 ---
 
@@ -204,10 +214,15 @@ Go è stato scelto per il backend per ragioni che vanno oltre la moda tecnologic
 | [docs/ABOUT.md](./docs/ABOUT.md)                             | Panoramica, logica librerie esterne, stack e test            |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)               | Architettura, layer, pattern, diagrammi data flow            |
 | [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)                 | Installazione locale, Docker, produzione, troubleshooting    |
+| [docs/MOBILE_SETUP_GUIDE.md](./docs/MOBILE_SETUP_GUIDE.md)   | Guida configurazione, test e build delle app mobile native  |
+| [docs/mobile_instruction.md](./docs/mobile_instruction.md)   | Istruzioni operative e testing delle app mobile e PWA       |
 | [docs/FRONTEND_GUIDE.md](./docs/FRONTEND_GUIDE.md)           | Guida sviluppo frontend: componenti, store, routing, testing |
 | [docs/API_REFERENCE.md](./docs/API_REFERENCE.md)             | Riferimento API completo con request/response bodies         |
+| [docs/example_account.md](./docs/example_account.md)         | Credenziali degli account di prova e seeder                  |
 | [registro-backend/README.md](./registro-backend/README.md)   | Guida specifica backend Go                                   |
 | [registro-frontend/README.md](./registro-frontend/README.md) | Guida specifica frontend Vue/Quasar                          |
+| [android/README.md](./android/README.md)                     | Guida rapida sottomoduli Android                             |
+| [ios/README.md](./ios/README.md)                             | Guida rapida target Xcode/SPM iOS                            |
 | [CHANGELOG.md](./CHANGELOG.md)                               | Storico versioni e breaking changes                          |
 | [CONTRIBUTING.md](./CONTRIBUTING.md)                         | Come contribuire, branch strategy, commit convention         |
 | [SECURITY.md](./SECURITY.md)                                 | Segnalazione vulnerabilità, policy GDPR                      |
@@ -244,12 +259,25 @@ cd registro-frontend && npm run test:coverage
 cd registro-frontend && npx playwright test
 ```
 
+### Mobile Testing (Android & iOS — Fase Alpha)
+
+```bash
+# Test unitari Android (Gradle)
+cd android && ./gradlew test
+
+# Test suite iOS (Swift Package Manager)
+cd ios && swift test
+```
+
 ---
 
 ## Licenza
 
-Questo progetto è rilasciato sotto licenza **[PolyForm Noncommercial 1.0.0](./LICENSE)**.
+Questo progetto — **compreso il backend Go, il frontend web e tutte le applicazioni mobile native per Android e iOS** — è rilasciato sotto licenza **[PolyForm Noncommercial 1.0.0](./LICENSE)**.
+
+> 📄 **Nota sulla Licenza Mobile**: Anche il codice sorgente delle applicazioni native per Android e iOS (inclusi tutti i moduli Studente, Genitore, Docente e Segreteria) condivide la medesima licenza dell'intero progetto.
 
 **L'utilizzo per scuole pubbliche, Comuni, Regioni, università, enti di ricerca e istituzioni pubbliche è gratuito e senza limitazioni** — perché crediamo che i dati degli studenti e gli strumenti per gestirli debbano rimanere in mano pubblica.
 
 Per utilizzi commerciali da parte di aziende ed enti privati è richiesta una licenza separata.
+

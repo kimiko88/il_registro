@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Regjistri - Mësuesi</string>
+    <string name="teacher_dashboard_title">Portali i Mësuesit</string>
+    <string name="take_attendance">Merr Pjesëmarrjen</string>
+    <string name="add_grade">Shto Notë</string>
+    <string name="scrutiny_board">Këshilli i Notave</string>
+    <string name="sign_hour">Nënshkruaj Orën e Mësimit</string>
+    <string name="lesson_topic">Tema e Mësimit</string>
+    <string name="select_class">Zgjidh Klasën</string>
+    <string name="login_subtitle">Hyni në katedrën tuaj</string>
+    <string name="email_label">Email-i i Mësuesit</string>
+    <string name="password_label">Fjalëkalimi</string>
+    <string name="btn_login">HYR NË REGJISTËR</string>
+    <string name="err_enter_credentials">Vendosni email-in dhe fjalëkalimin</string>
+    <string name="logout">Dil</string>
+    <string name="save">Ruaj</string>
+    <string name="cancel">Anulo</string>
+    <string name="present">I/E pranishëm</string>
+    <string name="absent">Mungon</string>
+    <string name="late">Me vonesë</string>
+    <string name="my_classes_title">Klasat e Mia</string>
+    <string name="lesson_signed">Mësimi u nënshkrua</string>
+</resources>

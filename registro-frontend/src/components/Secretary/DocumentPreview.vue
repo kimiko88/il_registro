@@ -1,9 +1,9 @@
 <template>
-  <q-card style="min-width: 600px; height: 80vh">
+  <q-card style="width: min(700px, 95vw); max-width: 95vw; height: 80vh">
     <q-card-section class="row items-center">
       <div class="text-h6">{{ doc?.title }}</div>
       <q-space />
-      <q-btn icon="close" flat round dense v-close-popup />
+      <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
     </q-card-section>
     <q-separator />
     <q-card-section class="scroll" style="height: calc(100% - 50px)">

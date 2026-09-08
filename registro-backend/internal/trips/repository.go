@@ -79,7 +79,7 @@ func (r *PostgresRepository) ListTrips(ctx context.Context, schoolID, studentID 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var trips []*EducationalTrip
 	for rows.Next() {
@@ -132,7 +132,7 @@ func (r *PostgresRepository) ListConsents(ctx context.Context, tripID string) ([
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []*TripConsent
 	for rows.Next() {

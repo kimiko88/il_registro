@@ -117,7 +117,7 @@ func (r *repository) CreateSlotsBatch(ctx context.Context, slots []ColloquioSlot
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	for _, s := range slots {
 		var overlapCount int
@@ -337,7 +337,7 @@ func (r *repository) querySlots(ctx context.Context, query string, args ...inter
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var slots []ColloquioSlot
 	for rows.Next() {
 		var s ColloquioSlot
@@ -355,7 +355,7 @@ func (r *repository) queryBookings(ctx context.Context, query string, args ...in
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var bookings []ColloquioBooking
 	for rows.Next() {
 		var b ColloquioBooking

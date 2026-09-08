@@ -1,17 +1,28 @@
 package classes
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
+	"time"
+
+	"registro-backend/internal/cache"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
 	service *Service
+	cache   cache.Cache
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, c ...cache.Cache) *Handler {
+	var appCache cache.Cache
+	if len(c) > 0 {
+		appCache = c[0]
+	}
+	return &Handler{service: service, cache: appCache}
 }
 
 func getSchoolID(c *gin.Context) string {
@@ -218,6 +229,11 @@ func (h *Handler) AssignSubject(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	if h.cache != nil {
+		_ = h.cache.Delete(c.Request.Context(), fmt.Sprintf("class:subjects:%s", c.Param("id")))
+	}
+
 	c.Status(http.StatusCreated)
 }
 
@@ -234,11 +250,28 @@ func (h *Handler) GetClassSubjects(c *gin.Context) {
 		return
 	}
 
-	res, err := h.service.GetClassSubjects(c.Request.Context(), schoolID, c.Param("id"))
+	classID := c.Param("id")
+	cacheKey := fmt.Sprintf("class:subjects:%s", classID)
+	if h.cache != nil {
+		if cached, err := h.cache.Get(c.Request.Context(), cacheKey); err == nil && cached != "" {
+			c.Header("X-Cache", "HIT")
+			c.Data(http.StatusOK, "application/json; charset=utf-8", []byte(cached))
+			return
+		}
+	}
+
+	res, err := h.service.GetClassSubjects(c.Request.Context(), schoolID, classID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	if h.cache != nil {
+		if jsonBytes, err := json.Marshal(res); err == nil {
+			_ = h.cache.Set(c.Request.Context(), cacheKey, string(jsonBytes), 30*time.Minute)
+		}
+	}
+	c.Header("X-Cache", "MISS")
 	c.JSON(http.StatusOK, res)
 }
 
@@ -263,6 +296,11 @@ func (h *Handler) RemoveSubject(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	if h.cache != nil {
+		_ = h.cache.Delete(c.Request.Context(), fmt.Sprintf("class:subjects:%s", c.Param("id")))
+	}
+
 	c.Status(http.StatusNoContent)
 }
 
@@ -362,6 +400,41 @@ func (h *Handler) BulkMigrateStudents(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "migration completed successfully"})
 }
 
+func (h *Handler) GetMonthlyJournalPDF(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	schoolID := getSchoolID(c)
+	classID := c.Param("id")
+
+	now := time.Now()
+	year := now.Year()
+	month := int(now.Month())
+
+	if y := c.Query("year"); y != "" {
+		if val, err := strconv.Atoi(y); err == nil && val > 2000 {
+			year = val
+		}
+	}
+	if m := c.Query("month"); m != "" {
+		if val, err := strconv.Atoi(m); err == nil && val >= 1 && val <= 12 {
+			month = val
+		}
+	}
+
+	pdfBytes, err := h.service.GenerateMonthlyJournalPDF(c.Request.Context(), schoolID, classID, year, month)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=giornale_classe_%s_%d_%02d.pdf", classID, year, month))
+	c.Data(http.StatusOK, "application/pdf", pdfBytes)
+}
+
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	group := rg.Group("/classes")
 	{
@@ -378,6 +451,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		group.GET("/:id/guardians", h.GetClassGuardians)
 		group.GET("/:id/lesson-topics", h.GetLessonTopics)
 		group.GET("/:id/disciplinary-notes", h.GetDisciplinaryNotes)
+		group.GET("/:id/giornale-mensile/pdf", h.GetMonthlyJournalPDF)
 	}
 	rg.GET("/teacher/classes", h.GetTeacherClasses)
 }

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">السجل - ولي الأمر</string>
+    <string name="parent_dashboard_title">بوابة أولياء الأمور</string>
+    <string name="my_children">أبنائي</string>
+    <string name="child_grades">درجات الابن</string>
+    <string name="pending_absences">غيابات للتبرير</string>
+    <string name="book_colloqui">حجز موعد</string>
+    <string name="switch_child">تبديل الابن</string>
+    <string name="justify_absence">تبرير الغياب</string>
+    <string name="book_colloquio">حجز موعد</string>
+    <string name="pending_justifications">تبريرات معلقة</string>
+    <string name="no_pending_justifications">لا توجد غيابات معلقة للتبرير</string>
+    <string name="login_subtitle">تسجيل الدخول إلى بوابة أولياء الأمور</string>
+    <string name="email_label">البريد الإلكتروني لولي الأمر</string>
+    <string name="password_label">كلمة المرور</string>
+    <string name="btn_login">دخول البوابة</string>
+    <string name="err_enter_credentials">أدخل البريد الإلكتروني وكلمة المرور</string>
+    <string name="logout">تسجيل الخروج</string>
+    <string name="child_attendance">الحضور والغياب</string>
+    <string name="upcoming_colloqui">المقابلات القادمة</string>
+    <string name="sign_hour">تأكيد</string>
+    <string name="communications">الإعلانات والمراسلات</string>
+    <string name="no_circulars">لا توجد تعميمات أو إعلانات متاحة</string>
+    <string name="no_children_found">لا يوجد طلاب مسجلون</string>
+    <string name="no_grades">لا توجد درجات متاحة</string>
+    <string name="status_justified">مبرر</string>
+    <string name="colloquio_confirmed">تم الحجز</string>
+    <string name="btn_justify">تبرير</string>
+    <string name="err_login_failed">فشل تسجيل الدخول</string>
+    <string name="no_data">لا توجد بيانات متاحة</string>
+</resources>

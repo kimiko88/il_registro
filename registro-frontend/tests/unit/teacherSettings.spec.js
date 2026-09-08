@@ -28,7 +28,7 @@ describe('Teacher Settings & School Year Logic', () => {
     expect(store.availableSchoolYears).toBeDefined()
     expect(store.availableSchoolYears.length).toBeGreaterThanOrEqual(1)
     expect(store.availableSchoolYears).toContain('2023/2024')
-    expect(store.availableSchoolYears[0]).toBe('2025/2026') // current active school year
+    expect(store.availableSchoolYears[0]).toBe(store.selectedSchoolYear) // current active school year
   })
 
   it('includes Impostazioni in teacher menu items', () => {

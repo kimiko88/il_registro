@@ -17,7 +17,19 @@
              class="rounded-lg text-weight-bold"
              @click="toggleSubstitutionMode"
            />
-           <q-btn color="secondary" icon="download" :label="$t('classRegister.exportCSV')" unelevated dense @click="exportCSV" />
+            <q-btn color="secondary" icon="download" :label="$t('classRegister.exportCSV')" unelevated dense @click="exportCSV" />
+            <q-btn
+              color="indigo"
+              icon="picture_as_pdf"
+              :label="$t('classRegister.printPersonalRegister') || 'Stampa Registro Personale'"
+              unelevated
+              dense
+              class="rounded-lg text-weight-bold"
+              :loading="printingRegister"
+              @click="printPersonalRegister"
+            >
+              <q-tooltip>{{ $t('classRegister.printPersonalRegisterTooltip') || 'Scarica il registro personale del docente con voti, assenze e lezioni firmate' }}</q-tooltip>
+            </q-btn>
        </div>
     </div>
 
@@ -188,7 +200,23 @@
                         :placeholder="$t('classRegister.topicPlaceholder')"
                         :readonly="isReadOnly"
                         :bg-color="isReadOnly ? 'grey-2' : 'white'"
-                    />
+                    >
+                        <template v-slot:append>
+                            <q-btn
+                                v-if="!isReadOnly && !isSubstitutionMode"
+                                round
+                                dense
+                                flat
+                                icon="history_edu"
+                                color="primary"
+                                :loading="loadingLastLesson"
+                                :disable="!lessonSubjectId"
+                                @click="copyLastLessonTopic"
+                            >
+                                <q-tooltip>{{ $t('classRegister.reuseLastLesson') || 'Riprendi argomenti ultima lezione' }}</q-tooltip>
+                            </q-btn>
+                        </template>
+                    </q-input>
                 </div>
                 <div class="col-12 col-md-3">
                     <q-select
@@ -346,7 +374,7 @@
                             <q-icon name="check_circle" class="q-mr-xs" size="12px" /> {{ $t('classRegister.present') }}
                         </q-badge>
                         <q-badge v-else-if="student.status === 'OutOfClass'" color="teal" class="q-px-sm q-py-xs">
-                            <q-icon name="meeting_room" class="q-mr-xs" size="12px" /> Fuori Aula
+                            <q-icon name="meeting_room" class="q-mr-xs" size="12px" /> {{ $t('classRegister.outOfClass') }}
                         </q-badge>
                         <q-badge v-else-if="student.status === 'Absent'" color="negative" class="q-px-sm q-py-xs">
                             <q-icon name="cancel" class="q-mr-xs" size="12px" /> {{ $t('classRegister.absent') }}
@@ -377,7 +405,7 @@
                         ]"
                     >
                         <template v-slot:present><q-tooltip>{{ $t('classRegister.present') }}</q-tooltip></template>
-                        <template v-slot:outofclass><q-tooltip>Fuori Aula</q-tooltip></template>
+                        <template v-slot:outofclass><q-tooltip>{{ $t('classRegister.outOfClass') }}</q-tooltip></template>
                         <template v-slot:absent><q-tooltip>{{ $t('classRegister.absent') }}</q-tooltip></template>
                         <template v-slot:late><q-tooltip>{{ $t('classRegister.late') }}</q-tooltip></template>
                         <template v-slot:early><q-tooltip>{{ $t('classRegister.earlyExit') }}</q-tooltip></template>
@@ -431,8 +459,9 @@
                     :loading="saving"
                 />
             </div>
-            <div>
-                <q-btn
+            <div class="row items-center q-gutter-sm">
+                <q-btn-dropdown
+                  split
                   :label="isReadOnly ? $t('classRegister.readOnlySaveBtn') : (currentHourLesson ? $t('classRegister.updateSaveBtn') : $t('classRegister.saveBtn'))"
                   :color="isReadOnly ? 'grey-6' : isSubstitutionMode ? 'deep-orange' : 'primary'"
                   size="md"
@@ -441,7 +470,28 @@
                   @click="saveUnifiedRecord"
                   :loading="saving"
                   :disable="!selectedClass || isReadOnly"
-                />
+                >
+                    <q-list dense class="rounded-borders">
+                        <q-item clickable v-close-popup @click="saveMultiHour(2)" :disable="selectedHour >= 8 || isReadOnly">
+                            <q-item-section avatar>
+                                <q-icon name="filter_2" color="primary" />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-item-label class="text-weight-bold">{{ $t('classRegister.sign2Hours') }}</q-item-label>
+                                <q-item-label caption>{{ $t('classRegister.sign2HoursDesc', { start: selectedHour, end: Number(selectedHour) + 1 }) }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                        <q-item clickable v-close-popup @click="saveMultiHour(3)" :disable="selectedHour >= 7 || isReadOnly">
+                            <q-item-section avatar>
+                                <q-icon name="filter_3" color="primary" />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-item-label class="text-weight-bold">{{ $t('classRegister.sign3Hours') }}</q-item-label>
+                                <q-item-label caption>{{ $t('classRegister.sign3HoursDesc', { start: selectedHour, mid: Number(selectedHour) + 1, end: Number(selectedHour) + 2 }) }}</q-item-label>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-btn-dropdown>
             </div>
         </q-card-actions>
     </q-card>
@@ -454,143 +504,12 @@
         :class-id="String(typeof selectedClass === 'object' ? selectedClass.id : selectedClass)"
     />
 
-    <!-- Student Detail Dialog -->
-    <q-dialog v-model="showStudentPanel" maximized-if-mobile>
-        <q-card style="min-width: 340px; max-width: 520px; width: 100%">
-            <q-bar class="bg-indigo-8 text-white">
-                <q-icon name="person" class="q-mr-sm" />
-                <span class="text-subtitle2 text-weight-bold">
-                    {{ panelStudent?.last_name }} {{ panelStudent?.first_name }}
-                </span>
-                <q-space />
-                <q-btn flat round dense icon="close" v-close-popup />
-            </q-bar>
-
-            <q-card-section class="q-pa-md">
-                <!-- Loading -->
-                <div v-if="panelLoading" class="row justify-center q-pa-lg">
-                    <q-spinner color="primary" size="40px" />
-                </div>
-
-                <template v-else>
-                    <!-- Personal Info -->
-                    <div class="text-caption text-weight-bold text-grey-6 q-mb-xs text-uppercase letter-spacing-wide">Dati Anagrafici</div>
-                    <q-list bordered separator rounded class="q-mb-md">
-                        <q-item dense>
-                            <q-item-section avatar><q-icon name="badge" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Nome completo</q-item-label>
-                                <q-item-label>{{ panelStudentInfo?.last_name }} {{ panelStudentInfo?.first_name }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense v-if="panelStudentInfo?.fiscal_code">
-                            <q-item-section avatar><q-icon name="fingerprint" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Codice Fiscale</q-item-label>
-                                <q-item-label class="text-mono">{{ panelStudentInfo.fiscal_code }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense v-if="panelStudentInfo?.class_name">
-                            <q-item-section avatar><q-icon name="class" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Classe</q-item-label>
-                                <q-item-label>{{ panelStudentInfo.class_name }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense v-if="panelStudentInfo?.email">
-                            <q-item-section avatar><q-icon name="email" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Email</q-item-label>
-                                <q-item-label>{{ panelStudentInfo.email }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense v-if="panelStudentInfo?.phone_number">
-                            <q-item-section avatar><q-icon name="phone" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Telefono</q-item-label>
-                                <q-item-label>{{ panelStudentInfo.phone_number }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                        <q-item dense v-if="panelStudentInfo?.date_of_birth">
-                            <q-item-section avatar><q-icon name="cake" color="indigo" /></q-item-section>
-                            <q-item-section>
-                                <q-item-label caption>Data di Nascita</q-item-label>
-                                <q-item-label>{{ formatDate(panelStudentInfo.date_of_birth) }}</q-item-label>
-                            </q-item-section>
-                        </q-item>
-                    </q-list>
-
-                    <!-- Attendance Summary -->
-                    <div class="text-caption text-weight-bold text-grey-6 q-mb-xs text-uppercase">Riepilogo Presenze</div>
-                    <div class="row q-col-gutter-sm q-mb-md">
-                        <div class="col-6">
-                            <q-card flat bordered class="text-center q-pa-sm">
-                                <div class="text-h5 text-negative text-weight-bold">{{ panelSummary?.total_absences ?? '—' }}</div>
-                                <div class="text-caption text-grey-7">Assenze Totali</div>
-                            </q-card>
-                        </div>
-                        <div class="col-6">
-                            <q-card flat bordered class="text-center q-pa-sm">
-                                <div class="text-h5 text-warning text-weight-bold">{{ panelSummary?.total_lates ?? '—' }}</div>
-                                <div class="text-caption text-grey-7">Ritardi</div>
-                            </q-card>
-                        </div>
-                        <div class="col-6">
-                            <q-card flat bordered class="text-center q-pa-sm">
-                                <div class="text-h5 text-purple text-weight-bold">{{ panelSummary?.total_early_exits ?? '—' }}</div>
-                                <div class="text-caption text-grey-7">Uscite Anticipate</div>
-                            </q-card>
-                        </div>
-                        <div class="col-6">
-                            <q-card flat bordered class="text-center q-pa-sm">
-                                <div class="text-h5 text-positive text-weight-bold">{{ panelSummary?.justified_count ?? '—' }}</div>
-                                <div class="text-caption text-grey-7">Giustificate</div>
-                            </q-card>
-                        </div>
-                    </div>
-
-                    <!-- Absence Rate + Risk -->
-                    <div v-if="panelSummary" class="q-mb-sm">
-                        <div class="row items-center justify-between q-mb-xs">
-                            <span class="text-caption text-grey-7">Tasso assenza</span>
-                            <span class="text-caption text-weight-bold" :class="panelSummary.absence_rate > 25 ? 'text-negative' : panelSummary.absence_rate > 10 ? 'text-warning' : 'text-positive'">
-                                {{ panelSummary.absence_rate?.toFixed(1) }}%
-                            </span>
-                        </div>
-                        <q-linear-progress
-                            :value="(panelSummary.absence_rate || 0) / 100"
-                            :color="panelSummary.absence_rate > 25 ? 'negative' : panelSummary.absence_rate > 10 ? 'warning' : 'positive'"
-                            rounded
-                            size="8px"
-                            class="q-mb-xs"
-                        />
-                        <q-chip
-                            dense
-                            :color="panelSummary.risk_level === 'high' ? 'negative' : panelSummary.risk_level === 'medium' ? 'warning' : 'positive'"
-                            text-color="white"
-                            :icon="panelSummary.risk_level === 'high' ? 'warning' : panelSummary.risk_level === 'medium' ? 'info' : 'check_circle'"
-                        >
-                            Rischio: {{ panelSummary.risk_level === 'high' ? 'ALTO' : panelSummary.risk_level === 'medium' ? 'MEDIO' : 'BASSO' }}
-                        </q-chip>
-                    </div>
-
-                    <!-- Today's attendance for this student -->
-                    <div class="text-caption text-weight-bold text-grey-6 q-mt-md q-mb-xs text-uppercase">Presenze Oggi per Ora</div>
-                    <div class="row q-gutter-xs">
-                        <q-badge
-                            v-for="h in 8" :key="h"
-                            :color="getHourBadgeColor(panelStudent, h)"
-                            :label="String(h) + 'ª'"
-                            class="text-weight-bold"
-                            style="font-size: 11px; padding: 4px 8px"
-                        >
-                            <q-tooltip>{{ getHourLabel(panelStudent, h) }}</q-tooltip>
-                        </q-badge>
-                    </div>
-                </template>
-            </q-card-section>
-        </q-card>
-    </q-dialog>
+    <!-- Student Detail Dialog (Modular) -->
+    <StudentAttendanceDetailDialog
+        v-model="showStudentPanel"
+        :student="panelStudent"
+        :all-today-attendance="allTodayAttendance"
+    />
 
   </q-page>
 </template>
@@ -605,9 +524,12 @@ import { useAuthStore } from '@/stores/auth'
 import { attendanceService } from 'src/services/attendanceService'
 import { lessonService } from 'src/services/lessonService'
 import api from '@/services/api'
+import { teacherService } from '@/services/teacherService'
 import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
+import StudentAttendanceDetailDialog from '@/components/Teacher/StudentAttendanceDetailDialog.vue'
 import SkeletonTable from '@/components/Common/SkeletonTable.vue'
 import { useSchoolYearStore } from '@/stores/schoolYear'
+import { useOfflineSync } from '@/composables/useOfflineSync'
 
 const $q = useQuasar()
 let t = (key, fallback) => (typeof fallback === 'string' ? fallback : key)
@@ -623,6 +545,7 @@ const classesStore = useClassesStore()
 const gradesStore = useGradesStore()
 const authStore = useAuthStore()
 const schoolYearStore = useSchoolYearStore()
+const { executeWithOfflineQueue } = useOfflineSync()
 
 // Current teacher ID from auth token
 const currentTeacherId = computed(() => authStore.user?.id || null)
@@ -635,6 +558,7 @@ const allSchoolClasses = ref([])
 
 // Lesson Form State
 const lessonTopic = ref('')
+const loadingLastLesson = ref(false)
 const lessonType = ref('Frontale')
 const activityType = ref('standard')
 const lessonSubjectId = ref(null)
@@ -751,37 +675,12 @@ const selectedStudentForNote = ref(null)
 // ── Student Detail Panel ──────────────────────────────────────
 const showStudentPanel = ref(false)
 const panelStudent = ref(null)
-const panelStudentInfo = ref(null)
-const panelSummary = ref(null)
-const panelLoading = ref(false)
 
-async function openStudentPanel(student) {
+function openStudentPanel(student) {
     panelStudent.value = student
-    panelStudentInfo.value = null
-    panelSummary.value = null
-    panelLoading.value = true
     showStudentPanel.value = true
-    try {
-        const [infoRes, summaryRes] = await Promise.allSettled([
-            api.get(`/users/${student.id}`),
-            attendanceService.getStudentSummary(student.id)
-        ])
-        if (infoRes.status === 'fulfilled') panelStudentInfo.value = infoRes.value.data
-        if (summaryRes.status === 'fulfilled') panelSummary.value = summaryRes.value
-    } catch (e) {
-        // individual errors handled above via allSettled
-    } finally {
-        panelLoading.value = false
-    }
 }
 // ─────────────────────────────────────────────────────────────
-
-// Formatta una data ISO (YYYY-MM-DD) in formato italiano (dd/mm/yyyy)
-function formatDate(isoDate) {
-    if (!isoDate) return ''
-    const [y, m, d] = isoDate.split('-')
-    return `${d}/${m}/${y}`
-}
 
 const selectedHour = ref(1)
 
@@ -849,13 +748,15 @@ const getHourLabel = (student, hour) => {
     const rec = allTodayAttendance.value.find(r =>
         r.student_id === student.id && String(r.hour) === String(hour)
     )
-    if (!rec) return `Ora ${hour}: non registrata`
+    if (!rec) return t('studentDetail.hourNotRegistered', { hour })
     const statusLabels = {
-        Present: 'Presente', OutOfClass: 'Fuori Aula', Absent: 'Assente',
-        Late: `Ritardo${rec.entry_time ? ' ore ' + rec.entry_time : ''}`,
-        LeftEarly: `Uscita anticipata${rec.exit_time ? ' ore ' + rec.exit_time : ''}`
+        Present: t('classRegister.present'),
+        OutOfClass: t('classRegister.outOfClass'),
+        Absent: t('classRegister.absent'),
+        Late: `${t('classRegister.late')}${rec.entry_time ? ` (${rec.entry_time})` : ''}`,
+        LeftEarly: `${t('classRegister.earlyExit')}${rec.exit_time ? ` (${rec.exit_time})` : ''}`
     }
-    return `Ora ${hour}: ${statusLabels[rec.status] || rec.status}`
+    return t('studentDetail.hourStatus', { hour, status: statusLabels[rec.status] || rec.status })
 }
 
 const toggleSubstitutionMode = async () => {
@@ -1091,8 +992,8 @@ const saveUnifiedRecord = async () => {
         // Effective subject ID: only pass a valid UUID, never empty string
         const effectiveSubjectId = (!isSubstitutionMode.value && lessonSubjectId.value) ? lessonSubjectId.value : ''
 
-        // 1. Save Attendance Record
-        await api.post('/attendance/mark-bulk', {
+        // 1. Save Attendance Record (resilient with Offline Outbox)
+        const markBulkPayload = {
             class_id: classId,
             date: date.value,
             hour: selectedHour.value,
@@ -1104,7 +1005,12 @@ const saveUnifiedRecord = async () => {
                 entry_time: (s.status === 'Late' && s.entry_time?.trim()) ? s.entry_time : null,
                 exit_time: (s.status === 'LeftEarly' && s.exit_time?.trim()) ? s.exit_time : null
             }))
-        })
+        }
+
+        const markResult = await executeWithOfflineQueue(
+            { url: '/attendance/mark-bulk', method: 'post', data: markBulkPayload },
+            { title: `Presenze Classe - Ora ${selectedHour.value}` }
+        )
 
         // 2. Save Lesson Signature if topic specified
         if (lessonTopic.value?.trim()) {
@@ -1123,35 +1029,206 @@ const saveUnifiedRecord = async () => {
             
             let lessonId = currentHourLesson.value?.id
             if (currentHourLesson.value && !isReadOnly.value) {
-                await lessonService.updateLesson(lessonId, lessonPayload)
+                await executeWithOfflineQueue(
+                    { url: `/lessons/${lessonId}`, method: 'put', data: lessonPayload },
+                    { title: `Aggiorna Lezione - Ora ${selectedHour.value}` }
+                )
             } else {
-                const lessonRes = await lessonService.createLesson(lessonPayload)
+                const lessonRes = await executeWithOfflineQueue(
+                    { url: '/lessons', method: 'post', data: lessonPayload },
+                    { title: `Firma Lezione - Ora ${selectedHour.value}` }
+                )
                 lessonId = lessonRes.data?.id
             }
 
             // 3. Save Homework if checked
             if (assignHomework.value && homeworkDesc.value && lessonId) {
-                await lessonService.createHomework({
-                    class_id: classId,
-                    subject_id: effectiveSubjectId || null,
-                    lesson_id: lessonId,
-                    due_date: homeworkDue.value || date.value,
-                    description: homeworkDesc.value
-                })
+                await executeWithOfflineQueue(
+                    {
+                        url: '/homeworks',
+                        method: 'post',
+                        data: {
+                            class_id: classId,
+                            subject_id: effectiveSubjectId || null,
+                            lesson_id: lessonId,
+                            due_date: homeworkDue.value || date.value,
+                            description: homeworkDesc.value
+                        }
+                    },
+                    { title: `Compiti Assegnati - Ora ${selectedHour.value}` }
+                )
             }
         }
 
         localStorage.removeItem(`attendance_draft_${classId}_${date.value}_${selectedHour.value}`)
         lastAutosaveTime.value = ''
 
-        $q.notify({ type: 'positive', message: `✓ Registro e Firma Lezione salvati — Ora ${selectedHour.value}` })
-        fetchData()
+        if (markResult?.offline || markResult?.enqueued) {
+            $q.notify({
+                type: 'warning',
+                icon: 'cloud_queue',
+                message: `✓ Salvato in locale (offline) — Ora ${selectedHour.value}. Sincronizzazione automatica al ripristino della rete.`
+            })
+        } else {
+            $q.notify({ type: 'positive', message: `✓ Registro e Firma Lezione salvati — Ora ${selectedHour.value}` })
+            fetchData()
+        }
 
     } catch (error) {
         $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' })
     } finally {
         saving.value = false
     }
+}
+
+const copyLastLessonTopic = async () => {
+    if (!selectedClass.value || !lessonSubjectId.value) return
+    loadingLastLesson.value = true
+    try {
+        const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
+        const res = await lessonService.getLessons(classId, lessonSubjectId.value)
+        const lessonsList = Array.isArray(res.data) ? res.data : []
+        const curDate = date.value
+        const curHour = Number(selectedHour.value)
+        const prevLessons = lessonsList.filter(l => {
+            if (!l.topic || !l.topic.trim()) return false
+            if (l.date < curDate) return true
+            if (l.date === curDate && Number(l.hour) < curHour) return true
+            return false
+        })
+
+        const targetLesson = prevLessons.length > 0 ? prevLessons[0] : lessonsList.find(l => l.topic && l.topic.trim())
+
+        if (targetLesson && targetLesson.topic) {
+            lessonTopic.value = targetLesson.topic
+            if (targetLesson.notes && !lessonNotes.value) {
+                lessonNotes.value = targetLesson.notes
+            }
+            $q.notify({
+                type: 'positive',
+                message: t('classRegister.previousLessonLoaded', { date: targetLesson.date }) || `✓ Argomenti ripresi dall'ultima lezione del ${targetLesson.date}`
+            })
+        } else {
+            $q.notify({
+                type: 'info',
+                message: t('classRegister.noPreviousLesson') || 'Nessuna lezione precedente trovata per questa materia.'
+            })
+        }
+    } catch (error) {
+        console.error('Error fetching last lesson:', error)
+        $q.notify({ type: 'warning', message: 'Impossibile recuperare l\'ultima lezione' })
+    } finally {
+        loadingLastLesson.value = false
+    }
+}
+
+const saveMultiHour = async (hoursCount) => {
+    const startH = Number(selectedHour.value)
+    const endH = startH + hoursCount - 1
+    if (endH > 8) {
+        $q.notify({ type: 'warning', message: 'L\'intervallo di ore supera l\'8ª ora.' })
+        return
+    }
+    const unmarked = students.value.filter(s => !s.status)
+    if (unmarked.length > 0) {
+        $q.notify({ type: 'warning', message: `${unmarked.length} alunni senza presenza assegnata.` })
+        return
+    }
+
+    $q.dialog({
+        title: t('classRegister.confirmMultiHourTitle') || 'Conferma Firma Consecutiva',
+        message: t('classRegister.confirmMultiHourMsg', { count: hoursCount, start: startH, end: endH }) ||
+            `Vuoi firmare e registrare le presenze per ${hoursCount} ore consecutive (dall'ora ${startH}ª all'ora ${endH}ª) con gli stessi argomenti e presenze?`,
+        cancel: true,
+        persistent: true,
+        ok: { label: 'Conferma e Firma', color: 'primary' }
+    }).onOk(async () => {
+        saving.value = true
+        try {
+            const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
+            const effectiveSubjectId = (!isSubstitutionMode.value && lessonSubjectId.value) ? lessonSubjectId.value : ''
+
+            for (let h = startH; h <= endH; h++) {
+                // 1. Mark Bulk Attendance for hour h
+                const markBulkPayload = {
+                    class_id: classId,
+                    date: date.value,
+                    hour: h,
+                    subject_id: effectiveSubjectId,
+                    is_substitution: isSubstitutionMode.value,
+                    statuses: students.value.map(s => ({
+                        student_id: s.id,
+                        status: s.status,
+                        entry_time: (s.status === 'Late' && s.entry_time?.trim()) ? s.entry_time : null,
+                        exit_time: (s.status === 'LeftEarly' && s.exit_time?.trim()) ? s.exit_time : null
+                    }))
+                }
+                await executeWithOfflineQueue(
+                    { url: '/attendance/mark-bulk', method: 'post', data: markBulkPayload },
+                    { title: `Presenze Classe - Ora ${h}` }
+                )
+
+                // 2. Save Lesson Signature for hour h if topic specified
+                if (lessonTopic.value?.trim()) {
+                    const lessonPayload = {
+                        class_id: classId,
+                        subject_id: effectiveSubjectId || null,
+                        date: date.value,
+                        hour: h,
+                        duration: 1,
+                        topic: lessonTopic.value,
+                        type: isSubstitutionMode.value ? 'Supplenza' : lessonType.value,
+                        activity_type: activityType.value || 'standard',
+                        is_co_teaching: isCoTeaching.value,
+                        notes: lessonNotes.value
+                    }
+
+                    const existingLessonForHour = dailyLessons.value.find(l => Number(l.hour) === h)
+                    if (existingLessonForHour && existingLessonForHour.teacher_id === currentTeacherId.value) {
+                        await executeWithOfflineQueue(
+                            { url: `/lessons/${existingLessonForHour.id}`, method: 'put', data: lessonPayload },
+                            { title: `Aggiorna Lezione - Ora ${h}` }
+                        )
+                    } else {
+                        await executeWithOfflineQueue(
+                            { url: '/lessons', method: 'post', data: lessonPayload },
+                            { title: `Firma Lezione - Ora ${h}` }
+                        )
+                    }
+                }
+
+                localStorage.removeItem(`attendance_draft_${classId}_${date.value}_${h}`)
+            }
+
+            if (assignHomework.value && homeworkDesc.value) {
+                await executeWithOfflineQueue(
+                    {
+                        url: '/homeworks',
+                        method: 'post',
+                        data: {
+                            class_id: classId,
+                            subject_id: effectiveSubjectId || null,
+                            due_date: homeworkDue.value || date.value,
+                            description: homeworkDesc.value
+                        }
+                    },
+                    { title: `Compiti Assegnati - Ore ${startH}-${endH}` }
+                )
+            }
+
+            lastAutosaveTime.value = ''
+            $q.notify({
+                type: 'positive',
+                message: t('classRegister.multiHourSaved', { start: startH, end: endH }) || `✓ Salvate e firmate con successo le lezioni per le ore ${startH} - ${endH}`
+            })
+            await fetchData()
+        } catch (error) {
+            console.error(error)
+            $q.notify({ type: 'negative', message: 'Errore durante il salvataggio delle lezioni consecutive' })
+        } finally {
+            saving.value = false
+        }
+    })
 }
 
 const deleteUnifiedRecord = () => {
@@ -1223,6 +1300,33 @@ const exportCSV = async () => {
         $q.notify({ type: 'positive', message: 'Export CSV completato!' })
     } catch (err) {
         $q.notify({ type: 'negative', message: "Errore durante l'export CSV" })
+    }
+}
+
+const printingRegister = ref(false)
+const printPersonalRegister = async () => {
+    printingRegister.value = true
+    try {
+        const classId = typeof selectedClass.value === 'object' ? selectedClass.value?.id : selectedClass.value
+        const res = await teacherService.getPersonalRegisterPDF({
+            class_id: classId || undefined,
+            teacher_id: currentTeacherId.value || undefined
+        })
+        const blob = new Blob([res.data], { type: 'application/pdf' })
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `registro_personale_docente_${date.value}.pdf`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+        $q.notify({ type: 'positive', message: 'Registro Personale PDF scaricato con successo!' })
+    } catch (err) {
+        console.error('Failed to print personal register', err)
+        $q.notify({ type: 'negative', message: 'Errore durante la generazione del registro personale' })
+    } finally {
+        printingRegister.value = false
     }
 }
 </script>

@@ -45,9 +45,9 @@
     <!-- Empty State -->
     <q-card v-else-if="plans.length === 0" class="text-center q-pa-xl bg-white rounded-xl shadow-xs border">
       <q-icon name="assignment_late" size="64px" color="grey-4" class="q-mb-md" />
-      <div class="text-h6 text-weight-bold text-slate-700">Nessun PDP / PEI registrato</div>
-      <div class="text-caption text-grey-6 q-mb-md">Non sono presenti piani per la classe selezionata per questo anno scolastico.</div>
-      <q-btn color="primary" icon="add" label="Crea il primo piano" unelevated no-caps @click="openCreateDialog" :disable="!selectedClassId" />
+      <div class="text-h6 text-weight-bold text-slate-700">{{ t('pdpPage.noPlans') }}</div>
+      <div class="text-caption text-grey-6 q-mb-md">{{ t('pdpPage.noPlansDesc') }}</div>
+      <q-btn color="primary" icon="add" :label="t('pdpPage.createFirst')" unelevated no-caps @click="openCreateDialog" :disable="!selectedClassId" />
     </q-card>
 
     <!-- Plans List -->
@@ -61,10 +61,10 @@
               </q-avatar>
               <div>
                 <div class="text-subtitle1 text-weight-bold text-slate-800">
-                  {{ plan.student_name || 'Studente' }}
+                  {{ plan.student_name || t('pdpPage.studentName') }}
                 </div>
                 <div class="text-caption text-grey-6">
-                  {{ plan.plan_type === 'pei' ? 'PEI (L. 104/92)' : 'PDP (L. 170/2010)' }} • A.S. {{ plan.academic_year }}
+                  {{ plan.plan_type === 'pei' ? 'PEI (L. 104/92)' : 'PDP (L. 170/2010)' }} • {{ t('common.year') || 'A.S.' }} {{ plan.academic_year }}
                 </div>
               </div>
             </div>
@@ -75,7 +75,7 @@
               :text-color="plan.shared_with_family ? 'white' : 'grey-9'"
               class="text-weight-bold"
             >
-              {{ plan.shared_with_family ? (plan.family_approved_at ? '✓ Approvato Famiglia' : 'Condiviso (in attesa)') : 'Bozza Interna' }}
+              {{ plan.shared_with_family ? (plan.family_approved_at ? t('pdpPage.approvedFamily') : t('pdpPage.sharedPending')) : t('pdpPage.internalDraft') }}
             </q-chip>
           </q-card-section>
 
@@ -83,20 +83,20 @@
 
           <q-card-section class="q-py-sm">
             <div class="text-caption text-grey-7 q-mb-xs">
-              <strong>Diagnosi / Certificazione:</strong> {{ plan.diagnosis || 'Riservata / Non specificata' }}
+              <strong>{{ t('pdpPage.clinicalDiagnosis') }}:</strong> {{ plan.diagnosis || t('pdpPage.noneSpecified') }}
             </div>
 
             <!-- Restricted Diagnosis File (Visible ONLY to Class Teachers) -->
             <div v-if="plan.diagnosis_file" class="q-my-sm p-2 bg-purple-50 rounded border border-purple-200 row items-center justify-between">
               <div class="row items-center">
                 <q-icon name="lock" color="purple" class="q-mr-xs" />
-                <span class="text-caption text-weight-bold text-purple-9">Allegato Diagnosi Medica (Riservato Docenti Classe)</span>
+                <span class="text-caption text-weight-bold text-purple-9">{{ t('pdpPage.restrictedFile') }}</span>
               </div>
-              <q-btn flat dense icon="download" color="purple" label="Scarica PDF" @click="downloadDiagnosisFile(plan)" />
+              <q-btn flat dense icon="download" color="purple" :label="t('common.download') || 'Scarica PDF'" @click="downloadDiagnosisFile(plan)" />
             </div>
             
             <div class="text-caption text-slate-700 q-mt-sm">
-              <strong>Misure Compensative:</strong>
+              <strong>{{ t('pdpPage.compensatoryTools') }}:</strong>
               <div class="row q-gutter-xs q-mt-xs">
                 <q-chip
                   v-for="m in (plan.content?.compensative || [])"
@@ -108,7 +108,7 @@
                 >
                   {{ formatMeasure(m) }}
                 </q-chip>
-                <span v-if="!(plan.content?.compensative?.length)" class="text-grey-5 font-italic">Nessuna specificata</span>
+                <span v-if="!(plan.content?.compensative?.length)" class="text-grey-5 font-italic">{{ t('pdpPage.noneSpecified') }}</span>
               </div>
             </div>
           </q-card-section>
@@ -116,15 +116,15 @@
           <q-separator />
 
           <q-card-actions align="right" class="q-px-md q-py-xs bg-slate-50">
-            <q-btn flat dense icon="edit" color="primary" label="Modifica" @click="editPlan(plan)" />
+            <q-btn flat dense icon="edit" color="primary" :label="t('common.edit') || t('pdpPage.editPlan')" @click="editPlan(plan)" />
             <q-btn
               flat dense
               :icon="plan.shared_with_family ? 'visibility_off' : 'share'"
               :color="plan.shared_with_family ? 'orange' : 'teal'"
-              :label="plan.shared_with_family ? 'Nascondi alla Famiglia' : 'Condividi con Famiglia'"
+              :label="plan.shared_with_family ? t('pdpPage.hideFromFamily') : t('pdpPage.shareWithFamily')"
               @click="toggleShare(plan)"
             />
-            <q-btn flat round dense icon="delete" color="negative" @click="deletePlan(plan)" />
+            <q-btn flat round dense icon="delete" color="negative" :aria-label="t('common.delete')" @click="deletePlan(plan)" />
           </q-card-actions>
         </q-card>
       </div>
@@ -133,82 +133,85 @@
     <!-- Form Dialog matching User Screenshot -->
     <q-dialog v-model="showDialog" persistent max-width="750px">
       <q-card style="width: 750px; max-width: 95vw;" class="rounded-xl">
-        <q-card-section class="bg-primary text-white row items-center justify-between q-py-md q-px-lg">
-          <div class="text-h6 text-weight-bold">
-            {{ isEditing ? 'Modifica Piano Didattico Personalizzato' : 'Nuovo Piano Didattico Personalizzato' }}
-          </div>
-          <q-btn flat round dense icon="close" v-close-popup />
-        </q-card-section>
-
-        <q-card-section class="q-pa-lg q-pt-lg q-gutter-y-md">
-          <div class="row q-col-gutter-md q-mt-xs">
-            <div class="col-12" v-if="!isEditing">
-              <q-select
-                v-model="form.student_id"
-                :options="studentOptions"
-                option-value="id"
-                option-label="label"
-                emit-value map-options
-                label="Seleziona Studente *"
-                outlined dense
-                :rules="[val => !!val || 'Campo obbligatorio']"
-              />
+        <q-form @submit="savePlan" greedy>
+          <q-card-section class="bg-primary text-white row items-center justify-between q-py-md q-px-lg">
+            <div class="text-h6 text-weight-bold">
+              {{ isEditing ? t('pdpPage.editPlan') : t('pdpPage.createPlan') }}
             </div>
-            <div class="col-12">
-              <q-select
-                v-model="form.plan_type"
-                :options="[{ label: 'PDP (BES / DSA)', value: 'pdp' }, { label: 'PEI (Disabilità H)', value: 'pei' }]"
-                emit-value map-options
-                label="Tipo Piano *"
-                outlined dense
-              />
+            <q-btn flat round dense icon="close" v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
+          </q-card-section>
+
+          <q-card-section class="q-pa-lg q-pt-lg q-gutter-y-md">
+            <div class="row q-col-gutter-md q-mt-xs">
+              <div class="col-12" v-if="!isEditing">
+                <q-select
+                  v-model="form.student_id"
+                  :options="studentOptions"
+                  option-value="id"
+                  option-label="label"
+                  emit-value map-options
+                  :label="t('pdpPage.selectStudent') || 'Seleziona Studente *'"
+                  outlined dense
+                  :rules="[val => !!val || t('common.requiredField') || 'Campo obbligatorio']"
+                />
+              </div>
+              <div class="col-12">
+                <q-select
+                  v-model="form.plan_type"
+                  :options="[{ label: t('pdpPage.pdpBes') || 'PDP (BES / DSA)', value: 'pdp' }, { label: t('pdpPage.pei104') || 'PEI (Disabilità H)', value: 'pei' }]"
+                  emit-value map-options
+                  :label="t('pdpPage.planTypeLabel') || 'Tipo Piano *'"
+                  outlined dense
+                  :rules="[val => !!val || t('common.requiredField') || 'Tipo Piano obbligatorio']"
+                />
+              </div>
             </div>
-          </div>
 
-          <q-input
-            v-model="form.diagnosis"
-            type="textarea"
-            rows="3"
-            label="Diagnosi / Quadro Clinico (riservato ai soli docenti)"
-            outlined dense
-          />
+            <q-input
+              v-model="form.diagnosis"
+              type="textarea"
+              rows="3"
+              :label="t('pdpPage.clinicalDiagnosis')"
+              outlined dense
+            />
 
-          <!-- Diagnosis File Attachment for Secretary/Docente -->
-          <div class="q-pa-sm bg-purple-50 rounded border border-purple-200">
-            <div class="text-caption text-weight-bold text-purple-9 q-mb-xs">
-              <q-icon name="cloud_upload" class="q-mr-xs" /> Carica File Diagnosi BES / DSA (Visibile SOLO ai Docenti della Classe)
+            <!-- Diagnosis File Attachment for Secretary/Docente -->
+            <div class="q-pa-sm bg-purple-50 rounded border border-purple-200">
+              <div class="text-caption text-weight-bold text-purple-9 q-mb-xs">
+                <q-icon name="cloud_upload" class="q-mr-xs" /> {{ t('pdpPage.restrictedFile') }}
+              </div>
+              <q-file
+                v-model="diagnosisFile"
+                :label="t('pdpPage.downloadPdf') || 'Seleziona file diagnosi (PDF, JPG, PNG)'"
+                outlined
+                dense
+                accept=".pdf,.jpg,.png,.doc,.docx"
+                bg-color="white"
+              >
+                <template v-slot:append>
+                  <q-icon name="attach_file" />
+                </template>
+              </q-file>
             </div>
-            <q-file
-              v-model="diagnosisFile"
-              label="Seleziona file diagnosi (PDF, JPG, PNG)"
-              outlined
-              dense
-              accept=".pdf,.jpg,.png,.doc,.docx"
-              bg-color="white"
-            >
-              <template v-slot:append>
-                <q-icon name="attach_file" />
-              </template>
-            </q-file>
-          </div>
 
-          <q-separator />
+            <q-separator />
 
-          <CompensativeMeasuresSelector v-model="form.content.compensative" />
+            <CompensativeMeasuresSelector v-model="form.content.compensative" />
 
-          <q-input
-            v-model="form.content.notes"
-            type="textarea"
-            rows="3"
-            label="Obiettivi e Note Strategiche Didattiche"
-            outlined dense
-          />
-        </q-card-section>
+            <q-input
+              v-model="form.content.notes"
+              type="textarea"
+              rows="3"
+              :label="t('pdpPage.customNotes') || 'Obiettivi e Note Strategiche Didattiche'"
+              outlined dense
+            />
+          </q-card-section>
 
-        <q-card-actions align="right" class="q-pa-md bg-slate-50">
-          <q-btn flat label="Annulla" v-close-popup color="grey-7" />
-          <q-btn color="primary" label="Salva Piano" unelevated :loading="saving" @click="savePlan" />
-        </q-card-actions>
+          <q-card-actions align="right" class="q-pa-md bg-slate-50">
+            <q-btn flat :label="t('common.cancel') || 'Annulla'" v-close-popup color="grey-7" />
+            <q-btn color="primary" type="submit" :label="t('pdpPage.savePlan') || t('common.save')" unelevated :loading="saving" />
+          </q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
   </q-page>
@@ -251,7 +254,7 @@ const form = ref({
   }
 })
 
-const classOptions = computed(() => classesStore.classes.map(c => ({ id: c.id, label: c.name || `Classe ${c.id}` })))
+const classOptions = computed(() => classesStore.classes.map(c => ({ id: c.id, label: c.name || `${t('common.class') || 'Classe'} ${c.id}` })))
 const studentOptions = computed(() => students.value.map(s => ({ id: s.id, label: `${s.last_name} ${s.first_name}` })))
 
 onMounted(async () => {
@@ -272,7 +275,7 @@ async function fetchClassPlans() {
     const usersRes = await api.get('/users', { params: { class_id: selectedClassId.value, role: 'student', page_size: 200 } })
     students.value = usersRes.data?.users || []
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento piani PDP' })
+    $q.notify({ type: 'negative', message: t('common.error') || 'Errore caricamento piani PDP' })
   } finally {
     loading.value = false
   }
@@ -310,10 +313,6 @@ function editPlan(plan) {
 }
 
 async function savePlan() {
-  if (!form.value.student_id && !isEditing.value) {
-    $q.notify({ type: 'warning', message: 'Seleziona uno studente' })
-    return
-  }
   saving.value = true
   try {
     if (isEditing.value) {
@@ -322,7 +321,7 @@ async function savePlan() {
         diagnosis: form.value.diagnosis,
         content: form.value.content
       })
-      $q.notify({ type: 'positive', message: 'PDP aggiornato' })
+      $q.notify({ type: 'positive', message: t('common.success') || 'PDP aggiornato' })
     } else {
       await pdpService.createPlan({
         student_id: form.value.student_id,
@@ -332,19 +331,19 @@ async function savePlan() {
         diagnosis: form.value.diagnosis,
         content: form.value.content
       })
-      $q.notify({ type: 'positive', message: 'Nuovo PDP creato con successo' })
+      $q.notify({ type: 'positive', message: t('common.success') || 'Nuovo PDP creato con successo' })
     }
     showDialog.value = false
     await fetchClassPlans()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore durante il salvataggio' })
+    $q.notify({ type: 'negative', message: t('common.error') || 'Errore durante il salvataggio' })
   } finally {
     saving.value = false
   }
 }
 
 function downloadDiagnosisFile(_plan) {
-  $q.notify({ type: 'info', message: 'Download diagnosi riservata docenti in corso...' })
+  $q.notify({ type: 'info', message: t('common.download') || 'Download diagnosi riservata docenti in corso...' })
 }
 
 async function toggleShare(plan) {
@@ -352,43 +351,39 @@ async function toggleShare(plan) {
     await pdpService.shareWithFamily(plan.id, !plan.shared_with_family)
     $q.notify({
       type: 'info',
-      message: !plan.shared_with_family ? 'PDP condiviso con la famiglia' : 'PDP nascosto alla famiglia'
+      message: !plan.shared_with_family ? t('pdpPage.shareWithFamily') : t('pdpPage.hideFromFamily')
     })
     await fetchClassPlans()
   } catch {
-    $q.notify({ type: 'negative', message: 'Errore aggiornamento condivisione' })
+    $q.notify({ type: 'negative', message: t('common.error') || 'Errore aggiornamento condivisione' })
   }
 }
 
 async function deletePlan(plan) {
   $q.dialog({
-    title: 'Conferma eliminazione',
-    message: `Sei sicuro di voler eliminare il piano di ${plan.student_name}?`,
+    title: t('common.confirm') || 'Conferma eliminazione',
+    message: `${t('common.confirm') || 'Eliminare il piano di'} ${plan.student_name}?`,
     cancel: true,
     persistent: true
   }).onOk(async () => {
     try {
       await pdpService.deletePlan(plan.id)
-      $q.notify({ type: 'positive', message: 'Piano eliminato' })
+      $q.notify({ type: 'positive', message: t('common.delete') || 'Piano eliminato' })
       await fetchClassPlans()
     } catch {
-      $q.notify({ type: 'negative', message: 'Errore eliminazione' })
+      $q.notify({ type: 'negative', message: t('common.error') || 'Errore eliminazione' })
     }
   })
 }
 
 function formatMeasure(val) {
   const map = {
-    calcolatrice: 'Uso Calcolatrice',
-    tempo_aggiuntivo_30: 'Tempo Agg. (+30%)',
-    tempo_aggiuntivo_50: 'Tempo Agg. (+50%)',
-    prova_equipollente: 'Prova Equipollente',
-    sintesi_vocale: 'Sintesi Vocale',
-    mappe_concettuali: 'Mappe Concettuali',
-    tavola_pitagorica: 'Tavola Pitagorica',
-    tabelle_formule: 'Tabelle / Formulario',
-    dizionario_ortografico: 'Dizionario Digitale',
-    testo_ingrandito: 'Testo Ingrandito / High Contrast'
+    calcolatrice: t('pdpPage.measures.calculator') || 'Uso Calcolatrice',
+    tempo_aggiuntivo_30: t('pdpPage.measures.extraTime30') || 'Tempo Agg. (+30%)',
+    tempo_aggiuntivo_50: t('pdpPage.measures.extraTime50') || 'Tempo Agg. (+50%)',
+    prova_equipollente: t('pdpPage.measures.equivalentTest') || 'Prova Equipollente',
+    sintesi_vocale: t('pdpPage.measures.textToSpeech') || 'Sintesi Vocale',
+    mappe_concettuali: t('pdpPage.measures.conceptMaps') || 'Mappe Concettuali'
   }
   if (val.startsWith('custom_')) {
     return val.replace('custom_', '').replace(/_/g, ' ')

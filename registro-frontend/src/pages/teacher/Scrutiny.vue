@@ -2,16 +2,25 @@
   <q-page padding class="bg-slate-50">
     <div class="row items-center q-mb-lg">
       <div class="col">
-        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">Scrutinio Accademico & Differito</h1>
-        <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">Gestione voti finali, argomenti delle carenze e recupero debiti formativi</p>
+        <h1 class="text-h4 text-weight-bold text-slate-800 q-my-none">{{ $t('scrutinyPage.title') }}</h1>
+        <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">{{ $t('scrutinyPage.subtitle') }}</p>
       </div>
       <div class="col-auto">
         <div class="row q-gutter-md glass-card q-pa-sm rounded-xl border-slate-200 items-center">
-          <q-btn v-if="selectedClassId" color="negative" icon="lock" label="Chiudi Scrutinio" unelevated @click="closeScrutiny" />
+          <q-btn
+            v-if="selectedClassId && matrix.students && matrix.students.length > 0"
+            color="secondary"
+            icon="archive"
+            :label="$t('scrutinyPage.exportZip') || 'Esporta Pagelle (ZIP)'"
+            unelevated
+            :loading="exportingZip"
+            @click="exportClassZip"
+          />
+          <q-btn v-if="selectedClassId" color="negative" icon="lock" :label="$t('scrutinyPage.closeScrutiny')" unelevated @click="closeScrutiny" />
           <q-select
             v-model="selectedClassId"
             :options="classOptions"
-            label="Classe"
+            :label="$t('common.class') || 'Classe'"
             outlined dense
             style="min-width: 200px"
             emit-value map-options
@@ -40,9 +49,9 @@
     <div v-if="!selectedClassId" class="flex flex-center" style="height: 60vh">
         <q-card class="glass-card text-center q-pa-xl rounded-2xl border-slate-100 shadow-soft">
             <q-icon name="rocket_launch" size="80px" color="primary" class="q-mb-md opacity-80" />
-            <div class="text-h4 text-weight-bold text-slate-800">Consiglio di Classe</div>
+            <div class="text-h4 text-weight-bold text-slate-800">{{ $t('scrutinyPage.classCouncil') }}</div>
             <div class="text-subtitle1 text-slate-500 q-mt-sm">
-              {{ classOptions.length === 0 ? "Non risulti coordinatore di alcuna classe per lo scrutinio." : "Seleziona una classe per iniziare il processo di scrutinio." }}
+              {{ classOptions.length === 0 ? $t('scrutinyPage.notCoordinator') : $t('scrutinyPage.selectClassPrompt') }}
             </div>
         </q-card>
     </div>
@@ -59,24 +68,24 @@
           hide-bottom
           :pagination="{ rowsPerPage: 0 }"
         >
-          <!-- Header: Subjects -->
+            <!-- Header: Subjects -->
           <template v-slot:header="props">
             <q-tr :props="props" class="bg-slate-50">
-              <q-th rowspan="2" align="left" class="text-weight-bold text-slate-700 sticky-col">Studente</q-th>
-              <q-th colspan="3" align="center" class="bg-indigo-50 text-indigo-900 border-x">Presenze</q-th>
+              <q-th rowspan="2" align="left" class="text-weight-bold text-slate-700 sticky-col">{{ $t('common.student') || 'Studente' }}</q-th>
+              <q-th colspan="3" align="center" class="bg-indigo-50 text-indigo-900 border-x">{{ $t('common.attendance') || 'Presenze' }}</q-th>
               <q-th v-for="sub in matrix.subjects" :key="sub.id" align="center" class="subject-header text-weight-bold text-slate-600">
                 {{ sub.name }}
               </q-th>
-              <q-th rowspan="2" align="center" class="bg-amber-50 text-amber-900 border-l text-weight-bold">Condotta</q-th>
-              <q-th rowspan="2" align="center" class="bg-emerald-50 text-emerald-900 text-weight-bold">Esito</q-th>
-              <q-th rowspan="2" align="center" class="text-slate-500">Azioni</q-th>
+              <q-th rowspan="2" align="center" class="bg-amber-50 text-amber-900 border-l text-weight-bold">{{ $t('common.conduct') || 'Condotta' }}</q-th>
+              <q-th rowspan="2" align="center" class="bg-emerald-50 text-emerald-900 text-weight-bold">{{ $t('common.outcome') || 'Esito' }}</q-th>
+              <q-th rowspan="2" align="center" class="text-slate-500">{{ $t('common.actions') || 'Azioni' }}</q-th>
             </q-tr>
             <q-tr :props="props" class="bg-slate-50">
               <q-th align="center" class="text-caption text-indigo-400 border-l">Ass.</q-th>
               <q-th align="center" class="text-caption text-indigo-400">Rit.</q-th>
               <q-th align="center" class="text-caption text-indigo-400 border-r">Usc.</q-th>
               <q-th v-for="sub in matrix.subjects" :key="sub.id" align="center" class="text-caption text-slate-400">
-                Media
+                {{ $t('common.average') || 'Media' }}
               </q-th>
             </q-tr>
           </template>
@@ -87,7 +96,7 @@
               <q-td class="text-weight-bold text-slate-800 sticky-col bg-white">
                 {{ props.row.student_name }}
                 <q-badge v-if="['Sospeso', 'Giudizio Sospeso'].includes(props.row.record?.final_decision)" color="deep-orange" class="q-ml-xs">
-                  Sospeso
+                  {{ $t('scrutinyPage.inProgress') || 'Sospeso' }}
                 </q-badge>
               </q-td>
               
@@ -140,13 +149,16 @@
 
               <q-td align="center" class="q-gutter-xs">
                 <q-btn flat round dense icon="save" color="primary" @click="saveStudentScrutiny(props.row.student_id)">
-                  <q-tooltip>Salva Singolo</q-tooltip>
+                  <q-tooltip>{{ $t('common.save') }}</q-tooltip>
+                </q-btn>
+                <q-btn flat round dense icon="picture_as_pdf" color="indigo" @click="exportSinglePagella(props.row.student_id)">
+                  <q-tooltip>{{ $t('scrutinyPage.downloadPagella') || 'Scarica Pagella (PDF)' }}</q-tooltip>
                 </q-btn>
                 <q-btn flat round dense icon="warning" color="amber-9" @click="openDeficiencyModal(props.row)">
-                  <q-tooltip>Argomenti Carenze & Recuperi</q-tooltip>
+                  <q-tooltip>{{ $t('scrutinyPage.deficiencySubtitle') }}</q-tooltip>
                 </q-btn>
                 <q-btn v-if="period === 2 || period === 3 || ['Sospeso', 'Giudizio Sospeso'].includes(props.row.record?.final_decision)" flat round dense icon="event_repeat" color="deep-orange" @click="openDeferredModal(props.row)">
-                  <q-tooltip>Scrutinio Differito (Esami Recupero)</q-tooltip>
+                  <q-tooltip>{{ $t('help.teacher.scrutiny.deferredScrutiny') }}</q-tooltip>
                 </q-btn>
               </q-td>
             </q-tr>
@@ -156,19 +168,19 @@
       
       <q-separator />
       <q-card-actions align="right" class="q-pa-md bg-transparent">
-        <q-btn label="Salva Scrutinio Finale" color="primary" icon="done_all" class="q-px-lg rounded-lg shadow-sm" @click="saveAll" :loading="saving" />
+        <q-btn :label="$t('scrutinyPage.saveFinal')" color="primary" icon="done_all" class="q-px-lg rounded-lg shadow-sm" @click="saveAll" :loading="saving" />
       </q-card-actions>
     </q-card>
 
     <!-- Dialog: Argomenti Carenze & Recuperi -->
     <q-dialog v-model="showDeficiencyModal">
-      <q-card style="min-width: 550px" class="rounded-xl">
+      <q-card style="width: min(550px, 95vw); max-width: 95vw;" class="rounded-xl">
         <q-card-section class="bg-amber-700 text-white row items-center justify-between">
           <div>
-            <div class="text-h6 text-weight-bold">Argomenti Carenze — {{ selectedStudent?.student_name }}</div>
-            <div class="text-caption">Indicazione delle lacune da recuperare (visibile a studente e genitori)</div>
+            <div class="text-h6 text-weight-bold">{{ $t('scrutinyPage.deficiencyTitle', { name: selectedStudent?.student_name || '' }) }}</div>
+            <div class="text-caption">{{ $t('scrutinyPage.deficiencySubtitle') }}</div>
           </div>
-          <q-btn flat round icon="close" v-close-popup />
+          <q-btn flat round icon="close" v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md space-y-4">
@@ -177,7 +189,7 @@
             :options="matrix.subjects"
             option-label="name"
             option-value="id"
-            label="Materia della Carenza"
+            :label="$t('scrutinyPage.deficiencySubject')"
             outlined dense emit-value map-options
           />
 
@@ -186,87 +198,87 @@
             type="textarea"
             rows="3"
             outlined
-            label="Argomenti della Carenza / Lacune Specifiche *"
+            :label="$t('scrutinyPage.deficiencyTopics')"
             hint="Es. Equazioni di 2° grado, Sintassi del periodo, Verbi irregolari"
           />
 
           <q-select
             v-model="deficiencyForm.recovery_mode"
             :options="[
-              { label: 'Studio Individuale', value: 'studio_individuale' },
-              { label: 'Corso di Recupero Estivo', value: 'corso_recupero' },
-              { label: 'Sportello Didattico', value: 'sportello_didattico' }
+              { label: $t('scrutinyPage.individualStudy'), value: 'studio_individuale' },
+              { label: $t('scrutinyPage.summerCourse'), value: 'corso_recupero' },
+              { label: $t('scrutinyPage.helpDesk'), value: 'sportello_didattico' }
             ]"
-            label="Modalità di Recupero"
+            :label="$t('scrutinyPage.recoveryMode')"
             outlined dense emit-value map-options
           />
 
           <q-select
             v-model="deficiencyForm.status"
             :options="[
-              { label: 'Da Recuperare', value: 'da_recuperare' },
-              { label: 'In Corso', value: 'in_corso' },
-              { label: 'Recuperato', value: 'recuperato' },
-              { label: 'Non Recuperato', value: 'non_recuperato' }
+              { label: $t('scrutinyPage.toRecover'), value: 'da_recuperare' },
+              { label: $t('scrutinyPage.inProgress'), value: 'in_corso' },
+              { label: $t('scrutinyPage.recovered'), value: 'recuperato' },
+              { label: $t('scrutinyPage.notRecovered'), value: 'non_recuperato' }
             ]"
-            label="Stato Recupero"
+            :label="$t('scrutinyPage.recoveryStatus')"
             outlined dense emit-value map-options
           />
 
           <div class="row q-col-gutter-md">
             <div class="col-6">
-              <q-input v-model.number="deficiencyForm.recovery_grade" type="number" step="0.5" label="Voto Prova di Recupero" outlined dense />
+              <q-input v-model.number="deficiencyForm.recovery_grade" type="number" step="0.5" :label="$t('scrutinyPage.recoveryGrade')" outlined dense />
             </div>
             <div class="col-6">
-              <q-input v-model="deficiencyForm.recovery_date" type="date" label="Data Prova Recupero" outlined dense stack-label />
+              <q-input v-model="deficiencyForm.recovery_date" type="date" :label="$t('scrutinyPage.recoveryDate')" outlined dense stack-label />
             </div>
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md bg-slate-50">
-          <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="amber-9" label="Salva Carenza" unelevated @click="saveDeficiency" :loading="savingDeficiency" />
+          <q-btn flat :label="$t('common.cancel') || 'Annulla'" v-close-popup />
+          <q-btn color="amber-9" :label="$t('scrutinyPage.saveDeficiency')" unelevated @click="saveDeficiency" :loading="savingDeficiency" />
         </q-card-actions>
       </q-card>
     </q-dialog>
 
     <!-- Dialog: Scrutinio Differito (Saldo Debiti Formativi) -->
     <q-dialog v-model="showDeferredModal">
-      <q-card style="min-width: 600px" class="rounded-xl">
+      <q-card style="width: min(600px, 95vw); max-width: 95vw;" class="rounded-xl">
         <q-card-section class="bg-deep-orange-8 text-white row items-center justify-between">
           <div>
             <div class="text-h6 text-weight-bold">{{ $t('help.teacher.scrutiny.deferredModalTitle', { name: selectedStudent?.student_name }) }}</div>
             <div class="text-caption">{{ $t('help.teacher.scrutiny.deferredModalSubtitle') }}</div>
           </div>
-          <q-btn flat round icon="close" v-close-popup />
+          <q-btn flat round icon="close" v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md space-y-4">
           <div v-if="studentDeficienciesList.length === 0" class="text-slate-500 text-center q-pa-md">
-            Nessuna carenza o debito salvato per questo studente.
+            {{ $t('scrutinyPage.noDeficiencies') }}
           </div>
 
           <div v-for="def in studentDeficienciesList" :key="def.id" class="p-3 border rounded-lg bg-slate-50 space-y-2">
             <div class="row items-center justify-between">
-              <div class="text-weight-bold text-slate-800">{{ def.subject_name || 'Materia' }}</div>
+              <div class="text-weight-bold text-slate-800">{{ def.subject_name || $t('common.subject') || 'Materia' }}</div>
               <q-badge :color="def.status === 'recuperato' ? 'positive' : 'negative'">{{ def.status }}</q-badge>
             </div>
-            <div class="text-caption text-slate-600"><strong>Argomenti:</strong> {{ def.topics }}</div>
+            <div class="text-caption text-slate-600"><strong>{{ $t('scrutinyPage.deficiencyTopics') }}:</strong> {{ def.topics }}</div>
 
             <div class="row q-col-gutter-md q-pt-xs">
               <div class="col-6">
                 <q-select
                   v-model="def.status"
                   :options="[
-                    { label: 'Recuperato (Debito Saldato)', value: 'recuperato' },
-                    { label: 'Non Recuperato', value: 'non_recuperato' }
+                    { label: $t('scrutinyPage.recovered'), value: 'recuperato' },
+                    { label: $t('scrutinyPage.notRecovered'), value: 'non_recuperato' }
                   ]"
-                  label="Esito Verifica"
+                  :label="$t('common.outcome') || 'Esito Verifica'"
                   outlined dense emit-value map-options
                 />
               </div>
               <div class="col-6">
-                <q-input v-model.number="def.recovery_grade" type="number" step="0.5" label="Voto Prova Recupero" outlined dense />
+                <q-input v-model.number="def.recovery_grade" type="number" step="0.5" :label="$t('scrutinyPage.recoveryGrade')" outlined dense />
               </div>
             </div>
           </div>
@@ -279,7 +291,7 @@
               { label: $t('help.teacher.scrutiny.promotedDebtsCleared'), value: 'promosso_con_debiti_saldati' },
               { label: $t('help.teacher.scrutiny.notPromotedDebtsNotCleared'), value: 'non_promosso' }
             ]"
-            label="Delibera Finale Scrutinio Differito *"
+            :label="$t('help.teacher.scrutiny.deliberateDeferred')"
             outlined dense emit-value map-options
           />
 
@@ -287,7 +299,7 @@
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md bg-slate-50">
-          <q-btn flat label="Annulla" v-close-popup />
+          <q-btn flat :label="$t('common.cancel') || 'Annulla'" v-close-popup />
           <q-btn color="deep-orange-8" :label="$t('help.teacher.scrutiny.deliberateDeferred')" unelevated @click="saveDeferredScrutiny" :loading="savingDeferred" />
         </q-card-actions>
       </q-card>
@@ -478,10 +490,9 @@ const saveStudentScrutiny = async (studentId, silent = false) => {
 const saveAll = async () => {
   saving.value = true
   let successCount = 0
-  let totalCount = 0
   try {
     const studentIds = Object.keys(scrutinyData)
-    totalCount = studentIds.length
+    const totalCount = studentIds.length
     for (const sid of studentIds) {
       const ok = await saveStudentScrutiny(sid, true)
       if (ok) successCount++
@@ -580,19 +591,69 @@ const getGradeClass = (avg) => {
 const closeScrutiny = () => {
   if (!selectedClassId.value) return
   $q.dialog({
-    title: 'Conferma Chiusura Scrutinio',
-    message: 'Sei sicuro di voler chiudere e sigillare lo scrutinio per la classe selezionata? L\'operazione è definitiva.',
+    title: t('scrutinyPage.closeScrutiny') || 'Conferma Chiusura Scrutinio',
+    message: t('help.teacher.scrutiny.closeConfirmMsg') || 'Sei sicuro di voler chiudere e sigillare lo scrutinio per la classe selezionata? L\'operazione è definitiva.',
     cancel: true,
     persistent: true
   }).onOk(async () => {
     try {
       await scrutinyService.closeScrutiny(selectedClassId.value, period.value)
-      $q.notify({ type: 'positive', message: 'Scrutinio chiuso ufficialmente e sigillato!' })
+      $q.notify({ type: 'positive', message: t('common.success') || 'Scrutinio chiuso ufficialmente e sigillato!' })
       fetchMatrix()
     } catch {
-      $q.notify({ type: 'negative', message: 'Errore durante la chiusura dello scrutinio' })
+      $q.notify({ type: 'negative', message: t('common.error') || 'Errore durante la chiusura dello scrutinio' })
     }
   })
+}
+
+const exportingZip = ref(false)
+
+const exportClassZip = async () => {
+  if (!selectedClassId.value) return
+  exportingZip.value = true
+  try {
+    const res = await scrutinyService.exportClassScrutinyZip(selectedClassId.value, period.value)
+    const blob = new Blob([res.data], { type: 'application/zip' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `pagelle_classe_${selectedClassId.value}_semestre${period.value}.zip`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+    $q.notify({
+      type: 'positive',
+      message: t('scrutinyPage.zipExportSuccess') || 'Archivio ZIP delle pagelle scaricato con successo'
+    })
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.error || t('scrutinyPage.zipExportError') || 'Errore durante l\'esportazione dello ZIP'
+    })
+  } finally {
+    exportingZip.value = false
+  }
+}
+
+const exportSinglePagella = async (studentId) => {
+  try {
+    const res = await scrutinyService.exportPagellaPDF(studentId, selectedClassId.value, period.value)
+    const blob = new Blob([res.data], { type: 'application/pdf' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `pagella_${studentId}_semestre${period.value}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.error || 'Errore durante lo scaricamento della pagella'
+    })
+  }
 }
 </script>
 

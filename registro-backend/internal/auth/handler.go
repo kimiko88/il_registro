@@ -98,15 +98,39 @@ func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 	appEnv := os.Getenv("APP_ENV")
 	ginMode := os.Getenv("GIN_MODE")
 	cookieSecure := os.Getenv("COOKIE_SECURE")
+	cookieSameSite := os.Getenv("COOKIE_SAMESITE")
 
-	isSecure := false
-	if cookieSecure == "true" || appEnv == "production" || ginMode == "release" || isHTTPSRequest(c) {
-		isSecure = true
-	}
+	isSecure := cookieSecure == "true" || appEnv == "production" || ginMode == "release" || isHTTPSRequest(c)
 	if cookieSecure == "false" && appEnv != "production" && ginMode != "release" {
 		isSecure = false
 	}
+
 	domain := os.Getenv("COOKIE_DOMAIN")
+
+	// SameSite=None is required for cross-origin cookies (e.g. frontend on different domain than backend).
+	// Default: use None when secure (production/HTTPS), Lax otherwise (local dev).
+	// Override via COOKIE_SAMESITE=strict|lax|none.
+	var sameSite http.SameSite
+	switch cookieSameSite {
+	case "strict":
+		sameSite = http.SameSiteStrictMode
+	case "lax":
+		sameSite = http.SameSiteLaxMode
+	case "none":
+		if isSecure {
+			sameSite = http.SameSiteNoneMode
+		} else {
+			sameSite = http.SameSiteLaxMode
+		}
+	default:
+		// Auto: in production/HTTPS, default to None for cross-origin support
+		if isSecure {
+			sameSite = http.SameSiteNoneMode
+		} else {
+			sameSite = http.SameSiteLaxMode
+		}
+	}
+
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "refreshToken",
 		Value:    token,
@@ -115,7 +139,7 @@ func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 		Domain:   domain,
 		Secure:   isSecure,
 		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: sameSite,
 	})
 }
 

@@ -136,7 +136,7 @@ func (t *AgIDTSAClient) RequestTimestamp(ctx context.Context, digest []byte) (st
 		// Fallback: token simulato con nota esplicita — NON valido per produzione legale
 		return computeSimulatedTSAToken(digest), time.Now().UTC(), nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", time.Time{}, fmt.Errorf("TSA: risposta non-200: %d", resp.StatusCode)

@@ -8,8 +8,8 @@ import (
 )
 
 func TestWS_AllowedOriginsCaching(t *testing.T) {
-	os.Setenv("ALLOWED_ORIGINS", "https://app.scuola.it")
-	defer os.Unsetenv("ALLOWED_ORIGINS")
+	_ = os.Setenv("ALLOWED_ORIGINS", "https://app.scuola.it")
+	defer func() { _ = os.Unsetenv("ALLOWED_ORIGINS") }()
 
 	origins1 := allowedOrigins()
 	assert.NotNil(t, origins1)

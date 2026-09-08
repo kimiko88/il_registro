@@ -26,8 +26,8 @@ export default [
     rules: {
       'vue/multi-word-component-names': 'off',
       'no-unused-vars': ['warn', {
-        argsIgnorePattern: '^(_|e$|err$|error$|row$|\\$event$)',
-        varsIgnorePattern: '^(_|__VLS_|\\$q$|loading$)',
+        argsIgnorePattern: '^(_|e$|err$|error$|row$|\\$event$|item$)',
+        varsIgnorePattern: '^(_|__VLS_|\\$q$|loading$|t$|te$|themeStore$|qdate$|api$)',
         destructuredArrayIgnorePattern: '^_',
         caughtErrors: 'none',
       }],

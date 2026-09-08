@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-center">
-    <div class="glass-card q-pa-xl relative-position" style="width: 100%; max-width: 420px">
+    <div class="glass-card login-card relative-position" style="width: 100%; max-width: 420px">
       <!-- Language Selector in Top Right -->
       <div class="absolute-top-right q-pa-md">
         <q-btn-dropdown
@@ -93,7 +93,7 @@
           <q-checkbox id="remember-me" v-model="rememberMe" :label="t('login.rememberMe')" dense size="sm" color="primary" />
         </div>
 
-        <!-- Inline Error Alert -->
+        <!-- Inline Error Alert (Reattivo al cambio lingua) -->
         <div v-if="errorMessage" role="alert" aria-live="assertive" class="q-mt-sm bg-red-1 text-negative q-pa-sm rounded-lg text-caption text-center row items-center justify-center">
           <q-icon name="error_outline" size="18px" class="q-mr-xs" />
           <span>{{ errorMessage }}</span>
@@ -119,12 +119,12 @@
 
     <!-- Modal Contatta la Segreteria -->
     <q-dialog v-model="showSecretaryDialog">
-      <q-card style="min-width: 420px; max-width: 550px;" class="rounded-xl">
+      <q-card style="min-width: 320px; max-width: 550px; width: 100%;" class="rounded-xl">
         <q-card-section class="bg-primary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold row items-center">
             <q-icon name="contact_support" class="q-mr-sm" size="24px" /> {{ t('login.contactTitle') }}
           </div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-lg">
@@ -155,7 +155,7 @@
                 </q-item-section>
                 <q-item-section>
                   <q-item-label class="text-weight-bold">{{ scope.opt.name }}</q-item-label>
-                  <q-item-label caption v-if="scope.opt.code">Codice: {{ scope.opt.code }} • {{ scope.opt.city || 'Italia' }}</q-item-label>
+                  <q-item-label caption v-if="scope.opt.code">{{ t('login.codeLabel') || 'Codice' }}: {{ scope.opt.code }} • {{ scope.opt.city || t('login.defaultCountry') || 'Italia' }}</q-item-label>
                 </q-item-section>
               </q-item>
             </template>
@@ -232,7 +232,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
@@ -248,10 +248,21 @@ const passwordInputRef = ref(null)
 const showPassword = ref(false)
 const rememberMe = ref(false)
 const loading = ref(false)
+
+// Reattivo al cambio lingua senza ricaricare la pagina
 const errorMessage = ref('')
+const errorKey = ref('')
+const errorParams = ref({})
+
+watch(() => (locale && typeof locale === 'object' ? locale.value : locale), () => {
+  if (errorKey.value) {
+    errorMessage.value = t(errorKey.value, errorParams.value)
+  }
+})
+
 const failedAttempts = ref(0)
 const lockoutUntil = ref(null)
-const { login } = useAuth()
+const { login, getLoginErrorKey } = useAuth()
 const route = useRoute()
 
 const showSecretaryDialog = ref(false)
@@ -269,6 +280,10 @@ const currentLangCode = computed(() => {
 
 function changeLanguage(langKey) {
   applyLocale(langKey, { locale }, $q)
+  document.title = t('login.documentTitle') || `${t('login.welcomeBack')} — Registro Elettronico`
+  if (errorKey.value) {
+    errorMessage.value = t(errorKey.value, errorParams.value)
+  }
 }
 
 const defaultSchools = [
@@ -280,8 +295,9 @@ const defaultSchools = [
 ]
 
 onMounted(() => {
-  document.title = 'Accedi — Registro Elettronico'
+  document.title = t('login.documentTitle') || `${t('login.welcomeBack')} — Registro Elettronico`
   if (route?.query?.reason === 'session_expired') {
+    errorKey.value = 'login.sessionExpired'
     errorMessage.value = t('login.sessionExpired')
   }
   if (route?.path === '/register' || route?.path === '/forgot-password') {
@@ -327,7 +343,7 @@ async function copyEmail(emailStr) {
     $q.notify({
       type: 'warning',
       icon: 'content_copy',
-      message: t('login.copyFailed') || `Copia manuale: ${emailStr}`
+      message: t('login.copyFailed') || `${t('login.copyManual') || 'Copia manuale'}: ${emailStr}`
     })
   }
 }
@@ -336,10 +352,14 @@ async function onSubmit() {
   // UI-level lockout after repeated failures (backend is the primary rate limiter)
   if (lockoutUntil.value && Date.now() < lockoutUntil.value) {
     const secs = Math.ceil((lockoutUntil.value - Date.now()) / 1000)
+    errorKey.value = 'login.tooManyAttempts'
+    errorParams.value = { secs }
     errorMessage.value = t('login.tooManyAttempts', { secs }) || `Troppi tentativi. Riprova tra ${secs}s.`
     return
   }
   errorMessage.value = ''
+  errorKey.value = ''
+  errorParams.value = {}
   loading.value = true
   const error = await login(email.value, password.value, rememberMe.value)
   loading.value = false
@@ -349,6 +369,9 @@ async function onSubmit() {
       lockoutUntil.value = Date.now() + 30_000 // 30-second UI lockout
     }
     errorMessage.value = error
+    if (typeof getLoginErrorKey === 'function') {
+      errorKey.value = getLoginErrorKey(error)
+    }
   } else {
     failedAttempts.value = 0
     lockoutUntil.value = null
@@ -357,6 +380,15 @@ async function onSubmit() {
 </script>
 
 <style scoped>
+.login-card {
+  padding: 3rem 2.5rem;
+}
+@media (max-width: 599px) {
+  .login-card {
+    padding: 1.5rem 1.25rem !important;
+    margin: 0.5rem;
+  }
+}
 .rounded-input :deep(.q-field__control) {
   border-radius: 12px;
 }
@@ -367,3 +399,4 @@ async function onSubmit() {
   border: 1px solid #c7d2fe;
 }
 </style>
+

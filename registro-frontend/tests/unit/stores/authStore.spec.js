@@ -1,6 +1,6 @@
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from 'src/stores/auth'
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 const createMockJWT = (role = 'teacher', expInSeconds = 3600) => {
     const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
@@ -145,6 +145,31 @@ describe('Auth Store', () => {
             expect(localStorage.getItem('user')).toBeNull()
             expect(localStorage.getItem('token')).toBeNull()
             expect(localStorage.getItem('refreshToken')).toBeNull()
+        })
+
+        it('should invalidate api-static-lists cache on logout if caches API is available', () => {
+            const deleteMock = vi.fn().mockReturnValue(Promise.resolve(true))
+            const originalCaches = window.caches
+            Object.defineProperty(window, 'caches', {
+                value: { delete: deleteMock },
+                configurable: true,
+                writable: true
+            })
+
+            const store = useAuthStore()
+            store.logout()
+
+            expect(deleteMock).toHaveBeenCalledWith('api-static-lists')
+
+            if (originalCaches !== undefined) {
+                Object.defineProperty(window, 'caches', {
+                    value: originalCaches,
+                    configurable: true,
+                    writable: true
+                })
+            } else {
+                delete window.caches
+            }
         })
     })
 

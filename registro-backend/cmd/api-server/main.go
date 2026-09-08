@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 
 	"registro-backend/internal/accessibility"
@@ -19,6 +20,7 @@ import (
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/auditlog"
 	"registro-backend/internal/auth"
+	"registro-backend/internal/cache"
 	"registro-backend/internal/certificates"
 	"registro-backend/internal/classes"
 	"registro-backend/internal/colloqui"
@@ -57,6 +59,7 @@ import (
 	"registro-backend/internal/schoolsettings"
 	"registro-backend/internal/scrutiny"
 	"registro-backend/internal/search"
+	"registro-backend/internal/sidi"
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/student_goals"
 	"registro-backend/internal/students"
@@ -101,7 +104,7 @@ func main() {
 	if err != nil {
 		logger.Log.Fatalf("Failed to connect to database: %v", err)
 	}
-	defer database.Close()
+	defer func() { _ = database.Close() }()
 
 	// 4. Setup Authentication (Keys & Managers)
 	privateKey, publicKey, err := jwt.GetOrGenerateKeys("private_key.pem", "public_key.pem")
@@ -113,6 +116,8 @@ func main() {
 	mfaService := auth.NewMFAService("RegistroElettronico")
 	wsHub := ws.NewHub(os.Getenv("REDIS_URL"))
 	go wsHub.Run(ctx)
+	appCache := cache.NewCache(os.Getenv("REDIS_URL"))
+	defer func() { _ = appCache.Close() }()
 
 	// 5. Setup Repositories
 	authRepo := auth.NewRepository(database)
@@ -196,8 +201,8 @@ func main() {
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc, wsTicketStore)
 	usersH := users.NewHandler(usersSvc)
-	schoolsH := schools.NewHandler(schoolsSvc)
-	classesH := classes.NewHandler(classesSvc)
+	schoolsH := schools.NewHandler(schoolsSvc, appCache)
+	classesH := classes.NewHandler(classesSvc, appCache)
 	gradesH := grades.NewHandler(gradesSvc, gradesAnalytics)
 	attendanceH := attendance.NewHandler(attendanceSvc)
 	docsUploader := upload.NewSupabaseUploader(cfg.Supabase.URL, cfg.Supabase.Key, cfg.Supabase.Bucket)
@@ -239,18 +244,93 @@ func main() {
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.SecurityHeadersMiddleware())
 	r.Use(middleware.RateLimitMiddleware())
+	// 30-second context timeout to cancel hanging queries and free connection pools
+	r.Use(middleware.TimeoutMiddleware(30 * time.Second))
+	// Compress JSON/text responses (60-80% size reduction). Excluded: /metrics (Prometheus plain text).
+	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPaths([]string{"/metrics"})))
 
 	middleware.InitCircuitBreaker()
 
 	api := r.Group("/api/v1")
 	{
 		r.GET("/health", healthH.Health)
+		r.HEAD("/health", healthH.Health)
+		r.GET("/live", healthH.Live)
+		r.HEAD("/live", healthH.Live)
 		r.GET("/ready", healthH.Ready)
+		r.HEAD("/ready", healthH.Ready)
 		r.GET("/metrics", healthH.Metrics)
 
-		api.GET("/swagger/doc.json", func(c *gin.Context) {
-			c.File("../docs/openapi.yaml")
-		})
+		// Lightweight connectivity probe used by the frontend health-check.
+		// No auth, no DB — responds in <1ms.
+		api.GET("/ping", healthH.Ping)
+		api.HEAD("/ping", healthH.Ping)
+		api.GET("/health", healthH.Health)
+		api.HEAD("/health", healthH.Health)
+		api.GET("/live", healthH.Live)
+		api.HEAD("/live", healthH.Live)
+		api.GET("/ready", healthH.Ready)
+		api.HEAD("/ready", healthH.Ready)
+		r.GET("/ping", healthH.Ping)
+		r.HEAD("/ping", healthH.Ping)
+
+		swaggerUIHTML := `<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>API Documentation - Registro Elettronico MIM</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5/favicon-32x32.png" sizes="32x32" />
+  <style>
+    body { margin: 0; padding: 0; background: #fafafa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    .topbar { display: none; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = function() {
+      window.ui = SwaggerUIBundle({
+        url: "/api/v1/swagger/doc.json",
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "BaseLayout"
+      });
+    };
+  </script>
+</body>
+</html>`
+
+		serveSwaggerDoc := func(c *gin.Context) {
+			swaggerDocPath := "../docs/openapi.yaml"
+			if _, err := os.Stat(swaggerDocPath); err != nil {
+				if _, err := os.Stat("docs/openapi.yaml"); err == nil {
+					swaggerDocPath = "docs/openapi.yaml"
+				}
+			}
+			c.File(swaggerDocPath)
+		}
+
+		serveSwaggerUI := func(c *gin.Context) {
+			c.Header("Content-Type", "text/html; charset=utf-8")
+			c.String(http.StatusOK, swaggerUIHTML)
+		}
+
+		api.GET("/swagger/doc.json", serveSwaggerDoc)
+		r.GET("/swagger/doc.json", serveSwaggerDoc)
+		api.GET("/swagger", serveSwaggerUI)
+		api.GET("/swagger/index.html", serveSwaggerUI)
+		r.GET("/swagger", serveSwaggerUI)
+		r.GET("/swagger/index.html", serveSwaggerUI)
 
 		authH.RegisterRoutes(api, authMiddleware)
 		api.GET("/public/schools", schoolsH.ListPublic)
@@ -262,10 +342,12 @@ func main() {
 
 		protected := api.Group("/")
 		protected.Use(authMiddleware.Authenticate())
+		protected.Use(middleware.IdempotencyMiddleware())
 		{
 			protected.POST("/accessibility/feedback", a11yH.SubmitPublic)
 			protected.GET("/admin/accessibility-feedbacks", adminMiddleware.RequireAdminOrSuperAdmin(), a11yH.List)
 			protected.PATCH("/admin/accessibility-feedbacks/:id/status", adminMiddleware.RequireAdminOrSuperAdmin(), a11yH.UpdateStatus)
+			protected.POST("/admin/gdpr/retention", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.ApplyDataRetention)
 
 			protected.GET("/user/accessibility-settings", a11yH.GetMyPreferences)
 			protected.PUT("/user/accessibility-settings", a11yH.SaveMyPreferences)
@@ -287,6 +369,7 @@ func main() {
 				usersGroup.GET("/:id/audit-log", usersH.GetAuditLog)
 				usersGroup.POST("/:id/gdpr-export", usersH.ExportGDPR)
 				usersGroup.DELETE("/:id/gdpr-delete", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.DeleteGDPR)
+				usersGroup.POST("/gdpr/retention", adminMiddleware.RequireAdminOrSuperAdmin(), usersH.ApplyDataRetention)
 				usersGroup.GET("/search", usersH.List)
 				usersGroup.PATCH("/:id/disable-mfa", usersH.DisableMFA)
 				usersGroup.GET("/:id/guardians", usersH.GetGuardians)
@@ -299,7 +382,8 @@ func main() {
 			classesH.RegisterRoutes(protected)
 			gradesH.RegisterRoutes(protected)
 			attendanceH.RegisterRoutes(protected)
-			docsH.RegisterRoutes(protected)
+			uploadLimited := protected.Group("", middleware.UploadRateLimitMiddleware())
+			docsH.RegisterRoutes(uploadLimited)
 			schedH.RegisterRoutes(protected)
 			timetablesH.RegisterRoutes(protected)
 			agendaH.RegisterRoutes(protected)
@@ -345,7 +429,7 @@ func main() {
 
 			redisAddr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
 			pdfWorkerClient := pdfworker.NewClient(redisAddr)
-			defer pdfWorkerClient.Close()
+			defer func() { _ = pdfWorkerClient.Close() }()
 
 			gradesH.SetPdfWorkerClient(pdfWorkerClient)
 			verbaliH.SetPdfWorkerClient(pdfWorkerClient)
@@ -357,7 +441,7 @@ func main() {
 
 			subjectsRepo := subjects.NewRepository(database)
 			subjectsSvc := subjects.NewService(subjectsRepo)
-			subjectsH := subjects.NewHandler(subjectsSvc)
+			subjectsH := subjects.NewHandler(subjectsSvc, appCache)
 			subjectsH.RegisterRoutes(protected)
 
 			goalsRepo := student_goals.NewRepository(database)
@@ -392,9 +476,10 @@ func main() {
 			schoolSettingsH := schoolsettings.NewHandler(schoolSettingsSvc)
 			schoolSettingsH.RegisterRoutes(protected)
 
-			reportsSvc := reports.NewService(scrutinySvc)
+			reportsSvc := reports.NewService(scrutinySvc, database)
 			reportsH := reports.NewHandler(reportsSvc)
-			reportsH.RegisterRoutes(protected)
+			exportLimited := protected.Group("", middleware.ExportRateLimitMiddleware())
+			reportsH.RegisterRoutes(exportLimited)
 
 			searchRepo := search.NewRepository(database)
 			searchSvc := search.NewService(searchRepo)
@@ -421,20 +506,9 @@ func main() {
 			supportH := support.NewHandler(supportSvc)
 			supportH.RegisterRoutes(protected)
 
-			protected.GET("/students/dashboard/stats", func(c *gin.Context) {
-				c.JSON(http.StatusOK, gin.H{
-					"total_grades":   0,
-					"presence_rate":  100,
-					"upcoming_tests": 0,
-				})
-			})
-			protected.GET("/parents/dashboard/stats", func(c *gin.Context) {
-				c.JSON(http.StatusOK, gin.H{
-					"total_children":   1,
-					"unread_messages":  0,
-					"pending_payments": 0,
-				})
-			})
+			studentDashboardSvc := students.NewDashboardService(database)
+			studentDashboardH := students.NewDashboardHandler(studentDashboardSvc)
+			studentDashboardH.RegisterRoutes(protected)
 
 			tenantsRepo := tenants.NewRepository(database)
 			tenantsSvc := tenants.NewService(tenantsRepo)
@@ -477,6 +551,11 @@ func main() {
 
 			// Firme qualificate FEQ/FES + SIDI export + CAD preservation
 			signaturesH.RegisterRoutes(protected)
+
+			// Modulo Flussi SIDI MIM
+			sidiSvc := sidi.NewService(database)
+			sidiH := sidi.NewHandler(sidiSvc)
+			sidiH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}

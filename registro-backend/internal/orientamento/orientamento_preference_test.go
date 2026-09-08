@@ -34,6 +34,13 @@ func (m *mockPreferenceRepo) GetPreference(ctx context.Context, studentID string
 	}
 	return m.pref, nil
 }
+func (m *mockPreferenceRepo) SaveCapolavoro(ctx context.Context, c *Capolavoro) error { return nil }
+func (m *mockPreferenceRepo) GetCapolavori(ctx context.Context, studentID string) ([]Capolavoro, error) {
+	return nil, nil
+}
+func (m *mockPreferenceRepo) GetCurriculumStudente(ctx context.Context, studentID string) (*CurriculumStudenteSummary, error) {
+	return nil, nil
+}
 
 func TestOrientamento_GetPreferenceEmpty(t *testing.T) {
 	repo := &mockPreferenceRepo{}

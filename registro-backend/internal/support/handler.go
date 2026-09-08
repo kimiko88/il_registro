@@ -72,13 +72,14 @@ func (h *Handler) ListDiaryEntries(c *gin.Context) {
 	}
 
 	isFamily := (role == "parent" || role == "student")
-	if role == "student" {
+	switch role {
+	case "student":
 		if studentID != "" && studentID != userID {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non puoi consultare i diari di altri studenti"})
 			return
 		}
 		studentID = userID
-	} else if role == "parent" {
+	case "parent":
 		if studentID == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "student_id obbligatorio per i genitori"})
 			return
@@ -183,13 +184,14 @@ func (h *Handler) ListPeiGoals(c *gin.Context) {
 		return
 	}
 
-	if role == "student" {
+	switch role {
+	case "student":
 		if studentID != "" && studentID != userID {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non puoi visualizzare gli obiettivi PEI di altri studenti"})
 			return
 		}
 		studentID = userID
-	} else if role == "parent" {
+	case "parent":
 		if studentID == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "student_id obbligatorio per i genitori"})
 			return

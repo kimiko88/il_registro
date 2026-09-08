@@ -3,6 +3,18 @@ import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import GradeWeights from '@/pages/teacher/GradeWeights.vue'
 
+vi.mock('@/services/api', () => ({
+    default: {
+        get: vi.fn().mockResolvedValue({ data: [] }),
+        put: vi.fn().mockResolvedValue({ data: {} }),
+        delete: vi.fn().mockResolvedValue({ data: {} }),
+        interceptors: {
+            request: { use: vi.fn(), handlers: [] },
+            response: { use: vi.fn(), handlers: [] }
+        }
+    }
+}))
+
 describe('Grade Weights and Matrix Workflow E2E', () => {
     let pinia
 
@@ -37,7 +49,7 @@ describe('Grade Weights and Matrix Workflow E2E', () => {
                     'q-icon': true,
                     'q-dialog': { template: '<div><slot /></div>' },
                     'q-form': { template: '<form @submit.prevent><slot /></form>' },
-                    'q-input': true,
+                    'q-input': { template: '<div><slot /></div>' },
                     'q-chip': true,
                     'q-badge': true
                 }

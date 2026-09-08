@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Registro - Estudiante</string>
+    <string name="dashboard_title">Mi Panel</string>
+    <string name="welcome_student">¡Hola, %1$s!</string>
+    <string name="grades_title">Mis Calificaciones</string>
+    <string name="agenda_title">Deberes y Agenda</string>
+    <string name="attendance_title">Asistencias y Ausencias</string>
+    <string name="report_card_title">Mi Boleta de Calificaciones</string>
+    <string name="gpa_average">Promedio General</string>
+    <string name="recent_grades">Calificaciones Recientes</string>
+    <string name="today_lessons">Horario de Clases de Hoy</string>
+    <string name="absences_count">Total de Ausencias</string>
+    <string name="lates_count">Total de Retrasos</string>
+    <string name="no_data">No hay datos disponibles</string>
+    <string name="login_subtitle">Inicia sesión en tu cuenta</string>
+    <string name="email_label">Correo del Estudiante</string>
+    <string name="password_label">Contraseña</string>
+    <string name="btn_login">INICIAR SESIÓN</string>
+    <string name="err_enter_credentials">Introduce correo y contraseña</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="settings">Configuración</string>
+    <string name="badges_title">Mis Insignias</string>
+    <string name="pcto_title">Itinerarios de Prácticas (PCTO)</string>
+    <string name="restriction_server_url_title">URL del Servidor Escolar (MDM)</string>
+    <string name="restriction_server_url_desc">Punto de conexión del servidor distribuido mediante MDM</string>
+    <string name="restriction_school_code_title">Código del Centro Educativo</string>
+    <string name="restriction_school_code_desc">Código de identificación oficial de la escuela</string>
+    <string name="restriction_kiosk_mode_title">Modo Kiosco de Examen / Tableta Compartida</string>
+    <string name="restriction_kiosk_mode_desc">Desactiva la navegación externa y bloquea la aplicación</string>
+</resources>

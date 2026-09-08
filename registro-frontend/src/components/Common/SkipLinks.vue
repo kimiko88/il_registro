@@ -1,30 +1,34 @@
 <template>
-  <nav aria-label="Scorciatoie di navigazione rapida" class="skip-links-nav">
+  <nav :aria-label="t('skipLinks.navAria') || 'Scorciatoie di navigazione rapida'" class="skip-links-nav">
     <a
       href="#main-content"
       class="skip-link"
       @click.prevent="jumpTo('#main-content')"
     >
-      Salta al contenuto principale
+      {{ t('skipLinks.mainContent') || 'Salta al contenuto principale' }}
     </a>
     <a
       href="#main-nav"
       class="skip-link"
       @click.prevent="jumpTo('#main-nav')"
     >
-      Salta al menu di navigazione
+      {{ t('skipLinks.mainNav') || 'Salta al menu di navigazione' }}
     </a>
     <a
       href="#a11y-panel"
       class="skip-link"
       @click.prevent="jumpTo('#a11y-panel')"
     >
-      Apri pannello accessibilità
+      {{ t('skipLinks.a11yPanel') || 'Apri pannello accessibilità' }}
     </a>
   </nav>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 function jumpTo(targetId) {
   const el = document.querySelector(targetId)
   if (el) {

@@ -10,6 +10,7 @@ import quasarLangUk from 'quasar/lang/uk'
 import quasarLangAr from 'quasar/lang/ar'
 import quasarLangZh from 'quasar/lang/zh-CN'
 import { Quasar } from 'quasar'
+import { loadLocaleMessages } from '../i18n/loader'
 
 export const SUPPORTED_LOCALES = [
   { label: 'Italiano', value: 'it-IT', code: 'IT', flag: '🇮🇹', icon: 'flag', dir: 'ltr' },
@@ -69,7 +70,18 @@ export function normalizeLocale(lang) {
   return byPrefix ? byPrefix.value : 'it-IT'
 }
 
-export function getSavedLocale() {
+export function getBrowserLocale() {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.language) {
+      return normalizeLocale(navigator.language)
+    }
+  } catch (e) {
+    console.warn('Could not detect browser locale:', e)
+  }
+  return 'it-IT'
+}
+
+export function getSavedLocale(fallbackToBrowser = false) {
   try {
     if (typeof localStorage !== 'undefined') {
       const saved = localStorage.getItem('app_language') || localStorage.getItem('user_locale')
@@ -78,6 +90,11 @@ export function getSavedLocale() {
   } catch (e) {
     console.warn('Could not read saved locale from localStorage:', e)
   }
+
+  if (fallbackToBrowser) {
+    return getBrowserLocale()
+  }
+
   return 'it-IT'
 }
 
@@ -93,6 +110,10 @@ export function applyLocale(langCode, i18nInstance = null, $q = null) {
   // 1. Update i18n
   if (i18nInstance) {
     try {
+      if (normalized !== 'it-IT' && normalized !== 'it') {
+        loadLocaleMessages(normalized, i18nInstance).catch(() => {})
+      }
+
       if (i18nInstance.global && i18nInstance.global.locale) {
         if (typeof i18nInstance.global.locale === 'object' && 'value' in i18nInstance.global.locale) {
           i18nInstance.global.locale.value = normalized

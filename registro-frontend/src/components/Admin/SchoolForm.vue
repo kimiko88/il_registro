@@ -1,5 +1,5 @@
 <template>
-  <q-card style="min-width: 400px">
+  <q-card style="width: min(450px, 95vw); max-width: 95vw;">
     <q-card-section>
       <div class="text-h6">{{ isEdit ? (t('common.edit') || 'Modifica Scuola') : (t('common.add') || 'Nuova Scuola') }}</div>
     </q-card-section>

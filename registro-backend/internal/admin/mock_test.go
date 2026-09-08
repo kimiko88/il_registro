@@ -183,3 +183,11 @@ func (m *MockRepository) GetUserGrowth(ctx context.Context, schoolID *string) ([
 	}
 	return args.Get(0).([]UserGrowthPoint), args.Error(1)
 }
+
+func (m *MockRepository) CheckDataIntegrity(ctx context.Context, schoolID *string) (*DataIntegrityReport, error) {
+	args := m.Called(ctx, schoolID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*DataIntegrityReport), args.Error(1)
+}

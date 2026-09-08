@@ -100,7 +100,7 @@ func (r *PostgresRepository) GetRubricByID(ctx context.Context, id string) (*Rub
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var c Criterion
@@ -121,10 +121,10 @@ func (r *PostgresRepository) GetRubricByID(ctx context.Context, id string) (*Rub
 				}
 			}
 			if err := lRows.Err(); err != nil {
-				lRows.Close()
+				_ = lRows.Close()
 				return nil, err
 			}
-			lRows.Close()
+			_ = lRows.Close()
 		}
 
 		rub.Criteria = append(rub.Criteria, c)
@@ -152,7 +152,7 @@ func (r *PostgresRepository) ListRubrics(ctx context.Context, schoolID, teacherI
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []*Rubric
 	for rows.Next() {
@@ -173,7 +173,7 @@ func (r *PostgresRepository) ListRubrics(ctx context.Context, schoolID, teacherI
 					rub.Criteria = append(rub.Criteria, c)
 				}
 			}
-			cRows.Close()
+			_ = cRows.Close()
 		}
 		if rub.Criteria == nil {
 			rub.Criteria = []Criterion{}
@@ -267,7 +267,7 @@ func (r *PostgresRepository) ListAssessmentsByStudent(ctx context.Context, stude
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []*RubricAssessment
 	for rows.Next() {
@@ -298,7 +298,7 @@ func (r *PostgresRepository) ListAssessmentsByClass(ctx context.Context, classID
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []*RubricAssessment
 	for rows.Next() {

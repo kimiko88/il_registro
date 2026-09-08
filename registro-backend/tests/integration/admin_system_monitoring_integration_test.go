@@ -53,6 +53,14 @@ func (m *mockMonitoringAdminRepo) GetSystemHealth(_ context.Context) (*admin.Sys
 func (m *mockMonitoringAdminRepo) GetUserGrowth(_ context.Context, _ *string) ([]admin.UserGrowthPoint, error) {
 	return nil, nil
 }
+func (m *mockMonitoringAdminRepo) CheckDataIntegrity(_ context.Context, _ *string) (*admin.DataIntegrityReport, error) {
+	return &admin.DataIntegrityReport{
+		Score:        100,
+		HealthStatus: "healthy",
+		TotalIssues:  0,
+		Checks:       []admin.DataIntegrityIssue{},
+	}, nil
+}
 func (m *mockMonitoringAdminRepo) ListSchools(_ context.Context, _ *admin.SchoolListRequest, _ int, _ *string) ([]admin.SchoolResponse, int64, error) {
 	return nil, 0, nil
 }

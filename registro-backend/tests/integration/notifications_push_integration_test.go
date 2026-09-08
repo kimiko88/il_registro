@@ -48,7 +48,7 @@ func (m *mockNotifRepo) GetUserTokens(_ context.Context, userID string) ([]notif
 func (m *mockNotifRepo) DeleteToken(_ context.Context, userID, deviceToken string) error {
 	var remaining []notifications.PushToken
 	for _, t := range m.tokens {
-		if !(t.UserID == userID && t.DeviceToken == deviceToken) {
+		if t.UserID != userID || t.DeviceToken != deviceToken {
 			remaining = append(remaining, t)
 		}
 	}

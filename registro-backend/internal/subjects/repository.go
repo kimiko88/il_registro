@@ -51,7 +51,7 @@ func (r *PostgresRepository) List(ctx context.Context, schoolID string) ([]Subje
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var subjects []Subject
 	for rows.Next() {

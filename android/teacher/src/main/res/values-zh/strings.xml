@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">电子花名册 - 教师</string>
+    <string name="teacher_dashboard_title">教师门户</string>
+    <string name="take_attendance">点名考勤</string>
+    <string name="add_grade">添加成绩</string>
+    <string name="scrutiny_board">评审委员会</string>
+    <string name="sign_hour">签署课时</string>
+    <string name="lesson_topic">课程主题</string>
+    <string name="select_class">选择班级</string>
+    <string name="login_subtitle">登录教师工作台</string>
+    <string name="email_label">教师邮箱</string>
+    <string name="password_label">密码</string>
+    <string name="btn_login">登录花名册</string>
+    <string name="err_enter_credentials">请输入邮箱和密码</string>
+    <string name="logout">退出登录</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="present">出勤</string>
+    <string name="absent">缺勤</string>
+    <string name="late">迟到</string>
+    <string name="my_classes_title">我的班级</string>
+    <string name="lesson_signed">已签署课时</string>
+</resources>

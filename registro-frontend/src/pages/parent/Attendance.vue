@@ -190,6 +190,9 @@
 
     <!-- TAB 3: STATISTICHE GRAFICHE -->
     <div v-else-if="activeTab === 'stats'">
+      <!-- Ministerial Absence Limit 25% Widget -->
+      <AbsenceLimitWidget :student-id="selectedChildId" class="q-mb-lg" />
+
       <!-- KPI Row -->
       <div class="row q-col-gutter-md q-mb-lg">
         <div class="col-6 col-md-3">
@@ -286,7 +289,7 @@
       <q-card style="min-width: 360px" class="rounded-xl overflow-hidden">
         <q-card-section class="bg-primary text-white row items-center justify-between q-py-md">
           <div class="text-h6 text-weight-bold">Giustifica Assenza</div>
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
 
         <q-card-section class="q-pa-md space-y-4">
@@ -329,6 +332,7 @@ import { useI18n } from 'vue-i18n'
 import { useQuasar, date as qdate } from 'quasar'
 import { useAttendanceStore } from '@/stores/attendance'
 import api from '@/services/api'
+import AbsenceLimitWidget from '@/components/Parent/AbsenceLimitWidget.vue'
 
 const $q = useQuasar()
 const { t } = useI18n()

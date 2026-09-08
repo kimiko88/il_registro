@@ -132,11 +132,12 @@ describe('MainLayout Logic', () => {
             setupUserRole('secretary')
             const flatItems = getFlatItems('secretary')
 
-            // 1 dashboard + 4 Anagrafiche + 4 Atti + 7 Servizi = 16
-            expect(flatItems).toHaveLength(16)
+            // 1 dashboard + 4 Anagrafiche + 4 Atti + 8 Servizi (incl. Flussi SIDI MIM) = 17
+            expect(flatItems).toHaveLength(17)
             expect(flatItems.map(i => i.label)).toContain('Dashboard')
             expect(flatItems.map(i => i.label)).toContain('Documenti')
             expect(flatItems.map(i => i.label)).toContain('Studenti')
+            expect(flatItems.map(i => i.label)).toContain('Flussi SIDI')
         })
     })
 

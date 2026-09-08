@@ -1,7 +1,17 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useWebSocketStore } from '@/stores/websocket'
 import { useAuthStore } from '@/stores/auth'
+
+vi.mock('quasar', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    Notify: {
+      create: vi.fn()
+    }
+  }
+})
 
 describe('useWebSocketStore — Connection, Ticket & Reconnect Lifecycle', () => {
   beforeEach(() => {
@@ -40,5 +50,40 @@ describe('useWebSocketStore — Connection, Ticket & Reconnect Lifecycle', () =>
     expect(wsStore.isConnected).toBe(false)
     expect(wsStore.reconnectAttempts).toBe(0)
     expect(wsStore.hasFailedPermanently).toBe(false)
+  })
+
+  it('triggers sendDesktopNotification when Notification permission is granted', () => {
+    const mockNotification = vi.fn()
+    mockNotification.permission = 'granted'
+    globalThis.Notification = mockNotification
+
+    const wsStore = useWebSocketStore()
+    const notif = wsStore.sendDesktopNotification({
+      title: 'Nuovo Voto',
+      body: 'Matematica: 8'
+    })
+
+    expect(mockNotification).toHaveBeenCalledWith('Nuovo Voto', expect.objectContaining({
+      body: 'Matematica: 8'
+    }))
+  })
+
+  it('dispatches desktop notification on incoming GRADE_ADDED message', () => {
+    const mockNotification = vi.fn()
+    mockNotification.permission = 'granted'
+    globalThis.Notification = mockNotification
+
+    const wsStore = useWebSocketStore()
+    wsStore.handleMessage({
+      type: 'GRADE_ADDED',
+      payload: {
+        grade_value: '9',
+        subject_name: 'Storia'
+      }
+    })
+
+    expect(mockNotification).toHaveBeenCalledWith('Registro Elettronico - Voti', expect.objectContaining({
+      body: expect.stringContaining('Storia')
+    }))
   })
 })

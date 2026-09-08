@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Register - Teacher</string>
+    <string name="teacher_dashboard_title">Teacher Portal</string>
+    <string name="take_attendance">Take Attendance</string>
+    <string name="add_grade">Add Grade</string>
+    <string name="scrutiny_board">Scrutiny Board</string>
+    <string name="sign_hour">Sign Lesson Hour</string>
+    <string name="lesson_topic">Lesson Topic</string>
+    <string name="select_class">Select Class</string>
+    <string name="login_subtitle">Log in to your teaching desk</string>
+    <string name="email_label">Teacher Email</string>
+    <string name="password_label">Password</string>
+    <string name="btn_login">LOG IN TO REGISTER</string>
+    <string name="err_enter_credentials">Enter email and password</string>
+    <string name="logout">Log out</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="present">Present</string>
+    <string name="absent">Absent</string>
+    <string name="late">Late</string>
+    <string name="my_classes_title">My Classes</string>
+    <string name="lesson_signed">Lesson Signed</string>
+</resources>

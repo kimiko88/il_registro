@@ -166,7 +166,7 @@ func (r *repository) Update(ctx context.Context, id string, req *UpdatePdpReques
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Build dynamic UPDATE
 	args := []any{}

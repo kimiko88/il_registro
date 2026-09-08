@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Журнал - Родитель</string>
+    <string name="parent_dashboard_title">Семейный портал</string>
+    <string name="my_children">Мои дети</string>
+    <string name="child_grades">Оценки ребенка</string>
+    <string name="pending_absences">Пропуски для объяснения</string>
+    <string name="book_colloqui">Записаться на встречу</string>
+    <string name="switch_child">Сменить ребенка</string>
+    <string name="justify_absence">Объяснить пропуск</string>
+    <string name="book_colloquio">Записаться на встречу</string>
+    <string name="pending_justifications">Ожидающие объяснения</string>
+    <string name="no_pending_justifications">Нет пропусков для объяснения</string>
+    <string name="login_subtitle">Вход в родительский портал</string>
+    <string name="email_label">Email родителя</string>
+    <string name="password_label">Пароль</string>
+    <string name="btn_login">ВОЙТИ В ПОРТАЛ</string>
+    <string name="err_enter_credentials">Введите email и пароль</string>
+    <string name="logout">Выйти</string>
+    <string name="child_attendance">Посещаемость</string>
+    <string name="upcoming_colloqui">Предстоящие встречи</string>
+    <string name="sign_hour">Подтвердить</string>
+    <string name="communications">Объявления</string>
+    <string name="no_circulars">Нет доступных циркуляров или объявлений</string>
+    <string name="no_children_found">Ученики не найдены</string>
+    <string name="no_grades">Нет доступных оценок</string>
+    <string name="status_justified">Оправдан</string>
+    <string name="colloquio_confirmed">Забронировано</string>
+    <string name="btn_justify">Оправдать</string>
+    <string name="err_login_failed">Ошибка входа</string>
+    <string name="no_data">Нет данных</string>
+</resources>

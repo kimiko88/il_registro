@@ -55,7 +55,7 @@ func (r *PostgresRepository) ListTenants(ctx context.Context) ([]*Tenant, error)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var list []*Tenant
 	for rows.Next() {

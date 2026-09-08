@@ -36,8 +36,8 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 func (h *Handler) List(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" && role != "system_auditor" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin, superadmin, and system_auditor"})
+	if role != "admin" && role != "superadmin" && role != "system_auditor" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin, superadmin, secretary, and system_auditor"})
 		return
 	}
 
@@ -49,6 +49,7 @@ func (h *Handler) List(c *gin.Context) {
 		ActorID:    c.Query("actor_id"),
 		Action:     c.Query("action"),
 		EntityType: c.Query("entity_type"),
+		IPAddress:  c.Query("ip_address"),
 		From:       c.Query("from"),
 		To:         c.Query("to"),
 		Page:       page,
@@ -67,8 +68,8 @@ func (h *Handler) List(c *gin.Context) {
 
 func (h *Handler) ExportCSV(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" && role != "system_auditor" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin, superadmin, and system_auditor"})
+	if role != "admin" && role != "superadmin" && role != "system_auditor" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "access restricted to admin, superadmin, secretary, and system_auditor"})
 		return
 	}
 
@@ -77,6 +78,7 @@ func (h *Handler) ExportCSV(c *gin.Context) {
 		ActorID:    c.Query("actor_id"),
 		Action:     c.Query("action"),
 		EntityType: c.Query("entity_type"),
+		IPAddress:  c.Query("ip_address"),
 		From:       c.Query("from"),
 		To:         c.Query("to"),
 	}
