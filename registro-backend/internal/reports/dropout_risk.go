@@ -56,57 +56,60 @@ func (s *Service) GetDropoutRisk(ctx context.Context, classID, riskFilter string
 		return []DropoutRiskItem{}, nil
 	}
 
-	// 1. Fetch Students
+	// 1. Fetch Students via the students table (users.class_id does not exist;
+	//    the class association is in students.class_id → classes.id)
 	userQuery := `
-		SELECT u.id, u.first_name, u.last_name, COALESCE(u.class_id, ''),
-		       COALESCE(c.name || ' ' || c.section, c.name, 'N/D') AS class_name
+		SELECT u.id, u.first_name, u.last_name,
+		       COALESCE(st.class_id::text, '') AS class_id,
+		       COALESCE(c.name || ' ' || COALESCE(c.section, ''), c.name, 'N/D') AS class_name,
+		       st.id AS student_record_id
 		FROM users u
-		LEFT JOIN classes c ON u.class_id = c.id
-		WHERE u.role = 'student' AND (u.deleted_at IS NULL)
+		INNER JOIN students st ON st.user_id = u.id AND st.deleted_at IS NULL
+		LEFT JOIN classes c ON c.id = st.class_id
+		WHERE u.role = 'student' AND u.deleted_at IS NULL
 	`
 	var userArgs []interface{}
 	if classID != "" {
-		userQuery += " AND u.class_id = $1"
+		userQuery += " AND st.class_id = $1"
 		userArgs = append(userArgs, classID)
 	}
 	userQuery += " ORDER BY u.last_name ASC, u.first_name ASC"
 
 	rows, err := s.db.QueryContext(ctx, userQuery, userArgs...)
-	if err != nil {
-		return nil, fmt.Errorf("query users error: %w", err)
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("query students error: %w", err)
 	}
 	defer rows.Close()
 
 	type studentBasic struct {
-		id        string
-		firstName string
-		lastName  string
-		classID   string
-		className string
+		userID          string
+		firstName       string
+		lastName        string
+		classID         string
+		className       string
+		studentRecordID string // students.id – used as FK in attendance and grades
 	}
 	var students []studentBasic
-	studentIDs := make(map[string]bool)
 
 	for rows.Next() {
 		var sb studentBasic
-		if err := rows.Scan(&sb.id, &sb.firstName, &sb.lastName, &sb.classID, &sb.className); err != nil {
+		if err := rows.Scan(&sb.userID, &sb.firstName, &sb.lastName, &sb.classID, &sb.className, &sb.studentRecordID); err != nil {
 			return nil, err
 		}
 		students = append(students, sb)
-		studentIDs[sb.id] = true
 	}
 	if len(students) == 0 {
 		return []DropoutRiskItem{}, nil
 	}
 
-	// 2. Fetch Attendance Aggregates per student
+	// 2. Fetch Attendance Aggregates per students.id
 	type attAgg struct {
 		total   int
 		absence int
 		late    int
 		exit    int
 	}
-	attMap := make(map[string]*attAgg)
+	attMap := make(map[string]*attAgg) // keyed by students.id
 
 	attQuery := `
 		SELECT student_id,
@@ -115,7 +118,7 @@ func (s *Service) GetDropoutRisk(ctx context.Context, classID, riskFilter string
 		       COUNT(CASE WHEN status = 'Late' THEN 1 END) AS late_count,
 		       COUNT(CASE WHEN status = 'LeftEarly' THEN 1 END) AS exit_count
 		FROM attendance
-		WHERE 1=1
+		WHERE deleted_at IS NULL
 	`
 	var attArgs []interface{}
 	if classID != "" {
@@ -136,16 +139,17 @@ func (s *Service) GetDropoutRisk(ctx context.Context, classID, riskFilter string
 		}
 	}
 
-	// 3. Fetch Grades Average < 5.0 per student per subject
-	gradeMap := make(map[string][]string) // studentID -> list of failing subjects
+	// 3. Fetch Grades Average < 5.0 per students.id per subject
+	//    grades.student_id references students.id; grade column is grade_value
+	gradeMap := make(map[string][]string) // students.id -> list of failing subjects
 
 	gradeQuery := `
-		SELECT g.student_id, COALESCE(s.name, 'Materia') as subject_name, AVG(g.value) as avg_val
+		SELECT g.student_id, COALESCE(s.name, 'Materia') AS subject_name, AVG(g.grade_value) AS avg_val
 		FROM grades g
 		LEFT JOIN subjects s ON g.subject_id = s.id
 		WHERE g.deleted_at IS NULL
 		GROUP BY g.student_id, s.name
-		HAVING AVG(g.value) < 5.0
+		HAVING AVG(g.grade_value) < 5.0
 	`
 	gradeRows, err := s.db.QueryContext(ctx, gradeQuery)
 	if err == nil {
@@ -162,7 +166,8 @@ func (s *Service) GetDropoutRisk(ctx context.Context, classID, riskFilter string
 	// 4. Build Result List
 	var results []DropoutRiskItem
 	for _, st := range students {
-		agg := attMap[st.id]
+		// attMap and gradeMap are keyed by students.id (the student record primary key)
+		agg := attMap[st.studentRecordID]
 		totalHours := 0
 		absHours := 0
 		lates := 0
@@ -177,7 +182,7 @@ func (s *Service) GetDropoutRisk(ctx context.Context, classID, riskFilter string
 			absenceRate = math.Round((float64(absHours)/float64(totalHours))*1000) / 10
 		}
 
-		failingSubs := gradeMap[st.id]
+		failingSubs := gradeMap[st.studentRecordID]
 		if failingSubs == nil {
 			failingSubs = []string{}
 		}
@@ -189,7 +194,7 @@ func (s *Service) GetDropoutRisk(ctx context.Context, classID, riskFilter string
 		}
 
 		results = append(results, DropoutRiskItem{
-			StudentID:            st.id,
+			StudentID:            st.userID, // expose users.id to the frontend
 			FirstName:            st.firstName,
 			LastName:             st.lastName,
 			ClassID:              st.classID,
