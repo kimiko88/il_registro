@@ -61,6 +61,7 @@ import (
 	"registro-backend/internal/search"
 	"registro-backend/internal/sidi"
 	"registro-backend/internal/signatures"
+	"registro-backend/internal/staff_attendance"
 	"registro-backend/internal/student_goals"
 	"registro-backend/internal/students"
 	"registro-backend/internal/subjects"
@@ -232,6 +233,10 @@ func main() {
 	elearningH := elearning.NewHandler(elearningSvc)
 
 	wsHandler := ws.NewHandler(wsHub)
+
+	staffAttRepo := staff_attendance.NewRepository(database)
+	staffAttSvc := staff_attendance.NewService(staffAttRepo)
+	staffAttH := staff_attendance.NewHandler(staffAttSvc)
 
 	adminMiddleware := admin.NewMiddleware()
 	healthH := handler.NewHealthHandler(database)
@@ -556,6 +561,9 @@ func main() {
 			sidiSvc := sidi.NewService(database)
 			sidiH := sidi.NewHandler(sidiSvc)
 			sidiH.RegisterRoutes(protected)
+
+			// Presenze Personale (Docenti in sciopero + Personale ATA)
+			staffAttH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}

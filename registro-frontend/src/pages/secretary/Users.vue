@@ -451,15 +451,31 @@ const fetchSchools = async () => {
 
 const filteredUsers = computed(() => users.value);
 
-const roleOptions = [
-    { label: 'Studente', value: 'student' },
-    { label: 'Docente', value: 'teacher' },
-    { label: 'Genitore', value: 'parent' },
-    { label: 'Segreteria', value: 'secretary' },
-    { label: 'Vicepreside / Staff', value: 'vice_principal' },
-    { label: 'Preside / Dirigente', value: 'principal' },
-    { label: 'Amministratore', value: 'admin' }
-];
+const roleOptions = computed(() => {
+    const role = (authStore.userRole || authStore.user?.role || '').toLowerCase();
+    const isAdmin = role === 'admin' || role === 'superadmin';
+
+    const options = [
+        { label: 'Studente', value: 'student' },
+        { label: 'Docente', value: 'teacher' },
+        { label: 'Genitore', value: 'parent' },
+        { label: 'Assistente Amministrativo', value: 'assistente_amministrativo' },
+        { label: 'Collaboratore Scolastico', value: 'collaboratore_scolastico' },
+        { label: 'Collaboratore della D.S.', value: 'collaboratore_ds' }
+    ];
+
+    if (isAdmin) {
+        options.push(
+            { label: 'DSGA (Direttore SGA)', value: 'dsga' },
+            { label: 'Segreteria', value: 'secretary' },
+            { label: 'Vicepreside / Staff', value: 'vice_principal' },
+            { label: 'Preside / Dirigente', value: 'principal' },
+            { label: 'Amministratore', value: 'admin' }
+        );
+    }
+
+    return options;
+});
 
 const openCreate = () => {
     isEditing.value = false;

@@ -1080,6 +1080,8 @@ const navigateToProfile = () => {
     router.push('/admin/settings')
   } else if (role === 'secretary' || role === 'principal' || role === 'vice_principal' || role === 'staff') {
     router.push('/secretary/settings')
+  } else if (['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico'].includes(role)) {
+    router.push('/ata')
   } else {
     router.push('/dashboard')
   }
@@ -1120,6 +1122,8 @@ const breadcrumbs = computed(() => {
     items.push({ label: t('roles.admin') || 'Amministrazione', icon: 'admin_panel_settings', path: '/admin/dashboard' })
   } else if (route.path.startsWith('/secretary/') && route.path !== '/secretary') {
     items.push({ label: t('roles.secretary') || 'Segreteria', icon: 'badge', path: '/secretary' })
+  } else if (route.path.startsWith('/ata/') && route.path !== '/ata') {
+    items.push({ label: 'Pannello ATA', icon: 'badge', path: '/ata' })
   }
 
   items.push(current)
@@ -1140,6 +1144,15 @@ const roleLabel = computed(() => {
   const roleKey = userRole.value.toLowerCase()
   if (te('roles.' + roleKey)) {
     return t('roles.' + roleKey)
+  }
+  const ataRolesMap = {
+    dsga: 'DSGA',
+    assistente_amministrativo: 'Assistente Amministrativo',
+    collaboratore_ds: 'Collaboratore D.S.',
+    collaboratore_scolastico: 'Collaboratore Scolastico'
+  }
+  if (ataRolesMap[roleKey]) {
+    return ataRolesMap[roleKey]
   }
   return userRole.value
 })

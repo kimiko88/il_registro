@@ -6,7 +6,7 @@ export default [
         component: () => import('@/layouts/MainLayout.vue'),
         meta: { requiresAuth: true },
         children: [
-            { path: '', component: () => import('@/pages/Dashboard.vue'), meta: { title: 'Dashboard', titleKey: 'routeTitles.dashboard', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'staff', 'system_auditor'] } },
+            { path: '', component: () => import('@/pages/Dashboard.vue'), meta: { title: 'Dashboard', titleKey: 'routeTitles.dashboard', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'staff', 'system_auditor', 'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico'] } },
             { path: 'dashboard', redirect: '/' },
 
             // Admin Routes (SuperAdmin + Admin)
@@ -112,6 +112,10 @@ export default [
             { path: 'secretary/audit-logs', redirect: '/admin/audit-logs' },
             { path: 'secretary/audit-log', redirect: '/admin/audit-logs' },
 
+            // ATA Routes & Staff Attendance (Presenze ATA e Docenti)
+            { path: 'ata', component: () => import('@/pages/ata/Index.vue'), meta: { title: 'Pannello ATA', titleKey: 'routeTitles.ataPanel', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
+            { path: 'ata/attendance', component: () => import('@/pages/ata/StaffAttendance.vue'), meta: { title: 'Presenze Personale & Docenti', titleKey: 'routeTitles.staffAttendance', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
+
             // Teacher Routes (Supports both 'teacher' and 'coordinator')
             { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { title: 'Pannello Docente', titleKey: 'routeTitles.teacherPanel', roles: ['teacher', 'coordinator'] } },
             { path: 'teacher/dashboard', redirect: '/teacher' },
@@ -191,12 +195,12 @@ export default [
                         if (role === 'teacher' || role === 'coordinator') return '/teacher/communications'
                         if (role === 'student') return '/student/communications'
                         if (role === 'parent') return '/parent/communications'
-                        if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary/communications'
+                        if (role === 'secretary' || role === 'principal' || role === 'vice_principal' || ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico'].includes(role)) return '/secretary/communications'
                         if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') return '/admin/dashboard'
                     } catch { /* store not ready */ }
                     return '/'
                 },
-                meta: { title: 'Comunicazioni', titleKey: 'routeTitles.communications', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'system_auditor'] }
+                meta: { title: 'Comunicazioni', titleKey: 'routeTitles.communications', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'system_auditor', 'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico'] }
             },
             {
                 path: 'profile',
@@ -209,10 +213,11 @@ export default [
                         if (role === 'admin' || role === 'superadmin') return '/admin/settings'
                         if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary/settings'
                         if (role === 'teacher' || role === 'coordinator') return '/teacher/settings'
+                        if (['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico'].includes(role)) return '/ata'
                     } catch { /* store not ready */ }
                     return '/'
                 },
-                meta: { title: 'Profilo Utente', titleKey: 'routeTitles.settings', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator'] }
+                meta: { title: 'Profilo Utente', titleKey: 'routeTitles.settings', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico'] }
             },
             { path: 'support', component: () => import('@/pages/Support.vue'), meta: { title: 'Supporto & Assistenza', titleKey: 'routeTitles.support', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } },
             { path: 'accessibility-statement', component: () => import('@/pages/AccessibilityStatement.vue'), meta: { title: 'Dichiarazione di Accessibilità (AgID)', titleKey: 'routeTitles.accessibility', requiresAuth: false } },

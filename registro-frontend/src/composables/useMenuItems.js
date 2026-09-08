@@ -19,6 +19,7 @@ export function useMenuItems(role) {
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
             { label: 'La Mia Scuola', icon: 'school', path: '/admin/schools' },
             { label: 'Gestione Utenti', icon: 'people', path: '/admin/users' },
+            { label: 'Presenze Personale', icon: 'co_present', path: '/ata/attendance' },
             { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
             { label: 'Feature Flags & Istituto', icon: 'toggle_on', path: '/admin/school-settings' },
             { label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
@@ -52,6 +53,7 @@ export function useMenuItems(role) {
                 category: 'Servizi & Report',
                 icon: 'manage_accounts',
                 children: [
+                    { label: 'Presenze Personale', icon: 'co_present', path: '/ata/attendance' },
                     { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
                     { label: 'Flussi SIDI', icon: 'cloud_sync', path: '/secretary/sidi' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
@@ -179,6 +181,79 @@ export function useMenuItems(role) {
                     { label: 'Impostazioni', icon: 'settings', path: '/parent/settings' },
                     { label: 'Profilo', icon: 'person', path: '/parent/profile' },
                     { label: 'Supporto', icon: 'help', path: '/support' }
+                ]
+            }
+        ],
+        dsga: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Presenze & Personale',
+                icon: 'co_present',
+                children: [
+                    { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Anagrafica Personale', icon: 'people', path: '/secretary/users' },
+                    { label: 'Sostituzioni Docenti', icon: 'swap_horiz', path: '/secretary/substitutions' }
+                ]
+            },
+            {
+                category: 'Atti & Gestione',
+                icon: 'folder_shared',
+                children: [
+                    { label: 'Documenti & Atti', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Flussi SIDI', icon: 'cloud_sync', path: '/secretary/sidi' },
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                ]
+            }
+        ],
+        assistente_amministrativo: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Presenze & Personale',
+                icon: 'co_present',
+                children: [
+                    { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Anagrafica Utenti', icon: 'people', path: '/secretary/users' },
+                    { label: 'Studenti', icon: 'school', path: '/secretary/students' }
+                ]
+            },
+            {
+                category: 'Segreteria & Atti',
+                icon: 'folder_shared',
+                children: [
+                    { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                ]
+            }
+        ],
+        collaboratore_ds: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Presenze & Organizzazione',
+                icon: 'co_present',
+                children: [
+                    { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Sostituzioni Docenti', icon: 'swap_horiz', path: '/secretary/substitutions' },
+                    { label: 'Orario Scolastico', icon: 'schedule', path: '/secretary/timetable' }
+                ]
+            },
+            {
+                category: 'Comunicazioni',
+                icon: 'campaign',
+                children: [
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
+                    { label: 'Documenti', icon: 'description', path: '/secretary/documents' }
+                ]
+            }
+        ],
+        collaboratore_scolastico: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Servizi di Sede',
+                icon: 'co_present',
+                children: [
+                    { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Comunicazioni & Circolari', icon: 'email', path: '/secretary/communications' }
                 ]
             }
         ]

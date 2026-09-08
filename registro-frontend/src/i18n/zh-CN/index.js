@@ -1280,6 +1280,10 @@ export default {
     "linguisticGroupLabel": "方向组：{name}"
   },
   "roles": {
+    "collaboratore_scolastico": "校园教辅人员",
+    "collaboratore_ds": "校长助理",
+    "assistente_amministrativo": "行政助理",
+    "dsga": "行政与总务主任 (DSGA)",
     "admin": "学校管理员",
     "superadmin": "超级管理员",
     "secretary": "教务秘书处",
@@ -3293,6 +3297,8 @@ export default {
     "viewAllGrades": "查阅全部学科学分"
   },
   "routeTitles": {
+    "staffAttendance": "Staff & Teacher Attendance",
+    "ataPanel": "School Staff Panel",
     "dashboard": "综合工作台",
     "adminDashboard": "总管理控制台",
     "schoolManagement": "分校机构组织架构",

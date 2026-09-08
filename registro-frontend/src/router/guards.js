@@ -37,6 +37,7 @@ export const authGuard = async (to, from, ...rest) => {
         if (role === 'student') return '/student'
         if (role === 'parent') return '/parent'
         if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary'
+        if (role === 'dsga' || role === 'assistente_amministrativo' || role === 'collaboratore_ds' || role === 'collaboratore_scolastico') return '/ata'
         return '/login'
     }
 

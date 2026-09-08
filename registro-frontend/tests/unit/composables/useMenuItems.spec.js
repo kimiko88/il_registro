@@ -19,12 +19,13 @@ describe('useMenuItems', () => {
         it('should return admin menu items', () => {
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(8)
+            expect(menuItems).toHaveLength(9)
             expect(menuItems[0].label).toBe('Dashboard')
             expect(menuItems[1].label).toBe('La Mia Scuola')
             expect(menuItems[2].label).toBe('Gestione Utenti')
-            expect(menuItems[3].label).toBe('Gestione Sostituzioni')
-            expect(menuItems[4].label).toBe('Feature Flags & Istituto')
+            expect(menuItems[3].label).toBe('Presenze Personale')
+            expect(menuItems[4].label).toBe('Gestione Sostituzioni')
+            expect(menuItems[5].label).toBe('Feature Flags & Istituto')
         })
 
         it('should have correct paths for admin', () => {
@@ -33,8 +34,9 @@ describe('useMenuItems', () => {
             expect(menuItems[0].path).toBe('/')
             expect(menuItems[1].path).toBe('/admin/schools')
             expect(menuItems[2].path).toBe('/admin/users')
-            expect(menuItems[3].path).toBe('/secretary/substitutions')
-            expect(menuItems[4].path).toBe('/admin/school-settings')
+            expect(menuItems[3].path).toBe('/ata/attendance')
+            expect(menuItems[4].path).toBe('/secretary/substitutions')
+            expect(menuItems[5].path).toBe('/admin/school-settings')
         })
 
         it('should have exact flag for dashboard', () => {
@@ -48,11 +50,41 @@ describe('useMenuItems', () => {
         it('should return secretary menu items', () => {
             const flatItems = getFlatItems('secretary')
 
-            expect(flatItems).toHaveLength(17)
+            expect(flatItems).toHaveLength(18)
             expect(flatItems.map(item => item.label)).toContain('Documenti')
             expect(flatItems.map(item => item.label)).toContain('Studenti')
             expect(flatItems.map(item => item.label)).toContain('Flussi SIDI')
             expect(flatItems.map(item => item.label)).toContain('Report')
+            expect(flatItems.map(item => item.label)).toContain('Presenze Personale')
+        })
+    })
+
+    describe('ATA roles', () => {
+        it('should return correct menu items for dsga', () => {
+            const flatItems = getFlatItems('dsga')
+            expect(flatItems.map(i => i.path)).toContain('/ata')
+            expect(flatItems.map(i => i.path)).toContain('/ata/attendance')
+            expect(flatItems.map(i => i.path)).toContain('/secretary/users')
+        })
+
+        it('should return correct menu items for assistente_amministrativo', () => {
+            const flatItems = getFlatItems('assistente_amministrativo')
+            expect(flatItems.map(i => i.path)).toContain('/ata')
+            expect(flatItems.map(i => i.path)).toContain('/ata/attendance')
+            expect(flatItems.map(i => i.path)).toContain('/secretary/students')
+        })
+
+        it('should return correct menu items for collaboratore_ds', () => {
+            const flatItems = getFlatItems('collaboratore_ds')
+            expect(flatItems.map(i => i.path)).toContain('/ata')
+            expect(flatItems.map(i => i.path)).toContain('/ata/attendance')
+            expect(flatItems.map(i => i.path)).toContain('/secretary/timetable')
+        })
+
+        it('should return correct menu items for collaboratore_scolastico', () => {
+            const flatItems = getFlatItems('collaboratore_scolastico')
+            expect(flatItems.map(i => i.path)).toContain('/ata')
+            expect(flatItems.map(i => i.path)).toContain('/ata/attendance')
         })
     })
 

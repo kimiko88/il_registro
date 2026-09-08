@@ -159,6 +159,10 @@ const roleFilterOptions = computed(() => [
   { label: t('usersPage.roleStudents') || 'Studenti', value: 'student' },
   { label: t('usersPage.roleTeachers') || 'Docenti', value: 'teacher' },
   { label: t('usersPage.roleParents') || 'Genitori', value: 'parent' },
+  { label: 'Assistenti Amministrativi', value: 'assistente_amministrativo' },
+  { label: 'Collaboratori Scolastici', value: 'collaboratore_scolastico' },
+  { label: 'Collaboratori D.S.', value: 'collaboratore_ds' },
+  { label: 'DSGA', value: 'dsga' },
   { label: t('usersPage.roleSecretary') || 'Segreteria', value: 'secretary' },
   { label: t('usersPage.rolePrincipal') || 'Preside', value: 'principal' },
   { label: t('usersPage.roleVicePrincipal') || 'Vicepreside', value: 'vice_principal' },
@@ -184,6 +188,10 @@ const getRoleColor = (role) => {
         case 'secretary': return 'cyan'
         case 'principal': return 'deep-purple'
         case 'vice_principal': return 'indigo'
+        case 'dsga': return 'teal'
+        case 'assistente_amministrativo': return 'cyan'
+        case 'collaboratore_ds': return 'deep-orange'
+        case 'collaboratore_scolastico': return 'amber-9'
         case 'admin': return 'red'
         case 'superadmin': return 'amber'
         default: return 'grey'
@@ -199,6 +207,10 @@ const getRoleLabel = (role) => {
         case 'secretary': return t('usersPage.roleSecretary') || 'Segreteria'
         case 'principal': return t('usersPage.rolePrincipal') || 'Preside'
         case 'vice_principal': return t('usersPage.roleVicePrincipal') || 'Vicepreside'
+        case 'dsga': return 'DSGA'
+        case 'assistente_amministrativo': return 'Assistente Amministrativo'
+        case 'collaboratore_ds': return 'Collaboratore D.S.'
+        case 'collaboratore_scolastico': return 'Collaboratore Scolastico'
         case 'admin': return t('usersPage.roleAdmin') || 'Amministratore'
         case 'superadmin': return 'Super Admin'
         default: return role

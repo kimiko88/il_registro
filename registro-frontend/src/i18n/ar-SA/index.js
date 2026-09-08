@@ -1280,6 +1280,10 @@ export default {
     "linguisticGroupLabel": "المسار: {name}"
   },
   "roles": {
+    "collaboratore_scolastico": "مساعد مدرسي",
+    "collaboratore_ds": "مساعد المدير",
+    "assistente_amministrativo": "مساعد إداري",
+    "dsga": "مدير الشؤون الإدارية والمالية",
     "admin": "مسؤول المدرسة",
     "superadmin": "مدير عام للنظام",
     "secretary": "السكرتارية والإدارة",
@@ -3413,6 +3417,8 @@ export default {
     "viewAllGrades": "عرض جميع الدرجات"
   },
   "routeTitles": {
+    "staffAttendance": "Staff & Teacher Attendance",
+    "ataPanel": "School Staff Panel",
     "dashboard": "الرئيسية",
     "adminDashboard": "لوحة تحكم المشرف",
     "schoolManagement": "إدارة المدارس",

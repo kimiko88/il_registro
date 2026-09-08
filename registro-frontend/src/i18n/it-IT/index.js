@@ -1280,6 +1280,10 @@ export default {
     "linguisticGroupLabel": "Gruppo Linguistico: {name}"
   },
   "roles": {
+    "collaboratore_scolastico": "Collaboratore Scolastico",
+    "collaboratore_ds": "Collaboratore D.S.",
+    "assistente_amministrativo": "Assistente Amministrativo",
+    "dsga": "DSGA (Direttore SGA)",
     "admin": "Amministratore",
     "superadmin": "Super Amministratore",
     "secretary": "Segreteria",
@@ -3268,6 +3272,8 @@ export default {
     "viewAllGrades": "Vedi tutti i voti"
   },
   "routeTitles": {
+    "staffAttendance": "Presenze Personale & Docenti",
+    "ataPanel": "Pannello Personale ATA",
     "dashboard": "Dashboard",
     "adminDashboard": "Dashboard Amministratore",
     "schoolManagement": "Gestione Scuole",

@@ -1280,6 +1280,10 @@ export default {
     "linguisticGroupLabel": "Профиль: {name}"
   },
   "roles": {
+    "collaboratore_scolastico": "Школьный сотрудник",
+    "collaboratore_ds": "Помощник директора",
+    "assistente_amministrativo": "Административный ассистент",
+    "dsga": "Заведующий хозяйством / ДСГА",
     "admin": "Администратор",
     "superadmin": "Главный администратор",
     "secretary": "Секретариат",
@@ -3268,6 +3272,8 @@ export default {
     "viewAllGrades": "Посмотреть все оценки"
   },
   "routeTitles": {
+    "staffAttendance": "Staff & Teacher Attendance",
+    "ataPanel": "School Staff Panel",
     "dashboard": "Главная Панель",
     "adminDashboard": "Панель Администратора",
     "schoolManagement": "Управление Организациями",

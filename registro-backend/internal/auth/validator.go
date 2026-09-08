@@ -15,36 +15,45 @@ const (
 
 // Role constants — single source of truth used by validator, service and middleware.
 const (
-	RoleSuperAdmin    = "superadmin"
-	RoleAdmin         = "admin"
-	RolePrincipal     = "principal"
-	RoleVicePrincipal = "vice_principal"
-	RoleSecretary     = "secretary"
-	RoleTeacher       = "teacher"
-	RoleCoordinator   = "coordinator"
-	RoleStudent       = "student"
-	RoleParent        = "parent"
-	RoleSystemAuditor = "system_auditor"
+	RoleSuperAdmin               = "superadmin"
+	RoleAdmin                    = "admin"
+	RolePrincipal                = "principal"
+	RoleVicePrincipal            = "vice_principal"
+	RoleSecretary                = "secretary"
+	RoleTeacher                  = "teacher"
+	RoleCoordinator              = "coordinator"
+	RoleStudent                  = "student"
+	RoleParent                   = "parent"
+	RoleSystemAuditor            = "system_auditor"
+	RoleDSGA                     = "dsga"
+	RoleAssistenteAmministrativo = "assistente_amministrativo"
+	RoleCollaboratoreDS          = "collaboratore_ds"
+	RoleCollaboratoreScolastico  = "collaboratore_scolastico"
 )
 
 // allRoles is the exhaustive set of valid role strings.
 var allRoles = map[string]bool{
-	RoleSuperAdmin:    true,
-	RoleAdmin:         true,
-	RolePrincipal:     true,
-	RoleVicePrincipal: true,
-	RoleSecretary:     true,
-	RoleTeacher:       true,
-	RoleCoordinator:   true,
-	RoleStudent:       true,
-	RoleParent:        true,
-	RoleSystemAuditor: true,
+	RoleSuperAdmin:               true,
+	RoleAdmin:                    true,
+	RolePrincipal:                true,
+	RoleVicePrincipal:            true,
+	RoleSecretary:                true,
+	RoleTeacher:                  true,
+	RoleCoordinator:              true,
+	RoleStudent:                  true,
+	RoleParent:                   true,
+	RoleSystemAuditor:            true,
+	RoleDSGA:                     true,
+	RoleAssistenteAmministrativo: true,
+	RoleCollaboratoreDS:          true,
+	RoleCollaboratoreScolastico:  true,
 }
 
 // IsStaffRole returns true if the given role belongs to staff/administration/teachers.
 func IsStaffRole(role string) bool {
 	switch role {
-	case RoleTeacher, RoleCoordinator, RoleAdmin, RoleSuperAdmin, RoleSecretary, RolePrincipal, RoleVicePrincipal, RoleSystemAuditor:
+	case RoleTeacher, RoleCoordinator, RoleAdmin, RoleSuperAdmin, RoleSecretary, RolePrincipal, RoleVicePrincipal, RoleSystemAuditor,
+		RoleDSGA, RoleAssistenteAmministrativo, RoleCollaboratoreDS, RoleCollaboratoreScolastico:
 		return true
 	default:
 		return false
@@ -54,32 +63,47 @@ func IsStaffRole(role string) bool {
 // creatableRoles defines which roles each caller role is allowed to create.
 var creatableRoles = map[string]map[string]bool{
 	RoleSuperAdmin: {
-		RoleAdmin:         true,
-		RolePrincipal:     true,
-		RoleVicePrincipal: true,
-		RoleSecretary:     true,
-		RoleTeacher:       true,
-		RoleCoordinator:   true,
-		RoleStudent:       true,
-		RoleParent:        true,
-		RoleSystemAuditor: true,
+		RoleAdmin:                    true,
+		RolePrincipal:                true,
+		RoleVicePrincipal:            true,
+		RoleSecretary:                true,
+		RoleTeacher:                  true,
+		RoleCoordinator:              true,
+		RoleStudent:                  true,
+		RoleParent:                   true,
+		RoleSystemAuditor:            true,
+		RoleDSGA:                     true,
+		RoleAssistenteAmministrativo: true,
+		RoleCollaboratoreDS:          true,
+		RoleCollaboratoreScolastico:  true,
 	},
 	RoleAdmin: {
-		RoleAdmin:         true,
-		RolePrincipal:     true,
-		RoleVicePrincipal: true,
-		RoleSecretary:     true,
-		RoleTeacher:       true,
-		RoleCoordinator:   true,
-		RoleStudent:       true,
-		RoleParent:        true,
-		RoleSystemAuditor: true,
+		RoleAdmin:                    true,
+		RolePrincipal:                true,
+		RoleVicePrincipal:            true,
+		RoleSecretary:                true,
+		RoleTeacher:                  true,
+		RoleCoordinator:              true,
+		RoleStudent:                  true,
+		RoleParent:                   true,
+		RoleSystemAuditor:            true,
+		RoleDSGA:                     true,
+		RoleAssistenteAmministrativo: true,
+		RoleCollaboratoreDS:          true,
+		RoleCollaboratoreScolastico:  true,
 	},
 	RoleSecretary: {
-		RoleTeacher:     true,
-		RoleCoordinator: true,
-		RoleStudent:     true,
-		RoleParent:      true,
+		RoleTeacher:                  true,
+		RoleCoordinator:              true,
+		RoleStudent:                  true,
+		RoleParent:                   true,
+		RoleCollaboratoreScolastico:  true,
+		RoleAssistenteAmministrativo: true,
+		RoleCollaboratoreDS:          true,
+	},
+	RoleDSGA: {
+		RoleAssistenteAmministrativo: true,
+		RoleCollaboratoreScolastico:  true,
 	},
 }
 

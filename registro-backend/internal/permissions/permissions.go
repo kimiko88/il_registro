@@ -16,14 +16,15 @@ type Action string
 
 const (
 	// Resources
-	ResourceUsers       Resource = "users"
-	ResourceClasses     Resource = "classes"
-	ResourceGrades      Resource = "grades"
-	ResourceAssignments Resource = "assignments"
-	ResourceAttendance  Resource = "attendance"
-	ResourceAudit       Resource = "audit"
-	ResourceDocuments   Resource = "documents"
-	ResourcePCTO        Resource = "pcto"
+	ResourceUsers           Resource = "users"
+	ResourceClasses         Resource = "classes"
+	ResourceGrades          Resource = "grades"
+	ResourceAssignments     Resource = "assignments"
+	ResourceAttendance      Resource = "attendance"
+	ResourceStaffAttendance Resource = "staff_attendance" // Presenze personale (docenti + ATA)
+	ResourceAudit           Resource = "audit"
+	ResourceDocuments       Resource = "documents"
+	ResourcePCTO            Resource = "pcto"
 )
 
 const (
@@ -81,6 +82,12 @@ const (
 	PCTOCreate Permission = "pcto:create"
 	PCTOUpdate Permission = "pcto:update"
 	PCTODelete Permission = "pcto:delete"
+
+	// Staff Attendance Permissions (Presenze Personale)
+	StaffAttendanceRead   Permission = "staff_attendance:read"
+	StaffAttendanceCreate Permission = "staff_attendance:create"
+	StaffAttendanceUpdate Permission = "staff_attendance:update"
+	StaffAttendanceDelete Permission = "staff_attendance:delete"
 )
 
 // RoleDefinitions maps roles to their default permissions
@@ -133,6 +140,49 @@ var RoleDefinitions = map[string][]Permission{
 	"parent": {
 		// Minimal self-access
 		GradeRead, AttendanceRead, SchedulingBook, SchedulingRead,
+	},
+
+	// =============================================
+	// Personale ATA — ruoli specifici scolastici italiani
+	// =============================================
+
+	// DSGA: Direttore dei Servizi Generali e Amministrativi
+	// Coordina tutto il personale ATA, gestisce il bilancio e gli atti amministrativi
+	"dsga": {
+		UserRead, UserCreate, UserUpdate, UserExport,
+		AttendanceRead,
+		StaffAttendanceRead, StaffAttendanceCreate, StaffAttendanceUpdate, StaffAttendanceDelete,
+		DocumentRead, DocumentCreate, DocumentUpdate, DocumentDelete,
+		AuditRead,
+		SchedulingRead,
+	},
+
+	// Assistente Amministrativo (AA)
+	// Gestisce la segreteria didattica e amministrativa
+	"assistente_amministrativo": {
+		UserRead, UserCreate, UserUpdate,
+		AttendanceRead,
+		StaffAttendanceRead, StaffAttendanceCreate, StaffAttendanceUpdate,
+		DocumentRead, DocumentCreate, DocumentUpdate,
+		SchedulingRead,
+	},
+
+	// Collaboratore DS: Collaboratore del Dirigente Scolastico
+	// Vicepreside nella pratica, coordina docenti e sorveglianza
+	"collaboratore_ds": {
+		UserRead, UserAudit,
+		AttendanceRead, AttendanceCreate, AttendanceUpdate,
+		StaffAttendanceRead, StaffAttendanceCreate, StaffAttendanceUpdate,
+		DocumentRead,
+		SchedulingRead,
+	},
+
+	// Collaboratore Scolastico (ex bidello)
+	// Sorveglianza, accoglienza, pulizia — può registrare presenze docenti durante scioperi
+	"collaboratore_scolastico": {
+		UserRead,
+		StaffAttendanceRead, StaffAttendanceCreate, StaffAttendanceUpdate,
+		DocumentRead,
 	},
 }
 

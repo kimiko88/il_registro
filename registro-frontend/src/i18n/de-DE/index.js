@@ -1280,6 +1280,10 @@ export default {
     "linguisticGroupLabel": "Fachprofil: {name}"
   },
   "roles": {
+    "collaboratore_scolastico": "Schulmitarbeiter",
+    "collaboratore_ds": "Mitarbeiter der Schulleitung",
+    "assistente_amministrativo": "Verwaltungsassistent",
+    "dsga": "Verwaltungsleiter (DSGA)",
     "admin": "Administrator",
     "superadmin": "Super-Administrator",
     "secretary": "Sekretariat",
@@ -3268,6 +3272,8 @@ export default {
     "viewAllGrades": "Alle Noten anzeigen"
   },
   "routeTitles": {
+    "staffAttendance": "Staff & Teacher Attendance",
+    "ataPanel": "School Staff Panel",
     "dashboard": "Übersicht",
     "adminDashboard": "Administrator-Dashboard",
     "schoolManagement": "Schulverwaltung",

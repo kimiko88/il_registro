@@ -1280,6 +1280,10 @@ export default {
     "linguisticGroupLabel": "Profil: {name}"
   },
   "roles": {
+    "collaboratore_scolastico": "Colaborator Școlar",
+    "collaboratore_ds": "Colaborator al Directorului",
+    "assistente_amministrativo": "Asistent Administrativ",
+    "dsga": "Director Administrativ (DSGA)",
     "admin": "Administrator",
     "superadmin": "Super Administrator",
     "secretary": "Secretariat",
@@ -3268,6 +3272,8 @@ export default {
     "viewAllGrades": "Vezi toate notele"
   },
   "routeTitles": {
+    "staffAttendance": "Staff & Teacher Attendance",
+    "ataPanel": "School Staff Panel",
     "dashboard": "Panou Principal",
     "adminDashboard": "Panou Administrator",
     "schoolManagement": "Gestiune Școli",

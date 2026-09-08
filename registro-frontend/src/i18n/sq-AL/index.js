@@ -1280,6 +1280,10 @@ export default {
     "linguisticGroupLabel": "Grupi Gjuhësor: {name}"
   },
   "roles": {
+    "collaboratore_scolastico": "Punonjës Shkollor",
+    "collaboratore_ds": "Bashkëpunëtor i Drejtorisë",
+    "assistente_amministrativo": "Asistent Administrativ",
+    "dsga": "Drejtor Administrativ (DSGA)",
     "admin": "Administrator",
     "superadmin": "Super Administrator",
     "secretary": "Sekretari",
@@ -3413,6 +3417,8 @@ export default {
     "viewAllGrades": "Shiko të gjitha notat"
   },
   "routeTitles": {
+    "staffAttendance": "Staff & Teacher Attendance",
+    "ataPanel": "School Staff Panel",
     "dashboard": "Paneli Kryesor",
     "adminDashboard": "Paneli i Administratorit",
     "schoolManagement": "Menaxhimi i Shkollave",

@@ -36,6 +36,12 @@ export function useAuth() {
                 case 'staff':
                     router.push('/secretary')
                     break
+                case 'dsga':
+                case 'collaboratore_ds':
+                case 'assistente_amministrativo':
+                case 'collaboratore_scolastico':
+                    router.push('/ata')
+                    break
                 case 'teacher':
                 case 'coordinator':
                 case 'docente':
