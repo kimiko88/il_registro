@@ -70,6 +70,38 @@ func (m *MockRepo) ListBadges(ctx context.Context, schoolID string) ([]staff_att
 	return nil, nil
 }
 
+func (m *MockRepo) CreateLeaveRequest(ctx context.Context, schoolID, userID string, req staff_attendance.CreateLeaveRequest) (*staff_attendance.LeaveRequest, error) {
+	return nil, nil
+}
+
+func (m *MockRepo) ListLeaveRequests(ctx context.Context, schoolID, userID, status string) ([]staff_attendance.LeaveRequest, error) {
+	return nil, nil
+}
+
+func (m *MockRepo) GetLeaveRequest(ctx context.Context, schoolID, id string) (*staff_attendance.LeaveRequest, error) {
+	return nil, nil
+}
+
+func (m *MockRepo) ApproveLeaveRequest(ctx context.Context, schoolID, id, approvedBy, notes string) error {
+	return nil
+}
+
+func (m *MockRepo) RejectLeaveRequest(ctx context.Context, schoolID, id, rejectedBy, reason string) error {
+	return nil
+}
+
+func (m *MockRepo) DeleteLeaveRequest(ctx context.Context, schoolID, id, userID string) error {
+	return nil
+}
+
+func (m *MockRepo) GetMonthlyTimecard(ctx context.Context, schoolID, userID, month string) (*staff_attendance.MonthlyTimecard, error) {
+	return nil, nil
+}
+
+func (m *MockRepo) GetAllMonthlyTimecards(ctx context.Context, schoolID, month string) ([]staff_attendance.MonthlyTimecard, error) {
+	return nil, nil
+}
+
 func TestATARolesAndPermissions(t *testing.T) {
 	roles := []string{"dsga", "assistente_amministrativo", "collaboratore_ds", "collaboratore_scolastico"}
 	for _, r := range roles {

@@ -48,6 +48,7 @@ import (
 	"registro-backend/internal/pcto"
 	"registro-backend/internal/pdfworker"
 	"registro-backend/internal/pdp"
+	"registro-backend/internal/personnel_desk"
 
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/recovery"
@@ -76,6 +77,7 @@ import (
 	"registro-backend/internal/uda"
 	"registro-backend/internal/users"
 	"registro-backend/internal/verbali"
+	"registro-backend/internal/visitors"
 	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
@@ -237,6 +239,15 @@ func main() {
 	staffAttRepo := staff_attendance.NewRepository(database)
 	staffAttSvc := staff_attendance.NewService(staffAttRepo)
 	staffAttH := staff_attendance.NewHandler(staffAttSvc)
+	staffAttLeaveH := staff_attendance.NewLeaveHandler(staffAttRepo)
+
+	visitorsRepo := visitors.NewRepository(database)
+	visitorsSvc := visitors.NewService(visitorsRepo)
+	visitorsH := visitors.NewHandler(visitorsSvc)
+
+	deskRepo := personnel_desk.NewRepository(database)
+	deskSvc := personnel_desk.NewService(deskRepo)
+	deskH := personnel_desk.NewHandler(deskSvc)
 
 	adminMiddleware := admin.NewMiddleware()
 	healthH := handler.NewHealthHandler(database)
@@ -564,6 +575,13 @@ func main() {
 
 			// Presenze Personale (Docenti in sciopero + Personale ATA)
 			staffAttH.RegisterRoutes(protected)
+			staffAttLeaveH.RegisterLeaveRoutes(protected)
+
+			// Registro Visitatori, Uscite Anticipate & Segnalazioni Guasti
+			visitorsH.RegisterRoutes(protected)
+
+			// Sportello Digitale Personale
+			deskH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}

@@ -25,6 +25,18 @@ type Repository interface {
 	AssignBadge(ctx context.Context, badge UserBadge) error
 	RevokeBadge(ctx context.Context, schoolID, userID, badgeCode string) error
 	ListBadges(ctx context.Context, schoolID string) ([]UserBadge, error)
+
+	// Ferie & Permessi
+	CreateLeaveRequest(ctx context.Context, schoolID, userID string, req CreateLeaveRequest) (*LeaveRequest, error)
+	ListLeaveRequests(ctx context.Context, schoolID, userID, status string) ([]LeaveRequest, error)
+	GetLeaveRequest(ctx context.Context, schoolID, id string) (*LeaveRequest, error)
+	ApproveLeaveRequest(ctx context.Context, schoolID, id, approvedBy, notes string) error
+	RejectLeaveRequest(ctx context.Context, schoolID, id, rejectedBy, reason string) error
+	DeleteLeaveRequest(ctx context.Context, schoolID, id, userID string) error
+
+	// Cartellino mensile
+	GetMonthlyTimecard(ctx context.Context, schoolID, userID, month string) (*MonthlyTimecard, error)
+	GetAllMonthlyTimecards(ctx context.Context, schoolID, month string) ([]MonthlyTimecard, error)
 }
 
 // PostgresRepository implementa Repository

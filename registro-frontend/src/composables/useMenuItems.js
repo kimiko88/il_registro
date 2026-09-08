@@ -191,6 +191,7 @@ export function useMenuItems(role) {
                 icon: 'co_present',
                 children: [
                     { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Cartellino & Piano Ferie', icon: 'calendar_month', path: '/ata/timecard' },
                     { label: 'Anagrafica Personale', icon: 'people', path: '/secretary/users' },
                     { label: 'Sostituzioni Docenti', icon: 'swap_horiz', path: '/secretary/substitutions' }
                 ]
@@ -199,6 +200,7 @@ export function useMenuItems(role) {
                 category: 'Atti & Gestione',
                 icon: 'folder_shared',
                 children: [
+                    { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
                     { label: 'Documenti & Atti', icon: 'description', path: '/secretary/documents' },
                     { label: 'Flussi SIDI', icon: 'cloud_sync', path: '/secretary/sidi' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
@@ -212,6 +214,7 @@ export function useMenuItems(role) {
                 icon: 'co_present',
                 children: [
                     { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Cartellino & Piano Ferie', icon: 'calendar_month', path: '/ata/timecard' },
                     { label: 'Anagrafica Utenti', icon: 'people', path: '/secretary/users' },
                     { label: 'Studenti', icon: 'school', path: '/secretary/students' }
                 ]
@@ -220,6 +223,7 @@ export function useMenuItems(role) {
                 category: 'Segreteria & Atti',
                 icon: 'folder_shared',
                 children: [
+                    { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
                     { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
                     { label: 'Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
@@ -232,7 +236,9 @@ export function useMenuItems(role) {
                 category: 'Presenze & Organizzazione',
                 icon: 'co_present',
                 children: [
+                    { label: 'Emergenza Sostituzioni', icon: 'bolt', path: '/ata/emergency-substitutions' },
                     { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Cartellino & Piano Ferie', icon: 'calendar_month', path: '/ata/timecard' },
                     { label: 'Sostituzioni Docenti', icon: 'swap_horiz', path: '/secretary/substitutions' },
                     { label: 'Orario Scolastico', icon: 'schedule', path: '/secretary/timetable' }
                 ]
@@ -241,6 +247,7 @@ export function useMenuItems(role) {
                 category: 'Comunicazioni',
                 icon: 'campaign',
                 children: [
+                    { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
                     { label: 'Documenti', icon: 'description', path: '/secretary/documents' }
                 ]
@@ -252,7 +259,10 @@ export function useMenuItems(role) {
                 category: 'Servizi di Sede',
                 icon: 'co_present',
                 children: [
+                    { label: 'Registro Visitatori', icon: 'door_front', path: '/ata/visitor-registry' },
                     { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Cartellino & Piano Ferie', icon: 'calendar_month', path: '/ata/timecard' },
+                    { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
                     { label: 'Comunicazioni & Circolari', icon: 'email', path: '/secretary/communications' }
                 ]
             }

@@ -26,9 +26,11 @@ const bcryptCost = 12
 
 // allowedCreators maps each role to the set of roles it is allowed to create.
 var allowedCreators = map[string]map[string]bool{
-	"superadmin": {"superadmin": true, "admin": true, "secretary": true, "teacher": true, "student": true, "parent": true},
-	"admin":      {"secretary": true, "teacher": true, "student": true, "parent": true},
-	"secretary":  {"student": true, "parent": true},
+	"superadmin":                {"superadmin": true, "admin": true, "secretary": true, "teacher": true, "student": true, "parent": true, "dsga": true, "collaboratore_ds": true, "assistente_amministrativo": true, "collaboratore_scolastico": true},
+	"admin":                     {"secretary": true, "teacher": true, "student": true, "parent": true, "dsga": true, "collaboratore_ds": true, "assistente_amministrativo": true, "collaboratore_scolastico": true},
+	"secretary":                 {"teacher": true, "student": true, "parent": true, "collaboratore_ds": true, "assistente_amministrativo": true, "collaboratore_scolastico": true},
+	"dsga":                      {"collaboratore_ds": true, "assistente_amministrativo": true, "collaboratore_scolastico": true},
+	"assistente_amministrativo": {"student": true, "parent": true},
 }
 
 // Service handles business logic for user management.
@@ -44,7 +46,7 @@ func NewService(repo Repository) *Service {
 // ─── Auth helpers ────────────────────────────────────────────────────────────
 
 func isPrivileged(role string) bool {
-	return role == "admin" || role == "superadmin" || role == "secretary"
+	return role == "admin" || role == "superadmin" || role == "secretary" || role == "dsga" || role == "assistente_amministrativo"
 }
 
 // ─── CRUD ────────────────────────────────────────────────────────────────────
@@ -111,7 +113,7 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 
 // ListUsers returns a paginated, filtered list of users.
 func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string, filter UserFilter) ([]User, int, error) {
-	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
+	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
 		if (actorRole == "parent" || actorRole == "student") && filter.Role == "teacher" {
 			// Allowed to query teachers in their school for booking colloqui or communications
 		} else {
@@ -126,7 +128,7 @@ func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string
 
 // GetUser returns a single user by ID.
 func (s *Service) GetUser(ctx context.Context, actorRole, actorSchoolID string, id string) (*User, error) {
-	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
+	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
 		return nil, ErrUnauthorized
 	}
 	user, err := s.repo.GetByID(ctx, id)
@@ -213,6 +215,9 @@ func (s *Service) DeleteUser(ctx context.Context, actorRole, actorSchoolID, id s
 	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
 		return ErrUnauthorized
 	}
+	if (actorRole == "secretary" || actorRole == "dsga" || actorRole == "assistente_amministrativo") && (user.Role == "admin" || user.Role == "superadmin" || (actorRole != "dsga" && user.Role == "dsga")) {
+		return ErrUnauthorized
+	}
 	return s.repo.Delete(ctx, id)
 }
 
@@ -221,14 +226,14 @@ func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole, actorSchoolID 
 	if !isPrivileged(actorRole) {
 		return 0, ErrUnauthorized
 	}
-	if actorRole == "admin" || actorRole == "secretary" {
+	if actorRole == "admin" || actorRole == "secretary" || actorRole == "dsga" || actorRole == "assistente_amministrativo" {
 		targetUsers, err := s.repo.ListByIDs(ctx, ids)
 		if err != nil {
 			return 0, fmt.Errorf("failed to verify target users: %w", err)
 		}
 		var safeIDs []string
 		for _, tu := range targetUsers {
-			if tu.Role != "admin" && tu.Role != "superadmin" {
+			if tu.Role != "admin" && tu.Role != "superadmin" && (actorRole == "dsga" || tu.Role != "dsga") {
 				if actorSchoolID != "" && tu.SchoolID != nil && *tu.SchoolID == actorSchoolID {
 					safeIDs = append(safeIDs, tu.ID)
 				}

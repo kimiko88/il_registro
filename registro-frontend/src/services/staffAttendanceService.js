@@ -70,6 +70,44 @@ export const staffAttendanceService = {
   async assignBadge(data) {
     const res = await api.post('/staff-attendance/badges', data)
     return res.data
+  },
+
+  /**
+   * Cartellino mensile e piano ferie ATA
+   */
+  async getTimecard(params) {
+    const res = await api.get('/staff-attendance/timecard', { params })
+    return res.data
+  },
+
+  async exportTimecard(params) {
+    const res = await api.get('/staff-attendance/timecard/export', { params, responseType: 'blob' })
+    return res.data
+  },
+
+  async listLeaves(params) {
+    const res = await api.get('/staff-attendance/leaves', { params })
+    return res.data
+  },
+
+  async createLeave(data) {
+    const res = await api.post('/staff-attendance/leaves', data)
+    return res.data
+  },
+
+  async approveLeave(id, data) {
+    const res = await api.patch(`/staff-attendance/leaves/${id}/approve`, data)
+    return res.data
+  },
+
+  async rejectLeave(id, data) {
+    const res = await api.patch(`/staff-attendance/leaves/${id}/reject`, data)
+    return res.data
+  },
+
+  async deleteLeave(id) {
+    const res = await api.delete(`/staff-attendance/leaves/${id}`)
+    return res.data
   }
 }
 

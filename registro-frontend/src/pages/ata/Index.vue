@@ -187,6 +187,114 @@
           </q-card-section>
         </q-card>
       </div>
+
+      <!-- 7. Emergenza Sostituzioni (Collaboratore DS, DSGA, Admin) -->
+      <div class="col-12 col-md-6 col-lg-4" v-if="userRole === 'collaboratore_ds' || userRole === 'dsga' || userRole === 'admin' || userRole === 'superadmin' || userRole === 'principal' || userRole === 'vice_principal'">
+        <q-card
+          class="hub-card rounded-2xl p-4 shadow-sm border border-slate-200 cursor-pointer full-height border-l-4 border-l-deep-orange-500"
+          @click="router.push('/ata/emergency-substitutions')"
+        >
+          <q-card-section>
+            <div class="row items-center justify-between q-mb-md">
+              <div class="icon-bubble bg-deep-orange-100 text-deep-orange-800">
+                <q-icon name="bolt" size="32px" />
+              </div>
+              <q-icon name="arrow_forward" color="grey-6" size="20px" class="card-arrow" />
+            </div>
+            <div class="text-h6 text-weight-bold text-slate-900 q-mb-xs">
+              {{ t('ataDashboard.cardEmergencySubsTitle') || 'Emergenza Sostituzioni' }}
+            </div>
+            <div class="text-caption text-slate-600 q-mb-md">
+              {{ t('ataDashboard.cardEmergencySubsDesc') || 'Centrale operativa mattutina: docenti assenti, raccomandazioni algoritmo e copertura cattedre con 1-click' }}
+            </div>
+            <div class="row items-center text-deep-orange-800 text-weight-bold text-caption">
+              {{ t('ataDashboard.cardEmergencySubsAction') || 'Apri Centrale Emergenza' }}
+              <q-icon name="chevron_right" size="16px" class="q-ml-xs" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- 8. Registro Visitatori & Portineria (Collaboratore Scolastico, DSGA, Admin) -->
+      <div class="col-12 col-md-6 col-lg-4">
+        <q-card
+          class="hub-card rounded-2xl p-4 shadow-sm border border-slate-200 cursor-pointer full-height"
+          @click="router.push('/ata/visitor-registry')"
+        >
+          <q-card-section>
+            <div class="row items-center justify-between q-mb-md">
+              <div class="icon-bubble bg-amber-100 text-amber-800">
+                <q-icon name="door_front" size="32px" />
+              </div>
+              <q-icon name="arrow_forward" color="grey-6" size="20px" class="card-arrow" />
+            </div>
+            <div class="text-h6 text-weight-bold text-slate-900 q-mb-xs">
+              {{ t('ataDashboard.cardVisitorsTitle') || 'Registro Visitatori & Portineria' }}
+            </div>
+            <div class="text-caption text-slate-600 q-mb-md">
+              {{ t('ataDashboard.cardVisitorsDesc') || 'Controllo ingressi esterni, uscite anticipate studenti con deleghe e segnalazione guasti' }}
+            </div>
+            <div class="row items-center text-amber-800 text-weight-bold text-caption">
+              {{ t('ataDashboard.cardVisitorsAction') || 'Apri Portineria' }}
+              <q-icon name="chevron_right" size="16px" class="q-ml-xs" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- 9. Cartellino & Piano Ferie (per tutti i ruoli ATA + DSGA) -->
+      <div class="col-12 col-md-6 col-lg-4">
+        <q-card
+          class="hub-card rounded-2xl p-4 shadow-sm border border-slate-200 cursor-pointer full-height"
+          @click="router.push('/ata/timecard')"
+        >
+          <q-card-section>
+            <div class="row items-center justify-between q-mb-md">
+              <div class="icon-bubble bg-teal-100 text-teal-800">
+                <q-icon name="calendar_month" size="32px" />
+              </div>
+              <q-icon name="arrow_forward" color="grey-6" size="20px" class="card-arrow" />
+            </div>
+            <div class="text-h6 text-weight-bold text-slate-900 q-mb-xs">
+              {{ t('ataDashboard.cardTimecardTitle') || 'Cartellino & Piano Ferie' }}
+            </div>
+            <div class="text-caption text-slate-600 q-mb-md">
+              {{ t('ataDashboard.cardTimecardDesc') || 'Riepilogo ore CCNL Scuola (36h), saldo straordinari, timbrature badge e richieste assenza' }}
+            </div>
+            <div class="row items-center text-teal-800 text-weight-bold text-caption">
+              {{ t('ataDashboard.cardTimecardAction') || 'Consulta Cartellino' }}
+              <q-icon name="chevron_right" size="16px" class="q-ml-xs" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
+
+      <!-- 10. Sportello Digitale Personale (Docenti + ATA) -->
+      <div class="col-12 col-md-6 col-lg-4">
+        <q-card
+          class="hub-card rounded-2xl p-4 shadow-sm border border-slate-200 cursor-pointer full-height"
+          @click="router.push('/ata/personnel-desk')"
+        >
+          <q-card-section>
+            <div class="row items-center justify-between q-mb-md">
+              <div class="icon-bubble bg-indigo-100 text-indigo-800">
+                <q-icon name="forward_to_inbox" size="32px" />
+              </div>
+              <q-icon name="arrow_forward" color="grey-6" size="20px" class="card-arrow" />
+            </div>
+            <div class="text-h6 text-weight-bold text-slate-900 q-mb-xs">
+              {{ t('ataDashboard.cardDeskTitle') || 'Sportello Digitale Personale' }}
+            </div>
+            <div class="text-caption text-slate-600 q-mb-md">
+              {{ t('ataDashboard.cardDeskDesc') || 'Workflow istanze autorizzative: Dipendente ➔ Istruttoria AA ➔ Visto DSGA ➔ Decreto Dirigente' }}
+            </div>
+            <div class="row items-center text-indigo-800 text-weight-bold text-caption">
+              {{ t('ataDashboard.cardDeskAction') || 'Accedi allo Sportello' }}
+              <q-icon name="chevron_right" size="16px" class="q-ml-xs" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
     </div>
   </q-page>
 </template>

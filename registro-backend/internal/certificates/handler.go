@@ -34,7 +34,7 @@ func (h *Handler) List(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "secretary" && role != "superadmin" {
+	if role != "admin" && role != "secretary" && role != "superadmin" && role != "assistente_amministrativo" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
 		return
 	}
@@ -63,7 +63,7 @@ func (h *Handler) Generate(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "secretary" && role != "superadmin" {
+	if role != "admin" && role != "secretary" && role != "superadmin" && role != "assistente_amministrativo" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
 		return
 	}
@@ -97,7 +97,7 @@ func (h *Handler) DownloadPDF(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "secretary" && role != "superadmin" && role != "student" && role != "parent" {
+	if role != "admin" && role != "secretary" && role != "superadmin" && role != "assistente_amministrativo" && role != "student" && role != "parent" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -147,7 +147,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "secretary" && role != "superadmin" {
+	if role != "admin" && role != "secretary" && role != "superadmin" && role != "assistente_amministrativo" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
 		return
 	}

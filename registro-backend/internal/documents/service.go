@@ -236,15 +236,15 @@ func (s *service) ProcessWorkflow(ctx context.Context, actorRole, schoolID, user
 			return errors.New("unauthorized: only document creator or admin can submit")
 		}
 	case "approve_secretary":
-		if actorRole != "secretary" && actorRole != "admin" && actorRole != "superadmin" {
+		if actorRole != "secretary" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "dsga" && actorRole != "assistente_amministrativo" {
 			return errors.New("unauthorized: insufficient permissions for secretary approval")
 		}
 	case "approve_director":
-		if actorRole != "admin" && actorRole != "superadmin" {
+		if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
 			return errors.New("unauthorized: insufficient permissions for director approval")
 		}
 	case "reject":
-		if actorRole != "secretary" && actorRole != "admin" && actorRole != "superadmin" {
+		if actorRole != "secretary" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "dsga" && actorRole != "assistente_amministrativo" {
 			return errors.New("unauthorized: insufficient permissions to reject")
 		}
 	default:
