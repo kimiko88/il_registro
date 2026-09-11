@@ -22,6 +22,7 @@ export function useMenuItems(role) {
             { label: 'Presenze Personale', icon: 'co_present', path: '/ata/attendance' },
             { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
             { label: 'Feature Flags & Istituto', icon: 'toggle_on', path: '/admin/school-settings' },
+            { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
             { label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
             { label: 'Google & Teams E-Learning', icon: 'hub', path: '/admin/elearning' },
             { label: 'Impostazioni', icon: 'settings', path: '/admin/settings' }
@@ -44,6 +45,7 @@ export function useMenuItems(role) {
                 icon: 'folder_shared',
                 children: [
                     { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
                     { label: 'Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
                     { label: 'Libri di Testo', icon: 'auto_stories', path: '/secretary/textbooks' },
                     { label: 'Riunioni', icon: 'groups', path: '/secretary/meetings' }

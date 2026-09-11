@@ -1,0 +1,15 @@
+{
+  "name": "il-registro-root",
+  "version": "1.0.0-beta",
+  "description": "Root workspace management scripts for il_registro (Registrov2)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bump": "node scripts/bump-version.mjs",
+    "bump:patch": "node scripts/bump-version.mjs patch",
+    "bump:minor": "node scripts/bump-version.mjs minor",
+    "bump:major": "node scripts/bump-version.mjs major",
+    "bump:beta": "node scripts/bump-version.mjs beta",
+    "version:check": "node scripts/bump-version.mjs --check"
+  }
+}

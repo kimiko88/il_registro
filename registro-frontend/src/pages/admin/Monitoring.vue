@@ -97,6 +97,34 @@
             </q-card-section>
           </q-card>
         </div>
+
+        <!-- Codecov Component Coverage -->
+        <div class="col-12">
+          <q-card class="glass-card shadow-soft rounded-xl">
+            <q-card-section class="q-pa-lg">
+              <div class="row items-center justify-between q-mb-sm">
+                <div class="text-h6 text-weight-bold text-slate-800">
+                  <q-icon name="insights" color="primary" class="q-mr-sm" />Copertura Test & Componenti (Codecov)
+                </div>
+                <q-badge color="indigo-7" class="q-pa-xs">Gestione Componenti Attiva</q-badge>
+              </div>
+              <p class="text-body2 text-slate-600 q-mb-md">
+                Monitoraggio continuo della percentuale di test coverage per singole componenti architetturali (Backend: Verbali, Auth, Voti, Presenze, Scrutini; Frontend: Docenti, Segreteria, Servizi e Componenti UI).
+              </p>
+              <div class="row items-center q-gutter-md">
+                <q-btn
+                  unelevated
+                  color="primary"
+                  icon="open_in_new"
+                  label="Apri Dashboard Componenti su Codecov"
+                  href="https://app.codecov.io/github/kimiko88/il_registro/components"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
       </div>
     </div>
 
@@ -223,10 +251,13 @@ const resourceMetrics = computed(() => {
   ]
 })
 
+const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0-beta'
+
 const versionInfo = computed(() => {
   const h = health.value || {}
   return [
-    { label: 'Versione API',      value: h.api_version      || '-' },
+    { label: 'Versione Web / UI', value: `v${appVersion}` },
+    { label: 'Versione API Go',   value: h.api_version ? `v${h.api_version}` : '-' },
     { label: 'Versione DB',       value: h.db_version       || '-' },
     { label: 'Ambiente',          value: h.environment      || '-' },
     { label: 'Uptime',            value: h.uptime           || '-' },

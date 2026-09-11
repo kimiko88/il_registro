@@ -70,11 +70,12 @@ func TestHandler_Verbali(t *testing.T) {
 	mockRepo.On("CreateMeeting", mock.Anything, mock.Anything).Return(nil).Once()
 
 	body, _ := json.Marshal(CreateMeetingRequest{
-		ClassID:   "class-1",
-		Title:     "Consiglio Ordinario",
-		Date:      "2026-11-10",
-		StartTime: "15:00",
-		EndTime:   "16:30",
+		ClassID:     "class-1",
+		MeetingType: "consiglio_classe",
+		Title:       "Consiglio Ordinario",
+		Date:        "2026-11-10",
+		StartTime:   "15:00",
+		EndTime:     "16:30",
 	})
 	req, _ = http.NewRequest(http.MethodPost, "/api/v1/verbali/meetings", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -90,12 +91,14 @@ func TestHandler_Verbali(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// CreateVerbale
-	mockRepo.On("GetMeetingByID", mock.Anything, "m-1").Return(&CouncilMeeting{ID: "m-1"}, nil).Once()
+	secID := "teacher-1"
+	mockRepo.On("GetMeetingWithCoordinator", mock.Anything, "m-1").Return(&CouncilMeeting{ID: "m-1"}, "teacher-1", nil).Once()
 	mockRepo.On("CreateVerbale", mock.Anything, mock.Anything).Return(nil).Once()
 	verbBody, _ := json.Marshal(CreateVerbaleRequest{
-		MeetingID: "m-1",
-		Title:     "Verbale Iniziale",
-		Content:   "Contenuto del verbale",
+		MeetingID:   "m-1",
+		Title:       "Verbale Iniziale",
+		Content:     "Contenuto del verbale",
+		SecretaryID: &secID,
 	})
 	req, _ = http.NewRequest(http.MethodPost, "/api/v1/verbali", bytes.NewBuffer(verbBody))
 	req.Header.Set("Content-Type", "application/json")
@@ -104,24 +107,43 @@ func TestHandler_Verbali(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, w.Code)
 
 	// GetVerbale
-	mockRepo.On("GetVerbaleByID", mock.Anything, "v-1", "teacher-1").Return(&MeetingVerbale{ID: "v-1"}, nil).Once()
+	mockRepo.On("GetVerbaleByID", mock.Anything, "v-1", "teacher-1").Return(&MeetingVerbale{ID: "v-1", MeetingID: "m-1", SecretaryID: &secID}, nil).Once()
+	mockRepo.On("GetMeetingWithCoordinator", mock.Anything, "m-1").Return(&CouncilMeeting{ID: "m-1"}, "teacher-1", nil).Once()
 	req, _ = http.NewRequest(http.MethodGet, "/api/v1/verbali/v-1", nil)
+	w = httptest.NewRecorder()
+	rTeacher.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// UpdateVerbale (PUT /verbali/:id)
+	mockRepo.On("GetVerbaleByID", mock.Anything, "v-1", "teacher-1").Return(&MeetingVerbale{ID: "v-1", MeetingID: "m-1", SecretaryID: &secID, IsSigned: false}, nil).Once()
+	mockRepo.On("GetMeetingWithCoordinator", mock.Anything, "m-1").Return(&CouncilMeeting{ID: "m-1"}, "teacher-1", nil).Once()
+	mockRepo.On("UpdateVerbale", mock.Anything, mock.Anything).Return(nil).Once()
+
+	putBody, _ := json.Marshal(UpdateVerbaleRequest{
+		Title:       "Verbale Modificato",
+		Content:     "Nuovo testo",
+		SecretaryID: &secID,
+	})
+	req, _ = http.NewRequest(http.MethodPut, "/api/v1/verbali/v-1", bytes.NewBuffer(putBody))
+	req.Header.Set("Content-Type", "application/json")
 	w = httptest.NewRecorder()
 	rTeacher.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// ListVerbali (requires valid UUID)
 	validMeetingUUID := "a0000000-0000-0000-0000-000000000001"
-	mockRepo.On("ListVerbali", mock.Anything, validMeetingUUID, "teacher-1").Return([]*MeetingVerbale{{ID: "v-1"}}, nil).Once()
+	mockRepo.On("ListVerbali", mock.Anything, validMeetingUUID, "teacher-1", false).Return([]*MeetingVerbale{{ID: "v-1", MeetingID: validMeetingUUID}}, nil).Once()
+	mockRepo.On("GetMeetingWithCoordinator", mock.Anything, validMeetingUUID).Return(&CouncilMeeting{ID: validMeetingUUID}, "teacher-1", nil).Once()
 	req, _ = http.NewRequest(http.MethodGet, "/api/v1/verbali/meeting/"+validMeetingUUID, nil)
 	w = httptest.NewRecorder()
 	rTeacher.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// SignVerbale
-	secID := "teacher-1"
-	mockRepo.On("GetVerbaleByID", mock.Anything, "v-1", "teacher-1").Return(&MeetingVerbale{ID: "v-1", SecretaryID: &secID, IsPublished: true}, nil).Once()
+	mockRepo.On("GetVerbaleByID", mock.Anything, "v-1", "teacher-1").Return(&MeetingVerbale{ID: "v-1", MeetingID: "m-1", SecretaryID: &secID, IsPublished: true}, nil).Once()
+	mockRepo.On("GetMeetingWithCoordinator", mock.Anything, "m-1").Return(&CouncilMeeting{ID: "m-1"}, "teacher-1", nil).Once()
 	mockRepo.On("SignVerbale", mock.Anything, "v-1", "teacher-1", mock.Anything).Return(nil).Once()
+	mockRepo.On("MarkVerbaleSigned", mock.Anything, "v-1").Return(nil).Once()
 	req, _ = http.NewRequest(http.MethodPost, "/api/v1/verbali/v-1/sign", nil)
 	w = httptest.NewRecorder()
 	rTeacher.ServeHTTP(w, req)
@@ -136,6 +158,7 @@ func TestHandler_Verbali(t *testing.T) {
 
 	// ExportPDF
 	mockRepo.On("GetVerbaleByID", mock.Anything, "v-1", "teacher-1").Return(&MeetingVerbale{ID: "v-1", MeetingID: "m-1", Title: "Verbale 1", Content: "Delibera approvata"}, nil).Once()
+	mockRepo.On("GetMeetingWithCoordinator", mock.Anything, "m-1").Return(&CouncilMeeting{ID: "m-1"}, "teacher-1", nil).Once()
 	mockRepo.On("GetSignatures", mock.Anything, "v-1").Return([]VerbaleSignature{{ID: "sig-1", UserID: "u-1", UserName: "Docente Segretario", IPAddress: "127.0.0.1"}}, nil).Once()
 	mockRepo.On("GetMeetingByID", mock.Anything, "m-1").Return(&CouncilMeeting{ID: "m-1", Title: "Consiglio", StartTime: "15:00", EndTime: "16:00", ClassID: "3A"}, nil).Once()
 	req, _ = http.NewRequest(http.MethodGet, "/api/v1/verbali/v-1/pdf", nil)
@@ -143,6 +166,22 @@ func TestHandler_Verbali(t *testing.T) {
 	rTeacher.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "application/pdf", w.Header().Get("Content-Type"))
+
+	// 3. Principal router: templates management
+	rPrincipal := setupVerbaliRouter(svc, "principal", "ds-1", "school-1")
+
+	tplBody, _ := json.Marshal(CreateTemplateRequest{
+		Title:           "Modello Collegio Docenti",
+		MeetingType:     "collegio_docenti",
+		DefaultAgenda:   "1. Approvazione PTOF",
+		TemplateContent: "Il collegio docenti...",
+	})
+	mockRepo.On("CreateTemplate", mock.Anything, mock.Anything).Return(nil).Once()
+	req, _ = http.NewRequest(http.MethodPost, "/api/v1/verbali/templates", bytes.NewBuffer(tplBody))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	rPrincipal.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusCreated, w.Code)
 
 	mockRepo.AssertExpectations(t)
 }

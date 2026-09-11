@@ -6,10 +6,10 @@ import "time"
 type VisitorPurpose string
 
 const (
-	PurposeParent       VisitorPurpose = "parent"        // genitore/tutore
-	PurposeSupplier     VisitorPurpose = "supplier"      // fornitore/tecnico
-	PurposeInstitution  VisitorPurpose = "institution"   // ente/istituzione
-	PurposeOther        VisitorPurpose = "other"         // altro
+	PurposeParent      VisitorPurpose = "parent"      // genitore/tutore
+	PurposeSupplier    VisitorPurpose = "supplier"    // fornitore/tecnico
+	PurposeInstitution VisitorPurpose = "institution" // ente/istituzione
+	PurposeOther       VisitorPurpose = "other"       // altro
 )
 
 // MaintenancePriority livelli di priorità per le segnalazioni guasti
@@ -49,27 +49,27 @@ type Visitor struct {
 
 // EarlyExit registra l'uscita anticipata di uno studente
 type EarlyExit struct {
-	ID             string     `json:"id" db:"id"`
-	SchoolID       string     `json:"school_id" db:"school_id"`
-	StudentID      string     `json:"student_id" db:"student_id"`
-	StudentName    string     `json:"student_name,omitempty"` // join
-	ClassName      string     `json:"class_name,omitempty"`   // join
-	ExitTime       time.Time  `json:"exit_time" db:"exit_time"`
-	ReturnTime     *time.Time `json:"return_time,omitempty" db:"return_time"`
-	DelegateeName  string     `json:"delegatee_name" db:"delegatee_name"`     // nome delegato
-	DelegateRel    string     `json:"delegate_rel,omitempty" db:"delegate_rel"` // genitore, nonno, tutore, ...
-	ReasonCode     string     `json:"reason_code,omitempty" db:"reason_code"`   // medica, famiglia, altro
-	Notes          string     `json:"notes,omitempty" db:"notes"`
-	RecordedBy     string     `json:"recorded_by" db:"recorded_by"`
-	CreatedAt      time.Time  `json:"created_at" db:"created_at"`
+	ID            string     `json:"id" db:"id"`
+	SchoolID      string     `json:"school_id" db:"school_id"`
+	StudentID     string     `json:"student_id" db:"student_id"`
+	StudentName   string     `json:"student_name,omitempty"` // join
+	ClassName     string     `json:"class_name,omitempty"`   // join
+	ExitTime      time.Time  `json:"exit_time" db:"exit_time"`
+	ReturnTime    *time.Time `json:"return_time,omitempty" db:"return_time"`
+	DelegateeName string     `json:"delegatee_name" db:"delegatee_name"`       // nome delegato
+	DelegateRel   string     `json:"delegate_rel,omitempty" db:"delegate_rel"` // genitore, nonno, tutore, ...
+	ReasonCode    string     `json:"reason_code,omitempty" db:"reason_code"`   // medica, famiglia, altro
+	Notes         string     `json:"notes,omitempty" db:"notes"`
+	RecordedBy    string     `json:"recorded_by" db:"recorded_by"`
+	CreatedAt     time.Time  `json:"created_at" db:"created_at"`
 }
 
 // MaintenanceReport segnala guasti o anomalie strutturali
 type MaintenanceReport struct {
 	ID          string              `json:"id" db:"id"`
 	SchoolID    string              `json:"school_id" db:"school_id"`
-	Location    string              `json:"location" db:"location"`       // es. "Aula 12", "Bagni piano 1"
-	Category    string              `json:"category" db:"category"`       // elettrico, idraulico, strutturale, pulizia, informatica
+	Location    string              `json:"location" db:"location"` // es. "Aula 12", "Bagni piano 1"
+	Category    string              `json:"category" db:"category"` // elettrico, idraulico, strutturale, pulizia, informatica
 	Description string              `json:"description" db:"description"`
 	Priority    MaintenancePriority `json:"priority" db:"priority"`
 	Status      MaintenanceStatus   `json:"status" db:"status"`

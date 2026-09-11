@@ -76,7 +76,7 @@ func (s *Service) GetDropoutRisk(ctx context.Context, classID, riskFilter string
 	userQuery += " ORDER BY u.last_name ASC, u.first_name ASC"
 
 	rows, err := s.db.QueryContext(ctx, userQuery, userArgs...)
-	if err := rows.Err(); err != nil {
+	if err != nil {
 		return nil, fmt.Errorf("query students error: %w", err)
 	}
 	defer rows.Close()
@@ -97,6 +97,9 @@ func (s *Service) GetDropoutRisk(ctx context.Context, classID, riskFilter string
 			return nil, err
 		}
 		students = append(students, sb)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("students rows error: %w", err)
 	}
 	if len(students) == 0 {
 		return []DropoutRiskItem{}, nil
@@ -137,6 +140,9 @@ func (s *Service) GetDropoutRisk(ctx context.Context, classID, riskFilter string
 				attMap[sID] = &a
 			}
 		}
+		if err := attRows.Err(); err != nil {
+			return nil, fmt.Errorf("attendance rows error: %w", err)
+		}
 	}
 
 	// 3. Fetch Grades Average < 5.0 per students.id per subject
@@ -160,6 +166,9 @@ func (s *Service) GetDropoutRisk(ctx context.Context, classID, riskFilter string
 			if err := gradeRows.Scan(&sID, &sName, &avg); err == nil {
 				gradeMap[sID] = append(gradeMap[sID], fmt.Sprintf("%s (%.1f)", sName, avg))
 			}
+		}
+		if err := gradeRows.Err(); err != nil {
+			return nil, fmt.Errorf("grade rows error: %w", err)
 		}
 	}
 

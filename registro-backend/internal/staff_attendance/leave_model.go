@@ -27,22 +27,22 @@ const (
 
 // LeaveRequest rappresenta una richiesta di assenza/permesso del personale ATA
 type LeaveRequest struct {
-	ID          string      `json:"id" db:"id"`
-	SchoolID    string      `json:"school_id" db:"school_id"`
-	UserID      string      `json:"user_id" db:"user_id"`
-	Type        LeaveType   `json:"type" db:"type"`
-	StartDate   string      `json:"start_date" db:"start_date"` // YYYY-MM-DD
-	EndDate     string      `json:"end_date" db:"end_date"`
-	Days        float64     `json:"days" db:"days"`
-	Hours       float64     `json:"hours" db:"hours"` // per permessi orari
-	Notes       string      `json:"notes,omitempty" db:"notes"`
-	Status      LeaveStatus `json:"status" db:"status"`
-	ApprovedBy  *string     `json:"approved_by,omitempty" db:"approved_by"`
-	ApprovedAt  *time.Time  `json:"approved_at,omitempty" db:"approved_at"`
-	RejectedAt  *time.Time  `json:"rejected_at,omitempty" db:"rejected_at"`
-	RejectReason string     `json:"reject_reason,omitempty" db:"reject_reason"`
-	CreatedAt   time.Time   `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time   `json:"updated_at" db:"updated_at"`
+	ID           string      `json:"id" db:"id"`
+	SchoolID     string      `json:"school_id" db:"school_id"`
+	UserID       string      `json:"user_id" db:"user_id"`
+	Type         LeaveType   `json:"type" db:"type"`
+	StartDate    string      `json:"start_date" db:"start_date"` // YYYY-MM-DD
+	EndDate      string      `json:"end_date" db:"end_date"`
+	Days         float64     `json:"days" db:"days"`
+	Hours        float64     `json:"hours" db:"hours"` // per permessi orari
+	Notes        string      `json:"notes,omitempty" db:"notes"`
+	Status       LeaveStatus `json:"status" db:"status"`
+	ApprovedBy   *string     `json:"approved_by,omitempty" db:"approved_by"`
+	ApprovedAt   *time.Time  `json:"approved_at,omitempty" db:"approved_at"`
+	RejectedAt   *time.Time  `json:"rejected_at,omitempty" db:"rejected_at"`
+	RejectReason string      `json:"reject_reason,omitempty" db:"reject_reason"`
+	CreatedAt    time.Time   `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time   `json:"updated_at" db:"updated_at"`
 
 	// Join fields
 	UserFirstName string `json:"user_first_name,omitempty"`
@@ -56,12 +56,12 @@ type MonthlyTimecard struct {
 	FirstName     string  `json:"first_name"`
 	LastName      string  `json:"last_name"`
 	Role          string  `json:"role"`
-	Month         string  `json:"month"` // YYYY-MM
+	Month         string  `json:"month"`          // YYYY-MM
 	ContractHours float64 `json:"contract_hours"` // ore contrattuali mensili (da CCNL: 36h/sett)
 	WorkedHours   float64 `json:"worked_hours"`   // ore effettive da badge
 	OvertimeHours float64 `json:"overtime_hours"`
 	AbsenceDays   int     `json:"absence_days"`
-	LeaveDays     int     `json:"leave_days"`  // ferie approvate
+	LeaveDays     int     `json:"leave_days"` // ferie approvate
 	SickDays      int     `json:"sick_days"`
 	PermitHours   float64 `json:"permit_hours"` // ore di permesso
 

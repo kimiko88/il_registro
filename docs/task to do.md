@@ -731,11 +731,4 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **9. Circuit Breaker per Integrazioni Esterne (Supabase Storage, SIDI, Webhook)**:
     - Backend: Creato package `pkg/circuitbreaker/circuitbreaker.go` basato su `sony/gobreaker` con gestione degli stati Closed, Half-Open e Open, soglie di errore configurabili, timeout di ripristino e fail-fast immediato con `ErrCircuitOpen`. Integrato nel provider di storage Supabase (`pkg/upload/supabase.go`) per prevenire blocchi o rallentamenti dell'API in caso di degradazione del servizio esterno.
     - Unit test validato: `pkg/circuitbreaker/circuitbreaker_test.go` (100% passati).
-  - **Validazione Completa & Regression Check**:
-    - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend.
-    - **0 errori, 0 warning** ESLint (`npm run lint`).
-    - **Tutte le 11 lingue** (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `zh-CN`, `uk-UA`, `ar-SA`) aggiornate e sincronizzate al 100% per tutte le nuove feature.
-    - **Backend**: `go vet ./...` (0 errori e 0 warning), tutti i test interni `go test ./internal/... ./pkg/...` superati al 100%, tutti i test di integrazione `go test ./tests/integration/...` superati al 100%.
-    - **Risoluzione `golangci-lint` (ineffassign & unused)**:
-      - `internal/classes/repository.go`: Sostituito `code := "P"` con `var code string` per eliminare l'assegnazione inefficace segnalata da `ineffassign`.
-      - `cmd/seed_school/main.go`: Rimosso `type studentSeed struct` non referenziato per eliminare il warning `unused`.
+  - **Validazione Completa & Regression Check**: - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend. - **0 errori, 0 warning** ESLint (`npm run lint`). - **Tutte le 11 lingue** (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `zh-CN`, `uk-UA`, `ar-SA`) aggiornate e sincronizzate al 100% per tutte le nuove feature. - **Backend**: `go vet ./...` (0 errori e 0 warning), tutti i test interni `go test ./internal/... ./pkg/...` superati al 100%, tutti i test di integrazione `go test ./tests/integration/...` superati al 100%. - **Risoluzione `golangci-lint` (ineffassign & unused)**: - `internal/classes/repository.go`: Sostituito `code := "P"` con `var code string` per eliminare l'assegnazione inefficace segnalata da `ineffassign`. - `cmd/seed_school/main.go`: Rimosso `type studentSeed struct` non referenziato per eliminare il warning `unused`.

@@ -91,6 +91,24 @@ func TestScuolaDiProvaWorkflow(t *testing.T) {
 	err = db.QueryRowContext(ctx, `SELECT id FROM users WHERE email = $1 AND school_id = $2`, "segreteria.prova@scuola.it", schoolID).Scan(&secID)
 	require.NoError(t, err, "Segreteria user must exist")
 
+	// 2b. Verify Personale ATA (1 DSGA, 2 AA, 2 Collaboratori DS, 2 Collaboratori Scolastici)
+	ataRolesExpected := map[string]int{
+		"dsga":                      1,
+		"assistente_amministrativo": 2,
+		"collaboratore_ds":          2,
+		"collaboratore_scolastico":  2,
+	}
+	for role, minCount := range ataRolesExpected {
+		var count int
+		err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM users WHERE school_id = $1 AND role = $2`, schoolID, role).Scan(&count)
+		require.NoError(t, err, "Query for ATA role %s must succeed", role)
+		assert.GreaterOrEqual(t, count, minCount, "Expected at least %d users with role %s", minCount, role)
+	}
+
+	var dsgaID string
+	err = db.QueryRowContext(ctx, `SELECT id FROM users WHERE email = $1 AND school_id = $2`, "dsga.prova@scuola.it", schoolID).Scan(&dsgaID)
+	require.NoError(t, err, "DSGA user must exist")
+
 	// 3. Verify 4 Subjects
 	var subjectCount int
 	err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM subjects WHERE school_id = $1`, schoolID).Scan(&subjectCount)

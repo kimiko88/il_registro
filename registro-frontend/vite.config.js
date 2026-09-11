@@ -3,9 +3,16 @@ import vue from '@vitejs/plugin-vue'
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import { readFileSync } from 'node:fs'
+
+const packageJson = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'))
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version || '1.0.0-beta'),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().split('T')[0])
+  },
   build: {
     // Use esbuild instead of terser to avoid serialize-javascript
     // crypto.randomUUID() error in CI / Node < 20 environments

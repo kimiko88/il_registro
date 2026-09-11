@@ -79,6 +79,9 @@ func (r *PostgresRepository) ListLeaveRequests(ctx context.Context, schoolID, us
 		}
 		leaves = append(leaves, l)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return leaves, nil
 }
 
@@ -215,6 +218,9 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 				}
 			}
 		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
 	}
 
 	// Ore contrattuali (CCNL Scuola: 36h/settimana = ~156h/mese)
@@ -261,6 +267,9 @@ func (r *PostgresRepository) GetAllMonthlyTimecards(ctx context.Context, schoolI
 		if err == nil {
 			timecards = append(timecards, *tc)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return timecards, nil
 }

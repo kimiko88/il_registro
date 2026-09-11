@@ -82,6 +82,7 @@ import (
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 	"registro-backend/pkg/upload"
+	"registro-backend/pkg/version"
 	"registro-backend/pkg/wsticket"
 )
 
@@ -594,7 +595,7 @@ func main() {
 	}
 
 	go func() {
-		logger.Log.Infof("Server starting on port %s", cfg.Server.Port)
+		logger.Log.Infof("il_registro API Server %s starting on port %s", version.String(), cfg.Server.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Log.Fatalf("Server error: %v", err)
 		}

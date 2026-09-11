@@ -29,19 +29,19 @@ const (
 )
 
 type DeskRequest struct {
-	ID          string       `json:"id"`
-	SchoolID    string       `json:"school_id"`
-	ApplicantID string       `json:"applicant_id"`
-	ApplicantName string     `json:"applicant_name,omitempty"`
-	ApplicantRole string     `json:"applicant_role,omitempty"`
-	Category    DeskCategory `json:"category"`
-	SubCategory string       `json:"sub_category,omitempty"`
-	StartDate   string       `json:"start_date"`
-	EndDate     string       `json:"end_date"`
-	Days        float64      `json:"days"`
-	Hours       float64      `json:"hours"`
-	Description string       `json:"description"`
-	Attachments []string     `json:"attachments"`
+	ID            string       `json:"id"`
+	SchoolID      string       `json:"school_id"`
+	ApplicantID   string       `json:"applicant_id"`
+	ApplicantName string       `json:"applicant_name,omitempty"`
+	ApplicantRole string       `json:"applicant_role,omitempty"`
+	Category      DeskCategory `json:"category"`
+	SubCategory   string       `json:"sub_category,omitempty"`
+	StartDate     string       `json:"start_date"`
+	EndDate       string       `json:"end_date"`
+	Days          float64      `json:"days"`
+	Hours         float64      `json:"hours"`
+	Description   string       `json:"description"`
+	Attachments   []string     `json:"attachments"`
 
 	Status DeskStatus `json:"status"`
 

@@ -73,7 +73,52 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to create secretary: %w", err)
 	}
-	fmt.Printf("[SEED] Admin ID: %s, Secretary ID: %s\n", adminID, secID)
+	dirigenteID, err := createUser("dirigente.prova@scuola.it", "Laura", "Dirigente", "principal")
+	if err != nil {
+		return fmt.Errorf("failed to create dirigente: %w", err)
+	}
+	fmt.Printf("[SEED] Admin ID: %s, Secretary ID: %s, Dirigente ID: %s\n", adminID, secID, dirigenteID)
+
+	// 2b. Personale ATA (1 DSGA + almeno 2 per ciascun nuovo ruolo ATA: assistente_amministrativo, collaboratore_ds, collaboratore_scolastico)
+	type ataUserData struct {
+		email     string
+		firstName string
+		lastName  string
+		role      string
+		badgeCode string
+	}
+	ataStaff := []ataUserData{
+		// 1 DSGA
+		{"dsga.prova@scuola.it", "Giovanna", "Conti", "dsga", "BADGE-DSGA-001"},
+		// 2 Assistenti Amministrativi
+		{"assistente1.prova@scuola.it", "Marco", "Ferrari", "assistente_amministrativo", "BADGE-AA-001"},
+		{"assistente2.prova@scuola.it", "Lucia", "Romano", "assistente_amministrativo", "BADGE-AA-002"},
+		// 2 Collaboratori del Dirigente Scolastico (Collaboratore DS)
+		{"collaboratore_ds1.prova@scuola.it", "Roberto", "Mancini", "collaboratore_ds", "BADGE-CDS-001"},
+		{"collaboratore_ds2.prova@scuola.it", "Elena", "Galli", "collaboratore_ds", "BADGE-CDS-002"},
+		// 2 Collaboratori Scolastici (Portineria / Personale ausiliario)
+		{"collaboratore_scolastico1.prova@scuola.it", "Salvatore", "Esposito", "collaboratore_scolastico", "BADGE-CS-001"},
+		{"collaboratore_scolastico2.prova@scuola.it", "Carmela", "Russo", "collaboratore_scolastico", "BADGE-CS-002"},
+	}
+
+	var hasUserBadgesTable bool
+	_ = dbConn.QueryRowContext(ctx, "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_badges')").Scan(&hasUserBadgesTable)
+
+	for _, ata := range ataStaff {
+		ataID, err := createUser(ata.email, ata.firstName, ata.lastName, ata.role)
+		if err != nil {
+			return fmt.Errorf("failed to create ATA user %s (%s): %w", ata.email, ata.role, err)
+		}
+
+		if hasUserBadgesTable {
+			_, _ = dbConn.ExecContext(ctx, `
+				INSERT INTO user_badges (id, school_id, user_id, badge_code, notes, is_active, assigned_at, created_at)
+				VALUES ($1, $2, $3, $4, $5, TRUE, NOW(), NOW())
+				ON CONFLICT (school_id, badge_code) DO NOTHING
+			`, uuid.New().String(), schoolID, ataID, ata.badgeCode, "Badge di prova ATA")
+		}
+		fmt.Printf("[SEED] ATA User created: %s (%s, ID: %s)\n", ata.email, ata.role, ataID)
+	}
 
 	// 3. 4 Subjects
 	subjectNames := []string{"Matematica", "Italiano", "Inglese", "Storia"}
@@ -699,6 +744,111 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 		}
 		fmt.Println("[SEED] Student Goals & Badges created.")
 	}
+
+	// 18. Verbali & Modelli Riunioni (Templates con ODG, Verbali Firmati e Bozze Riservate)
+	_, _ = dbConn.ExecContext(ctx, `ALTER TABLE council_meetings ALTER COLUMN class_id DROP NOT NULL`)
+	_, _ = dbConn.ExecContext(ctx, `ALTER TABLE council_meetings ADD COLUMN IF NOT EXISTS meeting_type VARCHAR(100) DEFAULT 'consiglio_classe'`)
+	_, _ = dbConn.ExecContext(ctx, `ALTER TABLE meeting_verbali ADD COLUMN IF NOT EXISTS is_signed BOOLEAN DEFAULT FALSE`)
+	_, _ = dbConn.ExecContext(ctx, `ALTER TABLE meeting_verbali ADD COLUMN IF NOT EXISTS signed_at TIMESTAMP WITH TIME ZONE`)
+	_, _ = dbConn.ExecContext(ctx, `ALTER TABLE meeting_verbali ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'draft'`)
+	_, _ = dbConn.ExecContext(ctx, `
+		CREATE TABLE IF NOT EXISTS meeting_verbale_templates (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+			title VARCHAR(255) NOT NULL,
+			meeting_type VARCHAR(100) NOT NULL DEFAULT 'consiglio_classe',
+			description TEXT,
+			default_agenda TEXT NOT NULL,
+			template_content TEXT NOT NULL,
+			created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+		)
+	`)
+
+	templatesSeed := []struct {
+		Title, MeetingType, Description, Agenda, Content string
+	}{
+		{
+			Title:       "Consiglio di Classe — Valutazione Intermedia e Andamento Didattico",
+			MeetingType: "consiglio_classe",
+			Description: "Modello standard per le sedute periodiche dei consigli di classe con analisi andamento e monitoraggio BES/DSA.",
+			Agenda:      "1. Approvazione verbale seduta precedente\n2. Andamento didattico e disciplinare generale della classe\n3. Verifica esiti valutativi intermedi ed eventuali interventi di recupero\n4. Monitoraggio casi particolari, studenti con BES/DSA e verifica PDP/PEI\n5. Varie ed eventuali",
+			Content:     "L'anno scolastico 2024/2025, in data odierna, nei locali dell'istituto si è riunito il Consiglio di Classe per discutere l'Ordine del Giorno stabilito.\n\nPresiede la seduta il coordinatore/presidente. Svolge le funzioni di segretario verbalista il docente designato.\n\nPunto 1: Il verbale della seduta precedente viene approvato all'unanimità.\nPunto 2: I docenti relazionano sull'andamento didattico generale. Il clima di classe risulta positivo e partecipativo.\nPunto 3: Vengono concordate strategie di supporto e recupero per gli studenti con lievi incertezze disciplinari.\nPunto 4: Si conferma la piena attuazione dei piani personalizzati (PDP/PEI) concordati.\n\nEsauriti i punti all'ODG, la seduta è tolta.",
+		},
+		{
+			Title:       "Collegio dei Docenti — Delibere Organizzative e Aggiornamento PTOF",
+			MeetingType: "collegio_docenti",
+			Description: "Schema per il Collegio Docenti plenario presieduto dal Dirigente Scolastico.",
+			Agenda:      "1. Approvazione verbale della seduta precedente\n2. Comunicazioni del Dirigente Scolastico\n3. Approvazione aggiornamento annuale Piano Triennale Offerta Formativa (PTOF)\n4. Criteri generali per la valutazione e assegnazione ore di potenziamento\n5. Delibere su viaggi di istruzione ed uscite didattiche",
+			Content:     "Nell'Aula Magna dell'istituto, si riunisce il Collegio dei Docenti presieduto dal Dirigente Scolastico.\nSvolge le funzioni di segretario verbalista il docente designato.\n\nConstatata la validità del numero legale, il Presidente apre la seduta trattando i punti all'Ordine del Giorno.\nIl Collegio all'unanimità delibera l'approvazione delle proposte illustrative presentate.\nLa seduta è tolta al termine dei lavori.",
+		},
+		{
+			Title:       "Riunione di Dipartimento Disciplinare — Programmazione e Prove Comuni",
+			MeetingType: "dipartimento",
+			Description: "Schema per le riunioni per assi culturali e dipartimenti disciplinari.",
+			Agenda:      "1. Definizione obiettivi minimi e competenze trasversali\n2. Calendario e struttura delle prove parallele\n3. Monitoraggio adozioni libri di testo e proposte sussidi\n4. Proposte corsi di recupero e progetti di potenziamento",
+			Content:     "Nei locali dell'istituto si riunisce il Dipartimento Disciplinare per esaminare i punti all'ODG.\nI docenti presenti concordano all'unanimità le griglie valutative e le tipologie di prove comuni da somministrare.",
+		},
+	}
+
+	for _, tpl := range templatesSeed {
+		var existingTplID string
+		_ = dbConn.QueryRowContext(ctx, `SELECT id FROM meeting_verbale_templates WHERE school_id = $1 AND title = $2`, schoolID, tpl.Title).Scan(&existingTplID)
+		if existingTplID == "" {
+			_, _ = dbConn.ExecContext(ctx, `
+				INSERT INTO meeting_verbale_templates (id, school_id, title, meeting_type, description, default_agenda, template_content, created_by, created_at, updated_at)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+			`, uuid.New().String(), schoolID, tpl.Title, tpl.MeetingType, tpl.Description, tpl.Agenda, tpl.Content, dirigenteID)
+		}
+	}
+	fmt.Println("[SEED] 3 Verbali & ODG Templates created by Dirigente Scolastica.")
+
+	// Meeting 1: Consiglio di Classe 2A - Verbale UFFICIALE FIRMATO (visibile alla Dirigente e bloccato in sola lettura)
+	var meeting1ID string
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM council_meetings WHERE school_id = $1 AND title = $2`, schoolID, "Consiglio di Classe 2A - Periodo Intermedio").Scan(&meeting1ID)
+	if err != nil {
+		meeting1ID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO council_meetings (id, school_id, class_id, meeting_type, title, date, start_time, end_time, agenda, created_by, created_at)
+			VALUES ($1, $2, $3, 'consiglio_classe', $4, '2024-11-15'::date, '15:00', '16:30', $5, $6, NOW())
+		`, meeting1ID, schoolID, class2AID, "Consiglio di Classe 2A - Periodo Intermedio", templatesSeed[0].Agenda, teacherUserIDs[0])
+
+		verbale1ID := uuid.New().String()
+		coordUser := teacherUserIDs[0]
+		secUser := teacherUserIDs[1]
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO meeting_verbali (id, meeting_id, title, content, secretary_id, president_id, is_published, is_signed, signed_at, status, created_at, updated_at)
+			VALUES ($1, $2, 'Verbale n. 1 - Consiglio di Classe 2A (Approvato e Firmato)', $3, $4, $5, TRUE, TRUE, NOW(), 'signed', NOW(), NOW())
+		`, verbale1ID, meeting1ID, templatesSeed[0].Content, secUser, coordUser)
+
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO verbale_signatures (id, verbale_id, user_id, signed_at, ip_address)
+			VALUES ($1, $2, $3, NOW() - INTERVAL '1 hour', '192.168.1.50'),
+			       ($4, $2, $5, NOW(), '192.168.1.51')
+			ON CONFLICT DO NOTHING
+		`, uuid.New().String(), verbale1ID, secUser, uuid.New().String(), coordUser)
+	}
+
+	// Meeting 2: Consiglio di Classe Straordinario 2A - Verbale IN BOZZA (modificabile SOLO da Coordinatore e Verbalista, NASCOSTO alla Dirigente)
+	var meeting2ID string
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM council_meetings WHERE school_id = $1 AND title = $2`, schoolID, "Consiglio di Classe Straordinario 2A").Scan(&meeting2ID)
+	if err != nil {
+		meeting2ID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO council_meetings (id, school_id, class_id, meeting_type, title, date, start_time, end_time, agenda, created_by, created_at)
+			VALUES ($1, $2, $3, 'consiglio_classe', $4, '2024-12-05'::date, '16:30', '17:30', '1. Verifica andamento didattico e provvedimenti disciplinari', $5, NOW())
+		`, meeting2ID, schoolID, class2AID, "Consiglio di Classe Straordinario 2A", teacherUserIDs[0])
+
+		verbale2ID := uuid.New().String()
+		coordUser := teacherUserIDs[0]
+		secUser := teacherUserIDs[1]
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO meeting_verbali (id, meeting_id, title, content, secretary_id, president_id, is_published, is_signed, status, created_at, updated_at)
+			VALUES ($1, $2, 'Bozza Verbale n. 2 - Consiglio Straordinario 2A', 'Bozza provvisoria in corso di stesura da parte del verbalista...', $3, $4, FALSE, FALSE, 'draft', NOW(), NOW())
+		`, verbale2ID, meeting2ID, secUser, coordUser)
+	}
+	fmt.Println("[SEED] Sample Signed Verbale & Confidential Draft Verbale created.")
 
 	fmt.Println("[SEED] Complete seeding for 'Scuola di Prova' finished successfully!")
 	return nil

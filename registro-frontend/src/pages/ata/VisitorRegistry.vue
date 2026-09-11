@@ -621,7 +621,7 @@ const maintenanceForm = ref({
   description: ''
 })
 
-function onTabChange(val) {
+function onTabChange(_val) {
   loadCurrentTabData()
 }
 

@@ -476,6 +476,10 @@ func (r *PostgresRepository) ProcessPendingSwipes(ctx context.Context, schoolID 
 			swipes = append(swipes, sw)
 		}
 	}
+	if err := rows.Err(); err != nil {
+		_ = rows.Close()
+		return 0, fmt.Errorf("ProcessPendingSwipes rows: %w", err)
+	}
 	_ = rows.Close()
 
 	processed := 0
