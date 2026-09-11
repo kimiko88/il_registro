@@ -43,7 +43,7 @@
     "sass": "^1.103.1",
     "vite": "^8.2.2",
     "vite-plugin-pwa": "^1.3.0",
-    "vitest": "^4.0.16",
+    "vitest": "^5.0.0",
     "vue-eslint-parser": "^10.4.1"
   },
   "overrides": {
