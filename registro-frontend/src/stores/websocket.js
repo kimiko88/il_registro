@@ -7,7 +7,7 @@ import { useCommunicationsStore } from './communications'
 import { useScrutinyStore } from './scrutiny'
 import { Notify } from 'quasar'
 import { i18n } from '@/i18n'
-import { getBaseURL } from '@/services/api'
+import api, { getBaseURL } from '@/services/api'
 
 const escapeHtml = (str) => {
     if (!str) return ''
@@ -84,22 +84,16 @@ export const useWebSocketStore = defineStore('websocket', () => {
 
         let ticket
         try {
-            const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), 5000)
-            const res = await fetch(`${baseUrl}/auth/ws-ticket`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authStore.token}`,
-                    'Content-Type': 'application/json'
-                },
-                signal: controller.signal
-            })
-            clearTimeout(timeoutId)
-            if (!res.ok) throw new Error(`ws-ticket status ${res.status}`)
-            const data = await res.json()
-            ticket = data.ticket
+            const res = await api.post('/auth/ws-ticket', {}, { timeout: 8000 })
+            ticket = res.data?.ticket
         } catch (e) {
             console.error('WebSocket: Failed to acquire ws ticket', e)
+            const isAuthError = e?.response?.status === 401 || !authStore.isAuthenticated
+            if (isAuthError) {
+                console.warn('WebSocket: Authentication expired or unauthorized (401), stopping reconnection')
+                disconnect()
+                return
+            }
             attemptReconnect()
             return
         }
