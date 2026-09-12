@@ -29,7 +29,8 @@ func (h *Handler) SetPdfWorkerClient(client *pdfworker.Client) {
 
 func isAllowedVerbaliRole(role string) bool {
 	switch strings.ToLower(role) {
-	case "teacher", "coordinator", "admin", "superadmin", "secretary", "principal", "vice_principal", "docente":
+	case "teacher", "coordinator", "admin", "superadmin", "secretary", "principal", "vice_principal", "docente",
+		"dsga", "collaboratore_ds", "assistente_amministrativo":
 		return true
 	default:
 		return false
@@ -65,10 +66,18 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
+func (h *Handler) getSchoolID(c *gin.Context, userID string) string {
+	schoolID := c.GetString("school_id")
+	if schoolID == "" && h.service != nil {
+		schoolID = h.service.ResolveSchoolID(c.Request.Context(), userID)
+	}
+	return schoolID
+}
+
 func (h *Handler) CreateMeeting(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	schoolID := c.GetString("school_id")
+	schoolID := h.getSchoolID(c, userID)
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -104,7 +113,7 @@ func (h *Handler) ListMeetings(c *gin.Context) {
 		return
 	}
 
-	schoolID := c.GetString("school_id")
+	schoolID := h.getSchoolID(c, userID)
 	classID := c.Query("class_id")
 
 	meetings, err := h.service.ListMeetings(c.Request.Context(), schoolID, classID)
@@ -297,7 +306,7 @@ func (h *Handler) ListVerbali(c *gin.Context) {
 func (h *Handler) ListAllVerbali(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	schoolID := c.GetString("school_id")
+	schoolID := h.getSchoolID(c, userID)
 	classID := c.Query("class_id")
 
 	if userID == "" {
@@ -487,7 +496,7 @@ func (h *Handler) GetPdfJobStatus(c *gin.Context) {
 func (h *Handler) ListTemplates(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	schoolID := c.GetString("school_id")
+	schoolID := h.getSchoolID(c, userID)
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -533,7 +542,7 @@ func (h *Handler) GetTemplate(c *gin.Context) {
 func (h *Handler) CreateTemplate(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	schoolID := c.GetString("school_id")
+	schoolID := h.getSchoolID(c, userID)
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
@@ -552,7 +561,7 @@ func (h *Handler) CreateTemplate(c *gin.Context) {
 	t, err := h.service.CreateTemplate(c.Request.Context(), userID, role, schoolID, req)
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "solo la Dirigente Scolastica o gli amministratori possono creare modelli di verbale"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "solo la Dirigenza, la DSGA o gli amministratori possono creare modelli di verbale"})
 			return
 		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -564,7 +573,8 @@ func (h *Handler) CreateTemplate(c *gin.Context) {
 func (h *Handler) UpdateTemplate(c *gin.Context) {
 	id := c.Param("id")
 	role := c.GetString("role")
-	schoolID := c.GetString("school_id")
+	userID := c.GetString("user_id")
+	schoolID := h.getSchoolID(c, userID)
 
 	var req UpdateTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -575,7 +585,7 @@ func (h *Handler) UpdateTemplate(c *gin.Context) {
 	t, err := h.service.UpdateTemplate(c.Request.Context(), role, schoolID, id, req)
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "solo la Dirigente Scolastica o gli amministratori possono modificare modelli di verbale"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "solo la Dirigenza, la DSGA o gli amministratori possono modificare modelli di verbale"})
 			return
 		}
 		if errors.Is(err, ErrNotFound) {
@@ -591,12 +601,13 @@ func (h *Handler) UpdateTemplate(c *gin.Context) {
 func (h *Handler) DeleteTemplate(c *gin.Context) {
 	id := c.Param("id")
 	role := c.GetString("role")
-	schoolID := c.GetString("school_id")
+	userID := c.GetString("user_id")
+	schoolID := h.getSchoolID(c, userID)
 
 	err := h.service.DeleteTemplate(c.Request.Context(), role, schoolID, id)
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "solo la Dirigente Scolastica o gli amministratori possono eliminare modelli di verbale"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "solo la Dirigenza, la DSGA o gli amministratori possono eliminare modelli di verbale"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

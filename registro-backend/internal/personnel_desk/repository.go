@@ -35,6 +35,9 @@ func (r *postgresRepository) Create(ctx context.Context, req *DeskRequest) error
 	if req.SchoolID == "" {
 		_ = r.db.QueryRowContext(ctx, `SELECT COALESCE(school_id::text, '') FROM users WHERE id=$1`, req.ApplicantID).Scan(&req.SchoolID)
 	}
+	if req.SchoolID == "" {
+		_ = r.db.QueryRowContext(ctx, `SELECT COALESCE(id::text, '') FROM schools LIMIT 1`).Scan(&req.SchoolID)
+	}
 
 	attJSON, err := json.Marshal(req.Attachments)
 	if err != nil {
@@ -73,9 +76,15 @@ func (r *postgresRepository) GetByID(ctx context.Context, schoolID, id string) (
 		       pdr.created_at, pdr.updated_at
 		FROM personnel_desk_requests pdr
 		LEFT JOIN users u ON u.id = pdr.applicant_id
-		WHERE pdr.id = $1 AND (pdr.school_id = $2 OR $2 = '')`
+		WHERE pdr.id = $1`
 
-	row := r.db.QueryRowContext(ctx, query, id, schoolID)
+	args := []interface{}{id}
+	if schoolID != "" {
+		query += " AND pdr.school_id = $2::uuid"
+		args = append(args, schoolID)
+	}
+
+	row := r.db.QueryRowContext(ctx, query, args...)
 
 	req := &DeskRequest{}
 	var attStr string
@@ -142,10 +151,16 @@ func (r *postgresRepository) List(ctx context.Context, schoolID, applicantID, st
 		       pdr.created_at, pdr.updated_at
 		FROM personnel_desk_requests pdr
 		LEFT JOIN users u ON u.id = pdr.applicant_id
-		WHERE (pdr.school_id = $1 OR $1 = '')`
+		WHERE 1=1`
 
-	args := []interface{}{schoolID}
-	idx := 2
+	args := []interface{}{}
+	idx := 1
+
+	if schoolID != "" {
+		query += fmt.Sprintf(" AND pdr.school_id = $%d::uuid", idx)
+		args = append(args, schoolID)
+		idx++
+	}
 
 	if applicantID != "" {
 		query += fmt.Sprintf(" AND pdr.applicant_id = $%d", idx)
@@ -250,7 +265,7 @@ func (r *postgresRepository) Update(ctx context.Context, req *DeskRequest) error
 			ds_approved_by = $18,
 			ds_approved_at = $19,
 			updated_at = $20
-		WHERE id = $21 AND (school_id = $22 OR $22 = '')`,
+		WHERE id = $21 AND (school_id::text = $22 OR $22 = '')`,
 		req.Category, req.SubCategory,
 		req.StartDate, req.EndDate, req.Days, req.Hours,
 		req.Description, string(attJSON),
@@ -267,7 +282,7 @@ func (r *postgresRepository) Update(ctx context.Context, req *DeskRequest) error
 func (r *postgresRepository) Delete(ctx context.Context, schoolID, id, applicantID string) error {
 	res, err := r.db.ExecContext(ctx, `
 		DELETE FROM personnel_desk_requests
-		WHERE id = $1 AND (school_id = $2 OR $2 = '') AND applicant_id = $3 AND status IN ('draft', 'submitted')`,
+		WHERE id = $1 AND (school_id::text = $2 OR $2 = '') AND applicant_id = $3 AND status IN ('draft', 'submitted')`,
 		id, schoolID, applicantID)
 	if err != nil {
 		return err

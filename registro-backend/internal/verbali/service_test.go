@@ -115,6 +115,10 @@ func (m *MockRepository) DeleteTemplate(ctx context.Context, id, schoolID string
 	args := m.Called(ctx, id, schoolID)
 	return args.Error(0)
 }
+func (m *MockRepository) ResolveSchoolID(ctx context.Context, userID string) string {
+	args := m.Called(ctx, userID)
+	return args.String(0)
+}
 
 func TestCreateMeetingAndVerbale(t *testing.T) {
 	mockRepo := new(MockRepository)

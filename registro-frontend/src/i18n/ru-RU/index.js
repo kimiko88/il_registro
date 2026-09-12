@@ -4487,7 +4487,7 @@ export default {
     "formAgendaLabel": "Повестка Дня по Умолчанию (нумерованная) *",
     "formAgendaHint": "Вводите пункты повестки дня с новой строки",
     "formContentLabel": "Структура / Каркас Протокола (с плейсхолдерами) *",
-    "formContentHint": "Допустимые плейсхолдеры: {{classe}}, {{data}}, {{odg}}, {{presidente}}, {{segretario}}",
+    "formContentHint": "Допустимые плейсхолдеры: [classe], [data], [odg], [presidente], [segretario]",
     "saveTemplateBtn": "Сохранить Шаблон",
     "dialogMeetingTitle": "Запланировать Общешкольное Собрание",
     "formMeetingTitle": "Название Собрания *",

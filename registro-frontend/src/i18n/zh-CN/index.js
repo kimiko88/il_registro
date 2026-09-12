@@ -4512,7 +4512,7 @@ export default {
     "formAgendaLabel": "预设议程（编号列表） *",
     "formAgendaHint": "每行输入一项议程",
     "formContentLabel": "纪要正文排版架构（支持占位符） *",
-    "formContentHint": "可用占位符：{{classe}}、{{data}}、{{odg}}、{{presidente}}、{{segretario}}",
+    "formContentHint": "可用占位符：[classe]、[data]、[odg]、[presidente]、[segretario]",
     "saveTemplateBtn": "保存模板",
     "dialogMeetingTitle": "安排学校会议",
     "formMeetingTitle": "会议名称 *",

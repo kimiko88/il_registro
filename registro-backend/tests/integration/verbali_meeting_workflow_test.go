@@ -170,6 +170,10 @@ func (m *mockVerbaliRepo) DeleteTemplate(ctx context.Context, id, schoolID strin
 	return nil
 }
 
+func (m *mockVerbaliRepo) ResolveSchoolID(ctx context.Context, userID string) string {
+	return "school-1"
+}
+
 func TestIntegration_Verbali_Meeting_Workflow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

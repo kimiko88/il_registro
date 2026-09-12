@@ -4632,7 +4632,7 @@ export default {
     "formAgendaLabel": "جدول الأعمال الافتراضي (مرقم) *",
     "formAgendaHint": "أدخل بنود جدول الأعمال مفصولة بأسطر جديدة",
     "formContentLabel": "هيكل / مسودة المحضر (مع الرموز النائبة) *",
-    "formContentHint": "يمكنك استخدام الرموز: {{classe}}، {{data}}، {{odg}}، {{presidente}}، {{segretario}}",
+    "formContentHint": "يمكنك استخدام الرموز: [classe]، [data]، [odg]، [presidente]، [segretario]",
     "saveTemplateBtn": "حفظ القالب",
     "dialogMeetingTitle": "جدولة اجتماع مدرسي",
     "formMeetingTitle": "عنوان الاجتماع *",

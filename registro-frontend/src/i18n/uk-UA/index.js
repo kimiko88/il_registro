@@ -4487,7 +4487,7 @@ export default {
     "formAgendaLabel": "Порядок Денний за Замовчуванням (нумерований) *",
     "formAgendaHint": "Вводьте пункти порядку денного з нового рядка",
     "formContentLabel": "Структура / Каркас Протоколу (із плейсхолдерами) *",
-    "formContentHint": "Дозволені плейсхолдери: {{classe}}, {{data}}, {{odg}}, {{presidente}}, {{segretario}}",
+    "formContentHint": "Дозволені плейсхолдери: [classe], [data], [odg], [presidente], [segretario]",
     "saveTemplateBtn": "Зберегти Шаблон",
     "dialogMeetingTitle": "Запланувати Шкільні Збори",
     "formMeetingTitle": "Назва Зборів *",

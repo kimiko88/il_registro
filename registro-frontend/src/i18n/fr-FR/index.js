@@ -4487,7 +4487,7 @@ export default {
     "formAgendaLabel": "Ordre du Jour par Défaut (numéroté) *",
     "formAgendaHint": "Saisir les points de l'ODJ séparés par un retour à la ligne",
     "formContentLabel": "Trame / Structure du Procès-Verbal (avec balises) *",
-    "formContentHint": "Balises utilisables : {{classe}}, {{data}}, {{odg}}, {{presidente}}, {{segretario}}",
+    "formContentHint": "Balises utilisables : [classe], [data], [odg], [presidente], [segretario]",
     "saveTemplateBtn": "Enregistrer le Modèle",
     "dialogMeetingTitle": "Programmer une Réunion d'Établissement",
     "formMeetingTitle": "Titre de la Réunion *",

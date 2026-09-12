@@ -30,6 +30,9 @@ func NewService(repo Repository) *Service {
 // CreateMeeting creates a new council or general school meeting.
 func (s *Service) CreateMeeting(ctx context.Context, actorID, schoolID string, req CreateMeetingRequest) (*CouncilMeeting, error) {
 	if schoolID == "" {
+		schoolID = s.repo.ResolveSchoolID(ctx, actorID)
+	}
+	if schoolID == "" {
 		return nil, fmt.Errorf("school_id required")
 	}
 	d, err := time.Parse("2006-01-02", req.Date)
@@ -294,16 +297,23 @@ func (s *Service) GetSignatures(ctx context.Context, verbaleID string) ([]Verbal
 
 func isPrincipalOrAdmin(role string) bool {
 	switch strings.ToLower(role) {
-	case "principal", "vice_principal", "admin", "superadmin":
+	case "principal", "vice_principal", "admin", "superadmin", "dsga", "collaboratore_ds", "assistente_amministrativo", "secretary":
 		return true
 	default:
 		return false
 	}
 }
 
+func (s *Service) ResolveSchoolID(ctx context.Context, userID string) string {
+	return s.repo.ResolveSchoolID(ctx, userID)
+}
+
 func (s *Service) CreateTemplate(ctx context.Context, actorID, actorRole, schoolID string, req CreateTemplateRequest) (*MeetingVerbaleTemplate, error) {
 	if !isPrincipalOrAdmin(actorRole) {
 		return nil, ErrUnauthorized
+	}
+	if schoolID == "" {
+		schoolID = s.repo.ResolveSchoolID(ctx, actorID)
 	}
 	if schoolID == "" {
 		return nil, fmt.Errorf("school_id required")
@@ -342,7 +352,7 @@ func (s *Service) UpdateTemplate(ctx context.Context, actorRole, schoolID, id st
 	if err != nil {
 		return nil, ErrNotFound
 	}
-	if t.SchoolID != schoolID {
+	if schoolID != "" && t.SchoolID != "" && t.SchoolID != schoolID {
 		return nil, ErrUnauthorized
 	}
 

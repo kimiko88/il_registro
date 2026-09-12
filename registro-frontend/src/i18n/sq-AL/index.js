@@ -4632,7 +4632,7 @@ export default {
     "formAgendaLabel": "Rendi i Ditës i Paracaktuar (i numëruar) *",
     "formAgendaHint": "Vendosni pikat e ndara me rresht të ri",
     "formContentLabel": "Struktura e Procesverbalit (me etiketa) *",
-    "formContentHint": "Etiketat: {{classe}}, {{data}}, {{odg}}, {{presidente}}, {{segretario}}",
+    "formContentHint": "Etiketat: [classe], [data], [odg], [presidente], [segretario]",
     "saveTemplateBtn": "Ruaj Modelin",
     "dialogMeetingTitle": "Planifiko Mbledhje Shkolle",
     "formMeetingTitle": "Titulli i Mbledhjes *",

@@ -334,7 +334,7 @@ import { useAuthStore } from '@/stores/auth'
 
 const emit = defineEmits(['restart-tour'])
 const router = useRouter()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const $q = useQuasar()
 const authStore = useAuthStore()
 
@@ -1094,6 +1094,7 @@ defineExpose({ open, close })
 .art-cyan    { background: linear-gradient(135deg, #22d3ee, #0891b2); }
 .art-pink    { background: linear-gradient(135deg, #ec4899, #db2777); }
 .art-amber   { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.art-deep-orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
 
 .article-icon {
   background: rgba(255,255,255,0.2);
@@ -1175,6 +1176,7 @@ defineExpose({ open, close })
 .badge-cyan    { background: #22d3ee; }
 .badge-pink    { background: #ec4899; }
 .badge-amber   { background: #f59e0b; }
+.badge-deep-orange { background: #ea580c; }
 
 .step-body { font-size: 0.875rem; color: #374151; line-height: 1.6; }
 .help-dark .step-body { color: #c0c0d0; }
@@ -1284,6 +1286,7 @@ defineExpose({ open, close })
 .si-cyan    { background: #ecfeff; color: #0891b2; }
 .si-pink    { background: #fdf2f8; color: #db2777; }
 .si-amber   { background: #fffbeb; color: #d97706; }
+.si-deep-orange { background: #fff7ed; color: #c2410c; }
 
 /* ── Transition: article panel ───────────────────────────────────── */
 .article-slide-enter-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }

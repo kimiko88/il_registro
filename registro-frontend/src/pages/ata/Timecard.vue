@@ -99,6 +99,7 @@
               map-options
               outlined
               dense
+              clearable
               bg-color="white"
               :label="t('timecard.selectStaff') || 'Dipendente'"
               @update:model-value="loadTimecard"
@@ -509,16 +510,11 @@ async function loadTimecard() {
     }
     const res = await staffAttendanceService.getTimecard(params)
     timecardData.value = res || {}
-    dailyEntries.value = res.entries || []
+    dailyEntries.value = res?.daily_entries || res?.entries || []
   } catch (err) {
-    // Non-blocking fallback
-    timecardData.value = {
-      worked_hours: 0,
-      contract_hours: 156,
-      overtime_hours: 0,
-      leave_days: 0,
-      absence_days: 0
-    }
+    console.error('Errore caricamento cartellino:', err)
+    $q.notify({ type: 'negative', message: 'Errore durante il caricamento del cartellino mensile' })
+    timecardData.value = {}
     dailyEntries.value = []
   } finally {
     loading.value = false
@@ -541,8 +537,9 @@ async function loadAllTimecards() {
   loading.value = true
   try {
     const res = await staffAttendanceService.getTimecard({ month: selectedMonth.value, all: true })
-    allTimecards.value = Array.isArray(res) ? res : [res]
-  } catch {
+    allTimecards.value = Array.isArray(res) ? res : (res ? [res] : [])
+  } catch (err) {
+    console.error('Errore caricamento riepilogo cartellini:', err)
     allTimecards.value = []
   } finally {
     loading.value = false
@@ -697,16 +694,16 @@ onMounted(async () => {
   await loadTimecard()
   if (isDSGAOrAdmin.value) {
     try {
-      const res = await userService.getUsers({})
+      const res = await userService.getAll({ page_size: 200 })
       const raw = res.data?.users || res.data || []
       staffOptions.value = raw
-        .filter(u => ['assistente_amministrativo', 'collaboratore_scolastico', 'collaboratore_ds', 'dsga'].includes(u.role))
+        .filter(u => ['assistente_amministrativo', 'collaboratore_scolastico', 'collaboratore_ds', 'dsga', 'secretary'].includes(u.role))
         .map(u => ({
           id: u.id,
           name: `${u.last_name || ''} ${u.first_name || ''} (${u.role})`
         }))
-    } catch {
-      // Non blocking
+    } catch (err) {
+      console.error('Errore nel caricamento dei dipendenti per il cartellino:', err)
     }
   }
 })

@@ -56,11 +56,27 @@ func (h *LeaveHandler) GetTimecard(c *gin.Context) {
 		return
 	}
 
-	targetUserID := c.Query("user_id")
 	month := c.Query("month")
 	if month == "" {
 		month = ""
 	}
+
+	// Se richiesto riepilogo globale (solo DSGA, Dirigente, Admin)
+	if c.Query("all") == "true" {
+		if role != "dsga" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "accesso non autorizzato al riepilogo complessivo"})
+			return
+		}
+		timecards, err := h.repo.GetAllMonthlyTimecards(c.Request.Context(), schoolID, month)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, timecards)
+		return
+	}
+
+	targetUserID := c.Query("user_id")
 
 	// Solo DSGA/admin/principal possono vedere il cartellino altrui
 	if targetUserID != "" && targetUserID != userID {

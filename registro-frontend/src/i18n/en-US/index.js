@@ -4487,7 +4487,7 @@ export default {
     "formAgendaLabel": "Default Agenda (Numbered items) *",
     "formAgendaHint": "Enter agenda items separated by new lines",
     "formContentLabel": "Minutes Draft Layout & Skeleton (with placeholders) *",
-    "formContentHint": "Placeholders allowed: {{classe}}, {{data}}, {{odg}}, {{presidente}}, {{segretario}}",
+    "formContentHint": "Placeholders allowed: [classe], [data], [odg], [presidente], [segretario]",
     "saveTemplateBtn": "Save Template",
     "dialogMeetingTitle": "Schedule School Meeting",
     "formMeetingTitle": "Meeting Title *",

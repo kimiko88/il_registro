@@ -4487,7 +4487,7 @@ export default {
     "formAgendaLabel": "Standard-Tagesordnung (nummeriert) *",
     "formAgendaHint": "Tagesordnungspunkte zeilenweise eingeben",
     "formContentLabel": "Entwurfsschema / Protokollstruktur (mit Platzhaltern) *",
-    "formContentHint": "Verfügbare Platzhalter: {{classe}}, {{data}}, {{odg}}, {{presidente}}, {{segretario}}",
+    "formContentHint": "Verfügbare Platzhalter: [classe], [data], [odg], [presidente], [segretario]",
     "saveTemplateBtn": "Vorlage speichern",
     "dialogMeetingTitle": "Schulsitzung ansetzen",
     "formMeetingTitle": "Sitzungstitel *",

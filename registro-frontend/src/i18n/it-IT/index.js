@@ -4487,7 +4487,7 @@ export default {
     "formAgendaLabel": "Ordine del Giorno Predefinito (ODG numerato) *",
     "formAgendaHint": "Inserisci i punti all'ODG separati da a capo",
     "formContentLabel": "Schema / Bozza Struttura Verbale (con segnaposto) *",
-    "formContentHint": "Puoi usare segnaposto come {{classe}}, {{data}}, {{odg}}, {{presidente}}, {{segretario}}",
+    "formContentHint": "Puoi usare segnaposto come [classe], [data], [odg], [presidente], [segretario]",
     "saveTemplateBtn": "Salva Modello",
     "dialogMeetingTitle": "Programma Riunione d'Istituto",
     "formMeetingTitle": "Titolo Riunione *",

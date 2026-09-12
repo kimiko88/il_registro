@@ -4487,7 +4487,7 @@ export default {
     "formAgendaLabel": "Ordinea de Zi Implicită (numerotată) *",
     "formAgendaHint": "Introduceți punctele separate prin rând nou",
     "formContentLabel": "Structura Procesului-Verbal (cu etichete) *",
-    "formContentHint": "Puteți folosi: {{classe}}, {{data}}, {{odg}}, {{presidente}}, {{segretario}}",
+    "formContentHint": "Puteți folosi: [classe], [data], [odg], [presidente], [segretario]",
     "saveTemplateBtn": "Salvează Șablonul",
     "dialogMeetingTitle": "Programează Ședință Instituțională",
     "formMeetingTitle": "Titlu Ședință *",

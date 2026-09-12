@@ -182,7 +182,7 @@
               <div :key="currentStep" class="step-content-area">
                 <div class="step-badge" :class="`badge-${activeStep.color}`">
                   <q-icon :name="activeStep.icon" size="14px" />
-                  {{ activeStep.category || '' }}
+                  {{ activeStep.category || roleLabel }}
                 </div>
 
                 <h2 class="step-title">{{ activeStep.title }}</h2>
@@ -700,6 +700,7 @@ function floatIconStyle(i) {
 .icon-cyan    { background: #ecfeff; color: #0891b2; }
 .icon-pink    { background: #fdf2f8; color: #db2777; }
 .icon-amber   { background: #fffbeb; color: #d97706; }
+.icon-deep-orange { background: #fff7ed; color: #c2410c; }
 
 .welcome-actions {
   display: flex;
@@ -739,6 +740,7 @@ function floatIconStyle(i) {
   position: relative;
   overflow: hidden;
   padding: 28px 16px;
+  background: linear-gradient(160deg, #667eea, #4338ca);
 }
 
 .panel-indigo  { background: linear-gradient(160deg, #667eea, #4338ca); }
@@ -752,6 +754,7 @@ function floatIconStyle(i) {
 .panel-cyan    { background: linear-gradient(160deg, #22d3ee, #0891b2); }
 .panel-pink    { background: linear-gradient(160deg, #ec4899, #db2777); }
 .panel-amber   { background: linear-gradient(160deg, #f59e0b, #d97706); }
+.panel-deep-orange { background: linear-gradient(160deg, #ea580c, #c2410c); }
 
 /* Sidebar step dots */
 .sidebar-steps {
@@ -791,7 +794,7 @@ function floatIconStyle(i) {
   font-weight: 700;
   color: rgba(255,255,255,0.7);
 }
-.sidebar-dot.active .dot-num { color: #4338ca; }
+.sidebar-dot.active .dot-num { color: #1f2937; }
 
 /* Step visual */
 .step-visual {
@@ -909,6 +912,7 @@ function floatIconStyle(i) {
 .badge-cyan    { background: #ecfeff; color: #0891b2; }
 .badge-pink    { background: #fdf2f8; color: #db2777; }
 .badge-amber   { background: #fffbeb; color: #d97706; }
+.badge-deep-orange { background: #fff7ed; color: #c2410c; }
 
 .step-title {
   font-size: 1.45rem;
@@ -961,6 +965,7 @@ function floatIconStyle(i) {
 .dot-cyan    { background: #22d3ee; }
 .dot-pink    { background: #ec4899; }
 .dot-amber   { background: #f59e0b; }
+.dot-deep-orange { background: #ea580c; }
 
 .step-tip {
   display: flex;

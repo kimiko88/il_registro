@@ -4,6 +4,9 @@ export const userService = {
     getAll(params) {
         return api.get('/users', { params })
     },
+    getUsers(params) {
+        return api.get('/users', { params })
+    },
     get(id) {
         return api.get(`/users/${id}`)
     },

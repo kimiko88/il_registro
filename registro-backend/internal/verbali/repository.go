@@ -30,6 +30,7 @@ type Repository interface {
 	GetTemplateByID(ctx context.Context, id string) (*MeetingVerbaleTemplate, error)
 	UpdateTemplate(ctx context.Context, t *MeetingVerbaleTemplate) error
 	DeleteTemplate(ctx context.Context, id, schoolID string) error
+	ResolveSchoolID(ctx context.Context, userID string) string
 }
 
 type PostgresRepository struct {
@@ -40,11 +41,25 @@ func NewRepository(db *sql.DB) Repository {
 	return &PostgresRepository{db: db}
 }
 
+func (r *PostgresRepository) ResolveSchoolID(ctx context.Context, userID string) string {
+	var schoolID string
+	if userID != "" {
+		_ = r.db.QueryRowContext(ctx, `SELECT COALESCE(school_id::text, '') FROM users WHERE id = $1`, userID).Scan(&schoolID)
+	}
+	if schoolID == "" {
+		_ = r.db.QueryRowContext(ctx, `SELECT COALESCE(id::text, '') FROM schools LIMIT 1`).Scan(&schoolID)
+	}
+	return schoolID
+}
+
 func (r *PostgresRepository) CreateMeeting(ctx context.Context, m *CouncilMeeting) error {
 	m.ID = uuid.New().String()
 	m.CreatedAt = time.Now()
 	if m.MeetingType == "" {
 		m.MeetingType = "consiglio_classe"
+	}
+	if m.SchoolID == "" {
+		m.SchoolID = r.ResolveSchoolID(ctx, m.CreatedBy)
 	}
 
 	query := `
@@ -62,7 +77,7 @@ func (r *PostgresRepository) ListMeetings(ctx context.Context, schoolID, classID
 		SELECT id, school_id, COALESCE(class_id::text, ''), COALESCE(meeting_type, 'consiglio_classe'),
 		       title, date, start_time, end_time, COALESCE(agenda, ''), created_by, created_at
 		FROM council_meetings
-		WHERE school_id = $1::uuid AND ($2 = '' OR class_id = NULLIF($2, '')::uuid)
+		WHERE (school_id = NULLIF($1, '')::uuid OR $1 = '') AND ($2 = '' OR class_id = NULLIF($2, '')::uuid)
 		ORDER BY date DESC, start_time DESC
 	`
 	rows, err := r.db.QueryContext(ctx, query, schoolID, classID)
@@ -249,7 +264,7 @@ func (r *PostgresRepository) ListAllVerbali(ctx context.Context, schoolID, class
 		       EXISTS(SELECT 1 FROM verbale_signatures vs WHERE vs.verbale_id = v.id AND vs.user_id = $2::uuid) AS is_signed_by_me
 		FROM meeting_verbali v
 		JOIN council_meetings cm ON v.meeting_id = cm.id
-		WHERE cm.school_id = $1::uuid
+		WHERE (cm.school_id = NULLIF($1, '')::uuid OR $1 = '')
 		  AND ($3 = '' OR cm.class_id = NULLIF($3, '')::uuid)
 		  AND (NOT $4 OR v.is_signed = TRUE)
 		ORDER BY v.created_at DESC
@@ -333,6 +348,9 @@ func (r *PostgresRepository) CreateTemplate(ctx context.Context, t *MeetingVerba
 	t.ID = uuid.New().String()
 	t.CreatedAt = time.Now()
 	t.UpdatedAt = time.Now()
+	if t.SchoolID == "" {
+		t.SchoolID = r.ResolveSchoolID(ctx, t.CreatedBy)
+	}
 
 	query := `
 		INSERT INTO meeting_verbale_templates (id, school_id, title, meeting_type, description, default_agenda, template_content, created_by, created_at, updated_at)
@@ -348,7 +366,7 @@ func (r *PostgresRepository) ListTemplates(ctx context.Context, schoolID, meetin
 	query := `
 		SELECT id, school_id, title, meeting_type, COALESCE(description, ''), default_agenda, template_content, created_by, created_at, updated_at
 		FROM meeting_verbale_templates
-		WHERE school_id = $1::uuid AND ($2 = '' OR meeting_type = $2)
+		WHERE (school_id = NULLIF($1, '')::uuid OR $1 = '') AND ($2 = '' OR meeting_type = $2)
 		ORDER BY title ASC
 	`
 	rows, err := r.db.QueryContext(ctx, query, schoolID, meetingType)
@@ -391,7 +409,7 @@ func (r *PostgresRepository) UpdateTemplate(ctx context.Context, t *MeetingVerba
 	query := `
 		UPDATE meeting_verbale_templates
 		SET title = $1, meeting_type = $2, description = $3, default_agenda = $4, template_content = $5, updated_at = $6
-		WHERE id = $7::uuid AND school_id = $8::uuid
+		WHERE id = $7::uuid AND (school_id = NULLIF($8, '')::uuid OR $8 = '')
 	`
 	_, err := r.db.ExecContext(ctx, query,
 		t.Title, t.MeetingType, t.Description, t.DefaultAgenda, t.TemplateContent, t.UpdatedAt, t.ID, t.SchoolID,
@@ -400,7 +418,7 @@ func (r *PostgresRepository) UpdateTemplate(ctx context.Context, t *MeetingVerba
 }
 
 func (r *PostgresRepository) DeleteTemplate(ctx context.Context, id, schoolID string) error {
-	query := `DELETE FROM meeting_verbale_templates WHERE id = $1::uuid AND school_id = $2::uuid`
+	query := `DELETE FROM meeting_verbale_templates WHERE id = $1::uuid AND (school_id = NULLIF($2, '')::uuid OR $2 = '')`
 	_, err := r.db.ExecContext(ctx, query, id, schoolID)
 	return err
 }

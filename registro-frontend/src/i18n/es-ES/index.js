@@ -4487,7 +4487,7 @@ export default {
     "formAgendaLabel": "Orden del Día Predeterminado (numerado) *",
     "formAgendaHint": "Introduzca los puntos del OD separados por saltos de línea",
     "formContentLabel": "Esquema / Estructura del Acta (con etiquetas) *",
-    "formContentHint": "Etiquetas disponibles: {{classe}}, {{data}}, {{odg}}, {{presidente}}, {{segretario}}",
+    "formContentHint": "Etiquetas disponibles: [classe], [data], [odg], [presidente], [segretario]",
     "saveTemplateBtn": "Guardar Plantilla",
     "dialogMeetingTitle": "Programar Reunión del Centro",
     "formMeetingTitle": "Título de la Reunión *",
