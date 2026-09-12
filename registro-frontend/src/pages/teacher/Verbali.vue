@@ -4,17 +4,17 @@
     <div class="row items-center justify-between q-mb-xs">
       <div>
         <h1 class="text-h4 text-weight-bold q-my-none text-primary">
-          <q-icon name="gavel" class="q-mr-sm" />Verbali & Riunioni
+          <q-icon name="gavel" class="q-mr-sm" />{{ t('verbali.title') }}
         </h1>
         <p class="text-subtitle1 text-grey-7 q-mb-none">
-          Gestione delle convocazioni con Ordine del Giorno, redazione riservata della bozza e firme digitali
+          {{ t('verbali.subtitle') }}
         </p>
       </div>
       <div class="q-gutter-sm">
         <q-btn
           color="primary"
           icon="add"
-          label="Nuova Riunione / Verbale"
+          :label="t('verbali.newMeetingVerbaleBtn')"
           unelevated
           @click="openCreateMeetingDialog"
         />
@@ -27,10 +27,10 @@
         <q-icon name="security" color="primary" size="md" />
       </template>
       <div class="text-weight-bold text-body2">
-        Regole di Accesso e Immutabilità Documentale:
+        {{ t('verbali.lifecycleBannerTitle') }}
       </div>
       <div class="text-caption text-grey-8">
-        La bozza del verbale è modificabile <strong>esclusivamente dal Docente Coordinatore di classe e dal Segretario Verbalista</strong>, rimanendo riservata e invisibile alla Dirigente Scolastica. Una volta apposta la firma digitale, il documento viene <strong>bloccato in sola lettura definitiva</strong> e reso consultabile alla Dirigenza Scolastica.
+        {{ t('verbali.lifecycleBannerText') }}
       </div>
     </q-banner>
 
@@ -44,8 +44,8 @@
         indicator-color="primary"
         align="left"
       >
-        <q-tab name="verbali" icon="description" label="Verbali & Firme Digitali" />
-        <q-tab name="meetings" icon="event" label="Riunioni & Convocazioni (ODG)" />
+        <q-tab name="verbali" icon="description" :label="t('verbali.tabVerbali')" />
+        <q-tab name="meetings" icon="event" :label="t('verbali.tabMeetings')" />
       </q-tabs>
 
       <q-separator />
@@ -59,7 +59,7 @@
             row-key="id"
             :loading="loadingVerbali"
             flat
-            no-data-label="Nessun verbale trovato per le tue classi"
+            :no-data-label="t('verbali.noVerbali')"
           >
             <!-- Badge Stato / Ciclo di vita -->
             <template v-slot:body-cell-status="props">
@@ -70,7 +70,7 @@
                   text-color="white"
                   class="q-pa-xs text-weight-bold"
                 >
-                  <q-icon name="verified" class="q-mr-xs" /> Firmato e Archiviato (Sola Lettura)
+                  <q-icon name="verified" class="q-mr-xs" /> {{ t('verbali.statusSigned') }}
                 </q-badge>
                 <q-badge
                   v-else
@@ -78,7 +78,7 @@
                   text-color="white"
                   class="q-pa-xs text-weight-bold"
                 >
-                  <q-icon name="edit_note" class="q-mr-xs" /> Bozza in Lavorazione
+                  <q-icon name="edit_note" class="q-mr-xs" /> {{ t('verbali.statusDraft') }}
                 </q-badge>
               </q-td>
             </template>
@@ -87,7 +87,7 @@
             <template v-slot:body-cell-editing="props">
               <q-td :props="props">
                 <span v-if="props.row.is_signed" class="text-grey-7 text-caption">
-                  <q-icon name="lock" class="q-mr-xs" /> Bloccato per tutti
+                  <q-icon name="lock" class="q-mr-xs" /> {{ t('verbali.lockedForAll') }}
                 </span>
                 <q-badge
                   v-else-if="props.row.can_edit"
@@ -95,10 +95,10 @@
                   text-color="white"
                   class="text-caption"
                 >
-                  <q-icon name="edit" class="q-mr-xs" /> Tu puoi modificare
+                  <q-icon name="edit" class="q-mr-xs" /> {{ t('verbali.youCanEdit') }}
                 </q-badge>
                 <span v-else class="text-grey-6 text-caption">
-                  <q-icon name="visibility" class="q-mr-xs" /> Sola lettura (riservato al coordinatore/verbalista)
+                  <q-icon name="visibility" class="q-mr-xs" /> {{ t('verbali.readOnlyReserved') }}
                 </span>
               </q-td>
             </template>
@@ -112,7 +112,7 @@
                   size="sm"
                   color="primary"
                   icon="history_edu"
-                  label="Vedi Firme"
+                  :label="t('verbali.viewSignatures')"
                   @click="viewSignatures(props.row)"
                 />
               </q-td>
@@ -130,7 +130,7 @@
                   icon="visibility"
                   @click="openViewVerbale(props.row)"
                 >
-                  <q-tooltip>Visualizza Documento</q-tooltip>
+                  <q-tooltip>{{ t('verbali.viewDocTooltip') }}</q-tooltip>
                 </q-btn>
 
                 <!-- Modifica Bozza (Abilitato solo se non firmato e utente è redattore autorizzato) -->
@@ -143,7 +143,7 @@
                   icon="edit"
                   @click="openEditVerbale(props.row)"
                 >
-                  <q-tooltip>Modifica Bozza Verbale</q-tooltip>
+                  <q-tooltip>{{ t('verbali.editDraftTooltip') }}</q-tooltip>
                 </q-btn>
 
                 <!-- Firma Digitale con IP (Se non ancora firmato da questo utente) -->
@@ -153,10 +153,10 @@
                   size="sm"
                   unelevated
                   icon="draw"
-                  label="Firma IP"
+                  :label="t('verbali.signIpBtn')"
                   @click="signVerbale(props.row.id)"
                 >
-                  <q-tooltip>Firma digitalmente con tracciamento IP e data certa</q-tooltip>
+                  <q-tooltip>{{ t('verbali.signIpTooltip') }}</q-tooltip>
                 </q-btn>
 
                 <!-- Download PDF Ufficiale -->
@@ -168,7 +168,7 @@
                   icon="picture_as_pdf"
                   @click="downloadPdf(props.row)"
                 >
-                  <q-tooltip>Scarica PDF Ufficiale</q-tooltip>
+                  <q-tooltip>{{ t('verbali.downloadPdfTooltip') }}</q-tooltip>
                 </q-btn>
               </q-td>
             </template>
@@ -183,12 +183,12 @@
             row-key="id"
             :loading="loadingMeetings"
             flat
-            no-data-label="Nessuna riunione programmata"
+            :no-data-label="t('verbali.noMeetings')"
           >
             <template v-slot:body-cell-agenda="props">
               <q-td :props="props">
                 <div class="ellipsis-2-lines text-body2" style="max-width: 320px;">
-                  {{ props.row.agenda || 'Nessun ODG inserito' }}
+                  {{ props.row.agenda || t('verbali.noAgenda') }}
                 </div>
                 <q-btn
                   v-if="props.row.agenda"
@@ -196,7 +196,7 @@
                   dense
                   size="xs"
                   color="primary"
-                  label="Espandi ODG"
+                  :label="t('verbali.expandAgenda')"
                   @click="showAgendaDetail(props.row)"
                 />
               </q-td>
@@ -209,7 +209,7 @@
                   size="sm"
                   unelevated
                   icon="post_add"
-                  label="Redigi Verbale"
+                  :label="t('verbali.writeVerbaleBtn')"
                   @click="openCreateVerbaleForMeeting(props.row)"
                 />
               </q-td>
@@ -224,7 +224,7 @@
       <q-card style="width: min(650px, 95vw); max-width: 95vw;">
         <q-card-section class="row items-center q-pb-none bg-primary text-white">
           <div class="text-h6">
-            <q-icon name="event_available" class="q-mr-sm" />Programma Riunione / Convocazione
+            <q-icon name="event_available" class="q-mr-sm" />{{ t('verbali.dialogMeetingTitle') }}
           </div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
@@ -237,7 +237,7 @@
               v-model="selectedTemplate"
               :options="templatesList"
               option-label="title"
-              label="Scegli un Modello predisposto dalla Dirigenza (ODG e Bozza)"
+              :label="t('verbali.selectTemplateLabel')"
               outlined
               dense
               clearable
@@ -253,7 +253,7 @@
                     <q-item-label caption>{{ scope.opt.description }}</q-item-label>
                   </q-item-section>
                   <q-item-section side>
-                    <q-badge color="indigo">{{ scope.opt.meeting_type }}</q-badge>
+                    <q-badge color="indigo">{{ formatMeetingType(scope.opt.meeting_type) }}</q-badge>
                   </q-item-section>
                 </q-item>
               </template>
@@ -263,10 +263,10 @@
           <q-form @submit="submitMeeting" class="q-gutter-y-sm">
             <q-input
               v-model="meetingForm.title"
-              label="Titolo Riunione / Seduta *"
+              :label="t('verbali.formMeetingTitle')"
               outlined
               dense
-              :rules="[val => !!val || 'Campo obbligatorio']"
+              :rules="[val => !!val || t('common.requiredField')]"
             />
 
             <div class="row q-col-gutter-sm">
@@ -274,55 +274,55 @@
                 <q-input
                   v-model="meetingForm.date"
                   type="date"
-                  label="Data *"
+                  :label="t('verbali.formDate')"
                   outlined
                   dense
-                  :rules="[val => !!val || 'Campo obbligatorio']"
+                  :rules="[val => !!val || t('common.requiredField')]"
                 />
               </div>
               <div class="col-6 col-md-4">
                 <q-input
                   v-model="meetingForm.start_time"
                   type="time"
-                  label="Ora Inizio *"
+                  :label="t('verbali.formStartTime')"
                   outlined
                   dense
-                  :rules="[val => !!val || 'Campo obbligatorio']"
+                  :rules="[val => !!val || t('common.requiredField')]"
                 />
               </div>
               <div class="col-6 col-md-4">
                 <q-input
                   v-model="meetingForm.end_time"
                   type="time"
-                  label="Ora Fine *"
+                  :label="t('verbali.formEndTime')"
                   outlined
                   dense
-                  :rules="[val => !!val || 'Campo obbligatorio']"
+                  :rules="[val => !!val || t('common.requiredField')]"
                 />
               </div>
             </div>
 
             <q-input
               v-model="meetingForm.class_id"
-              label="ID o Sigla Classe (opzionale per Collegio Docenti o Dipartimenti)"
+              :label="t('verbali.formClassId')"
               outlined
               dense
-              hint="Lascia vuoto se riunione d'istituto o dipartimento"
+              :hint="t('verbali.formClassIdHint')"
             />
 
             <q-input
               v-model="meetingForm.agenda"
               type="textarea"
-              label="Ordine del Giorno (ODG) *"
+              :label="t('verbali.formAgenda')"
               outlined
               dense
               rows="4"
-              :rules="[val => !!val || 'Inserisci i punti all\'ODG']"
+              :rules="[val => !!val || t('verbali.formAgendaHint')]"
             />
 
             <div class="row justify-end q-mt-md q-gutter-sm">
-              <q-btn label="Annulla" flat v-close-popup />
-              <q-btn label="Salva Riunione" color="primary" type="submit" unelevated :loading="submitting" />
+              <q-btn :label="t('common.cancel')" flat v-close-popup />
+              <q-btn :label="t('verbali.saveMeetingBtn')" color="primary" type="submit" unelevated :loading="submitting" />
             </div>
           </q-form>
         </q-card-section>
@@ -335,7 +335,7 @@
         <q-card-section class="row items-center q-pb-none bg-primary text-white">
           <div class="text-h6">
             <q-icon :name="isEditingVerbale ? 'edit' : 'post_add'" class="q-mr-sm" />
-            {{ isEditingVerbale ? 'Modifica Bozza Verbale' : 'Nuovo Verbale di Seduta' }}
+            {{ isEditingVerbale ? t('verbali.dialogEditVerbaleTitle') : t('verbali.dialogNewVerbaleTitle') }}
           </div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
@@ -344,31 +344,31 @@
         <q-card-section class="q-pa-md">
           <div class="bg-amber-1 text-amber-10 q-pa-sm rounded-borders q-mb-md text-caption">
             <q-icon name="info" class="q-mr-xs" />
-            Ricorda: solo il Coordinatore della classe e il Verbalista possono modificare la bozza. Dopo la firma, il verbale sarà bloccato per sempre in sola lettura.
+            {{ t('verbali.draftWarning') }}
           </div>
 
           <q-form @submit="submitVerbale" class="q-gutter-y-sm">
             <q-input
               v-model="verbaleForm.title"
-              label="Titolo Verbale *"
+              :label="t('verbali.formVerbaleTitle')"
               outlined
               dense
-              :rules="[val => !!val || 'Campo obbligatorio']"
+              :rules="[val => !!val || t('common.requiredField')]"
             />
 
             <q-input
               v-model="verbaleForm.content"
               type="textarea"
-              label="Testo e Risoluzioni del Verbale *"
+              :label="t('verbali.formVerbaleContent')"
               outlined
               dense
               rows="10"
-              :rules="[val => !!val || 'Inserisci il contenuto del verbale']"
+              :rules="[val => !!val || t('verbali.formVerbaleContentHint')]"
             />
 
             <div class="row justify-end q-mt-md q-gutter-sm">
-              <q-btn label="Annulla" flat v-close-popup />
-              <q-btn label="Salva Bozza" color="primary" type="submit" unelevated :loading="submitting" />
+              <q-btn :label="t('common.cancel')" flat v-close-popup />
+              <q-btn :label="t('verbali.saveDraftBtn')" color="primary" type="submit" unelevated :loading="submitting" />
             </div>
           </q-form>
         </q-card-section>
@@ -391,12 +391,12 @@
               class="q-pa-xs text-subtitle2"
             >
               <q-icon :name="currentVerbale?.is_signed ? 'verified' : 'pending_actions'" class="q-mr-xs" />
-              {{ currentVerbale?.is_signed ? 'Documento Ufficiale Firmato (Sola Lettura)' : 'Bozza Riservata' }}
+              {{ currentVerbale?.is_signed ? t('verbali.viewOfficialSigned') : t('verbali.viewDraftReserved') }}
             </q-badge>
           </div>
 
           <q-card flat bordered class="bg-grey-1 q-pa-md q-mb-md">
-            <div class="text-subtitle2 text-grey-8 q-mb-xs">Contenuto del Verbale:</div>
+            <div class="text-subtitle2 text-grey-8 q-mb-xs">{{ t('verbali.viewContentHeader') }}</div>
             <div style="white-space: pre-wrap; font-family: monospace;" class="text-body2">
               {{ currentVerbale?.content }}
             </div>
@@ -404,11 +404,11 @@
 
           <!-- Firme Apposte -->
           <div class="text-subtitle1 text-weight-bold q-mb-sm">
-            <q-icon name="history_edu" class="q-mr-xs text-primary" />Registro Firme Digitali:
+            <q-icon name="history_edu" class="q-mr-xs text-primary" />{{ t('verbali.viewSignaturesHeader') }}
           </div>
 
           <div v-if="verbaleSignatures.length === 0" class="text-grey-6 text-caption">
-            Nessuna firma digitale ancora apposta.
+            {{ t('verbali.noSignaturesYet') }}
           </div>
           <q-list v-else bordered separator class="rounded-borders">
             <q-item v-for="sig in verbaleSignatures" :key="sig.id">
@@ -416,13 +416,13 @@
                 <q-avatar icon="verified_user" color="positive" text-color="white" />
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-weight-bold">{{ sig.user_name || 'Docente Firmatario' }}</q-item-label>
+                <q-item-label class="text-weight-bold">{{ sig.user_name || t('verbali.defaultSigner') }}</q-item-label>
                 <q-item-label caption>
-                  Firmato il: {{ new Date(sig.signed_at).toLocaleString() }}
+                  {{ t('verbali.signedAt', { date: new Date(sig.signed_at).toLocaleString(locale) }) }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
-                <q-badge color="grey-8">IP: {{ sig.ip_address || 'Registrato' }}</q-badge>
+                <q-badge color="grey-8">{{ t('verbali.ipLabel', { ip: sig.ip_address || t('verbaliManagement.ipRegistered') }) }}</q-badge>
               </q-item-section>
             </q-item>
           </q-list>
@@ -432,11 +432,11 @@
               v-if="currentVerbale?.is_signed"
               color="negative"
               icon="picture_as_pdf"
-              label="Scarica PDF Ufficiale"
+              :label="t('verbali.downloadPdfBtn')"
               unelevated
               @click="downloadPdf(currentVerbale)"
             />
-            <q-btn label="Chiudi" flat v-close-popup />
+            <q-btn :label="t('common.close')" flat v-close-popup />
           </div>
         </q-card-section>
       </q-card>
@@ -447,7 +447,7 @@
       <q-card style="width: min(550px, 95vw); max-width: 95vw;">
         <q-card-section class="row items-center q-pb-none bg-grey-2">
           <div class="text-subtitle1 text-weight-bold">
-            <q-icon name="list_alt" class="q-mr-xs text-primary" />Ordine del Giorno (ODG)
+            <q-icon name="list_alt" class="q-mr-xs text-primary" />{{ t('verbali.dialogAgendaTitle') }}
           </div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
@@ -455,8 +455,7 @@
         <q-card-section class="q-pa-md">
           <div class="text-h6 text-primary q-mb-sm">{{ currentMeeting?.title }}</div>
           <div class="text-caption text-grey-7 q-mb-md">
-            Data: {{ currentMeeting?.date ? new Date(currentMeeting.date).toLocaleDateString() : '' }}
-            | Orario: {{ currentMeeting?.start_time }} - {{ currentMeeting?.end_time }}
+            {{ t('verbali.agendaDateTime', { date: currentMeeting?.date ? new Date(currentMeeting.date).toLocaleDateString(locale) : '', time: `${currentMeeting?.start_time || ''} - ${currentMeeting?.end_time || ''}` }) }}
           </div>
           <div class="bg-grey-1 q-pa-md rounded-borders" style="white-space: pre-wrap;">
             {{ currentMeeting?.agenda }}
@@ -470,9 +469,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import verbaliService from '@/services/verbaliService'
 
 const $q = useQuasar()
+const { t, locale } = useI18n()
 
 // Stato navigazione
 const activeTab = ref('verbali')
@@ -517,22 +518,31 @@ const verbaleForm = ref({
 
 // Colonne Tabella Verbali
 const verbaliColumns = computed(() => [
-  { name: 'title', label: 'Oggetto / Titolo Verbale', field: 'title', align: 'left', sortable: true },
-  { name: 'status', label: 'Stato / Ciclo di Vita', field: 'status', align: 'center' },
-  { name: 'editing', label: 'Permessi Modifica', field: 'can_edit', align: 'center' },
-  { name: 'created_at', label: 'Data Redazione', field: r => new Date(r.created_at).toLocaleDateString(), align: 'center' },
-  { name: 'signatures', label: 'Firme', align: 'center' },
-  { name: 'actions', label: 'Azioni', align: 'center' }
+  { name: 'title', label: t('verbali.colTitle'), field: 'title', align: 'left', sortable: true },
+  { name: 'status', label: t('verbali.colStatus'), field: 'status', align: 'center' },
+  { name: 'editing', label: t('verbali.colPermissions'), field: 'can_edit', align: 'center' },
+  { name: 'created_at', label: t('verbali.colCreatedDate'), field: r => new Date(r.created_at).toLocaleDateString(locale.value), align: 'center' },
+  { name: 'signatures', label: t('verbali.colSignatures'), align: 'center' },
+  { name: 'actions', label: t('common.actions'), align: 'center' }
 ])
 
 // Colonne Tabella Riunioni
 const meetingsColumns = computed(() => [
-  { name: 'title', label: 'Titolo Riunione', field: 'title', align: 'left', sortable: true },
-  { name: 'date', label: 'Data', field: r => new Date(r.date).toLocaleDateString(), align: 'center', sortable: true },
-  { name: 'time', label: 'Orario', field: r => `${r.start_time} - ${r.end_time}`, align: 'center' },
-  { name: 'agenda', label: 'Ordine del Giorno (ODG)', align: 'left' },
-  { name: 'actions', label: 'Azioni', align: 'center' }
+  { name: 'title', label: t('verbali.colMeetingTitle'), field: 'title', align: 'left', sortable: true },
+  { name: 'date', label: t('verbali.colDate'), field: r => new Date(r.date).toLocaleDateString(locale.value), align: 'center', sortable: true },
+  { name: 'time', label: t('verbali.colTime'), field: r => `${r.start_time} - ${r.end_time}`, align: 'center' },
+  { name: 'agenda', label: t('verbali.colAgenda'), align: 'left' },
+  { name: 'actions', label: t('common.actions'), align: 'center' }
 ])
+
+const formatMeetingType = (type) => {
+  switch (type) {
+    case 'consiglio_classe': return t('verbali.types.consiglio_classe')
+    case 'collegio_docenti': return t('verbali.types.collegio_docenti')
+    case 'dipartimento': return t('verbali.types.dipartimento')
+    default: return t('verbali.types.generale')
+  }
+}
 
 // Caricamento Dati
 const loadVerbali = async () => {
@@ -541,7 +551,7 @@ const loadVerbali = async () => {
     const res = await verbaliService.getAllVerbali()
     verbaliList.value = res.data || []
   } catch {
-    $q.notify({ type: 'negative', message: 'Errore durante il caricamento dei verbali' })
+    $q.notify({ type: 'negative', message: t('verbali.notifyLoadVerbaliError') })
   } finally {
     loadingVerbali.value = false
   }
@@ -553,7 +563,7 @@ const loadMeetings = async () => {
     const res = await verbaliService.listMeetings()
     meetingsList.value = res.data || []
   } catch {
-    $q.notify({ type: 'negative', message: 'Errore durante il caricamento delle riunioni' })
+    $q.notify({ type: 'negative', message: t('verbali.notifyLoadMeetingsError') })
   } finally {
     loadingMeetings.value = false
   }
@@ -595,11 +605,11 @@ const submitMeeting = async () => {
   submitting.value = true
   try {
     await verbaliService.createMeeting(meetingForm.value)
-    $q.notify({ type: 'positive', message: 'Riunione programmata con successo' })
+    $q.notify({ type: 'positive', message: t('verbali.notifyMeetingSaved') })
     showMeetingDialog.value = false
     await loadMeetings()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore creazione riunione' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('verbali.notifyMeetingSaveError') })
   } finally {
     submitting.value = false
   }
@@ -611,8 +621,8 @@ const openCreateVerbaleForMeeting = (meeting) => {
   verbaleForm.value = {
     id: '',
     meeting_id: meeting.id,
-    title: `Verbale seduta: ${meeting.title}`,
-    content: selectedTemplate.value?.template_content || `In data ${meeting.date}, si è riunita la seduta per discutere i seguenti punti:\n${meeting.agenda}\n\n`
+    title: t('verbali.meetingVerbalePrefix', { title: meeting.title }),
+    content: selectedTemplate.value?.template_content || t('verbali.meetingVerbaleInitialContent', { date: meeting.date, agenda: meeting.agenda })
   }
   showVerbaleDialog.value = true
 }
@@ -636,19 +646,19 @@ const submitVerbale = async () => {
         title: verbaleForm.value.title,
         content: verbaleForm.value.content
       })
-      $q.notify({ type: 'positive', message: 'Bozza verbale aggiornata con successo' })
+      $q.notify({ type: 'positive', message: t('verbali.notifyDraftUpdated') })
     } else {
       await verbaliService.createVerbale({
         meeting_id: verbaleForm.value.meeting_id,
         title: verbaleForm.value.title,
         content: verbaleForm.value.content
       })
-      $q.notify({ type: 'positive', message: 'Bozza verbale creata con successo' })
+      $q.notify({ type: 'positive', message: t('verbali.notifyDraftCreated') })
     }
     showVerbaleDialog.value = false
     await loadVerbali()
   } catch (err) {
-    const msg = err.response?.data?.error || 'Errore salvataggio verbale'
+    const msg = err.response?.data?.error || t('verbali.notifyVerbaleSaveError')
     $q.notify({ type: 'negative', message: msg })
   } finally {
     submitting.value = false
@@ -658,17 +668,17 @@ const submitVerbale = async () => {
 // Firma Digitale con Audit IP
 const signVerbale = async (id) => {
   $q.dialog({
-    title: 'Firma Digitale del Verbale',
-    message: 'Stai per apporre la tua firma digitale con certificazione di timestamp e registrazione dell\'indirizzo IP. Una volta firmato da tutti, il verbale sarà bloccato per sempre e inviato alla Dirigente Scolastica. Procedere?',
+    title: t('verbali.confirmSignTitle'),
+    message: t('verbali.confirmSignMessage'),
     cancel: true,
     persistent: true
   }).onOk(async () => {
     try {
       await verbaliService.signVerbale(id)
-      $q.notify({ type: 'positive', message: 'Firma digitale apposta con successo!' })
+      $q.notify({ type: 'positive', message: t('verbali.notifySignedSuccess') })
       await loadVerbali()
     } catch (err) {
-      $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore firma verbale' })
+      $q.notify({ type: 'negative', message: err.response?.data?.error || t('verbali.notifySignError') })
     }
   })
 }
@@ -708,7 +718,7 @@ const downloadPdf = async (verbale) => {
     link.remove()
     window.URL.revokeObjectURL(url)
   } catch {
-    $q.notify({ type: 'negative', message: 'Errore durante il download del PDF' })
+    $q.notify({ type: 'negative', message: t('verbali.notifyPdfError') })
   }
 }
 

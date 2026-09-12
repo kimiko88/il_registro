@@ -24,6 +24,20 @@ type MockRepo struct {
 	processCount int
 	processErr   error
 	assignErr    error
+
+	createLeaveResult *staff_attendance.LeaveRequest
+	createLeaveErr    error
+	listLeavesResult  []staff_attendance.LeaveRequest
+	listLeavesErr     error
+	getLeaveResult    *staff_attendance.LeaveRequest
+	getLeaveErr       error
+	approveLeaveErr   error
+	rejectLeaveErr    error
+	deleteLeaveErr    error
+	timecardResult    *staff_attendance.MonthlyTimecard
+	timecardErr       error
+	allTimecards      []staff_attendance.MonthlyTimecard
+	allTimecardsErr   error
 }
 
 func (m *MockRepo) GetByUserAndDate(ctx context.Context, schoolID, userID, date string) (*staff_attendance.StaffAttendance, error) {
@@ -71,35 +85,35 @@ func (m *MockRepo) ListBadges(ctx context.Context, schoolID string) ([]staff_att
 }
 
 func (m *MockRepo) CreateLeaveRequest(ctx context.Context, schoolID, userID string, req staff_attendance.CreateLeaveRequest) (*staff_attendance.LeaveRequest, error) {
-	return nil, nil
+	return m.createLeaveResult, m.createLeaveErr
 }
 
 func (m *MockRepo) ListLeaveRequests(ctx context.Context, schoolID, userID, status string) ([]staff_attendance.LeaveRequest, error) {
-	return nil, nil
+	return m.listLeavesResult, m.listLeavesErr
 }
 
 func (m *MockRepo) GetLeaveRequest(ctx context.Context, schoolID, id string) (*staff_attendance.LeaveRequest, error) {
-	return nil, nil
+	return m.getLeaveResult, m.getLeaveErr
 }
 
 func (m *MockRepo) ApproveLeaveRequest(ctx context.Context, schoolID, id, approvedBy, notes string) error {
-	return nil
+	return m.approveLeaveErr
 }
 
 func (m *MockRepo) RejectLeaveRequest(ctx context.Context, schoolID, id, rejectedBy, reason string) error {
-	return nil
+	return m.rejectLeaveErr
 }
 
 func (m *MockRepo) DeleteLeaveRequest(ctx context.Context, schoolID, id, userID string) error {
-	return nil
+	return m.deleteLeaveErr
 }
 
 func (m *MockRepo) GetMonthlyTimecard(ctx context.Context, schoolID, userID, month string) (*staff_attendance.MonthlyTimecard, error) {
-	return nil, nil
+	return m.timecardResult, m.timecardErr
 }
 
 func (m *MockRepo) GetAllMonthlyTimecards(ctx context.Context, schoolID, month string) ([]staff_attendance.MonthlyTimecard, error) {
-	return nil, nil
+	return m.allTimecards, m.allTimecardsErr
 }
 
 func TestATARolesAndPermissions(t *testing.T) {

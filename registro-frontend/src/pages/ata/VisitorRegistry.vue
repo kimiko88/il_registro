@@ -6,7 +6,7 @@
         <div class="row items-center q-gutter-sm q-mb-xs">
           <q-badge color="amber-9" text-color="white" class="q-px-sm q-py-xs text-weight-bold text-caption rounded-borders">
             <q-icon name="meeting_room" size="14px" class="q-mr-xs" />
-            {{ t('visitorRegistry.badge') || 'PORTINERIA & VIGILANZA • COLLABORATORE SCOLASTICO' }}
+            {{ t('visitorRegistry.badge') }}
           </q-badge>
           <q-badge outline color="primary" class="q-px-sm q-py-xs text-weight-bold">
             {{ selectedDateFormatted }}
@@ -14,10 +14,10 @@
         </div>
         <h1 class="text-h4 text-weight-bolder text-slate-800 q-my-none flex items-center">
           <q-icon name="door_front" color="amber-9" class="q-mr-sm" size="36px" />
-          {{ t('visitorRegistry.title') || 'Registro Visitatori & Portineria' }}
+          {{ t('visitorRegistry.title') }}
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-xs">
-          {{ t('visitorRegistry.subtitle') || 'Controllo accessi esterni, uscite anticipate studenti con delega e segnalazioni anomalie strutturali' }}
+          {{ t('visitorRegistry.subtitle') }}
         </div>
       </div>
 
@@ -27,7 +27,7 @@
           v-if="activeTab === 'visitors'"
           color="amber-9"
           icon="person_add"
-          :label="t('visitorRegistry.newVisitorBtn') || 'Registra Visitatore'"
+          :label="t('visitorRegistry.newVisitorBtn')"
           no-caps
           rounded
           class="shadow-2 text-weight-bold"
@@ -37,7 +37,7 @@
           v-else-if="activeTab === 'early_exits'"
           color="indigo-7"
           icon="exit_to_app"
-          :label="t('visitorRegistry.newEarlyExitBtn') || 'Nuova Uscita Studente'"
+          :label="t('visitorRegistry.newEarlyExitBtn')"
           no-caps
           rounded
           class="shadow-2 text-weight-bold"
@@ -47,7 +47,7 @@
           v-else-if="activeTab === 'maintenance'"
           color="deep-orange-7"
           icon="handyman"
-          :label="t('visitorRegistry.newReportBtn') || 'Segnala Guasto'"
+          :label="t('visitorRegistry.newReportBtn')"
           no-caps
           rounded
           class="shadow-2 text-weight-bold"
@@ -62,7 +62,7 @@
           :loading="loading"
           @click="loadCurrentTabData"
         >
-          <q-tooltip>{{ t('common.refresh') || 'Aggiorna' }}</q-tooltip>
+          <q-tooltip>{{ t('common.refresh') }}</q-tooltip>
         </q-btn>
       </div>
     </div>
@@ -78,9 +78,9 @@
       narrow-indicator
       @update:model-value="onTabChange"
     >
-      <q-tab name="visitors" icon="badge" :label="t('visitorRegistry.tabVisitors') || 'Visitatori Esterni'" />
-      <q-tab name="early_exits" icon="school" :label="t('visitorRegistry.tabEarlyExits') || 'Uscite Anticipate Studenti'" />
-      <q-tab name="maintenance" icon="build" :label="t('visitorRegistry.tabMaintenance') || 'Segnalazioni Manutenzione'" />
+      <q-tab name="visitors" icon="badge" :label="t('visitorRegistry.tabVisitors')" />
+      <q-tab name="early_exits" icon="school" :label="t('visitorRegistry.tabEarlyExits')" />
+      <q-tab name="maintenance" icon="build" :label="t('visitorRegistry.tabMaintenance')" />
     </q-tabs>
 
     <!-- Tab Panels -->
@@ -96,7 +96,7 @@
                   <q-icon name="location_on" size="24px" />
                 </div>
                 <div class="q-ml-md">
-                  <div class="text-caption text-emerald-800 text-weight-bold">{{ t('visitorRegistry.statPresent') || 'Attualmente in Sede' }}</div>
+                  <div class="text-caption text-emerald-800 text-weight-bold">{{ t('visitorRegistry.statPresent') }}</div>
                   <div class="text-h5 text-weight-bolder text-emerald-900">{{ currentVisitors.length }}</div>
                 </div>
               </q-card-section>
@@ -109,7 +109,7 @@
                   <q-icon name="logout" size="24px" />
                 </div>
                 <div class="q-ml-md">
-                  <div class="text-caption text-blue-800 text-weight-bold">{{ t('visitorRegistry.statExited') || 'Usciti Oggi' }}</div>
+                  <div class="text-caption text-blue-800 text-weight-bold">{{ t('visitorRegistry.statExited') }}</div>
                   <div class="text-h5 text-weight-bolder text-blue-900">{{ exitedVisitors.length }}</div>
                 </div>
               </q-card-section>
@@ -122,7 +122,7 @@
                   <q-icon name="groups" size="24px" />
                 </div>
                 <div class="q-ml-md">
-                  <div class="text-caption text-amber-800 text-weight-bold">{{ t('visitorRegistry.statTotal') || 'Totale Ingressi Oggi' }}</div>
+                  <div class="text-caption text-amber-800 text-weight-bold">{{ t('visitorRegistry.statTotal') }}</div>
                   <div class="text-h5 text-weight-bolder text-amber-900">{{ visitorsList.length }}</div>
                 </div>
               </q-card-section>
@@ -137,7 +137,7 @@
             :columns="visitorColumns"
             row-key="id"
             :loading="loading"
-            no-data-label="Nessun visitatore registrato per oggi"
+            :no-data-label="t('visitorRegistry.noVisitorsToday')"
             class="no-shadow"
             :pagination="{ rowsPerPage: 15 }"
           >
@@ -152,10 +152,10 @@
             <template v-slot:body-cell-status="props">
               <q-td :props="props">
                 <q-badge v-if="!props.row.exit_time" color="positive" class="q-px-sm q-py-xs">
-                  <q-icon name="check_circle" size="12px" class="q-mr-xs" /> In sede
+                  <q-icon name="check_circle" size="12px" class="q-mr-xs" /> {{ t('visitorRegistry.statusOnSite') }}
                 </q-badge>
                 <q-badge v-else color="grey-6" class="q-px-sm q-py-xs">
-                  Uscito ore {{ formatTime(props.row.exit_time) }}
+                  {{ t('visitorRegistry.statusExitedAt', { time: formatTime(props.row.exit_time) }) }}
                 </q-badge>
               </q-td>
             </template>
@@ -168,7 +168,7 @@
                   flat
                   dense
                   icon="logout"
-                  :label="t('visitorRegistry.exitAction') || 'Registra Uscita'"
+                  :label="t('visitorRegistry.exitAction')"
                   no-caps
                   size="sm"
                   class="text-weight-bold"
@@ -189,17 +189,17 @@
             :columns="earlyExitColumns"
             row-key="id"
             :loading="loading"
-            no-data-label="Nessuna uscita anticipata registrata oggi"
+            :no-data-label="t('visitorRegistry.noEarlyExitsToday')"
             class="no-shadow"
             :pagination="{ rowsPerPage: 15 }"
           >
             <template v-slot:body-cell-status="props">
               <q-td :props="props">
                 <q-badge v-if="!props.row.return_time" color="warning" text-color="dark" class="q-px-sm q-py-xs">
-                  <q-icon name="directions_walk" size="12px" class="q-mr-xs" /> Fuori sede
+                  <q-icon name="directions_walk" size="12px" class="q-mr-xs" /> {{ t('visitorRegistry.statusOffSite') }}
                 </q-badge>
                 <q-badge v-else color="positive" class="q-px-sm q-py-xs">
-                  Rientrato ore {{ formatTime(props.row.return_time) }}
+                  {{ t('visitorRegistry.statusReturnedAt', { time: formatTime(props.row.return_time) }) }}
                 </q-badge>
               </q-td>
             </template>
@@ -212,7 +212,7 @@
                   flat
                   dense
                   icon="keyboard_return"
-                  :label="t('visitorRegistry.returnAction') || 'Segna Rientro'"
+                  :label="t('visitorRegistry.returnAction')"
                   no-caps
                   size="sm"
                   class="text-weight-bold"
@@ -231,12 +231,7 @@
           <div class="col-12 col-sm-6 col-md-3">
             <q-select
               v-model="maintenanceStatusFilter"
-              :options="[
-                { label: 'Tutte le segnalazioni', value: '' },
-                { label: 'Aperte', value: 'aperto' },
-                { label: 'In Lavorazione', value: 'in_lavorazione' },
-                { label: 'Chiuse / Risolte', value: 'chiuso' }
-              ]"
+              :options="maintenanceFilterOptions"
               emit-value
               map-options
               outlined
@@ -265,7 +260,7 @@
                   {{ rep.location }}
                 </div>
                 <div class="text-caption text-slate-500 q-mb-sm text-capitalize">
-                  Categoria: <strong>{{ rep.category }}</strong>
+                  {{ t('visitorRegistry.categoryPrefix') }} <strong>{{ rep.category }}</strong>
                 </div>
                 <div class="text-body2 text-slate-700 q-mb-md">
                   {{ rep.description }}
@@ -283,18 +278,18 @@
                   dense
                   no-caps
                   color="primary"
-                  :label="t('visitorRegistry.updateStatus') || 'Aggiorna Stato'"
+                  :label="t('visitorRegistry.updateStatus')"
                   size="sm"
                 >
                   <q-list dense>
                     <q-item clickable v-close-popup @click="updateMaintStatus(rep, 'aperto')">
-                      <q-item-section>Aperto</q-item-section>
+                      <q-item-section>{{ t('visitorRegistry.maintStatusOpen') }}</q-item-section>
                     </q-item>
                     <q-item clickable v-close-popup @click="updateMaintStatus(rep, 'in_lavorazione')">
-                      <q-item-section>In Lavorazione</q-item-section>
+                      <q-item-section>{{ t('visitorRegistry.maintStatusInProgress') }}</q-item-section>
                     </q-item>
                     <q-item clickable v-close-popup @click="updateMaintStatus(rep, 'chiuso')">
-                      <q-item-section>Chiuso / Risolto</q-item-section>
+                      <q-item-section>{{ t('visitorRegistry.maintStatusClosed') }}</q-item-section>
                     </q-item>
                   </q-list>
                 </q-btn-dropdown>
@@ -311,31 +306,31 @@
         <q-card-section class="row items-center justify-between border-b border-slate-100">
           <div class="text-h6 text-weight-bold text-slate-900 flex items-center">
             <q-icon name="badge" color="amber-9" class="q-mr-sm" size="24px" />
-            {{ t('visitorRegistry.dialogVisitorTitle') || 'Registra Ingresso Visitatore' }}
+            {{ t('visitorRegistry.dialogVisitorTitle') }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-gutter-md q-pt-md">
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.nameLabel') || 'Nome & Cognome Visitatore *' }}</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.nameLabel') }}</label>
             <q-input v-model="visitorForm.name" outlined dense placeholder="Mario Rossi" />
           </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.docLabel') || 'Documento Identità' }}</label>
-              <q-input v-model="visitorForm.document_id" outlined dense placeholder="CI / Patente / Passaporto" />
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.docLabel') }}</label>
+              <q-input v-model="visitorForm.document_id" outlined dense :placeholder="t('visitorRegistry.docPlaceholder')" />
             </div>
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.badgeLabel') || 'N° Badge Assegnato' }}</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.badgeLabel') }}</label>
               <q-input v-model="visitorForm.badge_number" outlined dense placeholder="es. 04" />
             </div>
           </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.purposeLabel') || 'Motivo Visita *' }}</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.purposeLabel') }}</label>
               <q-select
                 v-model="visitorForm.purpose"
                 :options="purposeOptions"
@@ -346,22 +341,22 @@
               />
             </div>
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.hostLabel') || 'Persona / Ufficio da incontrare' }}</label>
-              <q-input v-model="visitorForm.host_name" outlined dense placeholder="es. Segreteria, Prof. Bianchi" />
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.hostLabel') }}</label>
+              <q-input v-model="visitorForm.host_name" outlined dense :placeholder="t('visitorRegistry.hostPlaceholder')" />
             </div>
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.notesLabel') || 'Note' }}</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.notesLabel') }}</label>
             <q-input v-model="visitorForm.notes" outlined dense type="textarea" rows="2" />
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md border-t border-slate-100">
-          <q-btn flat :label="t('common.cancel') || 'Annulla'" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('common.cancel')" color="grey-7" v-close-popup />
           <q-btn
             color="amber-9"
-            :label="t('visitorRegistry.saveVisitor') || 'Registra Ingresso'"
+            :label="t('visitorRegistry.saveVisitor')"
             no-caps
             rounded
             class="q-px-md text-weight-bold shadow-1"
@@ -378,14 +373,14 @@
         <q-card-section class="row items-center justify-between border-b border-slate-100">
           <div class="text-h6 text-weight-bold text-slate-900 flex items-center">
             <q-icon name="school" color="indigo-7" class="q-mr-sm" size="24px" />
-            {{ t('visitorRegistry.dialogEarlyExitTitle') || 'Registra Uscita Anticipata Studente' }}
+            {{ t('visitorRegistry.dialogEarlyExitTitle') }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-gutter-md q-pt-md">
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.studentLabel') || 'Studente *' }}</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.studentLabel') }}</label>
             <q-select
               v-model="earlyExitForm.student_id"
               :options="studentOptions"
@@ -397,31 +392,26 @@
               dense
               use-input
               @filter="filterStudents"
-              placeholder="Cerca studente..."
+              :placeholder="t('visitorRegistry.searchStudentPlaceholder')"
             />
           </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-7">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.delegateeLabel') || 'Nome Delegato al ritiro *' }}</label>
-              <q-input v-model="earlyExitForm.delegatee_name" outlined dense placeholder="Genitore o delegato" />
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.delegateeLabel') }}</label>
+              <q-input v-model="earlyExitForm.delegatee_name" outlined dense :placeholder="t('visitorRegistry.delegateePlaceholder')" />
             </div>
             <div class="col-5">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.relLabel') || 'Relazione / Titolo' }}</label>
-              <q-input v-model="earlyExitForm.delegate_rel" outlined dense placeholder="Madre / Padre / Tutore" />
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.relLabel') }}</label>
+              <q-input v-model="earlyExitForm.delegate_rel" outlined dense :placeholder="t('visitorRegistry.relPlaceholder')" />
             </div>
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.reasonLabel') || 'Motivazione' }}</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.reasonLabel') }}</label>
             <q-select
               v-model="earlyExitForm.reason_code"
-              :options="[
-                { label: 'Visita Medica', value: 'visita_medica' },
-                { label: 'Motivi Familiari', value: 'motivi_familiari' },
-                { label: 'Malessere Improvviso a Scuola', value: 'malessere' },
-                { label: 'Altro', value: 'altro' }
-              ]"
+              :options="reasonOptions"
               emit-value
               map-options
               outlined
@@ -430,16 +420,16 @@
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.notesLabel') || 'Note' }}</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.notesLabel') }}</label>
             <q-input v-model="earlyExitForm.notes" outlined dense type="textarea" rows="2" />
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md border-t border-slate-100">
-          <q-btn flat :label="t('common.cancel') || 'Annulla'" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('common.cancel')" color="grey-7" v-close-popup />
           <q-btn
             color="indigo-7"
-            :label="t('visitorRegistry.saveEarlyExit') || 'Registra Uscita'"
+            :label="t('visitorRegistry.saveEarlyExit')"
             no-caps
             rounded
             class="q-px-md text-weight-bold shadow-1"
@@ -456,30 +446,23 @@
         <q-card-section class="row items-center justify-between border-b border-slate-100">
           <div class="text-h6 text-weight-bold text-slate-900 flex items-center">
             <q-icon name="build" color="deep-orange-7" class="q-mr-sm" size="24px" />
-            {{ t('visitorRegistry.dialogMaintTitle') || 'Segnala Guasto / Anomalia' }}
+            {{ t('visitorRegistry.dialogMaintTitle') }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-gutter-md q-pt-md">
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.locationLabel') || 'Luogo / Plesso / Aula *' }}</label>
-            <q-input v-model="maintenanceForm.location" outlined dense placeholder="es. Bagni Piano 1 ala est, Aula 12" />
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.locationLabel') }}</label>
+            <q-input v-model="maintenanceForm.location" outlined dense :placeholder="t('visitorRegistry.locationPlaceholder')" />
           </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.categoryLabel') || 'Categoria *' }}</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.categoryLabel') }}</label>
               <q-select
                 v-model="maintenanceForm.category"
-                :options="[
-                  { label: 'Elettrico', value: 'elettrico' },
-                  { label: 'Idraulico', value: 'idraulico' },
-                  { label: 'Strutturale / Infissi', value: 'strutturale' },
-                  { label: 'Pulizia / Igiene', value: 'pulizia' },
-                  { label: 'Informatica / LIM', value: 'informatica' },
-                  { label: 'Altro', value: 'altro' }
-                ]"
+                :options="categoryOptions"
                 emit-value
                 map-options
                 outlined
@@ -487,15 +470,10 @@
               />
             </div>
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.priorityLabel') || 'Priorità *' }}</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.priorityLabel') }}</label>
               <q-select
                 v-model="maintenanceForm.priority"
-                :options="[
-                  { label: 'Bassa', value: 'bassa' },
-                  { label: 'Media', value: 'media' },
-                  { label: 'Alta', value: 'alta' },
-                  { label: 'Urgente / Pericolo', value: 'urgente' }
-                ]"
+                :options="priorityOptions"
                 emit-value
                 map-options
                 outlined
@@ -505,23 +483,23 @@
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.descLabel') || 'Descrizione Dettagliata *' }}</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('visitorRegistry.descLabel') }}</label>
             <q-input
               v-model="maintenanceForm.description"
               outlined
               dense
               type="textarea"
               rows="3"
-              placeholder="Descrivere il guasto o l'anomalia rilevata"
+              :placeholder="t('visitorRegistry.descPlaceholder')"
             />
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md border-t border-slate-100">
-          <q-btn flat :label="t('common.cancel') || 'Annulla'" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('common.cancel')" color="grey-7" v-close-popup />
           <q-btn
             color="deep-orange-7"
-            :label="t('visitorRegistry.saveMaint') || 'Invia Segnalazione'"
+            :label="t('visitorRegistry.saveMaint')"
             no-caps
             rounded
             class="q-px-md text-weight-bold shadow-1"
@@ -542,7 +520,7 @@ import visitorService from '@/services/visitorService'
 import userService from '@/services/userService'
 
 const $q = useQuasar()
-const { t, te, locale } = useI18n()
+const { t, locale } = useI18n()
 
 const activeTab = ref('visitors')
 const loading = ref(false)
@@ -566,26 +544,26 @@ const visitorForm = ref({
   notes: ''
 })
 
-const purposeOptions = [
-  { label: 'Genitore / Tutore', value: 'parent' },
-  { label: 'Fornitore / Tecnico Esterno', value: 'supplier' },
-  { label: 'Ente / Istituzione / ASL', value: 'institution' },
-  { label: 'Altro', value: 'other' }
-]
+const purposeOptions = computed(() => [
+  { label: t('visitorRegistry.purposeParent'), value: 'parent' },
+  { label: t('visitorRegistry.purposeSupplier'), value: 'supplier' },
+  { label: t('visitorRegistry.purposeInstitution'), value: 'institution' },
+  { label: t('visitorRegistry.purposeOther'), value: 'other' }
+])
 
 const currentVisitors = computed(() => visitorsList.value.filter(v => !v.exit_time))
 const exitedVisitors = computed(() => visitorsList.value.filter(v => v.exit_time))
 
-const visitorColumns = [
-  { name: 'name', label: 'Nome Visitatore', field: 'name', align: 'left', sortable: true },
-  { name: 'document_id', label: 'Documento', field: 'document_id', align: 'left' },
-  { name: 'purpose', label: 'Motivo', field: 'purpose', align: 'left' },
-  { name: 'host_name', label: 'Referente', field: 'host_name', align: 'left' },
-  { name: 'badge_number', label: 'Badge', field: 'badge_number', align: 'center' },
-  { name: 'entry_time', label: 'Ingresso', field: row => formatTime(row.entry_time), align: 'center' },
-  { name: 'status', label: 'Stato', align: 'center' },
-  { name: 'actions', label: 'Azioni', align: 'right' }
-]
+const visitorColumns = computed(() => [
+  { name: 'name', label: t('visitorRegistry.colVisitorName'), field: 'name', align: 'left', sortable: true },
+  { name: 'document_id', label: t('visitorRegistry.colDocument'), field: 'document_id', align: 'left' },
+  { name: 'purpose', label: t('visitorRegistry.colPurpose'), field: 'purpose', align: 'left' },
+  { name: 'host_name', label: t('visitorRegistry.colHost'), field: 'host_name', align: 'left' },
+  { name: 'badge_number', label: t('visitorRegistry.colBadge'), field: 'badge_number', align: 'center' },
+  { name: 'entry_time', label: t('visitorRegistry.colEntry'), field: row => formatTime(row.entry_time), align: 'center' },
+  { name: 'status', label: t('common.status'), align: 'center' },
+  { name: 'actions', label: t('common.actions'), align: 'right' }
+])
 
 // Tab 2: Early Exits
 const earlyExitsList = ref([])
@@ -600,15 +578,22 @@ const earlyExitForm = ref({
 const studentList = ref([])
 const studentOptions = ref([])
 
-const earlyExitColumns = [
-  { name: 'student_name', label: 'Studente', field: 'student_name', align: 'left', sortable: true },
-  { name: 'class_name', label: 'Classe', field: 'class_name', align: 'center' },
-  { name: 'delegatee_name', label: 'Ritirato da', field: 'delegatee_name', align: 'left' },
-  { name: 'delegate_rel', label: 'Grado parentela', field: 'delegate_rel', align: 'left' },
-  { name: 'exit_time', label: 'Ora Uscita', field: row => formatTime(row.exit_time), align: 'center' },
-  { name: 'status', label: 'Stato', align: 'center' },
-  { name: 'actions', label: 'Azioni', align: 'right' }
-]
+const earlyExitColumns = computed(() => [
+  { name: 'student_name', label: t('visitorRegistry.colStudent'), field: 'student_name', align: 'left', sortable: true },
+  { name: 'class_name', label: t('visitorRegistry.colClass'), field: 'class_name', align: 'center' },
+  { name: 'delegatee_name', label: t('visitorRegistry.colDelegatee'), field: 'delegatee_name', align: 'left' },
+  { name: 'delegate_rel', label: t('visitorRegistry.colRel'), field: 'delegate_rel', align: 'left' },
+  { name: 'exit_time', label: t('visitorRegistry.colExitTime'), field: row => formatTime(row.exit_time), align: 'center' },
+  { name: 'status', label: t('common.status'), align: 'center' },
+  { name: 'actions', label: t('common.actions'), align: 'right' }
+])
+
+const reasonOptions = computed(() => [
+  { label: t('visitorRegistry.reasonMedical'), value: 'visita_medica' },
+  { label: t('visitorRegistry.reasonFamily'), value: 'motivi_familiari' },
+  { label: t('visitorRegistry.reasonIllness'), value: 'malessere' },
+  { label: t('visitorRegistry.reasonOther'), value: 'altro' }
+])
 
 // Tab 3: Maintenance
 const maintenanceList = ref([])
@@ -620,6 +605,29 @@ const maintenanceForm = ref({
   priority: 'media',
   description: ''
 })
+
+const maintenanceFilterOptions = computed(() => [
+  { label: t('visitorRegistry.filterAllReports'), value: '' },
+  { label: t('visitorRegistry.maintStatusOpen'), value: 'aperto' },
+  { label: t('visitorRegistry.maintStatusInProgress'), value: 'in_lavorazione' },
+  { label: t('visitorRegistry.maintStatusClosed'), value: 'chiuso' }
+])
+
+const categoryOptions = computed(() => [
+  { label: t('visitorRegistry.catElectrical'), value: 'elettrico' },
+  { label: t('visitorRegistry.catPlumbing'), value: 'idraulico' },
+  { label: t('visitorRegistry.catStructural'), value: 'strutturale' },
+  { label: t('visitorRegistry.catCleaning'), value: 'pulizia' },
+  { label: t('visitorRegistry.catItLim'), value: 'informatica' },
+  { label: t('visitorRegistry.catOther'), value: 'altro' }
+])
+
+const priorityOptions = computed(() => [
+  { label: t('visitorRegistry.prioLow'), value: 'bassa' },
+  { label: t('visitorRegistry.prioMedium'), value: 'media' },
+  { label: t('visitorRegistry.prioHigh'), value: 'alta' },
+  { label: t('visitorRegistry.prioUrgent'), value: 'urgente' }
+])
 
 function onTabChange(_val) {
   loadCurrentTabData()
@@ -641,7 +649,7 @@ async function loadVisitors() {
     const res = await visitorService.listTodayVisitors(todayStr)
     visitorsList.value = res.data || []
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento visitatori' })
+    $q.notify({ type: 'negative', message: t('visitorRegistry.notifyLoadVisitorsError') })
   } finally {
     loading.value = false
   }
@@ -653,7 +661,7 @@ async function loadEarlyExits() {
     const res = await visitorService.listTodayEarlyExits(todayStr)
     earlyExitsList.value = res.data || []
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento uscite anticipate' })
+    $q.notify({ type: 'negative', message: t('visitorRegistry.notifyLoadEarlyExitsError') })
   } finally {
     loading.value = false
   }
@@ -665,7 +673,7 @@ async function loadMaintenance() {
     const res = await visitorService.listMaintenanceReports(maintenanceStatusFilter.value)
     maintenanceList.value = res.data || []
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento segnalazioni' })
+    $q.notify({ type: 'negative', message: t('visitorRegistry.notifyLoadReportsError') })
   } finally {
     loading.value = false
   }
@@ -685,17 +693,17 @@ function openNewVisitorDialog() {
 
 async function submitVisitor() {
   if (!visitorForm.value.name) {
-    $q.notify({ type: 'warning', message: 'Nome visitatore obbligatorio' })
+    $q.notify({ type: 'warning', message: t('visitorRegistry.notifyNameRequired') })
     return
   }
   saving.value = true
   try {
     await visitorService.registerVisitor(visitorForm.value)
-    $q.notify({ type: 'positive', message: 'Visitatore registrato con successo' })
+    $q.notify({ type: 'positive', message: t('visitorRegistry.notifyVisitorSaved') })
     visitorDialog.value = false
     await loadVisitors()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore registrazione visitatore' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('visitorRegistry.notifyLoadVisitorsError') })
   } finally {
     saving.value = false
   }
@@ -704,10 +712,10 @@ async function submitVisitor() {
 async function recordExit(v) {
   try {
     await visitorService.recordVisitorExit(v.id, 'Uscita registrata da portineria')
-    $q.notify({ type: 'positive', message: `Uscita registrata per ${v.name}` })
+    $q.notify({ type: 'positive', message: t('visitorRegistry.notifyExitRecorded', { name: v.name }) })
     await loadVisitors()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore registrazione uscita' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('visitorRegistry.notifyExitError') })
   }
 }
 
@@ -715,7 +723,7 @@ function openNewEarlyExitDialog() {
   earlyExitForm.value = {
     student_id: '',
     delegatee_name: '',
-    delegate_rel: 'Genitore',
+    delegate_rel: '',
     reason_code: 'visita_medica',
     notes: ''
   }
@@ -724,17 +732,17 @@ function openNewEarlyExitDialog() {
 
 async function submitEarlyExit() {
   if (!earlyExitForm.value.student_id || !earlyExitForm.value.delegatee_name) {
-    $q.notify({ type: 'warning', message: 'Compilare studente e nome del delegato' })
+    $q.notify({ type: 'warning', message: t('visitorRegistry.notifyEarlyExitValidation') })
     return
   }
   saving.value = true
   try {
     await visitorService.recordEarlyExit(earlyExitForm.value)
-    $q.notify({ type: 'positive', message: 'Uscita anticipata registrata' })
+    $q.notify({ type: 'positive', message: t('visitorRegistry.notifyEarlyExitSaved') })
     earlyExitDialog.value = false
     await loadEarlyExits()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore registrazione uscita anticipata' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('visitorRegistry.notifyEarlyExitError') })
   } finally {
     saving.value = false
   }
@@ -743,10 +751,10 @@ async function submitEarlyExit() {
 async function recordReturn(exit) {
   try {
     await visitorService.recordStudentReturn(exit.id, 'Rientro in aula')
-    $q.notify({ type: 'positive', message: 'Rientro dello studente registrato' })
+    $q.notify({ type: 'positive', message: t('visitorRegistry.notifyReturnSaved') })
     await loadEarlyExits()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore rientro studente' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('visitorRegistry.notifyReturnError') })
   }
 }
 
@@ -762,17 +770,17 @@ function openNewMaintenanceDialog() {
 
 async function submitMaintenance() {
   if (!maintenanceForm.value.location || !maintenanceForm.value.description) {
-    $q.notify({ type: 'warning', message: 'Luogo e descrizione sono obbligatori' })
+    $q.notify({ type: 'warning', message: t('visitorRegistry.notifyMaintValidation') })
     return
   }
   saving.value = true
   try {
     await visitorService.createMaintenanceReport(maintenanceForm.value)
-    $q.notify({ type: 'positive', message: 'Segnalazione registrata con successo' })
+    $q.notify({ type: 'positive', message: t('visitorRegistry.notifyMaintSaved') })
     maintenanceDialog.value = false
     await loadMaintenance()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore registrazione guasto' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('visitorRegistry.notifyMaintError') })
   } finally {
     saving.value = false
   }
@@ -781,10 +789,10 @@ async function submitMaintenance() {
 async function updateMaintStatus(rep, status) {
   try {
     await visitorService.updateMaintenanceStatus(rep.id, { status })
-    $q.notify({ type: 'positive', message: 'Stato segnalazione aggiornato' })
+    $q.notify({ type: 'positive', message: t('visitorRegistry.notifyStatusUpdated') })
     await loadMaintenance()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore aggiornamento stato' })
+    $q.notify({ type: 'negative', message: t('visitorRegistry.notifyStatusError') })
   }
 }
 
@@ -815,10 +823,10 @@ function formatDate(iso) {
 
 function getPurposeLabel(p) {
   switch (p) {
-    case 'parent': return 'Genitore'
-    case 'supplier': return 'Fornitore'
-    case 'institution': return 'Istituzione'
-    default: return 'Altro'
+    case 'parent': return t('visitorRegistry.purposeLabelParent')
+    case 'supplier': return t('visitorRegistry.purposeLabelSupplier')
+    case 'institution': return t('visitorRegistry.purposeLabelInstitution')
+    default: return t('visitorRegistry.purposeOther')
   }
 }
 
@@ -852,9 +860,9 @@ function getMaintenanceStatusColor(st) {
 
 function getMaintenanceStatusLabel(st) {
   switch (st) {
-    case 'aperto': return 'Aperto'
-    case 'in_lavorazione': return 'In corso'
-    case 'chiuso': return 'Risolto'
+    case 'aperto': return t('visitorRegistry.statusOpen')
+    case 'in_lavorazione': return t('visitorRegistry.statusInProgress')
+    case 'chiuso': return t('visitorRegistry.statusResolved')
     default: return st
   }
 }
