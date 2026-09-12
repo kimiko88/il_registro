@@ -204,6 +204,7 @@ export function useMenuItems(role) {
                 children: [
                     { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
                     { label: 'Documenti & Atti', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
                     { label: 'Flussi SIDI', icon: 'cloud_sync', path: '/secretary/sidi' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
                 ]
@@ -226,8 +227,10 @@ export function useMenuItems(role) {
                 icon: 'folder_shared',
                 children: [
                     { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
+                    { label: 'Flussi SIDI', icon: 'cloud_sync', path: '/secretary/sidi' },
                     { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
                     { label: 'Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
+                    { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
                 ]
             }
@@ -246,10 +249,11 @@ export function useMenuItems(role) {
                 ]
             },
             {
-                category: 'Comunicazioni',
+                category: 'Comunicazioni & Atti',
                 icon: 'campaign',
                 children: [
                     { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
+                    { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
                     { label: 'Documenti', icon: 'description', path: '/secretary/documents' }
                 ]

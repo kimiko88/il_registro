@@ -99,6 +99,9 @@ func (r *repository) ListTodayVisitors(ctx context.Context, schoolID, date strin
 		}
 		visitors = append(visitors, v)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return visitors, nil
 }
 
@@ -204,6 +207,9 @@ func (r *repository) ListTodayEarlyExits(ctx context.Context, schoolID, date str
 		}
 		exits = append(exits, e)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return exits, nil
 }
 
@@ -261,6 +267,9 @@ func (r *repository) ListMaintenanceReports(ctx context.Context, schoolID, statu
 			rep.ClosedAt = &closedAt.Time
 		}
 		reports = append(reports, rep)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return reports, nil
 }

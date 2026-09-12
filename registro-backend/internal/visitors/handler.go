@@ -20,6 +20,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		// Visitatori esterni
 		g.POST("", h.RegisterVisitor)
 		g.GET("", h.ListTodayVisitors)
+		g.GET("/today", h.ListTodayVisitors)
 		g.PATCH("/:id/exit", h.RecordVisitorExit)
 
 		// Uscite anticipate studenti

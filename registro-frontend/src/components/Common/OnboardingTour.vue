@@ -281,15 +281,23 @@ const userRole = computed(() => {
   const role = authStore.userRole || authStore.user?.role || 'student'
   const r = role.toLowerCase()
   if (r === 'superadmin') return 'admin'
-  return ['teacher','student','parent','secretary','admin'].includes(r) ? r : 'student'
+  if (['teacher', 'student', 'parent', 'secretary', 'admin',
+       'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'dsga'].includes(r)) {
+    return r
+  }
+  return 'student'
 })
 
 const roleMeta = {
-  teacher:   { icon: 'school',              color: 'indigo',  primary: 'indigo',  label: 'roles.teacher' },
-  student:   { icon: 'face',                color: 'teal',    primary: 'teal',    label: 'roles.student' },
-  parent:    { icon: 'family_restroom',      color: 'purple',  primary: 'purple',  label: 'roles.parent' },
-  secretary: { icon: 'admin_panel_settings', color: 'orange',  primary: 'orange',  label: 'roles.secretary' },
-  admin:     { icon: 'manage_accounts',      color: 'red',     primary: 'red',     label: 'roles.admin' }
+  teacher:                   { icon: 'school',              color: 'indigo',      primary: 'indigo',        label: 'roles.teacher' },
+  student:                   { icon: 'face',                color: 'teal',        primary: 'teal',          label: 'roles.student' },
+  parent:                    { icon: 'family_restroom',      color: 'purple',      primary: 'purple',        label: 'roles.parent' },
+  secretary:                 { icon: 'admin_panel_settings', color: 'orange',      primary: 'orange',        label: 'roles.secretary' },
+  admin:                     { icon: 'manage_accounts',      color: 'red',         primary: 'red',           label: 'roles.admin' },
+  assistente_amministrativo: { icon: 'manage_accounts',      color: 'cyan',        primary: 'cyan-8',        label: 'roles.assistente_amministrativo' },
+  collaboratore_ds:          { icon: 'co_present',          color: 'amber',       primary: 'amber-9',       label: 'roles.collaboratore_ds' },
+  collaboratore_scolastico:  { icon: 'door_front',          color: 'teal',        primary: 'teal-8',        label: 'roles.collaboratore_scolastico' },
+  dsga:                      { icon: 'account_balance',     color: 'deep-orange', primary: 'deep-orange-8', label: 'roles.dsga' }
 }
 
 const roleIcon    = computed(() => roleMeta[userRole.value]?.icon    || 'person')
@@ -348,6 +356,34 @@ const STEP_DEFS = {
     { icon:'settings',        color:'grey'    },
     { icon:'corporate_fare',  color:'indigo'  },
     { icon:'api',             color:'cyan'    }
+  ],
+  assistente_amministrativo: [
+    { icon: 'dashboard',        color: 'cyan' },
+    { icon: 'calendar_month',   color: 'blue' },
+    { icon: 'forward_to_inbox', color: 'purple' },
+    { icon: 'cloud_sync',       color: 'indigo' },
+    { icon: 'gavel',            color: 'teal' }
+  ],
+  collaboratore_ds: [
+    { icon: 'dashboard',        color: 'amber' },
+    { icon: 'bolt',             color: 'red' },
+    { icon: 'swap_horiz',       color: 'blue' },
+    { icon: 'co_present',       color: 'orange' },
+    { icon: 'gavel',            color: 'purple' }
+  ],
+  collaboratore_scolastico: [
+    { icon: 'dashboard',        color: 'teal' },
+    { icon: 'door_front',       color: 'blue' },
+    { icon: 'logout',           color: 'orange' },
+    { icon: 'build',            color: 'red' },
+    { icon: 'badge',            color: 'green' }
+  ],
+  dsga: [
+    { icon: 'dashboard',        color: 'deep-orange' },
+    { icon: 'assessment',       color: 'blue' },
+    { icon: 'verified',         color: 'green' },
+    { icon: 'cloud_sync',       color: 'indigo' },
+    { icon: 'gavel',            color: 'purple' }
   ]
 }
 
@@ -528,6 +564,9 @@ function floatIconStyle(i) {
 .hero-purple  { background: linear-gradient(160deg, #a855f7, #7c3aed); }
 .hero-orange  { background: linear-gradient(160deg, #f97316, #ea580c); }
 .hero-red     { background: linear-gradient(160deg, #ef4444, #dc2626); }
+.hero-cyan    { background: linear-gradient(160deg, #06b6d4, #0891b2); }
+.hero-amber   { background: linear-gradient(160deg, #f59e0b, #d97706); }
+.hero-deep-orange { background: linear-gradient(160deg, #f97316, #c2410c); }
 
 .hero-rings { position: absolute; inset: 0; }
 .ring {

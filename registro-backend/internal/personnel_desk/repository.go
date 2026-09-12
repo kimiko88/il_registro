@@ -32,6 +32,10 @@ func (r *postgresRepository) Create(ctx context.Context, req *DeskRequest) error
 	req.CreatedAt = now
 	req.UpdatedAt = now
 
+	if req.SchoolID == "" {
+		_ = r.db.QueryRowContext(ctx, `SELECT COALESCE(school_id::text, '') FROM users WHERE id=$1`, req.ApplicantID).Scan(&req.SchoolID)
+	}
+
 	attJSON, err := json.Marshal(req.Attachments)
 	if err != nil {
 		attJSON = []byte("[]")
@@ -60,7 +64,7 @@ func (r *postgresRepository) GetByID(ctx context.Context, schoolID, id string) (
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS applicant_name,
 		       COALESCE(u.role, '') AS applicant_role,
 		       pdr.category, COALESCE(pdr.sub_category, ''),
-		       pdr.start_date, pdr.end_date, pdr.days, pdr.hours,
+		       pdr.start_date::text, pdr.end_date::text, COALESCE(pdr.days, 0)::float8, COALESCE(pdr.hours, 0)::float8,
 		       COALESCE(pdr.description, ''), COALESCE(pdr.attachments::text, '[]'),
 		       pdr.status,
 		       COALESCE(pdr.aa_note, ''), pdr.aa_reviewed_by, pdr.aa_reviewed_at,
@@ -69,7 +73,7 @@ func (r *postgresRepository) GetByID(ctx context.Context, schoolID, id string) (
 		       pdr.created_at, pdr.updated_at
 		FROM personnel_desk_requests pdr
 		LEFT JOIN users u ON u.id = pdr.applicant_id
-		WHERE pdr.id = $1 AND pdr.school_id = $2`
+		WHERE pdr.id = $1 AND (pdr.school_id = $2 OR $2 = '')`
 
 	row := r.db.QueryRowContext(ctx, query, id, schoolID)
 
@@ -129,7 +133,7 @@ func (r *postgresRepository) List(ctx context.Context, schoolID, applicantID, st
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS applicant_name,
 		       COALESCE(u.role, '') AS applicant_role,
 		       pdr.category, COALESCE(pdr.sub_category, ''),
-		       pdr.start_date, pdr.end_date, pdr.days, pdr.hours,
+		       pdr.start_date::text, pdr.end_date::text, COALESCE(pdr.days, 0)::float8, COALESCE(pdr.hours, 0)::float8,
 		       COALESCE(pdr.description, ''), COALESCE(pdr.attachments::text, '[]'),
 		       pdr.status,
 		       COALESCE(pdr.aa_note, ''), pdr.aa_reviewed_by, pdr.aa_reviewed_at,
@@ -138,7 +142,7 @@ func (r *postgresRepository) List(ctx context.Context, schoolID, applicantID, st
 		       pdr.created_at, pdr.updated_at
 		FROM personnel_desk_requests pdr
 		LEFT JOIN users u ON u.id = pdr.applicant_id
-		WHERE pdr.school_id = $1`
+		WHERE (pdr.school_id = $1 OR $1 = '')`
 
 	args := []interface{}{schoolID}
 	idx := 2
@@ -210,6 +214,10 @@ func (r *postgresRepository) List(ctx context.Context, schoolID, applicantID, st
 		list = append(list, req)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return list, nil
 }
 
@@ -242,7 +250,7 @@ func (r *postgresRepository) Update(ctx context.Context, req *DeskRequest) error
 			ds_approved_by = $18,
 			ds_approved_at = $19,
 			updated_at = $20
-		WHERE id = $21 AND school_id = $22`,
+		WHERE id = $21 AND (school_id = $22 OR $22 = '')`,
 		req.Category, req.SubCategory,
 		req.StartDate, req.EndDate, req.Days, req.Hours,
 		req.Description, string(attJSON),
@@ -259,7 +267,7 @@ func (r *postgresRepository) Update(ctx context.Context, req *DeskRequest) error
 func (r *postgresRepository) Delete(ctx context.Context, schoolID, id, applicantID string) error {
 	res, err := r.db.ExecContext(ctx, `
 		DELETE FROM personnel_desk_requests
-		WHERE id = $1 AND school_id = $2 AND applicant_id = $3 AND status IN ('draft', 'submitted')`,
+		WHERE id = $1 AND (school_id = $2 OR $2 = '') AND applicant_id = $3 AND status IN ('draft', 'submitted')`,
 		id, schoolID, applicantID)
 	if err != nil {
 		return err

@@ -37,13 +37,16 @@ func (r *PostgresRepository) CreateLeaveRequest(ctx context.Context, schoolID, u
 // ListLeaveRequests elenca le richieste (tutte o per utente specifico)
 func (r *PostgresRepository) ListLeaveRequests(ctx context.Context, schoolID, userID, status string) ([]LeaveRequest, error) {
 	query := `
-		SELECT lr.*,
-		       u.first_name AS user_first_name,
-		       u.last_name  AS user_last_name,
-		       u.role       AS user_role
+		SELECT lr.id, lr.school_id, lr.user_id, lr.type, lr.start_date::text, lr.end_date::text,
+		       COALESCE(lr.days, 0), COALESCE(lr.hours, 0), COALESCE(lr.notes, ''), lr.status,
+		       lr.approved_by, lr.approved_at, lr.rejected_at, COALESCE(lr.reject_reason, ''),
+		       lr.created_at, lr.updated_at,
+		       COALESCE(u.first_name, '') AS user_first_name,
+		       COALESCE(u.last_name, '')  AS user_last_name,
+		       COALESCE(u.role, '')       AS user_role
 		FROM staff_leave_requests lr
 		JOIN users u ON u.id = lr.user_id
-		WHERE lr.school_id = $1`
+		WHERE (lr.school_id = $1 OR $1 = '')`
 	args := []interface{}{schoolID}
 	idx := 2
 
@@ -160,7 +163,7 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 	// Recupera dati utente
 	var firstName, lastName, role string
 	err := r.db.QueryRowContext(ctx,
-		`SELECT first_name, last_name, role FROM users WHERE id=$1 AND school_id=$2`,
+		`SELECT first_name, last_name, role FROM users WHERE id=$1 AND (school_id=$2 OR $2='' OR school_id IS NULL)`,
 		userID, schoolID).Scan(&firstName, &lastName, &role)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("utente non trovato")
@@ -175,8 +178,8 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 		SELECT COALESCE(SUM(
 		    EXTRACT(EPOCH FROM (COALESCE(badge_exit_time, NOW()) - badge_entry_time)) / 60
 		), 0) AS worked_minutes
-		FROM staff_attendances
-		WHERE school_id=$1 AND user_id=$2
+		FROM staff_attendance
+		WHERE (school_id=$1 OR $1='') AND user_id=$2
 		  AND TO_CHAR(date::date, 'YYYY-MM') = $3
 		  AND badge_entry_time IS NOT NULL`,
 		schoolID, userID, month).Scan(&workedMins)
@@ -185,6 +188,39 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 	}
 	workedHours := workedMins.Float64 / 60.0
 
+	// Dettaglio giornaliero per il cartellino
+	var dailyEntries []DailyTimecardEntry
+	dRows, err := r.db.QueryContext(ctx, `
+		SELECT date::text, badge_entry_time, badge_exit_time,
+		       COALESCE(EXTRACT(EPOCH FROM (COALESCE(badge_exit_time, NOW()) - badge_entry_time)) / 60, 0)::int as worked_minutes,
+		       status, COALESCE(notes, '')
+		FROM staff_attendance
+		WHERE (school_id=$1 OR $1='') AND user_id=$2
+		  AND TO_CHAR(date::date, 'YYYY-MM') = $3
+		ORDER BY date ASC`, schoolID, userID, month)
+	if err == nil {
+		defer dRows.Close()
+		for dRows.Next() {
+			var de DailyTimecardEntry
+			var entryTime, exitTime sql.NullTime
+			if err := dRows.Scan(&de.Date, &entryTime, &exitTime, &de.WorkedMinutes, &de.Status, &de.Notes); err == nil {
+				if entryTime.Valid {
+					de.EntryTime = &entryTime.Time
+				}
+				if exitTime.Valid {
+					de.ExitTime = &exitTime.Time
+				}
+				dailyEntries = append(dailyEntries, de)
+			}
+		}
+		if err := dRows.Err(); err != nil {
+			return nil, err
+		}
+	}
+	if dailyEntries == nil {
+		dailyEntries = []DailyTimecardEntry{}
+	}
+
 	// Conteggi assenze per tipo
 	var absenceDays, leaveDays, sickDays int
 	var permitHours float64
@@ -192,7 +228,7 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT type, COUNT(*) as cnt, COALESCE(SUM(hours),0) as hrs
 		FROM staff_leave_requests
-		WHERE school_id=$1 AND user_id=$2
+		WHERE (school_id=$1 OR $1='') AND user_id=$2
 		  AND TO_CHAR(start_date::date, 'YYYY-MM') = $3
 		  AND status='approved'
 		GROUP BY type`, schoolID, userID, month)
@@ -239,6 +275,7 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 		LeaveDays:     leaveDays,
 		SickDays:      sickDays,
 		PermitHours:   permitHours,
+		DailyEntries:  dailyEntries,
 	}, nil
 }
 
@@ -250,7 +287,7 @@ func (r *PostgresRepository) GetAllMonthlyTimecards(ctx context.Context, schoolI
 
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT id FROM users
-		WHERE school_id=$1 AND role IN ('dsga','assistente_amministrativo','collaboratore_ds','collaboratore_scolastico')
+		WHERE (school_id=$1 OR $1='' OR school_id IS NULL) AND role IN ('dsga','assistente_amministrativo','collaboratore_ds','collaboratore_scolastico')
 		ORDER BY last_name, first_name`, schoolID)
 	if err != nil {
 		return nil, err
