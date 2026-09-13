@@ -49,12 +49,22 @@ describe('useMenuItems — Dynamic Role-Based Menu Generation', () => {
     expect(didattica.children.some(c => c.path === '/parent/grades')).toBe(true)
   })
 
-  it('handles principal and vice_principal roles mapped to secretary menu', () => {
+  it('handles principal role mapped to secretary menu', () => {
     const principalItems = useMenuItems('principal')
-    const vpItems = useMenuItems('vice_principal')
     expect(principalItems.length).toBeGreaterThan(0)
-    expect(principalItems).toEqual(vpItems)
     expect(principalItems.some(i => i.category === 'Anagrafiche & Classi')).toBe(true)
+  })
+
+  it('handles vice_principal with dedicated executive governance and teaching duties', () => {
+    const vpItems = useMenuItems('vice_principal')
+    expect(vpItems.length).toBeGreaterThan(0)
+    expect(vpItems.some(i => i.category === 'Presidenza & Vicariato')).toBe(true)
+    expect(vpItems.some(i => i.category === 'Didattica & Le Mie Classi')).toBe(true)
+    const presidenza = vpItems.find(i => i.category === 'Presidenza & Vicariato')
+    expect(presidenza.children.some(c => c.path === '/secretary/substitutions')).toBe(true)
+    const didattica = vpItems.find(i => i.category === 'Didattica & Le Mie Classi')
+    expect(didattica.children.some(c => c.path === '/teacher/classes')).toBe(true)
+    expect(didattica.children.some(c => c.path === '/teacher/grades')).toBe(true)
   })
 
   it('handles coordinator role mapped to teacher menu', () => {

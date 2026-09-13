@@ -134,3 +134,8 @@ xcuserdata/
 *.pkg
 # Local only documentation / drafts
 docs/promotion.md
+
+
+# Go cache
+/registro-backend/.gocache/
+.gocache/

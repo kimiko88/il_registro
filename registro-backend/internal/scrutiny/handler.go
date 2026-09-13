@@ -56,6 +56,14 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	}
 }
 
+func isScrutinyOverviewStaff(role string) bool {
+	return role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary"
+}
+
+func isScrutinyManagementStaff(role string) bool {
+	return role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary" || role == "teacher"
+}
+
 func parseSemester(semStr string) int {
 	if s, err := strconv.Atoi(semStr); err == nil && (s == 1 || s == 2) {
 		return s
@@ -276,7 +284,7 @@ func (h *Handler) GetOverview(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+	if !isScrutinyOverviewStaff(actorRole) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 		return
 	}
@@ -300,7 +308,7 @@ func (h *Handler) GetClassReport(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" && actorRole != "teacher" {
+	if !isScrutinyManagementStaff(actorRole) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 		return
 	}
@@ -322,7 +330,7 @@ func (h *Handler) FinalizeClass(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 		return
 	}
@@ -345,7 +353,7 @@ func (h *Handler) ExportAll(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+	if !isScrutinyOverviewStaff(actorRole) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 		return
 	}
@@ -368,7 +376,7 @@ func (h *Handler) SaveDeficiency(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+	if !isScrutinyManagementStaff(actorRole) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 		return
 	}
@@ -419,7 +427,7 @@ func (h *Handler) GetClassDeficiencies(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+	if !isScrutinyManagementStaff(actorRole) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 		return
 	}
@@ -460,7 +468,7 @@ func (h *Handler) EnqueueAsyncScrutinyPdf(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+	if !isScrutinyManagementStaff(actorRole) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 		return
 	}

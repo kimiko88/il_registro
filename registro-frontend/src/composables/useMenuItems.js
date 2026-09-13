@@ -119,6 +119,46 @@ export function useMenuItems(role, assignments = []) {
                 ]
             }
         ],
+        vice_principal: [
+            { label: 'Dashboard Docente & Vicario', icon: 'dashboard', path: '/teacher', exact: true },
+            {
+                category: 'Presidenza & Vicariato',
+                icon: 'account_balance',
+                children: [
+                    { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
+                    { label: 'Orario Scolastico', icon: 'schedule', path: '/secretary/timetable' },
+                    { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Rilevazione Scioperi', icon: 'campaign', path: '/ata/strike' },
+                    { label: 'Verbali & Riunioni', icon: 'gavel', path: '/secretary/verbali' },
+                    { label: 'Classi', icon: 'room', path: '/secretary/classes' },
+                    { label: 'Gruppi Linguistici / Articolati', icon: 'groups', path: '/secretary/groups' },
+                    { label: 'Studenti', icon: 'school', path: '/secretary/students' },
+                    { label: 'Libri di Testo', icon: 'auto_stories', path: '/secretary/textbooks' },
+                    { label: 'Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
+                    { label: 'Documenti & Atti', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Comunicazioni Istituto', icon: 'campaign', path: '/secretary/communications' }
+                ]
+            },
+            {
+                category: 'Didattica & Le Mie Classi',
+                icon: 'menu_book',
+                children: [
+                    { label: 'Le Mie Classi', icon: 'class', path: '/teacher/classes' },
+                    { label: 'Registro Classe', icon: 'menu_book', path: '/teacher/lessons' },
+                    { label: 'Voti', icon: 'grade', path: '/teacher/grades' },
+                    { label: 'Presenze', icon: 'how_to_reg', path: '/teacher/attendance' },
+                    { label: 'Didattica', icon: 'folder_shared', path: '/teacher/didactics' },
+                    { label: 'Scrutinio', icon: 'analytics', path: '/teacher/scrutiny' },
+                    { label: 'Programmazione UdA', icon: 'auto_stories', path: '/teacher/uda' },
+                    { label: 'Piani PDP / PEI', icon: 'accessibility_new', path: '/teacher/pdp' },
+                    { label: 'Orario Lezioni', icon: 'schedule', path: '/teacher/timetable' },
+                    { label: 'Agenda', icon: 'edit_calendar', path: '/teacher/agenda' },
+                    { label: 'Colloqui', icon: 'event', path: '/teacher/colloqui' },
+                    { label: 'Note Disciplinari', icon: 'assignment_late', path: '/teacher/notes' },
+                    { label: 'Impostazioni Docente', icon: 'settings', path: '/teacher/settings' }
+                ]
+            }
+        ],
         student: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
             {
@@ -215,7 +255,8 @@ export function useMenuItems(role, assignments = []) {
                     { label: 'Documenti & Atti', icon: 'description', path: '/secretary/documents' },
                     { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
                     { label: 'Flussi SIDI', icon: 'cloud_sync', path: '/secretary/sidi' },
-                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
+                    { label: 'Impostazioni & Profilo', icon: 'settings', path: '/ata/settings' }
                 ]
             }
         ],
@@ -241,7 +282,8 @@ export function useMenuItems(role, assignments = []) {
                     { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
                     { label: 'Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
                     { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
-                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
+                    { label: 'Impostazioni & Profilo', icon: 'settings', path: '/ata/settings' }
                 ]
             }
         ],
@@ -349,7 +391,8 @@ export function useMenuItems(role, assignments = []) {
                     { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
                     { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
-                    { label: 'Documenti', icon: 'description', path: '/secretary/documents' }
+                    { label: 'Documenti', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Impostazioni & Profilo', icon: 'settings', path: '/ata/settings' }
                 ]
             }
         ],
@@ -363,7 +406,8 @@ export function useMenuItems(role, assignments = []) {
                     { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
                     { label: 'Cartellino & Piano Ferie', icon: 'calendar_month', path: '/ata/timecard' },
                     { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
-                    { label: 'Comunicazioni & Circolari', icon: 'email', path: '/secretary/communications' }
+                    { label: 'Comunicazioni & Circolari', icon: 'email', path: '/secretary/communications' },
+                    { label: 'Impostazioni & Profilo', icon: 'settings', path: '/ata/settings' }
                 ]
             }
         ],
@@ -381,7 +425,7 @@ export function useMenuItems(role, assignments = []) {
             }
         ],
         responsabile_gestione_documentale: [
-            { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
+            { label: 'Dashboard', icon: 'dashboard', path: '/secretary/documents', exact: true },
             {
                 category: 'Gestione Documentale & Archivi',
                 icon: 'archive',
@@ -393,7 +437,7 @@ export function useMenuItems(role, assignments = []) {
             }
         ],
         responsabile_conservazione: [
-            { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
+            { label: 'Dashboard', icon: 'dashboard', path: '/secretary/documents', exact: true },
             {
                 category: 'Conservazione Digitale',
                 icon: 'inventory_2',
@@ -405,7 +449,7 @@ export function useMenuItems(role, assignments = []) {
             }
         ],
         dpo: [
-            { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
+            { label: 'Dashboard', icon: 'dashboard', path: '/admin/audit-logs', exact: true },
             { label: 'Audit Logs & Sicurezza', icon: 'history', path: '/admin/audit-logs' },
             { label: 'Monitoraggio Sistema', icon: 'monitor_heart', path: '/admin/monitoring' },
             { label: 'Impostazioni Privacy', icon: 'security', path: '/admin/settings' },
@@ -413,9 +457,14 @@ export function useMenuItems(role, assignments = []) {
         ]
     }
 
-    // Principal / Vice-Principal map to secretary menu structure (incorporating institutional governance)
-    if (normRole === 'principal' || normRole === 'vice_principal' || normRole === 'dirigente_scolastico' || normRole === 'collaboratore_vicario') {
+    // Principal maps to secretary menu structure (incorporating institutional governance)
+    if (normRole === 'principal' || normRole === 'dirigente_scolastico') {
         return menuConfig.secretary
+    }
+
+    // Vice-Principal has dedicated executive governance + teaching duties menu
+    if (normRole === 'vice_principal' || normRole === 'collaboratore_vicario') {
+        return menuConfig.vice_principal
     }
 
     if (normRole === 'system_auditor') {

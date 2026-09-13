@@ -2,6 +2,7 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import authService from '@/services/authService'
+import { getUserDashboard } from '@/utils/roleUtils'
 
 import { i18n } from '@/i18n'
 
@@ -23,39 +24,8 @@ export function useAuth() {
             const { user: userData, access_token: token, refresh_token: refreshTokenValue } = response
             authStore.login(userData, token, refreshTokenValue, rememberMe)
 
-            // Redirect based on role
-            switch (userData.role) {
-                case 'superadmin':
-                case 'admin':
-                case 'system_auditor':
-                    router.push('/admin')
-                    break
-                case 'secretary':
-                case 'principal':
-                case 'vice_principal':
-                case 'staff':
-                    router.push('/secretary')
-                    break
-                case 'dsga':
-                case 'collaboratore_ds':
-                case 'assistente_amministrativo':
-                case 'collaboratore_scolastico':
-                    router.push('/ata')
-                    break
-                case 'teacher':
-                case 'coordinator':
-                case 'docente':
-                    router.push('/teacher')
-                    break
-                case 'student':
-                    router.push('/student')
-                    break
-                case 'parent':
-                    router.push('/parent')
-                    break
-                default:
-                    router.push('/')
-            }
+            // Redirect based on role using shared utility (consistent with router guard)
+            router.push(getUserDashboard(userData.role))
             return null
         } catch (error) {
             return translateLoginError(error)

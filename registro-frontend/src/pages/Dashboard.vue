@@ -96,7 +96,7 @@
                 </q-list>
 
                 <!-- Menu per Docente (Teacher) -->
-                <q-list style="min-width: 240px" v-else-if="currentRole === 'teacher'">
+                <q-list style="min-width: 240px" v-else-if="currentRole === 'teacher' || currentRole === 'vice_principal'">
                   <q-item clickable @click="openDraftModal">
                     <q-item-section avatar><q-icon name="edit_note" color="primary" /></q-item-section>
                     <q-item-section>{{ $t('udaPage.createTitle') || 'Pianifica Bozza Lezione' }}</q-item-section>
@@ -167,7 +167,7 @@
               <q-item-section>
                 <div>{{ $t('timetablePage.freeSlot') || 'Nessuna lezione pianificata per oggi' }}</div>
                 <q-btn
-                  v-if="currentRole === 'teacher'"
+                  v-if="currentRole === 'teacher' || currentRole === 'vice_principal'"
                   flat
                   color="primary"
                   icon="add"
@@ -370,7 +370,7 @@
     </q-dialog>
 
     <!-- Dialog Elenco Bozze Salvate (Solo Docente) -->
-    <q-dialog v-if="currentRole === 'teacher'" v-model="showDraftsListDialog">
+    <q-dialog v-if="currentRole === 'teacher' || currentRole === 'vice_principal'" v-model="showDraftsListDialog">
       <q-card style="width: min(600px, 95vw); max-width: 95vw;" class="rounded-xl">
         <q-card-section class="bg-secondary text-white row items-center justify-between">
           <div class="text-h6 text-weight-bold">
@@ -456,7 +456,7 @@ const draftForm = ref({
 const currentRole = computed(() => userRole.value || user.value?.role || 'student')
 
 const isDashboardAdmin = computed(() =>
-  ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'system_auditor'].includes(currentRole.value)
+  ['secretary', 'admin', 'superadmin', 'principal', 'system_auditor'].includes(currentRole.value)
 )
 
 const today = computed(() => {
@@ -636,7 +636,7 @@ const fetchDashboardData = async () => {
                     { label: t('dashboardPage.statRequests'), value: data.pending_documents_count ?? '0', icon: 'assignment', color: 'red' }
                 ]
                 recentEvents.value = data.recent_events || []
-            } else if (role === 'teacher') {
+            } else if (role === 'teacher' || role === 'vice_principal') {
                 realStats.value = [
                     { label: t('dashboardPage.statMyClasses'), value: data.classes_count ?? '0', icon: 'class', color: 'indigo' },
                     { label: t('dashboardPage.statStudents'), value: data.students_count ?? '0', icon: 'school', color: 'cyan' },
@@ -833,8 +833,21 @@ const handleActionClick = async (action) => {
 
 onMounted(() => {
   const role = (userRole.value || '').toLowerCase()
-  if (['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico'].includes(role)) {
+  const ataRoles = [
+    'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico',
+    'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo',
+    'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio'
+  ]
+  if (ataRoles.includes(role)) {
     router.replace('/ata')
+    return
+  }
+  if (['responsabile_gestione_documentale', 'responsabile_conservazione'].includes(role)) {
+    router.replace('/secretary/documents')
+    return
+  }
+  if (role === 'dpo') {
+    router.replace('/admin/audit-logs')
     return
   }
   loadStoredDrafts()

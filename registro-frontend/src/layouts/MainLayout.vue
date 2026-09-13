@@ -411,7 +411,16 @@
     >
       <div class="column full-height no-wrap">
         <!-- User Profile Section -->
-        <div class="q-pa-md bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" :aria-label="t('layout.userProfile')">
+        <div
+          class="q-pa-md bg-primary text-white relative-position overflow-hidden cursor-pointer user-profile-box"
+          v-if="userName"
+          role="button"
+          tabindex="0"
+          :aria-label="t('nav.profile') || 'Profilo utente'"
+          @click="navigateToProfile"
+          @keydown.enter.prevent="navigateToProfile"
+          @keydown.space.prevent="navigateToProfile"
+        >
           <div class="row items-center relative-position" style="z-index: 1">
             <q-avatar size="42px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
               <q-icon name="person" size="24px" />
@@ -420,8 +429,10 @@
               <div class="text-subtitle1 text-weight-bold no-wrap ellipsis" :aria-label="t('layout.connectedUser', { name: userName })">{{ userName }}</div>
               <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="t('layout.userRole', { role: roleLabel })">{{ roleLabel }}</div>
             </div>
+            <q-icon name="chevron_right" size="20px" class="opacity-70 q-ml-xs" />
           </div>
           <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
+          <q-tooltip>{{ t('nav.profile') || 'Impostazioni Profilo' }}</q-tooltip>
         </div>
 
         <!-- School Year Selector for Teachers on Mobile Drawer -->
@@ -1128,8 +1139,20 @@ const navigateToProfile = () => {
     router.push('/admin/settings')
   } else if (role === 'secretary' || role === 'principal' || role === 'vice_principal' || role === 'staff') {
     router.push('/secretary/settings')
-  } else if (['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico'].includes(role)) {
-    router.push('/ata')
+  } else if ([
+    'dsga',
+    'assistente_amministrativo',
+    'collaboratore_ds',
+    'collaboratore_scolastico',
+    'assistente_alunni',
+    'assistente_personale',
+    'assistente_contabilita',
+    'assistente_protocollo',
+    'assistente_sportello',
+    'assistente_tecnico',
+    'responsabile_servizio'
+  ].includes(role)) {
+    router.push('/ata/settings')
   } else {
     router.push('/dashboard')
   }

@@ -26,6 +26,15 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	}
 }
 
+func isTextbookAuthorizedRole(role string) bool {
+	switch role {
+	case "teacher", "admin", "superadmin", "secretary", "principal", "vice_principal":
+		return true
+	default:
+		return false
+	}
+}
+
 func (h *Handler) Create(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
@@ -33,7 +42,7 @@ func (h *Handler) Create(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if !isTextbookAuthorizedRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -59,7 +68,7 @@ func (h *Handler) Update(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if !isTextbookAuthorizedRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -91,6 +100,7 @@ func (h *Handler) List(c *gin.Context) {
 			schoolID = querySchoolID
 		}
 	}
+
 	res, err := h.service.ListTextbooks(c.Request.Context(), schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -107,7 +117,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if !isTextbookAuthorizedRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -141,7 +151,7 @@ func (h *Handler) AssignToClass(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if !isTextbookAuthorizedRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -165,7 +175,7 @@ func (h *Handler) RemoveFromClass(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if !isTextbookAuthorizedRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

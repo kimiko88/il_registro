@@ -1,5 +1,6 @@
 import { useAuthStore } from 'src/stores/auth'
 import { isTokenExpired } from 'src/utils/jwt'
+import { getUserDashboard } from 'src/utils/roleUtils'
 import { Notify } from 'quasar'
 
 // Shared in-flight promise to prevent concurrent initAuth calls
@@ -30,16 +31,6 @@ export const authGuard = async (to, from, ...rest) => {
     }
 
     const publicRoutes = ['/login', '/register', '/forgot-password']
-
-    const getUserDashboard = (role) => {
-        if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') return '/admin/dashboard'
-        if (role === 'teacher' || role === 'coordinator') return '/teacher'
-        if (role === 'student') return '/student'
-        if (role === 'parent') return '/parent'
-        if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary'
-        if (role === 'dsga' || role === 'assistente_amministrativo' || role === 'collaboratore_ds' || role === 'collaboratore_scolastico') return '/ata'
-        return '/login'
-    }
 
     const currentRole = authStore.userRole
 

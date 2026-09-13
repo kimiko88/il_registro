@@ -15,13 +15,12 @@ export const dashboardService = {
             role === 'superadmin' ||
             role === 'secretary' ||
             role === 'principal' ||
-            role === 'vice_principal' ||
             role === 'system_auditor'
         ) {
             const response = await api.get('/admin/dashboard/stats')
             return response.data
         }
-        if (role === 'teacher' || role === 'coordinator') {
+        if (role === 'teacher' || role === 'coordinator' || role === 'vice_principal') {
             const response = await api.get('/teachers/dashboard/stats')
             return response.data
         }

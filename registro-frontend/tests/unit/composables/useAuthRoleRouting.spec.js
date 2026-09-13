@@ -30,7 +30,7 @@ describe('useAuth Role Redirection & Routing Suite', () => {
     { role: 'system_auditor', expectedRoute: '/admin' },
     { role: 'secretary', expectedRoute: '/secretary' },
     { role: 'principal', expectedRoute: '/secretary' },
-    { role: 'vice_principal', expectedRoute: '/secretary' },
+    { role: 'vice_principal', expectedRoute: '/teacher' },
     { role: 'staff', expectedRoute: '/secretary' },
     { role: 'teacher', expectedRoute: '/teacher' },
     { role: 'coordinator', expectedRoute: '/teacher' },

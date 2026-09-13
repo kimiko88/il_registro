@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file dashboardService.test.js
  * Unit tests for dashboardService: role-based endpoint routing, principal/vice_principal/coordinator/auditor, dual export
  */
@@ -29,7 +29,6 @@ describe('dashboardService — Role-based Stats Routing', () => {
     'superadmin',
     'secretary',
     'principal',
-    'vice_principal',
     'system_auditor'
   ])('routes role %s to /admin/dashboard/stats', async (role) => {
     const res = await dashboardService.getDashboardStats(role)
@@ -39,7 +38,8 @@ describe('dashboardService — Role-based Stats Routing', () => {
 
   it.each([
     'teacher',
-    'coordinator'
+    'coordinator',
+    'vice_principal'
   ])('routes role %s to /teachers/dashboard/stats', async (role) => {
     const res = await dashboardService.getDashboardStats(role)
     expect(api.get).toHaveBeenCalledWith('/teachers/dashboard/stats')

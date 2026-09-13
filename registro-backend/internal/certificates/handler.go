@@ -27,6 +27,16 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
+func isCertificateStaffRole(role string) bool {
+	switch role {
+	case "admin", "superadmin", "secretary", "principal", "vice_principal", "dsga",
+		"assistente_amministrativo", "assistente_alunni", "assistente_contabilita", "assistente_sportello":
+		return true
+	default:
+		return false
+	}
+}
+
 func (h *Handler) List(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
@@ -34,7 +44,7 @@ func (h *Handler) List(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "secretary" && role != "superadmin" && role != "assistente_amministrativo" {
+	if !isCertificateStaffRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
 		return
 	}
@@ -63,7 +73,7 @@ func (h *Handler) Generate(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "secretary" && role != "superadmin" && role != "assistente_amministrativo" {
+	if !isCertificateStaffRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
 		return
 	}
@@ -97,7 +107,7 @@ func (h *Handler) DownloadPDF(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "secretary" && role != "superadmin" && role != "assistente_amministrativo" && role != "student" && role != "parent" {
+	if !isCertificateStaffRole(role) && role != "student" && role != "parent" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -147,7 +157,7 @@ func (h *Handler) Delete(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "admin" && role != "secretary" && role != "superadmin" && role != "assistente_amministrativo" {
+	if !isCertificateStaffRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
 		return
 	}

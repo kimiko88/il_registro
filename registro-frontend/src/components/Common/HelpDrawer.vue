@@ -110,7 +110,7 @@ import { useAuthStore } from '@/stores/auth'
 
 const emit = defineEmits(['restart-tour'])
 const router = useRouter()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const authStore = useAuthStore()
 
 const isOpen = ref(false)
@@ -206,31 +206,38 @@ const categoryIcons = {
 const categories = computed(() => {
   const role = userRole.value
   const keys = roleCategoryKeys[role] || []
-  return keys.map(key => ({
-    key,
-    label: t(`help.${role}.${key}`),
-    icon: categoryIcons[key] || 'help'
-  }))
+  return keys.map(key => {
+    const labelKey = `help.${role}.${key}`
+    return {
+      key,
+      label: te(labelKey) ? t(labelKey) : key,
+      icon: categoryIcons[key] || 'help'
+    }
+  })
 })
 
 const articles = computed(() => {
   const role = userRole.value
   const result = []
   for (let i = 1; i <= 10; i++) {
-    const q = t(`help.${role}.q${i}`)
-    const a = t(`help.${role}.a${i}`)
-    if (q && a && !q.startsWith('help.')) {
-      // Find matching category (map i to category)
-      const catKeys = roleCategoryKeys[role] || []
-      const catIdx = Math.floor((i - 1) / 1) % catKeys.length
-      const catKey = catKeys[catIdx] || ''
-      result.push({
-        key: `${role}-q${i}`,
-        question: q,
-        answer: a,
-        categoryKey: catKey,
-        categoryIcon: categoryIcons[catKey] || 'help_outline'
-      })
+    const qKey = `help.${role}.q${i}`
+    const aKey = `help.${role}.a${i}`
+    if (te(qKey) && te(aKey)) {
+      const q = t(qKey)
+      const a = t(aKey)
+      if (q && a && !q.startsWith('help.')) {
+        // Find matching category (map i to category)
+        const catKeys = roleCategoryKeys[role] || []
+        const catIdx = Math.floor((i - 1) / 1) % catKeys.length
+        const catKey = catKeys[catIdx] || ''
+        result.push({
+          key: `${role}-q${i}`,
+          question: q,
+          answer: a,
+          categoryKey: catKey,
+          categoryIcon: categoryIcons[catKey] || 'help_outline'
+        })
+      }
     }
   }
   return result
