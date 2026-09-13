@@ -554,7 +554,7 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - Creato componente `src/components/Common/PrintHeader.vue` — intestazione istituzionale visibile solo in stampa con props `schoolName`, `schoolSubtitle`, `documentType`, `academicYear` e data di stampa auto-localizzata; accessibile con `role="banner"` e `aria-label`.
     - Suite di unit test `tests/unit/components/Common/PrintHeader.spec.js` (8/8 test passati).
   - **Developer Experience (DX)**:
-    - Creato `registro-frontend/.env.example` con documentazione di tutte le variabili VITE_ necessarie (`VITE_API_URL`, future `VITE_VAPID_PUBLIC_KEY`, `VITE_SENTRY_DSN`) con note di sicurezza e istruzioni di setup.
+    - Creato `registro-frontend/.env.example` con documentazione di tutte le variabili VITE\_ necessarie (`VITE_API_URL`, future `VITE_VAPID_PUBLIC_KEY`, `VITE_SENTRY_DSN`) con note di sicurezza e istruzioni di setup.
     - Creato `src/types/api.d.js` con 20+ type definitions JSDoc per i principali modelli API (`User`, `Grade`, `AttendanceRecord`, `Communication`, `ColloquioSlot`, `ScrutinyRecord`, `ApiResponse<T>`, `PaginatedResponse`) per migliorare l'autocomplete IDE senza migration a TypeScript.
   - **Validazione Completa & Regression Check**:
     - **183/183** suite di unit test superate (**1203/1203 test passati**) — +3 nuove suite (`useIdempotency.spec.js`, `PrintHeader.spec.js`), +41 nuovi test.
@@ -708,7 +708,7 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - Frontend: In `src/pages/teacher/Attendance.vue`, aggiunto il pulsante "Stampa Registro Personale (PDF)" con dialog di configurazione e download del documento.
     - Unit test validato: `internal/teachers/teacher_register_pdf_test.go` (100% passati).
   - **2. Matrice Valutazione Descrittiva per Obiettivi di Apprendimento (O.M. 172/2020)**:
-    - Frontend: Creato componente `src/components/Teacher/DescriptiveEvaluationMatrix.vue` conforme all'Ordinanza Ministeriale 172/2020 con i 4 livelli (*Avanzato*, *Intermedio*, *Base*, *In via di prima acquisizione*), gestione personalizzata degli obiettivi disciplinari, matrice interattiva studenti/obiettivi con pillole di livello, note pedagogiche individuali, distribuzione statistica ed esportazione in CSV.
+    - Frontend: Creato componente `src/components/Teacher/DescriptiveEvaluationMatrix.vue` conforme all'Ordinanza Ministeriale 172/2020 con i 4 livelli (_Avanzato_, _Intermedio_, _Base_, _In via di prima acquisizione_), gestione personalizzata degli obiettivi disciplinari, matrice interattiva studenti/obiettivi con pillole di livello, note pedagogiche individuali, distribuzione statistica ed esportazione in CSV.
     - Integrato come Tab 3 in `src/pages/teacher/Rubrics.vue`.
   - **3. Verifica Congruità Dati Scolastici (Data Integrity & Diagnostic Linter)**:
     - Backend: In `internal/postgres/admin_integrity.go`, implementato motore di controllo e diagnostica preventiva relazionale su PostgreSQL; esposto endpoint `GET /api/v1/admin/data-integrity`. Rileva: studenti senza classe, classi prive di coordinatore, lezioni sovrapposte nello stesso orario/aula, voti inseriti di domenica o festivi, e genitori privi di studenti collegati.
@@ -731,16 +731,4 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **9. Circuit Breaker per Integrazioni Esterne (Supabase Storage, SIDI, Webhook)**:
     - Backend: Creato package `pkg/circuitbreaker/circuitbreaker.go` basato su `sony/gobreaker` con gestione degli stati Closed, Half-Open e Open, soglie di errore configurabili, timeout di ripristino e fail-fast immediato con `ErrCircuitOpen`. Integrato nel provider di storage Supabase (`pkg/upload/supabase.go`) per prevenire blocchi o rallentamenti dell'API in caso di degradazione del servizio esterno.
     - Unit test validato: `pkg/circuitbreaker/circuitbreaker_test.go` (100% passati).
-  - **Validazione Completa & Regression Check**:
-    - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend.
-    - **0 errori, 0 warning** ESLint (`npm run lint`).
-    - **Tutte le 11 lingue** (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `zh-CN`, `uk-UA`, `ar-SA`) aggiornate e sincronizzate al 100% per tutte le nuove feature.
-    - **Backend**: `go vet ./...` (0 errori e 0 warning), tutti i test interni `go test ./internal/... ./pkg/...` superati al 100%, tutti i test di integrazione `go test ./tests/integration/...` superati al 100%.
-    - **Risoluzione `golangci-lint` (ineffassign & unused)**:
-      - `internal/classes/repository.go`: Sostituito `code := "P"` con `var code string` per eliminare l'assegnazione inefficace segnalata da `ineffassign`.
-      - `cmd/seed_school/main.go`: Rimosso `type studentSeed struct` non referenziato per eliminare il warning `unused`.
-
-
-
-
-
+  - **Validazione Completa & Regression Check**: - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend. - **0 errori, 0 warning** ESLint (`npm run lint`). - **Tutte le 11 lingue** (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `zh-CN`, `uk-UA`, `ar-SA`) aggiornate e sincronizzate al 100% per tutte le nuove feature. - **Backend**: `go vet ./...` (0 errori e 0 warning), tutti i test interni `go test ./internal/... ./pkg/...` superati al 100%, tutti i test di integrazione `go test ./tests/integration/...` superati al 100%. - **Risoluzione `golangci-lint` (ineffassign & unused)**: - `internal/classes/repository.go`: Sostituito `code := "P"` con `var code string` per eliminare l'assegnazione inefficace segnalata da `ineffassign`. - `cmd/seed_school/main.go`: Rimosso `type studentSeed struct` non referenziato per eliminare il warning `unused`.

@@ -199,6 +199,18 @@ func (m *mockUserRepo) ChangePasswordTx(_ context.Context, _, _ string) error { 
 func (m *mockUserRepo) ApplyDataRetention(_ context.Context, _ *string, _ time.Time) (int, error) {
 	return 0, nil
 }
+func (m *mockUserRepo) GetAssignments(_ context.Context, _ string) ([]users.UserAssignment, error) {
+	return nil, nil
+}
+func (m *mockUserRepo) CreateAssignment(_ context.Context, _ *users.UserAssignment) error {
+	return nil
+}
+func (m *mockUserRepo) DeleteAssignment(_ context.Context, _ string) error {
+	return nil
+}
+func (m *mockUserRepo) SetCoordinatedClasses(_ context.Context, _, _ string, _ []string) error {
+	return nil
+}
 
 // ---------------------------------------------------------------------------
 // Helpers

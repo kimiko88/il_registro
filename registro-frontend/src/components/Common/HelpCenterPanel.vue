@@ -334,7 +334,7 @@ import { useAuthStore } from '@/stores/auth'
 
 const emit = defineEmits(['restart-tour'])
 const router = useRouter()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const $q = useQuasar()
 const authStore = useAuthStore()
 
@@ -350,15 +350,23 @@ const userRole = computed(() => {
   const role = authStore.userRole || authStore.user?.role || 'student'
   const r = role.toLowerCase()
   if (r === 'superadmin') return 'admin'
-  return ['teacher', 'student', 'parent', 'secretary', 'admin'].includes(r) ? r : 'student'
+  if (['teacher', 'student', 'parent', 'secretary', 'admin',
+       'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'dsga'].includes(r)) {
+    return r
+  }
+  return 'student'
 })
 
 const roleMeta = {
-  teacher:   { icon: 'school',              color: 'indigo',  label: 'roles.teacher' },
-  student:   { icon: 'face',                color: 'teal',    label: 'roles.student' },
-  parent:    { icon: 'family_restroom',      color: 'purple',  label: 'roles.parent' },
-  secretary: { icon: 'admin_panel_settings', color: 'orange',  label: 'roles.secretary' },
-  admin:     { icon: 'manage_accounts',      color: 'red',     label: 'roles.admin' }
+  teacher:                   { icon: 'school',              color: 'indigo',      label: 'roles.teacher' },
+  student:                   { icon: 'face',                color: 'teal',        label: 'roles.student' },
+  parent:                    { icon: 'family_restroom',      color: 'purple',      label: 'roles.parent' },
+  secretary:                 { icon: 'admin_panel_settings', color: 'orange',      label: 'roles.secretary' },
+  admin:                     { icon: 'manage_accounts',      color: 'red',         label: 'roles.admin' },
+  assistente_amministrativo: { icon: 'manage_accounts',      color: 'cyan',        label: 'roles.assistente_amministrativo' },
+  collaboratore_ds:          { icon: 'co_present',          color: 'amber',       label: 'roles.collaboratore_ds' },
+  collaboratore_scolastico:  { icon: 'door_front',          color: 'teal',        label: 'roles.collaboratore_scolastico' },
+  dsga:                      { icon: 'account_balance',     color: 'deep-orange', label: 'roles.dsga' }
 }
 const roleIcon  = computed(() => roleMeta[userRole.value]?.icon  || 'person')
 const roleColor = computed(() => roleMeta[userRole.value]?.color || 'primary')
@@ -463,16 +471,84 @@ const GUIDE_DEFS = {
       integrations: { key: 'integrations', icon: 'extension',       color: 'teal',        readTime: 5 },
       audit:        { key: 'audit',        icon: 'policy',          color: 'purple',      readTime: 4 }
     }
+  },
+  assistente_amministrativo: {
+    categories: [
+      { key: 'dashboard',       label: 'Dashboard ATA',              icon: 'dashboard',        color: 'cyan',   description: 'Panoramica operativa e notifiche' },
+      { key: 'personnel_desk',  label: 'Sportello Personale',        icon: 'forward_to_inbox', color: 'purple', description: 'Istruttoria richieste ferie e permessi' },
+      { key: 'sidi',            label: 'Flussi SIDI & MIM',          icon: 'cloud_sync',       color: 'indigo', description: 'Generazione ed export tracciati ministeriali' },
+      { key: 'attendance',      label: 'Presenze & Badge',           icon: 'badge',            color: 'blue',   description: 'Rilevazione presenze e cartellini' },
+      { key: 'verbali',         label: 'Verbali & Riunioni',         icon: 'gavel',            color: 'teal',   description: 'Redazione e conservazione verbali' }
+    ],
+    guides: {
+      dashboard:      { key: 'dashboard',      icon: 'dashboard',        color: 'cyan',   readTime: 3 },
+      personnel_desk: { key: 'personnel_desk', icon: 'forward_to_inbox', color: 'purple', readTime: 5 },
+      sidi:           { key: 'sidi',           icon: 'cloud_sync',       color: 'indigo', readTime: 5 },
+      attendance:     { key: 'attendance',     icon: 'badge',            color: 'blue',   readTime: 4 },
+      verbali:        { key: 'verbali',        icon: 'gavel',            color: 'teal',   readTime: 4 }
+    }
+  },
+  collaboratore_ds: {
+    categories: [
+      { key: 'dashboard',     label: 'Dashboard ATA',              icon: 'dashboard',   color: 'amber',  description: 'Panoramica giornaliera e urgenze' },
+      { key: 'substitutions', label: 'Sostituzioni Docenti',       icon: 'swap_horiz',  color: 'blue',   description: 'Gestione sostituzioni e classi scoperte' },
+      { key: 'emergency',     label: 'Emergenza Sostituzioni',     icon: 'bolt',        color: 'red',    description: 'Riassegnazioni rapide e ore buche' },
+      { key: 'strike',        label: 'Monitoraggio & Sciopero',    icon: 'how_to_reg',  color: 'orange', description: 'Rilevazione presenze e adesioni' },
+      { key: 'verbali',       label: 'Verbali & Circolari',        icon: 'gavel',       color: 'purple', description: 'Verbali collegiali e comunicazioni' }
+    ],
+    guides: {
+      dashboard:     { key: 'dashboard',     icon: 'dashboard',  color: 'amber',  readTime: 3 },
+      substitutions: { key: 'substitutions', icon: 'swap_horiz', color: 'blue',   readTime: 4 },
+      emergency:     { key: 'emergency',     icon: 'bolt',       color: 'red',    readTime: 4 },
+      strike:        { key: 'strike',        icon: 'how_to_reg', color: 'orange', readTime: 3 },
+      verbali:       { key: 'verbali',       icon: 'gavel',      color: 'purple', readTime: 4 }
+    }
+  },
+  collaboratore_scolastico: {
+    categories: [
+      { key: 'dashboard',   label: 'Dashboard ATA',              icon: 'dashboard',  color: 'teal',   description: 'Panoramica sede e notifiche' },
+      { key: 'visitors',    label: 'Registro Visitatori',        icon: 'door_front', color: 'blue',   description: 'Ingresso e badge visitatori esterni' },
+      { key: 'early_exits', label: 'Uscite Anticipate',          icon: 'logout',     color: 'orange', description: 'Ritiro studenti e controllo deleghe' },
+      { key: 'maintenance', label: 'Segnalazione Guasti',        icon: 'build',      color: 'red',    description: 'Manutenzione aule e strutture' },
+      { key: 'badge',       label: 'Cartellino & Ferie',         icon: 'badge',      color: 'green',  description: 'Timbratura oraria e richieste personali' }
+    ],
+    guides: {
+      dashboard:   { key: 'dashboard',   icon: 'dashboard',  color: 'teal',   readTime: 3 },
+      visitors:    { key: 'visitors',    icon: 'door_front', color: 'blue',   readTime: 4 },
+      early_exits: { key: 'early_exits', icon: 'logout',     color: 'orange', readTime: 3 },
+      maintenance: { key: 'maintenance', icon: 'build',      color: 'red',    readTime: 3 },
+      badge:       { key: 'badge',       icon: 'badge',      color: 'green',  readTime: 3 }
+    }
+  },
+  dsga: {
+    categories: [
+      { key: 'dashboard',      label: 'Direzione SGA',             icon: 'dashboard',       color: 'deep-orange', description: 'Supervisione generale servizi e personale' },
+      { key: 'timecard',       label: 'Cartellini & Straordinari',  icon: 'assessment',      color: 'blue',        description: 'Controllo monte ore 36h, ferie e permessi' },
+      { key: 'personnel_desk', label: 'Sportello Personale',       icon: 'verified',        color: 'green',       description: 'Visto contabile e firma richieste' },
+      { key: 'sidi',           label: 'Flussi SIDI & MIM',         icon: 'cloud_sync',      color: 'indigo',      description: 'Validazione tracciati e adempimenti' },
+      { key: 'strike',         label: 'Scioperi & Servizi Minimi', icon: 'gavel',           color: 'purple',      description: 'Gestione contingenti e delibere' }
+    ],
+    guides: {
+      dashboard:      { key: 'dashboard',      icon: 'dashboard',       color: 'deep-orange', readTime: 3 },
+      timecard:       { key: 'timecard',       icon: 'assessment',      color: 'blue',        readTime: 5 },
+      personnel_desk: { key: 'personnel_desk', icon: 'verified',        color: 'green',       readTime: 5 },
+      sidi:           { key: 'sidi',           icon: 'cloud_sync',      color: 'indigo',      readTime: 4 },
+      strike:         { key: 'strike',         icon: 'gavel',           color: 'purple',      readTime: 4 }
+    }
   }
 }
 
 // FAQ definitions per ruolo (from help.* i18n keys)
 const FAQ_CATEGORY_MAP = {
-  teacher:   { dashboard: [1,2], attendance: [3,4], grades: [5,6], agenda: [7], communications: [8], meetings: [9], scrutiny: [10], pdp: [] },
-  student:   { dashboard: [1], grades: [2,3], homework: [4,5], attendance: [6], documents: [7], simulator: [8,9], pcto: [10] },
-  parent:    { monitoring: [1,2], meetings: [3,4], communications: [5], pagopa: [6,7], documents: [8], justifications: [9,10] },
-  secretary: { students: [1,2], classes: [3], certificates: [4,5], timetable: [6,7], communications: [8], reports: [9,10] },
-  admin:     { monitoring: [1], users: [2,3], schools: [4], security: [5,6], analytics: [7], integrations: [8], audit: [9,10] }
+  teacher:                   { dashboard: [1,2], attendance: [3,4], grades: [5,6], agenda: [7], communications: [8], meetings: [9], scrutiny: [10], pdp: [] },
+  student:                   { dashboard: [1], grades: [2,3], homework: [4,5], attendance: [6], documents: [7], simulator: [8,9], pcto: [10] },
+  parent:                    { monitoring: [1,2], meetings: [3,4], communications: [5], pagopa: [6,7], documents: [8], justifications: [9,10] },
+  secretary:                 { students: [1,2], classes: [3], certificates: [4,5], timetable: [6,7], communications: [8], reports: [9,10] },
+  admin:                     { monitoring: [1], users: [2,3], schools: [4], security: [5,6], analytics: [7], integrations: [8], audit: [9,10] },
+  assistente_amministrativo: { dashboard: [1], personnel_desk: [2], sidi: [3], attendance: [4], verbali: [5] },
+  collaboratore_ds:          { dashboard: [1], substitutions: [2], emergency: [3], strike: [4], verbali: [5] },
+  collaboratore_scolastico:  { dashboard: [1], visitors: [2], early_exits: [3], maintenance: [4], badge: [5] },
+  dsga:                      { dashboard: [1], timecard: [2], personnel_desk: [3], sidi: [4], strike: [5] }
 }
 
 const categories = computed(() => {
@@ -481,7 +557,13 @@ const categories = computed(() => {
   return def.categories.map(cat => {
     const guideKeys = Object.keys(def.guides).filter(k => k === cat.key)
     const faqIdxs = (FAQ_CATEGORY_MAP[role] || {})[cat.key] || []
-    return { ...cat, count: guideKeys.length + faqIdxs.length }
+    const localizedLabel = te(`guideCenter.${role}.${cat.key}.categoryLabel`)
+      ? t(`guideCenter.${role}.${cat.key}.categoryLabel`)
+      : (te(`help.${role}.cat_${cat.key}`) ? t(`help.${role}.cat_${cat.key}`) : cat.label)
+    const localizedDesc = te(`guideCenter.${role}.${cat.key}.categoryDesc`)
+      ? t(`guideCenter.${role}.${cat.key}.categoryDesc`)
+      : cat.description
+    return { ...cat, label: localizedLabel, description: localizedDesc, count: guideKeys.length + faqIdxs.length }
   })
 })
 
@@ -1012,6 +1094,7 @@ defineExpose({ open, close })
 .art-cyan    { background: linear-gradient(135deg, #22d3ee, #0891b2); }
 .art-pink    { background: linear-gradient(135deg, #ec4899, #db2777); }
 .art-amber   { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.art-deep-orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
 
 .article-icon {
   background: rgba(255,255,255,0.2);
@@ -1093,6 +1176,7 @@ defineExpose({ open, close })
 .badge-cyan    { background: #22d3ee; }
 .badge-pink    { background: #ec4899; }
 .badge-amber   { background: #f59e0b; }
+.badge-deep-orange { background: #ea580c; }
 
 .step-body { font-size: 0.875rem; color: #374151; line-height: 1.6; }
 .help-dark .step-body { color: #c0c0d0; }
@@ -1202,6 +1286,7 @@ defineExpose({ open, close })
 .si-cyan    { background: #ecfeff; color: #0891b2; }
 .si-pink    { background: #fdf2f8; color: #db2777; }
 .si-amber   { background: #fffbeb; color: #d97706; }
+.si-deep-orange { background: #fff7ed; color: #c2410c; }
 
 /* ── Transition: article panel ───────────────────────────────────── */
 .article-slide-enter-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }

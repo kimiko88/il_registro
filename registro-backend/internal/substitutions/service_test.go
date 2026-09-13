@@ -80,6 +80,9 @@ func (m *mockSubstitutionRepo) SignRegister(ctx context.Context, id string, sigH
 }
 
 func (m *mockSubstitutionRepo) GetAvailableTeachers(ctx context.Context, schoolID string) ([]TeacherCandidate, error) {
+	if m.getErr != nil {
+		return nil, m.getErr
+	}
 	return []TeacherCandidate{
 		{TeacherID: "t-1", UserID: "u-1", TeacherName: "Docente 1"},
 		{TeacherID: "t-2", UserID: "u-2", TeacherName: "Docente 2"},

@@ -121,7 +121,11 @@ const userRole = computed(() => {
   const role = authStore.userRole || authStore.user?.role || 'student'
   const r = role.toLowerCase()
   if (r === 'superadmin') return 'admin'
-  return ['teacher', 'student', 'parent', 'secretary', 'admin'].includes(r) ? r : 'student'
+  if (['teacher', 'student', 'parent', 'secretary', 'admin',
+       'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'dsga'].includes(r)) {
+    return r
+  }
+  return 'student'
 })
 
 // Category definitions per role
@@ -130,7 +134,11 @@ const roleCategoryKeys = {
   student: ['cat_grades', 'cat_attendance', 'cat_homework', 'cat_documents', 'cat_settings'],
   parent: ['cat_monitoring', 'cat_communications', 'cat_meetings', 'cat_documents', 'cat_settings'],
   secretary: ['cat_students', 'cat_classes', 'cat_documents', 'cat_timetable', 'cat_reports'],
-  admin: ['cat_monitoring', 'cat_users', 'cat_schools', 'cat_security', 'cat_analytics']
+  admin: ['cat_monitoring', 'cat_users', 'cat_schools', 'cat_security', 'cat_analytics'],
+  assistente_amministrativo: ['cat_personnel_desk', 'cat_sidi', 'cat_attendance', 'cat_verbali', 'cat_certificates'],
+  collaboratore_ds: ['cat_substitutions', 'cat_emergency', 'cat_strike', 'cat_verbali', 'cat_timetable'],
+  collaboratore_scolastico: ['cat_visitors', 'cat_early_exits', 'cat_maintenance', 'cat_badge', 'cat_leaves'],
+  dsga: ['cat_dsga_overview', 'cat_personnel_desk', 'cat_sidi', 'cat_strike', 'cat_verbali']
 }
 
 const categoryIcons = {
@@ -151,7 +159,20 @@ const categoryIcons = {
   cat_users: 'manage_accounts',
   cat_schools: 'school',
   cat_security: 'security',
-  cat_analytics: 'analytics'
+  cat_analytics: 'analytics',
+  cat_personnel_desk: 'forward_to_inbox',
+  cat_sidi: 'cloud_sync',
+  cat_verbali: 'gavel',
+  cat_certificates: 'workspace_premium',
+  cat_substitutions: 'swap_horiz',
+  cat_emergency: 'bolt',
+  cat_strike: 'how_to_reg',
+  cat_visitors: 'door_front',
+  cat_early_exits: 'logout',
+  cat_maintenance: 'build',
+  cat_badge: 'badge',
+  cat_leaves: 'calendar_month',
+  cat_dsga_overview: 'account_balance'
 }
 
 const categories = computed(() => {

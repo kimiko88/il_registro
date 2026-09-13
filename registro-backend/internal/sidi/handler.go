@@ -23,6 +23,15 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	grp.GET("/exports/:id/download", h.DownloadExportXML)
 }
 
+func canAccessSidi(role string) bool {
+	switch role {
+	case "secretary", "admin", "superadmin", "principal", "vice_principal", "dsga", "assistente_amministrativo":
+		return true
+	default:
+		return false
+	}
+}
+
 func (h *Handler) GenerateExport(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
@@ -31,8 +40,8 @@ func (h *Handler) GenerateExport(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "secretary" && role != "admin" && role != "superadmin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo la segreteria o l'amministrazione possono generare flussi SIDI"})
+	if !canAccessSidi(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo la segreteria, il DSGA o l'amministrazione possono generare flussi SIDI"})
 		return
 	}
 
@@ -62,7 +71,7 @@ func (h *Handler) GetExports(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "secretary" && role != "admin" && role != "superadmin" {
+	if !canAccessSidi(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -82,7 +91,7 @@ func (h *Handler) DownloadExportXML(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "secretary" && role != "admin" && role != "superadmin" {
+	if !canAccessSidi(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

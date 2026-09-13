@@ -1,3 +1,13 @@
+# Licenza del Software — il_registro
+
+> 🏛️ **Nota per le Istituzioni Scolastiche e la Pubblica Amministrazione (Linee Guida AgID)**:  
+> Il presente software è rilasciato sotto la licenza **PolyForm Noncommercial License 1.0.0**.  
+> In virtù della clausola **Permitted Organizations** (Sezione 17-19), **ogni scuola, istituto di istruzione, ente di ricerca pubblica e istituzione governativa/PA ha diritto libero, illimitato e gratuito** di utilizzare, modificare, personalizzare ed eseguire il software senza alcun costo o vincolo commerciale.  
+> La clausola non-commerciale impedisce la ri-commercializzazione a scopo di lucro da parte di terzi privati, garantendo la tutela della scuola pubblica.  
+> Per la Relazione Motivazionale ex Sez. 1 Linee Guida AgID (art. 69 CAD), consultare [`docs/AGID_LICENSE_JUSTIFICATION.md`](./docs/AGID_LICENSE_JUSTIFICATION.md).
+
+---
+
 PolyForm Noncommercial License 1.0.0
 
 https://polyformproject.org/licenses/noncommercial/1.0.0/

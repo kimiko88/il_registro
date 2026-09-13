@@ -1,6 +1,7 @@
 import api from './api'
 
 export const verbaliService = {
+  // Riunioni
   listMeetings(params) {
     return api.get('/verbali/meetings', { params })
   },
@@ -12,6 +13,11 @@ export const verbaliService = {
   },
   deleteMeeting(id) {
     return api.delete(`/verbali/meetings/${id}`)
+  },
+
+  // Verbali
+  getAllVerbali(params) {
+    return api.get('/verbali', { params })
   },
   getVerbali(meetingId) {
     if (!meetingId || meetingId === 'undefined' || meetingId === 'null') {
@@ -36,8 +42,33 @@ export const verbaliService = {
   },
   getSignatures(id) {
     return api.get(`/verbali/${id}/signatures`)
+  },
+  exportPdf(id) {
+    return api.get(`/verbali/${id}/pdf`, { responseType: 'blob' })
+  },
+  enqueueAsyncPdf(id) {
+    return api.post(`/verbali/${id}/async-pdf`)
+  },
+  getPdfJobStatus(jobId) {
+    return api.get(`/verbali/pdf-jobs/${jobId}`)
+  },
+
+  // Modelli / Templates per Verbali & Ordini del Giorno (ODG)
+  getTemplates(params) {
+    return api.get('/verbali/templates', { params })
+  },
+  getTemplate(id) {
+    return api.get(`/verbali/templates/${id}`)
+  },
+  createTemplate(data) {
+    return api.post('/verbali/templates', data)
+  },
+  updateTemplate(id, data) {
+    return api.put(`/verbali/templates/${id}`, data)
+  },
+  deleteTemplate(id) {
+    return api.delete(`/verbali/templates/${id}`)
   }
 }
 
 export default verbaliService
-

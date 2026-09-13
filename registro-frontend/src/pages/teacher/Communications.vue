@@ -1,5 +1,8 @@
 <template>
-  <q-page class="q-pa-md" style="height: calc(100vh - 50px);">
+  <q-page class="q-pa-md" style="min-height: calc(100vh - 50px);">
+    <!-- Active Strike Notice & Intention Banner -->
+    <ActiveStrikeNoticeBanner />
+
     <!-- Tab switcher -->
     <q-tabs v-model="activeTab" dense class="text-primary q-mb-md" align="left">
       <q-tab name="messaggi" icon="mail" :label="t('nav.communications')" />
@@ -228,6 +231,7 @@ import { useQuasar, date as qdate } from 'quasar'
 import { useI18n } from 'vue-i18n'
 import { useCommunicationsStore } from '@/stores/communications'
 import { communicationService } from '@/services/communicationService'
+import ActiveStrikeNoticeBanner from '@/components/Common/ActiveStrikeNoticeBanner.vue'
 import api from '@/services/api'
 
 const $q = useQuasar()

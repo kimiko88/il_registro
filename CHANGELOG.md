@@ -3,6 +3,17 @@
 Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
+## [1.0.0-beta] — 2026-09-11
+
+### Aggiunto & Adeguato per la Pubblica Amministrazione (AgID / Developers Italia)
+
+- **Conformità Riuso PA & Developers Italia**:
+  - **Scheda Metadati `publiccode.yml`**: Integrazione della scheda informativa v0.2 per l'indicizzazione nel Catalogo del Software a Riuso della Pubblica Amministrazione di Developers Italia.
+  - **Licenza & Trasparenza PA (`LICENSE`)**: Chiarimento della licenza **PolyForm Noncommercial 1.0.0** con riferimento alla clausola *Permitted Organizations* che garantisce l'uso gratuito ed illimitato a tutte le Scuole Statali, Università ed Enti Pubblici.
+  - **Relazione Motivazionale Eccezione AgID (`docs/AGID_LICENSE_JUSTIFICATION.md`)**: Redazione del documento formale di motivazione dell'eccezione di licenza ex art. 69 CAD e Sezione 1 delle Linee Guida AgID.
+  - **Moduli ATA Specialistici**: Integrazione completa e testata dei 4 moduli per il personale ATA (Emergenza Sostituzioni `collaboratore_ds`, Registro Visitatori & Portineria `collaboratore_scolastico`, Cartellino Mensile `dsga`, Sportello Digitale Personale per istanze dipendenti).
+  - **Documentazione**: Aggiornamento coordinato di `README.md`, `README_EN.md` e `CONTRIBUTING.md` con badge e link a Developers Italia.
+
 ## [0.8.0] — 2026-09-06
 
 ### Aggiunto & Migliorato

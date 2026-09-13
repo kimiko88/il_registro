@@ -331,4 +331,110 @@ func TestRoleSecurityRBACMatrix(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("6. Incarichi Aggiuntivi Governance Authority RBAC Matrix", func(t *testing.T) {
+		t.Run("Class coordination assignment permissions", func(t *testing.T) {
+			allowedCoordinators := map[string]bool{
+				"superadmin": true, "admin": true, "principal": true, "vice_principal": true, "secretary": true,
+			}
+
+			for _, role := range allRoles {
+				currentRole := role
+				t.Run("role_"+currentRole, func(t *testing.T) {
+					mUser := new(testhelpers.MockUsersRepository)
+					teacherTarget := &users.User{ID: teacherID, Role: "teacher", SchoolID: &schoolIDPtr}
+					mUser.On("GetByID", mock.Anything, teacherID).Return(teacherTarget, nil).Maybe()
+					mUser.On("SetCoordinatedClasses", mock.Anything, schoolID, teacherID, []string{classID}).Return(nil).Maybe()
+
+					userSvc := users.NewService(mUser)
+					userH := users.NewHandler(userSvc)
+
+					r := gin.New()
+					g := r.Group("/api/v1")
+					g.Use(setAuthHeader("actor-1", currentRole, schoolID))
+					g.PUT("/users/:id/coordinated-classes", userH.SetCoordinatedClasses)
+
+					body := fmt.Sprintf(`{"class_ids":["%s"]}`, classID)
+					req := httptest.NewRequest("PUT", "/api/v1/users/"+teacherID+"/coordinated-classes", bytes.NewBufferString(body))
+					req.Header.Set("Content-Type", "application/json")
+					res := httptest.NewRecorder()
+					r.ServeHTTP(res, req)
+
+					if allowedCoordinators[currentRole] {
+						assert.Equal(t, http.StatusOK, res.Code, "Role %s should be allowed to assign class coordinator", currentRole)
+					} else {
+						assert.Contains(t, []int{http.StatusForbidden, http.StatusUnauthorized}, res.Code, "Role %s should be denied from assigning class coordinator", currentRole)
+					}
+				})
+			}
+		})
+
+		t.Run("Educational duty vs ATA service duty governance", func(t *testing.T) {
+			mUser := new(testhelpers.MockUsersRepository)
+			teacherTarget := &users.User{ID: teacherID, Role: "teacher", SchoolID: &schoolIDPtr}
+			ataTarget := &users.User{ID: "ata-01", Role: "collaboratore_scolastico", SchoolID: &schoolIDPtr}
+			mUser.On("GetByID", mock.Anything, teacherID).Return(teacherTarget, nil).Maybe()
+			mUser.On("GetByID", mock.Anything, "ata-01").Return(ataTarget, nil).Maybe()
+			mUser.On("CreateAssignment", mock.Anything, mock.Anything).Return(nil).Maybe()
+
+			userSvc := users.NewService(mUser)
+			userH := users.NewHandler(userSvc)
+
+			r := gin.New()
+			g := r.Group("/api/v1")
+			g.POST("/users/:id/assignments", userH.AddAssignment)
+
+			// 1. Principal assigns inclusion lead -> Allowed
+			req1 := httptest.NewRequest("POST", "/api/v1/users/"+teacherID+"/assignments", bytes.NewBufferString(`{"assignment_type":"referente_inclusione","scope_type":"school","title":"Referente Inclusione"}`))
+			req1.Header.Set("Content-Type", "application/json")
+			res1 := httptest.NewRecorder()
+			c1, _ := gin.CreateTestContext(res1)
+			c1.Request = req1
+			c1.Set("user_id", "principal-1")
+			c1.Set("role", "principal")
+			c1.Set("school_id", schoolID)
+			c1.Params = gin.Params{{Key: "id", Value: teacherID}}
+			userH.AddAssignment(c1)
+			assert.Equal(t, http.StatusCreated, res1.Code)
+
+			// 2. DSGA attempts to assign inclusion lead -> Forbidden (403)
+			req2 := httptest.NewRequest("POST", "/api/v1/users/"+teacherID+"/assignments", bytes.NewBufferString(`{"assignment_type":"referente_inclusione","scope_type":"school","title":"Referente Inclusione"}`))
+			req2.Header.Set("Content-Type", "application/json")
+			res2 := httptest.NewRecorder()
+			c2, _ := gin.CreateTestContext(res2)
+			c2.Request = req2
+			c2.Set("user_id", "dsga-1")
+			c2.Set("role", "dsga")
+			c2.Set("school_id", schoolID)
+			c2.Params = gin.Params{{Key: "id", Value: teacherID}}
+			userH.AddAssignment(c2)
+			assert.Equal(t, http.StatusForbidden, res2.Code)
+
+			// 3. DSGA assigns service manager to ATA staff -> Allowed
+			req3 := httptest.NewRequest("POST", "/api/v1/users/ata-01/assignments", bytes.NewBufferString(`{"assignment_type":"responsabile_servizio","scope_type":"service","title":"Responsabile Bar"}`))
+			req3.Header.Set("Content-Type", "application/json")
+			res3 := httptest.NewRecorder()
+			c3, _ := gin.CreateTestContext(res3)
+			c3.Request = req3
+			c3.Set("user_id", "dsga-1")
+			c3.Set("role", "dsga")
+			c3.Set("school_id", schoolID)
+			c3.Params = gin.Params{{Key: "id", Value: "ata-01"}}
+			userH.AddAssignment(c3)
+			assert.Equal(t, http.StatusCreated, res3.Code)
+
+			// 4. Teacher attempts to assign duty -> Forbidden
+			req4 := httptest.NewRequest("POST", "/api/v1/users/"+teacherID+"/assignments", bytes.NewBufferString(`{"assignment_type":"coordinatore_classe","scope_type":"class","title":"Coordinatore"}`))
+			req4.Header.Set("Content-Type", "application/json")
+			res4 := httptest.NewRecorder()
+			c4, _ := gin.CreateTestContext(res4)
+			c4.Request = req4
+			c4.Set("user_id", "teacher-2")
+			c4.Set("role", "teacher")
+			c4.Set("school_id", schoolID)
+			c4.Params = gin.Params{{Key: "id", Value: teacherID}}
+			userH.AddAssignment(c4)
+			assert.Equal(t, http.StatusForbidden, res4.Code)
+		})
+	})
 }

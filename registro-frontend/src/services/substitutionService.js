@@ -24,6 +24,9 @@ export const substitutionService = {
   },
   signRegister(subId, notes = '') {
     return api.post(`/substitutions/${subId}/sign-register`, { notes })
+  },
+  todaySummary(date) {
+    return api.get('/substitutions/today-summary', { params: { date } })
   }
 }
 

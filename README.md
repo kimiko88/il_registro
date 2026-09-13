@@ -14,6 +14,7 @@ _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbe
 
 [![Discord Members](https://img.shields.io/discord/426912293134270465.svg?label=Discord&logo=discord)](https://discord.gg/Qh5XjQxwb)
 [![Backend CI](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml/badge.svg)](https://github.com/kimiko88/il_registro/actions/workflows/ci.yml)
+[![Developers Italia](https://img.shields.io/badge/Developers%20Italia-publiccode.yml-blue.svg)](./publiccode.yml)
 [![Go Version](https://img.shields.io/badge/go-1.27%2B-blue)](https://go.dev/)
 [![Vue Version](https://img.shields.io/badge/vue-3.x-brightgreen)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](./LICENSE)
@@ -22,6 +23,7 @@ _**Nota bene**_: alcune password, come quella per l'account superadmin, potrebbe
 [![Anthropic Claude](https://img.shields.io/badge/AI-Anthropic%20Claude-D97757?logo=anthropic&logoColor=white)](https://anthropic.com)
 [![Status](https://img.shields.io/badge/status-web%20beta%20%7C%20mobile%20alpha-orange)](https://github.com/kimiko88/il_registro)
 [![codecov](https://codecov.io/github/kimiko88/il_registro/graph/badge.svg?token=2946K0BLDX)](https://codecov.io/github/kimiko88/il_registro)
+[![Codecov Components](https://img.shields.io/badge/Codecov-Componenti%20Testati-brightgreen?logo=codecov)](https://app.codecov.io/github/kimiko88/il_registro/components)
 
 ---
 
@@ -231,7 +233,9 @@ Go è stato scelto per il backend per ragioni che vanno oltre la moda tecnologic
 
 ## 🧪 Testing & Qualità
 
-Il progetto include una suite completa di test automatizzati per il backend (Go) e il frontend (Vue/Quasar):
+Il progetto include una suite completa di test automatizzati per il backend (Go) e il frontend (Vue/Quasar), integrata con tracciamento granulare della copertura per modulo:
+
+👉 **[Visualizza Componenti Testati su Codecov (Dashboard Moduli)](https://app.codecov.io/github/kimiko88/il_registro/components)**
 
 ### Backend Testing (Go)
 
@@ -271,13 +275,17 @@ cd ios && swift test
 
 ---
 
-## Licenza
+## Licenza & Riuso nella Pubblica Amministrazione
 
-Questo progetto — **compreso il backend Go, il frontend web e tutte le applicazioni mobile native per Android e iOS** — è rilasciato sotto licenza **[PolyForm Noncommercial 1.0.0](./LICENSE)**.
+Questo progetto — **compreso il backend Go, il frontend web e le applicazioni mobile native per Android e iOS** — è rilasciato sotto licenza **[PolyForm Noncommercial 1.0.0](./LICENSE)** ed è strutturato secondo le **[Linee Guida AgID su acquisizione e riuso del software nella PA (art. 69 CAD)](./docs/AGID_LICENSE_JUSTIFICATION.md)** con il file di metadati **[`publiccode.yml`](./publiccode.yml)** per l'indicizzazione su **Developers Italia**.
 
-> 📄 **Nota sulla Licenza Mobile**: Anche il codice sorgente delle applicazioni native per Android e iOS (inclusi tutti i moduli Studente, Genitore, Docente e Segreteria) condivide la medesima licenza dell'intero progetto.
+> 🏛️ **Uso Gratuito per Scuole e PA**: In conformità alla clausola *Permitted Organizations* della licenza PolyForm, **l'utilizzo per scuole pubbliche, università, Comuni, Regioni ed enti di ricerca è libero, illimitato e a costo zero**.  
+> La clausola non-commerciale impedisce a soggetti terzi privati a scopo di lucro di impacchettare o rivendere il software come servizio a pagamento a danno della scuola pubblica.
 
-**L'utilizzo per scuole pubbliche, Comuni, Regioni, università, enti di ricerca e istituzioni pubbliche è gratuito e senza limitazioni** — perché crediamo che i dati degli studenti e gli strumenti per gestirli debbano rimanere in mano pubblica.
+Per consultare la Relazione Motivazionale ex art. 69 CAD relativa all'eccezione di licenza, si veda **[`docs/AGID_LICENSE_JUSTIFICATION.md`](./docs/AGID_LICENSE_JUSTIFICATION.md)**.
 
-Per utilizzi commerciali da parte di aziende ed enti privati è richiesta una licenza separata.
+---
 
+## Versionamento & Rilasci
+
+Il versionamento SemVer coordinato tra frontend, backend e metadati AgID è gestito con il comando `npm run bump` (oppure `.\scripts\bump-version.ps1`). Per approfondire, consulta la **[Guida al Versionamento (`docs/VERSIONING.md`)](./docs/VERSIONING.md)**.

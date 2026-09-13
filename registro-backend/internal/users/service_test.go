@@ -160,6 +160,34 @@ func (m *MockRepository) ApplyDataRetention(ctx context.Context, schoolID *strin
 	return args.Int(0), args.Error(1)
 }
 
+func (m *MockRepository) GetAssignments(ctx context.Context, userID string) ([]UserAssignment, error) {
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "GetAssignments" {
+			args := m.Called(ctx, userID)
+			if args.Get(0) == nil {
+				return nil, args.Error(1)
+			}
+			return args.Get(0).([]UserAssignment), args.Error(1)
+		}
+	}
+	return nil, nil
+}
+
+func (m *MockRepository) CreateAssignment(ctx context.Context, assignment *UserAssignment) error {
+	args := m.Called(ctx, assignment)
+	return args.Error(0)
+}
+
+func (m *MockRepository) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	args := m.Called(ctx, assignmentID)
+	return args.Error(0)
+}
+
+func (m *MockRepository) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
+	args := m.Called(ctx, schoolID, teacherUserID, classIDs)
+	return args.Error(0)
+}
+
 func TestService_CreateUser(t *testing.T) {
 	mockRepo := new(MockRepository)
 	service := NewService(mockRepo)
@@ -943,4 +971,58 @@ func TestService_BulkDeleteUsers_EmptyActorSchoolID(t *testing.T) {
 	count, err := service.BulkDeleteUsers(context.Background(), "admin", "", []string{"u1"})
 	assert.NoError(t, err)
 	assert.Equal(t, 0, count, "Admin without schoolID should not be able to delete users in school-B")
+}
+
+func TestService_Assignments_Authorization(t *testing.T) {
+	mockRepo := new(MockRepository)
+	service := NewService(mockRepo)
+	schoolID := "school-A"
+	teacherUser := &User{ID: "teacher-1", Role: "teacher", SchoolID: &schoolID}
+
+	t.Run("Principal can assign coordinator", func(t *testing.T) {
+		mockRepo.On("GetByID", mock.Anything, "teacher-1").Return(teacherUser, nil).Once()
+		mockRepo.On("SetCoordinatedClasses", mock.Anything, schoolID, "teacher-1", []string{"c1", "c2"}).Return(nil).Once()
+
+		err := service.SetCoordinatedClasses(context.Background(), "principal", schoolID, "teacher-1", []string{"c1", "c2"})
+		assert.NoError(t, err)
+	})
+
+	t.Run("Teacher cannot assign coordinator", func(t *testing.T) {
+		err := service.SetCoordinatedClasses(context.Background(), "teacher", schoolID, "teacher-1", []string{"c1"})
+		assert.ErrorIs(t, err, ErrForbidden)
+	})
+
+	t.Run("Principal can assign inclusion lead", func(t *testing.T) {
+		mockRepo.On("GetByID", mock.Anything, "teacher-1").Return(teacherUser, nil).Once()
+		mockRepo.On("CreateAssignment", mock.Anything, mock.Anything).Return(nil).Once()
+
+		_, err := service.AddUserAssignment(context.Background(), "principal", "principal-user", schoolID, "teacher-1", CreateAssignmentRequest{
+			AssignmentType: "referente_inclusione",
+			ScopeType:      "school",
+			Title:          "Referente Inclusione",
+		})
+		assert.NoError(t, err)
+	})
+
+	t.Run("DSGA cannot assign teacher inclusion lead", func(t *testing.T) {
+		_, err := service.AddUserAssignment(context.Background(), "dsga", "dsga-user", schoolID, "teacher-1", CreateAssignmentRequest{
+			AssignmentType: "referente_inclusione",
+			ScopeType:      "school",
+			Title:          "Referente Inclusione",
+		})
+		assert.ErrorIs(t, err, ErrForbidden)
+	})
+
+	t.Run("DSGA can assign ATA service responsibility", func(t *testing.T) {
+		ataUser := &User{ID: "ata-1", Role: "collaboratore_scolastico", SchoolID: &schoolID}
+		mockRepo.On("GetByID", mock.Anything, "ata-1").Return(ataUser, nil).Once()
+		mockRepo.On("CreateAssignment", mock.Anything, mock.Anything).Return(nil).Once()
+
+		_, err := service.AddUserAssignment(context.Background(), "dsga", "dsga-user", schoolID, "ata-1", CreateAssignmentRequest{
+			AssignmentType: "responsabile_servizio",
+			ScopeType:      "service",
+			Title:          "Responsabile Servizio Bar",
+		})
+		assert.NoError(t, err)
+	})
 }

@@ -832,6 +832,11 @@ const handleActionClick = async (action) => {
 }
 
 onMounted(() => {
+  const role = (userRole.value || '').toLowerCase()
+  if (['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico'].includes(role)) {
+    router.replace('/ata')
+    return
+  }
   loadStoredDrafts()
   fetchDashboardData()
 })

@@ -59,6 +59,12 @@ type Repository interface {
 	// Guardianship
 	IsActive(ctx context.Context, id string) (bool, error)
 
+	// Incarichi aggiuntivi / User Assignments
+	GetAssignments(ctx context.Context, userID string) ([]UserAssignment, error)
+	CreateAssignment(ctx context.Context, assignment *UserAssignment) error
+	DeleteAssignment(ctx context.Context, assignmentID string) error
+	SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error
+
 	// ChangePasswordTx aggiorna la password e inserisce la history in una singola transazione.
 	// Garantisce che la history non venga mai persa anche in caso di crash parziale.
 	ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error
@@ -187,6 +193,11 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*User, err
 	u.ClassID = classID
 	if className != nil {
 		u.ClassName = className
+	}
+	if err == nil {
+		if ass, errAss := r.GetAssignments(ctx, u.ID); errAss == nil {
+			u.Assignments = ass
+		}
 	}
 	return &u, err
 }
@@ -833,4 +844,145 @@ func (r *PostgresRepository) ApplyDataRetention(ctx context.Context, schoolID *s
 		return 0, err
 	}
 	return int(rows), nil
+}
+
+// Incarichi aggiuntivi / User Assignments
+
+func (r *PostgresRepository) GetAssignments(ctx context.Context, userID string) ([]UserAssignment, error) {
+	query := `
+		SELECT id, school_id, user_id, assignment_type, scope_type, COALESCE(scope_id, ''),
+		       COALESCE(title, ''), COALESCE(assigned_by::text, ''), COALESCE(metadata::text, '{}'),
+		       is_active, valid_from, valid_to, created_at, updated_at
+		FROM user_assignments
+		WHERE user_id = $1::uuid AND is_active = true
+		ORDER BY created_at DESC
+	`
+	rows, err := r.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []UserAssignment
+	for rows.Next() {
+		var a UserAssignment
+		var scopeID, assignedBy, metaStr string
+		if err := rows.Scan(
+			&a.ID, &a.SchoolID, &a.UserID, &a.AssignmentType, &a.ScopeType, &scopeID,
+			&a.Title, &assignedBy, &metaStr,
+			&a.IsActive, &a.ValidFrom, &a.ValidTo, &a.CreatedAt, &a.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		if scopeID != "" {
+			a.ScopeID = &scopeID
+		}
+		if assignedBy != "" {
+			a.AssignedBy = &assignedBy
+		}
+		a.Metadata = metaStr
+		result = append(result, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (r *PostgresRepository) CreateAssignment(ctx context.Context, assignment *UserAssignment) error {
+	query := `
+		INSERT INTO user_assignments (id, school_id, user_id, assignment_type, scope_type, scope_id, title, assigned_by, metadata, is_active, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NULLIF($8, '')::uuid, $9::jsonb, $10, NOW(), NOW())
+		ON CONFLICT (id) DO UPDATE
+		SET title = EXCLUDED.title, metadata = EXCLUDED.metadata, is_active = EXCLUDED.is_active, updated_at = NOW()
+	`
+	if assignment.ID == "" {
+		assignment.ID = uuid.New().String()
+	}
+	meta := assignment.Metadata
+	if meta == "" {
+		meta = "{}"
+	}
+	assignedBy := ""
+	if assignment.AssignedBy != nil {
+		assignedBy = *assignment.AssignedBy
+	}
+	_, err := r.db.ExecContext(ctx, query,
+		assignment.ID, assignment.SchoolID, assignment.UserID, assignment.AssignmentType,
+		assignment.ScopeType, assignment.ScopeID, assignment.Title, assignedBy, meta, assignment.IsActive,
+	)
+	return err
+}
+
+func (r *PostgresRepository) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM user_assignments WHERE id = $1::uuid`, assignmentID)
+	return err
+}
+
+func (r *PostgresRepository) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// 1. Reset coordinator_id su classi precedentemente coordinate da questo docente che non sono più in classIDs
+	if len(classIDs) > 0 {
+		_, err = tx.ExecContext(ctx, `
+			UPDATE classes 
+			SET coordinator_id = NULL, updated_at = NOW()
+			WHERE school_id = $1::uuid AND coordinator_id = $2::uuid AND id != ALL($3::uuid[])
+		`, schoolID, teacherUserID, pq.Array(classIDs))
+	} else {
+		_, err = tx.ExecContext(ctx, `
+			UPDATE classes 
+			SET coordinator_id = NULL, updated_at = NOW()
+			WHERE school_id = $1::uuid AND coordinator_id = $2::uuid
+		`, schoolID, teacherUserID)
+	}
+	if err != nil {
+		return err
+	}
+
+	// 2. Imposta coordinator_id sulle nuove classi
+	for _, cid := range classIDs {
+		if cid == "" {
+			continue
+		}
+		_, err = tx.ExecContext(ctx, `
+			UPDATE classes 
+			SET coordinator_id = $1::uuid, updated_at = NOW()
+			WHERE id = $2::uuid AND school_id = $3::uuid
+		`, teacherUserID, cid, schoolID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// 3. Sincronizza tabella user_assignments per il tipo coordinatore_classe
+	_, err = tx.ExecContext(ctx, `
+		DELETE FROM user_assignments 
+		WHERE user_id = $1::uuid AND assignment_type = 'coordinatore_classe'
+	`, teacherUserID)
+	if err != nil {
+		return err
+	}
+
+	for _, cid := range classIDs {
+		if cid == "" {
+			continue
+		}
+		var cName, cSec string
+		_ = tx.QueryRowContext(ctx, `SELECT name, COALESCE(section, '') FROM classes WHERE id = $1::uuid`, cid).Scan(&cName, &cSec)
+		title := "Coordinatore " + cName + cSec
+		_, err = tx.ExecContext(ctx, `
+			INSERT INTO user_assignments (school_id, user_id, assignment_type, scope_type, scope_id, title, is_active)
+			VALUES ($1::uuid, $2::uuid, 'coordinatore_classe', 'class', $3, $4, true)
+		`, schoolID, teacherUserID, cid, title)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }

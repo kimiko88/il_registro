@@ -116,5 +116,51 @@ describe('Router Security Guards — Navigation & Role Access Control', () => {
         expect(authStore.initAuth).toHaveBeenCalled()
         expect(nextSpy).toHaveBeenCalledWith()
     })
+
+    describe('ATA Roles Route Permissions', () => {
+        it('allows dsga to access authorized secretary routes', async () => {
+            const authStore = useAuthStore()
+            authStore.login({ id: 'd1', role: 'dsga' }, createMockJWT('dsga'), 'refresh-token')
+
+            const to = { path: '/secretary/users', meta: { roles: ['secretary', 'principal', 'vice_principal', 'dsga', 'assistente_amministrativo'] } }
+            await authGuard(to, { path: '/ata' }, nextSpy)
+            expect(nextSpy).toHaveBeenCalledWith()
+        })
+
+        it('allows assistente_amministrativo to access authorized routes', async () => {
+            const authStore = useAuthStore()
+            authStore.login({ id: 'aa1', role: 'assistente_amministrativo' }, createMockJWT('assistente_amministrativo'), 'refresh-token')
+
+            const to = { path: '/secretary/students', meta: { roles: ['secretary', 'principal', 'vice_principal', 'assistente_amministrativo'] } }
+            await authGuard(to, { path: '/ata' }, nextSpy)
+            expect(nextSpy).toHaveBeenCalledWith()
+        })
+
+        it('allows collaboratore_ds to access substitutions and timetable', async () => {
+            const authStore = useAuthStore()
+            authStore.login({ id: 'cds1', role: 'collaboratore_ds' }, createMockJWT('collaboratore_ds'), 'refresh-token')
+
+            const to = { path: '/secretary/substitutions', meta: { roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'dsga', 'collaboratore_ds'] } }
+            await authGuard(to, { path: '/ata' }, nextSpy)
+            expect(nextSpy).toHaveBeenCalledWith()
+        })
+
+        it('allows collaboratore_scolastico to access communications but blocks from sidi', async () => {
+            const authStore = useAuthStore()
+            authStore.login({ id: 'cs1', role: 'collaboratore_scolastico' }, createMockJWT('collaboratore_scolastico'), 'refresh-token')
+
+            // Allowed to communications
+            const toAllowed = { path: '/secretary/communications', meta: { roles: ['secretary', 'principal', 'vice_principal', 'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico'] } }
+            await authGuard(toAllowed, { path: '/ata' }, nextSpy)
+            expect(nextSpy).toHaveBeenCalledWith()
+
+            // Blocked from sidi -> redirected to /ata
+            const nextSpyBlocked = vi.fn()
+            const toBlocked = { path: '/secretary/sidi', meta: { roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'dsga'] } }
+            await authGuard(toBlocked, { path: '/ata' }, nextSpyBlocked)
+            expect(nextSpyBlocked).toHaveBeenCalledWith('/ata')
+        })
+    })
 })
+
 

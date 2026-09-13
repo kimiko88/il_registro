@@ -249,6 +249,18 @@ func (m *MockUserRepo) ApplyDataRetention(ctx context.Context, schoolID *string,
 func (m *MockUserRepo) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
 	return nil
 }
+func (m *MockUserRepo) GetAssignments(ctx context.Context, userID string) ([]users.UserAssignment, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) CreateAssignment(ctx context.Context, assignment *users.UserAssignment) error {
+	return nil
+}
+func (m *MockUserRepo) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	return nil
+}
+func (m *MockUserRepo) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
+	return nil
+}
 
 func TestAttendanceService_MarkAttendance(t *testing.T) {
 	mockRepo := new(MockAttendanceRepo)
