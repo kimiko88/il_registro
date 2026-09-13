@@ -279,16 +279,42 @@ const COMPLETION_STEP = 999
 // ── Role helpers ─────────────────────────────────────────────────────────────
 const userRole = computed(() => {
   const role = authStore.userRole || authStore.user?.role || 'student'
-  const r = role.toLowerCase()
-  if (r === 'superadmin') return 'admin'
-  if (['teacher', 'student', 'parent', 'secretary', 'admin',
-       'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'dsga'].includes(r)) {
-    return r
+  const r = role.toLowerCase().trim()
+  if (['principal', 'vice_principal', 'dirigente_scolastico', 'collaboratore_vicario'].includes(r)) {
+    return 'principal'
+  }
+  if (['admin', 'superadmin', 'system_auditor', 'dpo'].includes(r)) {
+    return 'admin'
+  }
+  if (['secretary', 'staff', 'responsabile_gestione_documentale', 'responsabile_conservazione'].includes(r)) {
+    return 'secretary'
+  }
+  if (r === 'dsga') {
+    return 'dsga'
+  }
+  if (['collaboratore_ds', 'responsabile_servizio'].includes(r)) {
+    return 'collaboratore_ds'
+  }
+  if (r === 'collaboratore_scolastico') {
+    return 'collaboratore_scolastico'
+  }
+  if (['assistente_amministrativo', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico'].includes(r)) {
+    return 'assistente_amministrativo'
+  }
+  if (['teacher', 'docente', 'coordinator', 'coordinatore_classe', 'segretario_consiglio', 'referente_progetto', 'referente_inclusione', 'responsabile_dipartimento', 'tutor_orientatore', 'animatore_digitale'].includes(r)) {
+    return 'teacher'
+  }
+  if (['parent', 'genitore'].includes(r)) {
+    return 'parent'
+  }
+  if (['student', 'studente'].includes(r)) {
+    return 'student'
   }
   return 'student'
 })
 
 const roleMeta = {
+  principal:                 { icon: 'account_balance',      color: 'deep-purple', primary: 'deep-purple-8', label: 'roles.principal' },
   teacher:                   { icon: 'school',              color: 'indigo',      primary: 'indigo',        label: 'roles.teacher' },
   student:                   { icon: 'face',                color: 'teal',        primary: 'teal',          label: 'roles.student' },
   parent:                    { icon: 'family_restroom',      color: 'purple',      primary: 'purple',        label: 'roles.parent' },
@@ -307,6 +333,14 @@ const roleLabel   = computed(() => t(roleMeta[userRole.value]?.label || 'roles.u
 
 // ── Steps definition ─────────────────────────────────────────────────────────
 const STEP_DEFS = {
+  principal: [
+    { icon: 'dashboard',         color: 'deep-purple' },
+    { icon: 'manage_accounts',   color: 'indigo' },
+    { icon: 'verified',          color: 'teal' },
+    { icon: 'swap_horiz',        color: 'orange' },
+    { icon: 'gavel',             color: 'blue' },
+    { icon: 'assessment',        color: 'purple' }
+  ],
   teacher: [
     { icon:'dashboard',       color:'indigo'  },
     { icon:'menu_book',       color:'blue'    },
@@ -400,7 +434,7 @@ const tourSteps = computed(() => {
       : `onboardingExtra.${role}.step${n}_desc`
     const bulletsKey = `onboardingExtra.${role}.step${n}_bullets`
 
-    const rawBullets = tm(bulletsKey)
+    const rawBullets = typeof tm === 'function' ? tm(bulletsKey) : []
     const bullets = Array.isArray(rawBullets) ? rawBullets : []
 
     return {
@@ -567,6 +601,7 @@ function floatIconStyle(i) {
 .hero-cyan    { background: linear-gradient(160deg, #06b6d4, #0891b2); }
 .hero-amber   { background: linear-gradient(160deg, #f59e0b, #d97706); }
 .hero-deep-orange { background: linear-gradient(160deg, #f97316, #c2410c); }
+.hero-deep-purple { background: linear-gradient(160deg, #7c3aed, #4c1d95); }
 
 .hero-rings { position: absolute; inset: 0; }
 .ring {
@@ -701,6 +736,7 @@ function floatIconStyle(i) {
 .icon-pink    { background: #fdf2f8; color: #db2777; }
 .icon-amber   { background: #fffbeb; color: #d97706; }
 .icon-deep-orange { background: #fff7ed; color: #c2410c; }
+.icon-deep-purple { background: #f5f3ff; color: #6d28d9; }
 
 .welcome-actions {
   display: flex;
@@ -755,6 +791,7 @@ function floatIconStyle(i) {
 .panel-pink    { background: linear-gradient(160deg, #ec4899, #db2777); }
 .panel-amber   { background: linear-gradient(160deg, #f59e0b, #d97706); }
 .panel-deep-orange { background: linear-gradient(160deg, #ea580c, #c2410c); }
+.panel-deep-purple { background: linear-gradient(160deg, #7c3aed, #4c1d95); }
 
 /* Sidebar step dots */
 .sidebar-steps {

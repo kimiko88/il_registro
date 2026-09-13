@@ -172,6 +172,40 @@ Middleware Go:
 | **Descriptive Assessment Matrix** | Frontend, `DescriptiveEvaluationMatrix` | Valutazione per obiettivi su 4 livelli ministeriali (O.M. 172/2020) con matrice interattiva ed export CSV |
 | **Statutory Absence Forecasting** | Frontend, `AbsenceLimitWidget` | Monitoraggio e calcolo predittivo della soglia 25% assenze per la validità dell'anno (Art. 14 DPR 122/2009) |
 | **Idempotency-Key Injection**     | Frontend, `useIdempotency.js`  | Prevenzione duplicazioni su richieste mutative critiche con header HTTP `Idempotency-Key` automatico |
+| **Strict Role Validation & Domain Guard** | Backend, `internal/users` | Validazione server-side dei 25 ruoli istituzionali supportati con respinta `HTTP 400 Bad Request` |
+| **Hierarchical Role Resolver & Adaptive Tour/Help** | Frontend, `Common/` (Tour & Help) | Mappatura coerente dei ruoli su profili canonici con Onboarding Tour e Help Center dedicati per ruolo |
+
+---
+
+## Sistema di Ruoli Istituzionali, Onboarding e Assistenza
+
+### Ruoli Supportati nel Backend
+Il backend (`internal/users/service.go`) convalida rigidamente i 25 ruoli previsti dall'ordinamento scolastico e amministrativo:
+- **Dirigenza**: `principal`, `vice_principal`
+- **Amministrazione & Sicurezza**: `admin`, `superadmin`, `system_auditor`, `dpo`
+- **Servizi Generali & Amministrativi**: `secretary`, `staff`, `responsabile_gestione_documentale`, `responsabile_conservazione`
+- **Personale ATA**: `dsga`, `collaboratore_ds`, `responsabile_servizio`, `collaboratore_scolastico`, `assistente_amministrativo`, `assistente_alunni`, `assistente_personale`, `assistente_contabilita`, `assistente_protocollo`, `assistente_sportello`, `assistente_tecnico`
+- **Personale Docente & Incarichi**: `teacher`, `coordinator`, `referente_inclusione`, `referente_progetto`, `segretario_consiglio`, `responsabile_dipartimento`, `tutor_orientatore`, `animatore_digitale`
+- **Utenza Famiglie & Studenti**: `student`, `parent`
+
+### Risoluzione Canonica Frontend (Tour & Centro Assistenza)
+Nei componenti `OnboardingTour.vue`, `HelpDrawer.vue` e `HelpCenterPanel.vue`, ogni ruolo è risolto in una delle 10 categorie canoniche senza fallire su `student`:
+1. `principal`: include il Dirigente Scolastico e il Collaboratore Vicario.
+2. `admin`: include amministratori di sistema, auditor e DPO.
+3. `secretary`: personale di segreteria e responsabili della gestione documentale/conservazione.
+4. `dsga`: Direttore dei Servizi Generali e Amministrativi.
+5. `collaboratore_ds`: collaboratori del DS e responsabili di servizio.
+6. `collaboratore_scolastico`: collaboratori scolastici di plesso.
+7. `assistente_amministrativo`: assistenti amministrativi e tecnici di segreteria.
+8. `teacher`: docenti curriculari, coordinatori di classe e referenti di progetto/inclusione.
+9. `parent`: genitori e tutori legali.
+10. `student`: studenti iscritti.
+
+### Onboarding Tour & Centro Guide Adattivo
+- **`OnboardingTour.vue`**: Presentazione guidata interattiva a schede con scorciatoie da tastiera (`←`, `→`, `ESC`), avanzamento visivo, anteprima a chip e completamento persistito (`onboarding_done_${userRole.value}`).
+- **`HelpDrawer.vue`**: Pannello a scomparsa laterale destra con motore di ricerca istantaneo, filtri per categoria di ruolo, domande frequenti espanse ed accesso al tour.
+- **`HelpCenterPanel.vue`**: Centro assistenza completo a schermo con catalogo guide tematiche, tempi di lettura stimati, procedure passo-passo e blocco FAQ correlate.
+- **Integrità i18n**: Tutte le chiavi di Onboarding e Help sono verificate e sincronizzate al 100% su tutte le 11 lingue supportate (`i18nKeys.test.js`).
 
 ---
 

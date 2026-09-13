@@ -10,10 +10,10 @@
         <div class="row items-center gap-sm">
           <q-badge color="negative" text-color="white" class="q-px-sm q-py-xs text-weight-bold rounded-borders">
             <q-icon name="campaign" size="16px" class="q-mr-xs" />
-            COMUNICAZIONE DI SCIOPERO
+            {{ t('strikeManagement.bannerCommunicationTitle') || 'COMUNICAZIONE DI SCIOPERO' }}
           </q-badge>
           <span class="text-caption text-weight-bold text-slate-700">
-            Proclamato da: <span class="text-primary">{{ notice.proclaimed_by || 'Organizzazioni Sindacali' }}</span>
+            {{ t('strikeManagement.proclaimedBy') || 'Proclamato da:' }} <span class="text-primary">{{ notice.proclaimed_by || t('strikeManagement.defaultProclaimedBy') || 'Organizzazioni Sindacali' }}</span>
           </span>
         </div>
 
@@ -25,7 +25,7 @@
             class="text-caption text-weight-bold"
           >
             <q-icon :name="notice.is_expired ? 'lock' : 'timer'" size="14px" class="q-mr-xs" />
-            {{ notice.is_expired ? 'Termine Dichiarazioni Scaduto' : deadlineTimeRemaining(notice.declaration_deadline) }}
+            {{ notice.is_expired ? (t('strikeManagement.bannerNoticeExpired') || 'Termine Dichiarazioni Scaduto') : deadlineTimeRemaining(notice.declaration_deadline) }}
           </q-chip>
 
           <q-btn
@@ -35,7 +35,7 @@
             no-caps
             color="primary"
             icon="analytics"
-            label="Quadro Preventivo"
+            :label="t('strikeManagement.bannerPreventiveDashboard') || 'Quadro Preventivo'"
             to="/ata/strike"
             class="gt-xs text-weight-bold"
           />
@@ -50,13 +50,13 @@
               {{ notice.title }}
             </h2>
             <div class="text-body2 text-slate-600 q-mt-xs">
-              <span class="text-weight-bold">Data Sciopero:</span>
+              <span class="text-weight-bold">{{ t('strikeManagement.strikeDate') || 'Data Sciopero:' }}</span>
               <q-badge color="indigo-1" text-color="indigo-9" class="q-ml-xs text-weight-bold q-px-sm">
                 <q-icon name="event" size="14px" class="q-mr-xs" />
                 {{ formatDate(notice.strike_date) }}
               </q-badge>
               <span class="q-mx-sm text-slate-300">•</span>
-              <span class="text-weight-bold">Scadenza Comunicazione:</span>
+              <span class="text-weight-bold">{{ t('strikeManagement.bannerDeclarationDeadline') || 'Scadenza Comunicazione:' }}</span>
               <span class="q-ml-xs text-weight-medium" :class="notice.is_expired ? 'text-negative text-weight-bold' : 'text-slate-700'">
                 {{ formatDateTime(notice.declaration_deadline) }}
               </span>
@@ -68,7 +68,7 @@
             </div>
 
             <div class="legal-disclaimer text-caption text-slate-500 q-mt-xs">
-              * Rilevazione preventiva facoltativa ai sensi dell'Accordo Aran 2/12/2020. La dichiarazione ha carattere volontario e preventivo.
+              {{ t('strikeManagement.bannerLegalDisclaimer') || '* Rilevazione preventiva facoltativa ai sensi dell\'Accordo Aran 2/12/2020. La dichiarazione ha carattere volontario e preventivo.' }}
             </div>
           </div>
 
@@ -76,9 +76,9 @@
           <div class="col-12 col-md-5">
             <div class="intention-action-card rounded-xl q-pa-sm border bg-white shadow-xs">
               <div class="text-caption text-weight-bold text-slate-700 q-mb-xs row items-center justify-between">
-                <span>La tua dichiarazione preventiva:</span>
+                <span>{{ t('strikeManagement.bannerYourDeclaration') || 'La tua dichiarazione preventiva:' }}</span>
                 <span v-if="notice.user_declaration" class="text-caption text-slate-500">
-                  Registrata il {{ formatDateTime(notice.user_declaration.declared_at) }}
+                  {{ t('strikeManagement.bannerRegisteredAt', { date: formatDateTime(notice.user_declaration.declared_at) }) || `Registrata il ${formatDateTime(notice.user_declaration.declared_at)}` }}
                 </span>
               </div>
 
@@ -99,7 +99,7 @@
                       size="16px"
                       class="q-mr-xs"
                     />
-                    Aderisco
+                    {{ t('strikeManagement.participates') || 'Aderisco' }}
                   </q-btn>
                 </div>
                 <div class="col-12 col-sm-4">
@@ -117,7 +117,7 @@
                       size="16px"
                       class="q-mr-xs"
                     />
-                    Non aderisco
+                    {{ t('strikeManagement.notParticipates') || 'Non aderisco' }}
                   </q-btn>
                 </div>
                 <div class="col-12 col-sm-4">
@@ -135,7 +135,7 @@
                       size="16px"
                       class="q-mr-xs"
                     />
-                    Non so ancora
+                    {{ t('strikeManagement.undecided') || 'Non so ancora' }}
                   </q-btn>
                 </div>
               </div>
@@ -145,7 +145,7 @@
                 <div class="row items-center justify-between bg-slate-100 rounded-borders q-pa-sm">
                   <div class="row items-center gap-xs">
                     <q-icon name="lock" color="slate-600" size="18px" />
-                    <span class="text-caption text-slate-700">Dichiarazione acquisita:</span>
+                    <span class="text-caption text-slate-700">{{ t('strikeManagement.bannerAcquired') || 'Dichiarazione acquisita:' }}</span>
                   </div>
                   <div>
                     <q-chip
@@ -159,16 +159,16 @@
                   </div>
                 </div>
                 <div class="text-caption text-slate-500 q-mt-xs text-italic text-center">
-                  Il termine per comunicare o modificare la scelta preventiva è scaduto.
+                  {{ t('strikeManagement.legalBannerSubtitle') || 'Il termine per comunicare o modificare la scelta preventiva è scaduto.' }}
                 </div>
               </div>
 
               <!-- Status message confirmation -->
               <div v-if="currentUserIntention(notice) && !notice.is_expired" class="text-caption text-slate-600 q-mt-xs row items-center justify-between">
                 <span class="text-positive text-weight-bold">
-                  <q-icon name="done_all" size="14px" /> Scelta registrata: {{ getIntentionLabel(currentUserIntention(notice)) }}
+                  <q-icon name="done_all" size="14px" /> {{ getIntentionLabel(currentUserIntention(notice)) }}
                 </span>
-                <span class="text-slate-400 text-caption">Modificabile fino alla scadenza</span>
+                <span class="text-slate-400 text-caption">{{ t('strikeManagement.statusOpen') }}</span>
               </div>
             </div>
           </div>
@@ -183,9 +183,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import strikeService from '@/services/strikeService'
 
 const $q = useQuasar()
+const { t, locale } = useI18n()
 const authStore = useAuthStore()
 const { userRole } = storeToRefs(authStore)
 
@@ -216,7 +218,6 @@ const loadNotices = async () => {
   if (!isStaffUser.value) return
   try {
     const list = await strikeService.getStrikeNotices()
-    // Sort or filter: show active notices or notices whose strike date is >= yesterday
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
     notices.value = (list || []).filter(n => {
@@ -224,7 +225,6 @@ const loadNotices = async () => {
       return strikeDate >= yesterday
     })
   } catch {
-    // Non-blocking banner error
     notices.value = []
   }
 }
@@ -237,19 +237,17 @@ const setDeclaration = async (notice, intention) => {
     notice.user_declaration = res
     $q.notify({
       type: 'positive',
-      message: `Dichiarazione registrata: "${getIntentionLabel(intention)}"`,
-      caption: 'Puoi aggiornare la scelta fino alla data di scadenza',
+      message: t('strikeManagement.notifyDeclarationSaved') || 'Dichiarazione preventiva registrata con successo',
       position: 'top',
       timeout: 3000
     })
   } catch (err) {
-    const msg = err.response?.data?.error || 'Errore nella registrazione della dichiarazione'
+    const msg = err.response?.data?.error || t('strikeManagement.notifyDeclarationError') || 'Errore nella registrazione della dichiarazione'
     $q.notify({
       type: 'negative',
       message: msg,
       position: 'top'
     })
-    // Reload notice to get updated status/deadline
     loadNotices()
   } finally {
     savingNoticeId.value = null
@@ -259,10 +257,10 @@ const setDeclaration = async (notice, intention) => {
 
 const getIntentionLabel = (intention) => {
   switch (intention) {
-    case 'participates': return 'Aderisco'
-    case 'not_participates': return 'Non aderisco'
-    case 'undecided': return 'Non ho ancora deciso'
-    default: return 'Nessuna risposta'
+    case 'participates': return t('strikeManagement.participates') || 'Aderisco'
+    case 'not_participates': return t('strikeManagement.notParticipates') || 'Non aderisco'
+    case 'undecided': return t('strikeManagement.undecided') || 'Non ho ancora deciso'
+    default: return t('strikeManagement.statNotDeclared') || 'Nessuna risposta'
   }
 }
 
@@ -279,7 +277,7 @@ const formatDate = (isoDate) => {
   if (!isoDate) return '-'
   try {
     const d = new Date(isoDate)
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
+    return d.toLocaleDateString(locale.value || 'it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
   } catch {
     return isoDate
   }
@@ -289,7 +287,7 @@ const formatDateTime = (isoDate) => {
   if (!isoDate) return '-'
   try {
     const d = new Date(isoDate)
-    return d.toLocaleDateString('it-IT', {
+    return d.toLocaleDateString(locale.value || 'it-IT', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -304,13 +302,13 @@ const formatDateTime = (isoDate) => {
 const deadlineTimeRemaining = (deadlineIso) => {
   if (!deadlineIso) return ''
   const diff = new Date(deadlineIso).getTime() - Date.now()
-  if (diff <= 0) return 'Scaduto'
+  if (diff <= 0) return t('strikeManagement.statusExpired') || 'Scaduto'
   const hours = Math.floor(diff / (1000 * 60 * 60))
   if (hours < 24) {
-    return `Scade tra ${hours}h`
+    return `${hours}h`
   }
   const days = Math.floor(hours / 24)
-  return `Scade tra ${days}g`
+  return `${days}d`
 }
 
 onMounted(() => {

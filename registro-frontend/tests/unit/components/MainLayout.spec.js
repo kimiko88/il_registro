@@ -94,11 +94,13 @@ describe('MainLayout Logic', () => {
             setupUserRole('admin')
             const menuItems = useMenuItems('admin')
 
-            // admin config has 9 top-level flat items (no nested children)
-            expect(menuItems).toHaveLength(9)
+            // admin config has 11 top-level flat items (no nested children)
+            expect(menuItems).toHaveLength(11)
             expect(menuItems.map(i => i.label)).toContain('Dashboard')
             expect(menuItems.map(i => i.label)).toContain('La Mia Scuola')
             expect(menuItems.map(i => i.label)).toContain('Presenze Personale')
+            expect(menuItems.map(i => i.label)).toContain('Rilevazione Scioperi')
+            expect(menuItems.map(i => i.label)).toContain('Verbali & Modelli Riunioni')
             expect(menuItems.map(i => i.label)).toContain('Analytics')
             expect(menuItems.map(i => i.label)).toContain('Impostazioni')
         })
@@ -133,13 +135,15 @@ describe('MainLayout Logic', () => {
             setupUserRole('secretary')
             const flatItems = getFlatItems('secretary')
 
-            // 1 dashboard + 5 Anagrafiche + 4 Atti + 8 Servizi (incl. Presenze Personale & Flussi SIDI MIM) = 18
-            expect(flatItems).toHaveLength(18)
+            // 1 dashboard + 5 Anagrafiche + 5 Atti + 9 Servizi (incl. Presenze Personale & Flussi SIDI MIM) = 20
+            expect(flatItems).toHaveLength(20)
             expect(flatItems.map(i => i.label)).toContain('Dashboard')
             expect(flatItems.map(i => i.label)).toContain('Documenti')
             expect(flatItems.map(i => i.label)).toContain('Studenti')
             expect(flatItems.map(i => i.label)).toContain('Presenze Personale')
             expect(flatItems.map(i => i.label)).toContain('Flussi SIDI')
+            expect(flatItems.map(i => i.label)).toContain('Rilevazione Scioperi')
+            expect(flatItems.map(i => i.label)).toContain('Verbali & Modelli Riunioni')
         })
     })
 

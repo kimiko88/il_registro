@@ -19,7 +19,27 @@ import (
 var (
 	ErrUnauthorized = errors.New("unauthorized")
 	ErrForbidden    = errors.New("forbidden")
+	ErrInvalidRole  = errors.New("invalid role")
 )
+
+// validRoles is the exhaustive set of registered system roles.
+var validRoles = map[string]bool{
+	"superadmin": true, "admin": true, "principal": true, "vice_principal": true,
+	"secretary": true, "teacher": true, "student": true, "parent": true,
+	"system_auditor": true, "dsga": true, "collaboratore_ds": true, "collaboratore_scolastico": true,
+	"assistente_amministrativo": true, "assistente_alunni": true, "assistente_personale": true,
+	"assistente_contabilita": true, "assistente_protocollo": true, "assistente_sportello": true,
+	"assistente_tecnico": true, "responsabile_servizio": true,
+	"responsabile_gestione_documentale": true, "responsabile_conservazione": true, "dpo": true,
+	"coordinator": true, "coordinatore_classe": true, "segretario_consiglio": true,
+	"referente_progetto": true, "referente_inclusione": true, "responsabile_dipartimento": true,
+	"tutor_orientatore": true, "animatore_digitale": true,
+}
+
+// IsValidRole returns true if the provided role string is a registered valid role.
+func IsValidRole(role string) bool {
+	return validRoles[role]
+}
 
 // bcryptCost è il cost factor usato per tutti gli hash bcrypt nel package users.
 // Usare cost 12 invece di bcrypt.DefaultCost (10) per maggiore resistenza al brute-force.
@@ -108,6 +128,9 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 	allowed, ok := allowedCreators[actorRole]
 	if !ok {
 		return nil, ErrUnauthorized
+	}
+	if !IsValidRole(req.Role) {
+		return nil, ErrInvalidRole
 	}
 	if !allowed[req.Role] {
 		return nil, ErrUnauthorized
@@ -216,7 +239,13 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole, actorSchoolID, id s
 	}
 	if req.Role != nil && *req.Role != user.Role {
 		allowed, ok := allowedCreators[actorRole]
-		if !ok || !allowed[*req.Role] {
+		if !ok {
+			return nil, ErrUnauthorized
+		}
+		if !IsValidRole(*req.Role) {
+			return nil, ErrInvalidRole
+		}
+		if !allowed[*req.Role] {
 			return nil, ErrUnauthorized
 		}
 		user.Role = *req.Role

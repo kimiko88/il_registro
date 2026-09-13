@@ -4,24 +4,24 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 
 ### 🐹 Backend Go (`/registro-backend`)
 
+- [x] `#87` `golang.org/x/time`: 0.15.0 → **0.16.0**
+- [x] `#86` `golang.org/x/crypto`: 0.55.0 → **0.57.0**
 - [x] `#27` `github.com/gin-gonic/gin`: 1.11.0 → **1.12.0**
 - [x] `#26` `github.com/lib/pq`: 1.11.2 → **1.12.3**
 - [x] `#24` `github.com/xuri/excelize/v2`: 2.10.1 → **2.11.0**
-- [x] `#22` `golang.org/x/crypto`: 0.48.0 → **0.54.0**
-- [x] `#21` `golang.org/x/time`: 0.14.0 → **0.15.0**
 
 ### ⚡ Frontend JavaScript (`/registro-frontend`)
 
+- [x] `#91` `globals`: 16.5.0 → **17.12.0**
+- [x] `#90` `@vitest/coverage-v8`: 4.1.10 → **5.0.0**
+- [x] `#89` `quasar`: 2.28.0 → **2.31.0**
+- [x] `#88` `postcss`: 8.5.26 → **8.5.28**
+- [x] `#85` `@vitest/mocker` & `vitest`: 4.1.10 → **5.0.0**
 - [x] `#77` `vue`: 3.5.41 → **3.5.42**
 - [x] `#76` `happy-dom`: 20.11.15 → **20.12.2**
 - [x] `#75` `axios`: 1.19.0 → **1.20.0**
 - [x] `#74` `@quasar/vite-plugin`: 2.0.0 → **2.0.2**
 - [x] `#73` `fast-uri`: 3.1.5 → **3.1.7** (risolto security bump in `package-lock.json`)
-- [x] `#11` `vitest`: 0.34.6 → **4.0.16**
-- [x] `#10` `@vitest/coverage-v8`: 0.34.6 → **4.0.16**
-- [x] `#9` `pinia`: 2.3.1 → **3.0.4**
-- [x] `#8` `happy-dom`: 12.10.3 → **20.12.2**
-- [x] `#7` `@vitejs/plugin-vue`: 4.6.2 → **6.0.8**
 - [x] `vite`: 4.4.5 → **8.2.2**
 
 ### 🤖 GitHub Actions (`/.github/workflows` & `/registro-backend/.github/workflows`)
@@ -37,9 +37,9 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 
 ### Stato Verification:
 
-- **Frontend Test**: 95 test file passati (445 test) su Vitest v4
-- **Frontend Build**: `npm run build` eseguito con successo (`built in 5.34s`)
-- **Backend Test**: `go test ./...` tutti i package passati
+- **Frontend Test**: 195 test file passati (1294 test) su Vitest v5
+- **Frontend Build**: `npm run build` eseguito con successo
+- **Backend Test**: `go test ./...` tutti i package passati (unit e integrazione)
 
 - [x] Aggiungi nei campi dei libri di testo la materia scolastica
 
@@ -732,3 +732,68 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - Backend: Creato package `pkg/circuitbreaker/circuitbreaker.go` basato su `sony/gobreaker` con gestione degli stati Closed, Half-Open e Open, soglie di errore configurabili, timeout di ripristino e fail-fast immediato con `ErrCircuitOpen`. Integrato nel provider di storage Supabase (`pkg/upload/supabase.go`) per prevenire blocchi o rallentamenti dell'API in caso di degradazione del servizio esterno.
     - Unit test validato: `pkg/circuitbreaker/circuitbreaker_test.go` (100% passati).
   - **Validazione Completa & Regression Check**: - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend. - **0 errori, 0 warning** ESLint (`npm run lint`). - **Tutte le 11 lingue** (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `zh-CN`, `uk-UA`, `ar-SA`) aggiornate e sincronizzate al 100% per tutte le nuove feature. - **Backend**: `go vet ./...` (0 errori e 0 warning), tutti i test interni `go test ./internal/... ./pkg/...` superati al 100%, tutti i test di integrazione `go test ./tests/integration/...` superati al 100%. - **Risoluzione `golangci-lint` (ineffassign & unused)**: - `internal/classes/repository.go`: Sostituito `code := "P"` con `var code string` per eliminare l'assegnazione inefficace segnalata da `ineffassign`. - `cmd/seed_school/main.go`: Rimosso `type studentSeed struct` non referenziato per eliminare il warning `unused`.
+- [x] **Batch 19: Validazione Ruoli Istituzionali Backend (HTTP 400), Onboarding Tour & Centro Assistenza per tutti i 25 Ruoli e Dirigente Scolastico, Aggiornamento Dipendenze & Allineamento i18n Totale (Settembre 2026)**:
+  - **1. Validazione Stringente dei Ruoli Istituzionali nel Backend (HTTP 400 Bad Request)**:
+    - In `internal/users/service.go`: Definito `ErrInvalidRole = errors.New("invalid role")`, istanziata la mappa `validRoles` comprendente tutti i 25 ruoli ammessi dell'istituto scolastico (amministrativi, dirigenziali, docenti/funzioni strumentali, studenti, genitori e personale ATA specialistico) ed esportata la funzione `IsValidRole(role string) bool`.
+    - Applicata validazione preventiva in `CreateUser` e `UpdateUser`: se il ruolo specificato non appartiene ai ruoli istituzionali supportati, l'operazione viene rifiutata con `ErrInvalidRole`.
+    - In `internal/users/handler.go`: Mappato `ErrInvalidRole` a risposta uniforme `HTTP 400 Bad Request` (`{"error": "invalid role"}`) negli endpoint `POST /api/v1/users`, `PUT /api/v1/users/:id` e `POST /api/v1/users/:id/roles`.
+    - Test validati: `internal/users/service_test.go` e integrazione `tests/integration/edge_cases_integration_test.go` (`TestValidationAndEdgeCasesIntegration/User_Creation_-_Invalid_Role_returns_HTTP_400`).
+  - **2. Risoluzione Canonica dei Ruoli nel Frontend (Tour & Help)**:
+    - Implementato resolver gerarchico in `OnboardingTour.vue`, `HelpDrawer.vue` e `HelpCenterPanel.vue` per mappare i 25 ruoli istituzionali sui macro-profili autorizzativi:
+      - `principal`: `principal`, `vice_principal`, `dirigente_scolastico`, `collaboratore_vicario`
+      - `admin`: `admin`, `superadmin`, `system_auditor`, `dpo`
+      - `secretary`: `secretary`, `staff`, `responsabile_gestione_documentale`, `responsabile_conservazione`
+      - `dsga`: `dsga`
+      - `collaboratore_ds`: `collaboratore_ds`, `responsabile_servizio`
+      - `collaboratore_scolastico`: `collaboratore_scolastico`
+      - `assistente_amministrativo`: `assistente_amministrativo`, `assistente_alunni`, `assistente_personale`, `assistente_contabilita`, `assistente_protocollo`, `assistente_sportello`, `assistente_tecnico`
+      - `teacher`: `teacher`, `docente`, `coordinator`, `coordinatore_classe`, `segretario_consiglio`, `referente_progetto`, `referente_inclusione`, `responsabile_dipartimento`, `tutor_orientatore`, `animatore_digitale`
+      - `parent`: `parent`, `genitore`
+      - `student`: `student`, `studente`
+    - Eliminato qualsiasi fallback anomalo a `student` per i ruoli amministrativi o di presidenza.
+  - **3. Onboarding Tour Completo per il Dirigente Scolastico (`principal`)**:
+    - Creati 6 step di introduzione guidata: Dashboard Direzione & Quadro Generale, Personale, Nomine & Incarichi, Decreti & Visti Personale, Sostituzioni Docenti & Gestione Emergenze, Atti, Verbali & Delibere Collegiali, Monitoraggio Didattico, Scrutini & Dispersione.
+    - Introdotte classi cromatiche dedicate `.hero-deep-purple`, `.panel-deep-purple` e `.icon-deep-purple`.
+    - Corretta coerenza chiave `localStorage` (`onboarding_done_${userRole.value}`) tra lettura in `checkAndStartTour` e salvataggio in `completeTour`.
+  - **4. Help Drawer & Help Center Panel per tutti i Ruoli e Dirigente**:
+    - In `HelpDrawer.vue`: Aggiunte categorie per il DS (`cat_direction`, `cat_personnel`, `cat_substitutions`, `cat_verbali`, `cat_strike`), icone associate e supporto all'estrazione di tutte le domande FAQ (q1-q10).
+    - In `HelpCenterPanel.vue`: Configurate guide e macro-sezioni per il Dirigente Scolastico (`dashboard`, `personnel`, `substitutions`, `verbali`, `strike`), mappatura domande frequenti e stili `.art-deep-purple` e `.si-deep-purple`.
+  - **5. Aggiornamento Dipendenze Dependabot (PR #85 - #91)**:
+    - Backend: Bump `golang.org/x/time` a `v0.16.0` (PR #87) e `golang.org/x/crypto` a `v0.57.0` (PR #86).
+    - Frontend: Bump `quasar` a `^2.31.0` (PR #89), `globals` a `^17.12.0` (PR #91), `postcss` a `^8.5.28` (PR #88), `vitest`, `@vitest/coverage-v8` e `@vitest/mocker` a `^5.0.0` (PR #85, #90).
+    - Risolte tutte le dipendenze con 0 vulnerabilità.
+  - **6. Sincronizzazione Totale Dizionari i18n su 11 Lingue**:
+    - Sincronizzate al 100% le sezioni `onboarding.principal`, `onboardingExtra.principal`, `help.principal`, `guideCenter.principal` e `usersPage` su tutte le 11 lingue ufficiali (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`).
+    - Suite `tests/unit/i18n/i18nKeys.test.js` superata con 231/231 test passati.
+  - **Validazione Completa & Regression Check**:
+    - **195/195** suite di unit test superate (**1294/1294 test passati**) sul frontend su Vitest v5.
+    - Test di integrazione e unitari backend (`go test ./...`) passati al 100%.
+
+- [x] **Batch 20: Localizzazione Completa (11 Lingue) Pagine Ruoli Istituzionali, Incarichi Aggiuntivi & Moduli ATA (Settembre 2026)**:
+  - **1. Sincronizzazione Simmetrica dei Dizionari i18n su tutte le 11 Lingue**:
+    - Estesi i dizionari di tutte le 11 lingue (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`) con parità al 100% (0 chiavi mancanti):
+      - `roles`: Inclusi tutti i 25 ruoli istituzionali (`assistente_alunni`, `assistente_personale`, `assistente_contabilita`, `assistente_protocollo`, `assistente_sportello`, `assistente_tecnico`, `responsabile_servizio`, `responsabile_gestione_documentale`, `responsabile_conservazione`, `dpo`, ecc.).
+      - `categories`: Tutte le 24 categorie del menu laterale (es. `presenzePersonale`, `attiGestione`, `didatticaStudenti`, `gestionePersonale`, `bilancioContabilita`, `protocolloArchivi`, `frontOfficeSportello`, `laboratoriTecnologie`, `presenzeOrganizzazione`, `serviziSede`, `gestioneServizioStruttura`, `gestioneDocumentaleArchivi`, `conservazioneDigitale`).
+      - `nav`: Tutte le 34 etichette di navigazione ATA e incarichi aggiuntivi (`dashboardAta`, `staffAttendance`, `strikeDetection`, `timecardLeave`, `emergencySubstitutions`, `personnelDesk`, `visitorRegistry`, `orientationTutor`, `inclusionBesDsa`, `digitalTeamELearning`, `projectsFunding`, ecc.).
+      - `staffAttendance`: Localizzazione pulsante `strikeDetection` e stati operativi (`statusPresent`, `statusAbsent`, `statusLate`, `statusMission`, `statusPermit`, `statusSickLeave`, `statusOnStrike`).
+      - `usersPage`: Dialogo gestione incarichi aggiuntivi (`assignmentsDialog`), preset funzioni strumentali (coordinamento, inclusione, tutor, team digitale) e notifiche di assegnazione/revoca.
+      - `personnelDesk`: Flusso completo a 4 fasi (bozza dipendente, istruttoria AA, visto contabile DSGA, decreto dirigenziale DS) con filtri, stati, bottoni di azione e modali.
+      - `timecard`: Cartellino mensile e piano ferie per tutto il personale ATA e DSGA con card KPI, badge timbrature, calcolo straordinari e modali richiesta congedo.
+      - `strikeManagement`: Rilevazione preventiva scioperi (Accordo Aran 2/12/2020), banner bacheca del personale (`ActiveStrikeNoticeBanner.vue`), metriche KPI, ripartizione per qualifica, export CSV nominativo e modali di pubblicazione.
+      - `coordinatorView`: Dashboard coordinatore di classe con selezione classe, matrice andamento, note disciplinari, anagrafica genitori e avvio sessione scrutinio.
+  - **2. Localizzazione Componenti & Pagine Frontend**:
+    - `ActiveStrikeNoticeBanner.vue`: Localizzato con `t('strikeManagement.*')`.
+    - `StrikeManagement.vue`: Localizzati header, hero badges, accordo ARAN, KPI cards, ripartizione per categoria, colonne computate della tabella nominativa, modale di pubblicazione avviso e notifiche.
+    - `CoordinatorView.vue`: Localizzati tutti i tab (andamento, note, genitori, scrutinio), colonne tabella, stato vuoto e pulsanti d'azione.
+    - `PersonnelDesk.vue`: Localizzato il workflow completo e i 4 dialoghi di avanzamento stato con notifiche.
+    - `Timecard.vue`: Localizzate tutte le sezioni del cartellino, tabelle timbrature, ferie e vista globale DSGA.
+    - `UserTable.vue`: Localizzato il menu "Incarichi & Funzioni", filtri e badge di ruolo dinamici.
+    - `Users.vue`: Localizzato il dialogo di assegnazione incarichi aggiuntivi e i preset con `computed()`.
+    - `StaffAttendance.vue`: Localizzato il bottone "Rilevazione Scioperi" e la mappatura stati.
+    - `MainLayout.vue`: Aggiornate `categoryToKeyMap` e `menuLabelToKeyMap` per tradurre dinamicamente tutte le voci del drawer di navigazione per tutti i 25 ruoli in tutte le 11 lingue.
+  - **3. Validazione Completa & Regression Check**:
+    - **231/231 test i18n passati al 100%** (`tests/unit/i18n/i18nKeys.test.js`).
+    - **195/195 file di test passati** (**1294/1294 unit test passati**) su Vitest v5.
+    - **69/69 file di test E2E passati** (**163/163 test E2E passati**) su Vitest v5 (`npm run test:e2e`).
+    - **Build di produzione (`npm run build`) completata con successo in 3.10s**.
+

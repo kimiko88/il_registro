@@ -54,7 +54,7 @@
           outline
           color="negative"
           icon="campaign"
-          label="Rilevazione Scioperi"
+          :label="t('staffAttendance.strikeDetection') || 'Rilevazione Scioperi'"
           no-caps
           rounded
           to="/ata/strike"

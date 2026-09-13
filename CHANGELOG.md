@@ -3,6 +3,22 @@
 Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
+## [1.1.0-beta] — 2026-09-13
+
+### Aggiunto & Migliorato
+
+- **Backend (`registro-backend`)**:
+  - **Validazione Stringente Ruoli Istituzionali (`internal/users`)**: Aggiunto controllo preventivo `IsValidRole` sui 25 ruoli istituzionali ammessi nella creazione, aggiornamento e assegnazione incarichi utente (`POST /api/v1/users`, `PUT /api/v1/users/:id`, `POST /api/v1/users/:id/roles`). Restituzione uniforme di `HTTP 400 Bad Request` (`{"error": "invalid role"}`) e test di integrazione dedicato.
+  - **Aggiornamento Dipendenze**: Bump `golang.org/x/time` a `v0.16.0` e `golang.org/x/crypto` a `v0.57.0`.
+
+- **Frontend (`registro-frontend`)**:
+  - **Risoluzione Canonica Ruoli (Tour & Assistenza)**: Mappatura gerarchica completa di tutti i 25 ruoli istituzionali (dirigenza, ATA, docenti con funzioni strumentali, studenti, genitori) sui 10 profili canonici in `OnboardingTour.vue`, `HelpDrawer.vue` e `HelpCenterPanel.vue`, eliminando fallback anomali a studente.
+  - **Onboarding Tour Dirigente Scolastico (`principal`)**: Aggiunto tour guidato a 6 passaggi dedicato alla presidenza con dashboard strategica, gestione personale e nomine, decreti dirigenziali con visto DSGA, sostituzioni live, verbali collegiali conformi al CAD e validazione scrutini.
+  - **Help Drawer & Help Center Panel Adattivi**: Sezioni, guide passo-passo e risposte FAQ contestualizzate per il Dirigente Scolastico (`dashboard`, `personnel`, `substitutions`, `verbali`, `strike`), con classi e temi dedicati deep-purple.
+  - **Allineamento i18n Totale su 11 Lingue**: Sincronizzazione al 100% delle etichette di onboarding, aiuto e gestione utenti, nonché localizzazione integrale su tutte le 11 lingue di tutti i moduli specialistici ATA e delle pagine per incarichi istituzionali (`StrikeManagement.vue`, `ActiveStrikeNoticeBanner.vue`, `CoordinatorView.vue`, `PersonnelDesk.vue`, `Timecard.vue`, `StaffAttendance.vue`, `Users.vue`, `UserTable.vue`, e drawer `MainLayout.vue` con traduzione dinamica per tutte le 24 categorie e 34 voci di navigazione per tutti i 25 ruoli).
+  - **Aggiornamento Dipendenze**: Aggiornamento a `vitest` v5.0.0, `@vitest/coverage-v8` v5.0.0, `quasar` 2.31.0, `globals` 17.12.0 e `postcss` 8.5.28.
+  - **Test Suite**: Espansione a **195 test file** e **1294 test passati al 100%** su Vitest v5, con **231/231 test di parità i18n superati**.
+
 ## [1.0.0-beta] — 2026-09-11
 
 ### Aggiunto & Adeguato per la Pubblica Amministrazione (AgID / Developers Italia)

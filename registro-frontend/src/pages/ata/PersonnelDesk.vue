@@ -50,38 +50,38 @@
     <q-card class="rounded-2xl shadow-sm border border-indigo-100 bg-white q-mb-lg">
       <q-card-section class="q-pa-md">
         <div class="text-caption text-slate-500 text-weight-bold text-uppercase q-mb-sm">
-          Fasi del Workflow Istruttorio
+          {{ t('personnelDesk.workflowPhasesTitle') }}
         </div>
         <div class="row items-center justify-between workflow-steps-grid">
           <div class="workflow-step-pill" :class="{ 'step-active': statusFilter === 'submitted' }">
             <div class="step-num bg-blue-100 text-blue-800">1</div>
             <div>
-              <div class="text-weight-bold text-caption text-slate-900">Istanza Inviata</div>
-              <div class="text-caption text-slate-400">Dipendente</div>
+              <div class="text-weight-bold text-caption text-slate-900">{{ t('personnelDesk.step1Title') }}</div>
+              <div class="text-caption text-slate-400">{{ t('personnelDesk.step1Subtitle') }}</div>
             </div>
           </div>
           <q-icon name="arrow_forward" color="grey-5" size="18px" class="gt-xs" />
           <div class="workflow-step-pill" :class="{ 'step-active': statusFilter === 'aa_review' }">
             <div class="step-num bg-cyan-100 text-cyan-800">2</div>
             <div>
-              <div class="text-weight-bold text-caption text-slate-900">Istruttoria AA</div>
-              <div class="text-caption text-slate-400">Ass. Amministrativo</div>
+              <div class="text-weight-bold text-caption text-slate-900">{{ t('personnelDesk.step2Title') }}</div>
+              <div class="text-caption text-slate-400">{{ t('personnelDesk.step2Subtitle') }}</div>
             </div>
           </div>
           <q-icon name="arrow_forward" color="grey-5" size="18px" class="gt-xs" />
           <div class="workflow-step-pill" :class="{ 'step-active': statusFilter === 'dsga_review' }">
             <div class="step-num bg-teal-100 text-teal-800">3</div>
             <div>
-              <div class="text-weight-bold text-caption text-slate-900">Visto di Regolarità</div>
-              <div class="text-caption text-slate-400">DSGA</div>
+              <div class="text-weight-bold text-caption text-slate-900">{{ t('personnelDesk.step3Title') }}</div>
+              <div class="text-caption text-slate-400">{{ t('personnelDesk.step3Subtitle') }}</div>
             </div>
           </div>
           <q-icon name="arrow_forward" color="grey-5" size="18px" class="gt-xs" />
           <div class="workflow-step-pill" :class="{ 'step-active': statusFilter === 'ds_review' }">
             <div class="step-num bg-purple-100 text-purple-800">4</div>
             <div>
-              <div class="text-weight-bold text-caption text-slate-900">Decreto / Provvedimento</div>
-              <div class="text-caption text-slate-400">Dirigente Scolastico</div>
+              <div class="text-weight-bold text-caption text-slate-900">{{ t('personnelDesk.step4Title') }}</div>
+              <div class="text-caption text-slate-400">{{ t('personnelDesk.step4Subtitle') }}</div>
             </div>
           </div>
         </div>
@@ -97,14 +97,7 @@
         dense
         rounded
         class="bg-white shadow-1"
-        :options="[
-          { label: 'Tutte', value: '' },
-          { label: 'Da Istruire (AA)', value: 'submitted' },
-          { label: 'Attesa Visto (DSGA)', value: 'dsga_review' },
-          { label: 'Attesa Decreto (DS)', value: 'ds_review' },
-          { label: 'Approvate', value: 'approved' },
-          { label: 'Respinte', value: 'rejected' }
-        ]"
+        :options="filterOptions"
         @update:model-value="loadRequests"
       />
     </div>
@@ -115,7 +108,7 @@
     </div>
     <div v-else-if="requests.length === 0" class="q-pa-xl text-center text-slate-400 bg-white rounded-2xl shadow-sm border border-slate-200">
       <q-icon name="inbox" size="48px" class="q-mb-sm" />
-      <div class="text-body1 text-weight-medium">Nessuna richiesta presente per questo filtro</div>
+      <div class="text-body1 text-weight-medium">{{ t('personnelDesk.noRequests') }}</div>
     </div>
     <div v-else class="row q-col-gutter-lg">
       <div v-for="req in requests" :key="req.id" class="col-12 col-md-6 col-lg-4">
@@ -133,10 +126,10 @@
 
             <!-- Applicant Info -->
             <div class="text-h6 text-weight-bold text-slate-900 q-mb-xs">
-              {{ req.applicant_name || 'Dipendente' }}
+              {{ req.applicant_name || t('personnelDesk.applicantDefault') }}
             </div>
             <div class="text-caption text-slate-500 q-mb-sm">
-              Ruolo: <strong>{{ req.applicant_role || 'Docente/ATA' }}</strong>
+              {{ t('personnelDesk.roleLabel') }} <strong>{{ req.applicant_role ? (t('roles.' + req.applicant_role) || req.applicant_role) : t('personnelDesk.roleDefault') }}</strong>
             </div>
 
             <!-- Period & Details -->
@@ -146,7 +139,7 @@
                 {{ req.start_date }} ➔ {{ req.end_date }}
               </div>
               <div class="text-caption text-slate-600 q-mt-xs">
-                Durata: <strong>{{ req.days ? `${req.days} giorni` : `${req.hours} ore` }}</strong>
+                {{ t('personnelDesk.durationLabel') }} <strong>{{ req.days ? `${req.days} ${t('personnelDesk.daysUnit')}` : `${req.hours} ${t('personnelDesk.hoursUnit')}` }}</strong>
                 <span v-if="req.sub_category"> • {{ req.sub_category }}</span>
               </div>
             </div>
@@ -158,13 +151,13 @@
 
             <!-- Workflow Notes Progress -->
             <div v-if="req.aa_note" class="text-caption text-cyan-900 bg-cyan-50 q-pa-xs rounded-borders q-mb-xs">
-              <strong>Istruttoria AA:</strong> {{ req.aa_note }}
+              <strong>{{ t('personnelDesk.aaNoteLabel') }}</strong> {{ req.aa_note }}
             </div>
             <div v-if="req.dsga_note" class="text-caption text-teal-900 bg-teal-50 q-pa-xs rounded-borders q-mb-xs">
-              <strong>Visto DSGA:</strong> {{ req.dsga_note }}
+              <strong>{{ t('personnelDesk.dsgaNoteLabel') }}</strong> {{ req.dsga_note }}
             </div>
             <div v-if="req.ds_decree_num" class="text-caption text-purple-900 bg-purple-50 q-pa-xs rounded-borders">
-              <strong>Decreto DS:</strong> {{ req.ds_decree_num }} — {{ req.ds_note }}
+              <strong>{{ t('personnelDesk.dsDecreeLabel') }}</strong> {{ req.ds_decree_num }} — {{ req.ds_note }}
             </div>
           </q-card-section>
 
@@ -182,7 +175,7 @@
                 dense
                 rounded
                 no-caps
-                label="Invia Pratica"
+                :label="t('personnelDesk.sendDraftBtn')"
                 size="sm"
                 class="q-px-sm"
                 @click="submitDraft(req)"
@@ -196,7 +189,7 @@
                 rounded
                 no-caps
                 icon="fact_check"
-                label="Istruisci AA"
+                :label="t('personnelDesk.aaReviewBtn')"
                 size="sm"
                 class="q-px-sm text-weight-bold"
                 @click="openAAReviewDialog(req)"
@@ -210,7 +203,7 @@
                 rounded
                 no-caps
                 icon="draw"
-                label="Apponi Visto"
+                :label="t('personnelDesk.dsgaSignBtn')"
                 size="sm"
                 class="q-px-sm text-weight-bold"
                 @click="openDSGASignDialog(req)"
@@ -224,7 +217,7 @@
                 rounded
                 no-caps
                 icon="gavel"
-                label="Emana Decreto"
+                :label="t('personnelDesk.dsApproveBtn')"
                 size="sm"
                 class="q-px-sm text-weight-bold"
                 @click="openDSApproveDialog(req)"
@@ -241,14 +234,14 @@
         <q-card-section class="row items-center justify-between border-b border-slate-100">
           <div class="text-h6 text-weight-bold text-slate-900 flex items-center">
             <q-icon name="post_add" color="indigo-8" class="q-mr-sm" size="24px" />
-            Nuova Istanza / Domanda Personale
+            {{ t('personnelDesk.dialogNewTitle') }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-gutter-md q-pt-md">
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Tipologia Istanza *</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.categoryLabel') }}</label>
             <q-select
               v-model="createForm.category"
               :options="categoryOptions"
@@ -260,45 +253,45 @@
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Sotto-categoria / Norma (opzionale)</label>
-            <q-input v-model="createForm.sub_category" outlined dense placeholder="es. Legge 104/92 art. 33, Permesso sindacale" />
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.subCategoryLabel') }}</label>
+            <q-input v-model="createForm.sub_category" outlined dense :placeholder="t('personnelDesk.subCategoryPlaceholder')" />
           </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Data Inizio *</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.startDateLabel') }}</label>
               <q-input v-model="createForm.start_date" type="date" outlined dense />
             </div>
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Data Fine *</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.endDateLabel') }}</label>
               <q-input v-model="createForm.end_date" type="date" outlined dense />
             </div>
           </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Numero Giorni</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.daysLabel') }}</label>
               <q-input v-model.number="createForm.days" type="number" step="0.5" outlined dense />
             </div>
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Ore (se a ore)</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.hoursLabel') }}</label>
               <q-input v-model.number="createForm.hours" type="number" step="0.5" outlined dense />
             </div>
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Motivazione / Relazione *</label>
-            <q-input v-model="createForm.description" outlined dense type="textarea" rows="3" placeholder="Specificare i dettagli dell'istanza..." />
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.descriptionLabel') }}</label>
+            <q-input v-model="createForm.description" outlined dense type="textarea" rows="3" :placeholder="t('personnelDesk.descriptionPlaceholder')" />
           </div>
 
-          <q-checkbox v-model="createForm.submit_now" label="Invia immediatamente per l'istruttoria (altrimenti salva in bozza)" />
+          <q-checkbox v-model="createForm.submit_now" :label="t('personnelDesk.submitNowLabel')" />
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md border-t border-slate-100">
-          <q-btn flat label="Annulla" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('personnelDesk.cancelBtn')" color="grey-7" v-close-popup />
           <q-btn
             color="indigo-8"
-            label="Salva Istanza"
+            :label="t('personnelDesk.saveRequestBtn')"
             no-caps
             rounded
             class="q-px-md text-weight-bold shadow-1"
@@ -315,42 +308,42 @@
         <q-card-section class="row items-center justify-between border-b border-slate-100">
           <div class="text-h6 text-weight-bold text-slate-900 flex items-center">
             <q-icon name="fact_check" color="cyan-8" class="q-mr-sm" size="24px" />
-            Istruttoria Pratica — Assistente Amministrativo
+            {{ t('personnelDesk.dialogAATitle') }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-gutter-md q-pt-md">
           <div class="text-body2 text-slate-700">
-            Richiedente: <strong>{{ activeReq?.applicant_name }}</strong><br />
-            Tipologia: <strong>{{ activeReq?.category }}</strong> ({{ activeReq?.start_date }} ➔ {{ activeReq?.end_date }})
+            {{ t('personnelDesk.applicant') }} <strong>{{ activeReq?.applicant_name }}</strong><br />
+            {{ t('personnelDesk.type') }} <strong>{{ getCategoryLabel(activeReq?.category) }}</strong> ({{ activeReq?.start_date }} ➔ {{ activeReq?.end_date }})
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Note di Istruttoria (verifica monte ore, documentazione)</label>
-            <q-input v-model="aaForm.note" outlined dense type="textarea" rows="3" placeholder="Documentazione verificata con esito positivo..." />
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.aaNotesLabel') }}</label>
+            <q-input v-model="aaForm.note" outlined dense type="textarea" rows="3" :placeholder="t('personnelDesk.aaNotesPlaceholder')" />
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Esito Istruttoria</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.aaOutcomeLabel') }}</label>
             <q-btn-toggle
               v-model="aaForm.approve"
               toggle-color="primary"
               dense
               rounded
               :options="[
-                { label: 'Favorevole (Inoltra a DSGA)', value: true },
-                { label: 'Non Conforme (Respingi)', value: false }
+                { label: t('personnelDesk.aaFavorable'), value: true },
+                { label: t('personnelDesk.aaUnfavorable'), value: false }
               ]"
             />
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md border-t border-slate-100">
-          <q-btn flat label="Annulla" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('personnelDesk.cancelBtn')" color="grey-7" v-close-popup />
           <q-btn
             color="cyan-8"
-            label="Conferma Istruttoria"
+            :label="t('personnelDesk.confirmAABtn')"
             no-caps
             rounded
             :loading="saving"
@@ -366,42 +359,42 @@
         <q-card-section class="row items-center justify-between border-b border-slate-100">
           <div class="text-h6 text-weight-bold text-slate-900 flex items-center">
             <q-icon name="draw" color="teal-8" class="q-mr-sm" size="24px" />
-            Visto di Regolarità Contabile / Organizzativa — DSGA
+            {{ t('personnelDesk.dialogDSGATitle') }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-gutter-md q-pt-md">
           <div class="text-body2 text-slate-700">
-            Richiedente: <strong>{{ activeReq?.applicant_name }}</strong><br />
-            Tipologia: <strong>{{ activeReq?.category }}</strong>
+            {{ t('personnelDesk.applicant') }} <strong>{{ activeReq?.applicant_name }}</strong><br />
+            {{ t('personnelDesk.type') }} <strong>{{ getCategoryLabel(activeReq?.category) }}</strong>
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Parere / Visto DSGA</label>
-            <q-input v-model="dsgaForm.note" outlined dense type="textarea" rows="3" placeholder="Visto favorevole di regolarità contabile ed organizzativa..." />
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.dsgaNotesLabel') }}</label>
+            <q-input v-model="dsgaForm.note" outlined dense type="textarea" rows="3" :placeholder="t('personnelDesk.dsgaNotesPlaceholder')" />
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Decisione Visto</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.dsgaOutcomeLabel') }}</label>
             <q-btn-toggle
               v-model="dsgaForm.approve"
               toggle-color="teal-8"
               dense
               rounded
               :options="[
-                { label: 'Visto Favorevole (Inoltra a DS)', value: true },
-                { label: 'Parere Contrario (Respingi)', value: false }
+                { label: t('personnelDesk.dsgaFavorable'), value: true },
+                { label: t('personnelDesk.dsgaUnfavorable'), value: false }
               ]"
             />
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md border-t border-slate-100">
-          <q-btn flat label="Annulla" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('personnelDesk.cancelBtn')" color="grey-7" v-close-popup />
           <q-btn
             color="teal-8"
-            label="Apponi Visto"
+            :label="t('personnelDesk.confirmDSGABtn')"
             no-caps
             rounded
             :loading="saving"
@@ -417,47 +410,47 @@
         <q-card-section class="row items-center justify-between border-b border-slate-100">
           <div class="text-h6 text-weight-bold text-slate-900 flex items-center">
             <q-icon name="gavel" color="purple-8" class="q-mr-sm" size="24px" />
-            Provvedimento Finale — Dirigente Scolastico
+            {{ t('personnelDesk.dialogDSTitle') }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-gutter-md q-pt-md">
           <div class="text-body2 text-slate-700">
-            Richiedente: <strong>{{ activeReq?.applicant_name }}</strong><br />
-            Tipologia: <strong>{{ activeReq?.category }}</strong>
+            {{ t('personnelDesk.applicant') }} <strong>{{ activeReq?.applicant_name }}</strong><br />
+            {{ t('personnelDesk.type') }} <strong>{{ getCategoryLabel(activeReq?.category) }}</strong>
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Numero Decreto / Provvedimento (se approvato)</label>
-            <q-input v-model="dsForm.decree_num" outlined dense placeholder="es. DECR-2026/089" />
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.dsDecreeNumLabel') }}</label>
+            <q-input v-model="dsForm.decree_num" outlined dense :placeholder="t('personnelDesk.dsDecreePlaceholder')" />
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Note / Motivazione Provvedimento</label>
-            <q-input v-model="dsForm.note" outlined dense type="textarea" rows="3" placeholder="Si decreta l'approvazione dell'istanza..." />
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.dsNotesLabel') }}</label>
+            <q-input v-model="dsForm.note" outlined dense type="textarea" rows="3" :placeholder="t('personnelDesk.dsNotesPlaceholder')" />
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Esito Finale</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('personnelDesk.dsOutcomeLabel') }}</label>
             <q-btn-toggle
               v-model="dsForm.approve"
               toggle-color="purple-8"
               dense
               rounded
               :options="[
-                { label: 'Emana Decreto (Approva)', value: true },
-                { label: 'Rigetta Istanza', value: false }
+                { label: t('personnelDesk.dsApprove'), value: true },
+                { label: t('personnelDesk.dsReject'), value: false }
               ]"
             />
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md border-t border-slate-100">
-          <q-btn flat label="Annulla" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('personnelDesk.cancelBtn')" color="grey-7" v-close-popup />
           <q-btn
             color="purple-8"
-            label="Conferma Provvedimento"
+            :label="t('personnelDesk.confirmDSBtn')"
             no-caps
             rounded
             :loading="saving"
@@ -495,7 +488,7 @@ const dsDialog = ref(false)
 
 const userRoleLabel = computed(() => {
   const r = (userRole.value || '').toLowerCase()
-  return r === 'dsga' ? 'DSGA' : r === 'assistente_amministrativo' ? 'Assistente Amministrativo' : r === 'collaboratore_ds' ? 'Collaboratore DS' : r === 'collaboratore_scolastico' ? 'Collaboratore Scolastico' : r
+  return t('roles.' + r) || r
 })
 
 const canAAReview = computed(() => {
@@ -513,15 +506,24 @@ const canDSApprove = computed(() => {
   return r === 'principal' || r === 'vice_principal' || r === 'admin' || r === 'superadmin'
 })
 
-const categoryOptions = [
-  { label: 'Ferie Ordinarie', value: 'ferie' },
-  { label: 'Permesso Breve (ore)', value: 'permesso_breve' },
-  { label: 'Malattia / Visite Specialistiche', value: 'malattia' },
-  { label: 'Congedo Parentale / Maternità', value: 'congedo_parentale' },
-  { label: 'Diritto allo Studio (150 ore)', value: 'permesso_studio' },
-  { label: 'Aspettativa Retribuita / Non Retribuita', value: 'aspettativa' },
-  { label: 'Altro Permesso CCNL', value: 'altro' }
-]
+const filterOptions = computed(() => [
+  { label: t('personnelDesk.filterAll'), value: '' },
+  { label: t('personnelDesk.filterSubmitted'), value: 'submitted' },
+  { label: t('personnelDesk.filterDSGAReview'), value: 'dsga_review' },
+  { label: t('personnelDesk.filterDSReview'), value: 'ds_review' },
+  { label: t('personnelDesk.filterApproved'), value: 'approved' },
+  { label: t('personnelDesk.filterRejected'), value: 'rejected' }
+])
+
+const categoryOptions = computed(() => [
+  { label: t('personnelDesk.catFerie'), value: 'ferie' },
+  { label: t('personnelDesk.catPermessoBreve'), value: 'permesso_breve' },
+  { label: t('personnelDesk.catMalattia'), value: 'malattia' },
+  { label: t('personnelDesk.catCongedoParentale'), value: 'congedo_parentale' },
+  { label: t('personnelDesk.catPermessoStudio'), value: 'permesso_studio' },
+  { label: t('personnelDesk.catAspettativa'), value: 'aspettativa' },
+  { label: t('personnelDesk.catAltro'), value: 'altro' }
+])
 
 const createForm = ref({
   category: 'ferie',
@@ -544,7 +546,7 @@ async function loadRequests() {
     const res = await personnelDeskService.listRequests(statusFilter.value)
     requests.value = res.data || []
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento istanze' })
+    $q.notify({ type: 'negative', message: t('personnelDesk.notifyLoadError') })
   } finally {
     loading.value = false
   }
@@ -566,17 +568,17 @@ function openNewRequestDialog() {
 
 async function submitCreate() {
   if (!createForm.value.description) {
-    $q.notify({ type: 'warning', message: 'Descrizione / Motivazione obbligatoria' })
+    $q.notify({ type: 'warning', message: t('personnelDesk.notifyDescRequired') })
     return
   }
   saving.value = true
   try {
     await personnelDeskService.createRequest(createForm.value)
-    $q.notify({ type: 'positive', message: 'Istanza registrata con successo!' })
+    $q.notify({ type: 'positive', message: t('personnelDesk.notifySavedSuccess') })
     createDialog.value = false
     await loadRequests()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore salvataggio istanza' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('personnelDesk.notifySaveError') })
   } finally {
     saving.value = false
   }
@@ -585,10 +587,10 @@ async function submitCreate() {
 async function submitDraft(req) {
   try {
     await personnelDeskService.submitRequest(req.id)
-    $q.notify({ type: 'positive', message: 'Pratica inoltrata per l\'istruttoria' })
+    $q.notify({ type: 'positive', message: t('personnelDesk.notifySubmittedSuccess') })
     await loadRequests()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore invio pratica' })
+    $q.notify({ type: 'negative', message: t('personnelDesk.notifySubmitError') })
   }
 }
 
@@ -602,11 +604,11 @@ async function submitAAReview() {
   saving.value = true
   try {
     await personnelDeskService.aaReview(activeReq.value.id, aaForm.value)
-    $q.notify({ type: 'positive', message: 'Istruttoria AA completata' })
+    $q.notify({ type: 'positive', message: t('personnelDesk.notifyAACompleted') })
     aaDialog.value = false
     await loadRequests()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore istruttoria' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('personnelDesk.notifyAAError') })
   } finally {
     saving.value = false
   }
@@ -622,11 +624,11 @@ async function submitDSGASign() {
   saving.value = true
   try {
     await personnelDeskService.dsgaSign(activeReq.value.id, dsgaForm.value)
-    $q.notify({ type: 'positive', message: 'Visto DSGA registrato' })
+    $q.notify({ type: 'positive', message: t('personnelDesk.notifyDSGASuccess') })
     dsgaDialog.value = false
     await loadRequests()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore visto DSGA' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('personnelDesk.notifyDSGAError') })
   } finally {
     saving.value = false
   }
@@ -636,7 +638,7 @@ function openDSApproveDialog(req) {
   activeReq.value = req
   dsForm.value = {
     decree_num: `DECR-${new Date().getFullYear()}/${Math.floor(Math.random() * 900 + 100)}`,
-    note: 'Si approva l\'istanza conformemente all\'istruttoria',
+    note: t('personnelDesk.dsNotesPlaceholder'),
     approve: true
   }
   dsDialog.value = true
@@ -646,19 +648,27 @@ async function submitDSApprove() {
   saving.value = true
   try {
     await personnelDeskService.dsApprove(activeReq.value.id, dsForm.value)
-    $q.notify({ type: 'positive', message: 'Provvedimento emanato con successo!' })
+    $q.notify({ type: 'positive', message: t('personnelDesk.notifyDSSuccess') })
     dsDialog.value = false
     await loadRequests()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore provvedimento' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('personnelDesk.notifyDSError') })
   } finally {
     saving.value = false
   }
 }
 
 function getCategoryLabel(c) {
-  const opt = categoryOptions.find(o => o.value === c)
-  return opt ? opt.label : c
+  switch (c) {
+    case 'ferie': return t('personnelDesk.catFerie')
+    case 'permesso_breve': return t('personnelDesk.catPermessoBreve')
+    case 'malattia': return t('personnelDesk.catMalattia')
+    case 'congedo_parentale': return t('personnelDesk.catCongedoParentale')
+    case 'permesso_studio': return t('personnelDesk.catPermessoStudio')
+    case 'aspettativa': return t('personnelDesk.catAspettativa')
+    case 'altro': return t('personnelDesk.catAltro')
+    default: return c
+  }
 }
 
 function getCategoryColor(c) {
@@ -675,13 +685,13 @@ function getCategoryColor(c) {
 
 function getStatusBadgeLabel(st) {
   switch (st) {
-    case 'draft': return 'Bozza'
-    case 'submitted': return '1. Inviata'
-    case 'aa_review': return '2. Istruttoria AA'
-    case 'dsga_review': return '3. Visto DSGA'
-    case 'ds_review': return '4. Decreto DS'
-    case 'approved': return 'Approvata'
-    case 'rejected': return 'Respinta'
+    case 'draft': return t('personnelDesk.statusDraft')
+    case 'submitted': return t('personnelDesk.statusSubmitted')
+    case 'aa_review': return t('personnelDesk.statusAAReview')
+    case 'dsga_review': return t('personnelDesk.statusDSGAReview')
+    case 'ds_review': return t('personnelDesk.statusDSReview')
+    case 'approved': return t('personnelDesk.statusApproved')
+    case 'rejected': return t('personnelDesk.statusRejected')
     default: return st
   }
 }
