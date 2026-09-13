@@ -56,20 +56,22 @@
                     <div>
                         <div class="row q-col-gutter-lg">
                             <div class="col-6">
-                                <q-input v-model="userForm.first_name" :label="t('common.name') || 'Nome'" outlined :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
+                                <q-input for="user-first-name" v-model="userForm.first_name" :label="t('common.name') || 'Nome'" outlined autocomplete="given-name" :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
                             </div>
                             <div class="col-6">
-                                <q-input v-model="userForm.last_name" :label="t('common.surname') || 'Cognome'" outlined :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
+                                <q-input for="user-last-name" v-model="userForm.last_name" :label="t('common.surname') || 'Cognome'" outlined autocomplete="family-name" :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
                             </div>
                         </div>
                     </div>
-                    <q-input v-model="userForm.email" :label="t('login.emailLabel') || 'Email Istituzionale'" outlined type="email" :rules="[val => !!val || (t('common.requiredField') || 'Inserire un email valida')]" />
+                    <q-input for="user-email" v-model="userForm.email" :label="t('login.emailLabel') || 'Email Istituzionale'" outlined type="email" autocomplete="email" :rules="[val => !!val || (t('common.requiredField') || 'Inserire un email valida')]" />
                     <q-input
+                      for="user-fiscal-code"
                       v-model="userForm.fiscal_code"
                       :label="t('classRegister.fiscalCode') || 'Codice Fiscale'"
                       outlined
                       maxlength="16"
                       class="uppercase-input"
+                      autocomplete="off"
                       :rules="[val => !val || /^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/i.test(val) || 'Formato Codice Fiscale non valido']"
                     />
                     
@@ -77,6 +79,7 @@
                         <div class="row q-col-gutter-lg">
                             <div :class="isSuperAdmin ? 'col-6' : 'col-12'">
                                 <q-select 
+                                    for="user-role"
                                     v-model="userForm.role" 
                                     :options="roleOptions"
                                     label="Ruolo"
@@ -87,6 +90,7 @@
                             </div>
                             <div v-if="isSuperAdmin" class="col-6">
                                 <q-select 
+                                    for="user-school-id"
                                     v-model="userForm.school_id" 
                                     :options="schoolOptions"
                                     label="Scuola"
@@ -105,6 +109,7 @@
                     <div v-if="userForm.role === 'student'" class="bg-indigo-50 q-px-lg q-pt-lg q-pb-md rounded-xl border border-indigo-100">
                          <div class="text-subtitle2 text-indigo-700 q-mb-md">Dettagli Studente</div>
                          <q-select
+                            for="user-class-id"
                             v-model="userForm.class_id"
                             :options="classOptions"
                             label="Classe di appartenenza"
@@ -145,10 +150,12 @@
                     
                      <q-input
                          v-if="!isEditing"
+                         for="user-password"
                          v-model="userForm.password"
                          label="Password Iniziale"
                          outlined
                          type="password"
+                         autocomplete="new-password"
                          :rules="[val => !!val || 'Campo obbligatorio', val => val.length >= 8 || 'La password deve contenere almeno 8 caratteri']"
                          :class="{ 'q-mt-md': userForm.role === 'student' }"
                     />
@@ -273,10 +280,12 @@
             <q-card-section class="q-pa-xl">
                 <q-form @submit="handleResetPwd" class="q-gutter-y-md">
                     <q-input
+                      for="reset-new-password"
                       v-model="newPassword"
                       label="Nuova Password"
                       type="password"
                       outlined
+                      autocomplete="new-password"
                       :rules="[
                         val => (!!val && val.length >= 8) || 'Inserire una password sicura di almeno 8 caratteri'
                       ]"

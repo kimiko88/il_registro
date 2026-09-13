@@ -18,6 +18,8 @@
           <div class="text-h5 text-weight-bold text-outfit q-mr-xl text-slate-800">{{ t('usersPage.title') || 'Elenco Utenti' }}</div>
           
           <q-select
+            for="user-table-role-filter"
+            aria-label="Filtra per Ruolo"
             v-model="roleFilter"
             :options="roleFilterOptions"
             dense
@@ -32,7 +34,7 @@
           <q-space />
           
           <div class="row q-gutter-sm">
-            <q-input dense outlined v-model="filter" :placeholder="t('usersPage.searchPlaceholder') || 'Cerca per nome, email...'" class="bg-white min-width-250">
+            <q-input for="user-table-search" aria-label="Cerca utenti" dense outlined v-model="filter" :placeholder="t('usersPage.searchPlaceholder') || 'Cerca per nome, email...'" class="bg-white min-width-250">
               <template v-slot:prepend>
                 <q-icon name="search" color="slate-300" />
               </template>
