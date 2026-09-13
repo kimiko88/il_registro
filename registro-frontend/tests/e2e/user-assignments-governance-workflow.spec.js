@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import { Quasar } from 'quasar'
 import { useAuthStore } from '@/stores/auth'
@@ -7,6 +7,11 @@ import { useClassesStore } from '@/stores/classes'
 import { useUserAssignments, canAssignDuty } from '@/composables/useUserAssignments'
 import { useMenuItems } from '@/composables/useMenuItems'
 import CoordinatorView from '@/pages/teacher/CoordinatorView.vue'
+import itMessages from '@/i18n/it-IT/index.js'
+
+const translate = (key) => {
+    return key.split('.').reduce((o, i) => o?.[i], itMessages) || key
+}
 
 vi.mock('@/services/api', () => ({
     default: {
@@ -184,7 +189,7 @@ describe('End-to-End Governance & User Assignments Workflow (E2E)', () => {
             global: {
                 plugins: [Quasar, pinia],
                 mocks: {
-                    t: (key) => key
+                    t: translate
                 },
                 stubs: {
                     'q-page': { template: '<div><slot /></div>' },
@@ -203,6 +208,8 @@ describe('End-to-End Governance & User Assignments Workflow (E2E)', () => {
                 }
             }
         })
+
+        await flushPromises()
 
         expect(wrapper.exists()).toBe(true)
         expect(wrapper.text().toLowerCase()).toContain('coordinatore')

@@ -229,6 +229,15 @@ func TestService_CreateUser(t *testing.T) {
 			mockSetup: func() {},
 			wantErr:   true,
 		},
+		{
+			name:      "Invalid role returns ErrInvalidRole",
+			actorRole: "superadmin",
+			input: CreateUserRequest{
+				Email: "t@e.com", Password: "Password123!", FiscalCode: "RSSMRA80A01H501U", Role: "superhero",
+			},
+			mockSetup: func() {},
+			wantErr:   true,
+		},
 	}
 
 	for _, tt := range tests {

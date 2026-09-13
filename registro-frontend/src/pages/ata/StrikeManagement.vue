@@ -6,19 +6,19 @@
         <div class="row items-center q-gutter-sm q-mb-xs">
           <q-badge color="indigo-7" text-color="white" class="q-px-sm q-py-xs text-weight-bold text-caption rounded-borders">
             <q-icon name="campaign" size="14px" class="q-mr-xs" />
-            BACHECA & RILEVAZIONE PREVENTIVA
+            {{ t('strikeManagement.badge') }}
           </q-badge>
           <q-badge color="teal-8" text-color="white" class="q-px-sm q-py-xs text-weight-bold text-caption rounded-borders">
             <q-icon name="gavel" size="14px" class="q-mr-xs" />
-            ACCORDO ARAN 2/12/2020
+            {{ t('strikeManagement.legalAccord') }}
           </q-badge>
         </div>
         <h1 class="text-h4 text-weight-bolder text-slate-800 q-my-none flex items-center">
           <q-icon name="ballot" color="primary" class="q-mr-sm" size="36px" />
-          Rilevazione Preventiva Scioperi
+          {{ t('strikeManagement.title') }}
         </h1>
         <div class="text-subtitle1 text-slate-500 q-mt-xs">
-          Comunicazione scioperi in bacheca, impostazione scadenze per le dichiarazioni del personale e quadro preventivo delle adesioni
+          {{ t('strikeManagement.subtitle') }}
         </div>
       </div>
 
@@ -27,7 +27,7 @@
         <q-btn
           color="primary"
           icon="add"
-          label="Nuovo Avviso di Sciopero"
+          :label="t('strikeManagement.newNoticeBtn')"
           no-caps
           rounded
           class="shadow-2 text-weight-bold q-px-md"
@@ -42,7 +42,7 @@
           @click="loadNotices"
           :loading="loadingNotices"
         >
-          <q-tooltip>Aggiorna elenco scioperi</q-tooltip>
+          <q-tooltip>{{ t('strikeManagement.refreshTooltip') }}</q-tooltip>
         </q-btn>
       </div>
     </div>
@@ -53,10 +53,10 @@
         <q-avatar size="40px" color="indigo-600" text-color="white" icon="info" />
         <div>
           <div class="text-weight-bold text-slate-800">
-            Quadro Preventivo per la DSGA e la Dirigenza Scolastica
+            {{ t('strikeManagement.legalBannerTitle') }}
           </div>
           <div class="text-caption text-slate-600">
-            I dipendenti (docenti e ATA) possono comunicare preventivamente: <b>Aderisco</b>, <b>Non aderisco</b> o <b>Non ho ancora deciso</b>. Oltre il termine indicato non sarà più possibile inserire o modificare la scelta.
+            {{ t('strikeManagement.legalBannerSubtitle') }}
           </div>
         </div>
       </div>
@@ -66,7 +66,7 @@
           dense
           color="primary"
           icon="co_present"
-          label="Vai a Presenze Personale"
+          :label="t('strikeManagement.goToStaffAttendance')"
           to="/ata/attendance"
           class="text-weight-bold"
         />
@@ -76,14 +76,14 @@
     <!-- Active Strike Notice Selector / Carousel -->
     <div v-if="notices.length === 0 && !loadingNotices" class="q-pa-xl text-center bg-white rounded-xl border border-slate-200 shadow-sm">
       <q-icon name="event_busy" size="64px" color="slate-300" class="q-mb-md" />
-      <div class="text-h6 text-weight-bold text-slate-700">Nessuna comunicazione di sciopero registrata</div>
+      <div class="text-h6 text-weight-bold text-slate-700">{{ t('strikeManagement.noNoticesTitle') }}</div>
       <div class="text-body2 text-slate-500 q-mt-xs q-mb-md">
-        Crea la prima comunicazione per pubblicarla nella bacheca del personale e avviare la raccolta preventiva delle intenzioni.
+        {{ t('strikeManagement.noNoticesDesc') }}
       </div>
       <q-btn
         color="primary"
         icon="add"
-        label="Crea Avviso di Sciopero"
+        :label="t('strikeManagement.createNoticeBtn')"
         no-caps
         rounded
         class="text-weight-bold"
@@ -97,7 +97,7 @@
         <div class="row items-center justify-between q-mb-sm">
           <div class="text-subtitle1 text-weight-bold text-slate-800 flex items-center">
             <q-icon name="list_alt" color="primary" class="q-mr-xs" size="20px" />
-            Avvisi di Sciopero Registrati ({{ notices.length }})
+            {{ t('strikeManagement.registeredNoticesTitle', { count: notices.length }) }}
           </div>
         </div>
 
@@ -124,7 +124,7 @@
                     class="text-weight-bold q-px-sm q-py-xs rounded-borders"
                   >
                     <q-icon :name="item.is_expired ? 'lock' : 'campaign'" size="13px" class="q-mr-xs" />
-                    {{ item.is_expired ? 'Termine Scaduto' : 'Dichiarazioni Aperte' }}
+                    {{ item.is_expired ? t('strikeManagement.statusExpired') : t('strikeManagement.statusOpen') }}
                   </q-badge>
 
                   <q-btn
@@ -135,7 +135,7 @@
                     icon="delete_outline"
                     @click.stop="confirmDeleteNotice(item)"
                   >
-                    <q-tooltip>Elimina avviso</q-tooltip>
+                    <q-tooltip>{{ t('strikeManagement.deleteNoticeTooltip') }}</q-tooltip>
                   </q-btn>
                 </div>
 
@@ -144,7 +144,7 @@
                 </div>
 
                 <div class="text-caption text-slate-500 q-mt-xs">
-                  Proclamato da: <span class="text-weight-bold text-slate-700">{{ item.proclaimed_by || 'Organizzazioni Sindacali' }}</span>
+                  {{ t('strikeManagement.proclaimedBy') }} <span class="text-weight-bold text-slate-700">{{ item.proclaimed_by || t('strikeManagement.defaultProclaimedBy') }}</span>
                 </div>
               </q-card-section>
 
@@ -152,11 +152,11 @@
 
               <q-card-section class="q-py-sm text-caption text-slate-600">
                 <div class="row items-center justify-between q-mb-xs">
-                  <span><q-icon name="event" size="15px" class="q-mr-xs text-primary" />Data Sciopero:</span>
+                  <span><q-icon name="event" size="15px" class="q-mr-xs text-primary" />{{ t('strikeManagement.strikeDate') }}</span>
                   <span class="text-weight-bold text-slate-800">{{ formatDate(item.strike_date) }}</span>
                 </div>
                 <div class="row items-center justify-between">
-                  <span><q-icon name="timer" size="15px" class="q-mr-xs text-deep-orange-8" />Termine Scelta:</span>
+                  <span><q-icon name="timer" size="15px" class="q-mr-xs text-deep-orange-8" />{{ t('strikeManagement.declarationDeadline') }}</span>
                   <span class="text-weight-bold" :class="item.is_expired ? 'text-grey-7' : 'text-deep-orange-9'">
                     {{ formatDateTime(item.declaration_deadline) }}
                   </span>
@@ -165,14 +165,14 @@
 
               <q-card-actions align="between" class="bg-slate-50 q-px-md q-py-xs border-t border-slate-100">
                 <span class="text-caption text-slate-500">
-                  Creato il {{ formatDate(item.created_at) }}
+                  {{ t('strikeManagement.createdAt', { date: formatDate(item.created_at) }) }}
                 </span>
                 <q-btn
                   flat
                   dense
                   no-caps
                   color="primary"
-                  label="Vedi Quadro"
+                  :label="t('strikeManagement.viewDashboard')"
                   icon-right="arrow_forward"
                   class="text-weight-bold"
                   @click.stop="selectNotice(item.id)"
@@ -186,7 +186,7 @@
       <!-- Detail View: Quadro Preventivo for Selected Notice -->
       <div v-if="loadingSummary" class="q-pa-xl text-center">
         <q-spinner-dots color="primary" size="48px" />
-        <div class="text-slate-500 q-mt-md">Caricamento quadro preventivo e adesioni...</div>
+        <div class="text-slate-500 q-mt-md">{{ t('strikeManagement.subtitle') }}...</div>
       </div>
 
       <div v-else-if="summary" class="summary-container q-mt-xl">
@@ -197,29 +197,29 @@
               <div class="col-12 col-lg-8">
                 <div class="row items-center q-gutter-sm q-mb-xs">
                   <q-badge color="primary" text-color="white" class="text-weight-bold q-px-sm">
-                    QUADRO PREVENTIVO ATTIVO
+                    {{ t('strikeManagement.activeBoardBadge') }}
                   </q-badge>
                   <q-badge
                     :color="summary.notice.is_expired ? 'grey-7' : 'positive'"
                     text-color="white"
                     class="text-weight-bold q-px-sm"
                   >
-                    {{ summary.notice.is_expired ? 'Termine Inserimento Chiuso' : 'Raccolta Intenzioni in Corso' }}
+                    {{ summary.notice.is_expired ? t('strikeManagement.statusClosed') : t('strikeManagement.statusInProgress') }}
                   </q-badge>
                 </div>
                 <h2 class="text-h5 text-weight-bolder text-slate-900 q-my-none">
                   {{ summary.notice.title }}
                 </h2>
                 <div class="text-body2 text-slate-600 q-mt-xs">
-                  Proclamato da: <b>{{ summary.notice.proclaimed_by }}</b>
+                  {{ t('strikeManagement.proclaimedBy') }} <b>{{ summary.notice.proclaimed_by }}</b>
                   <span class="q-mx-sm">•</span>
-                  Data di svolgimento: <b>{{ formatDate(summary.notice.strike_date) }}</b>
+                  {{ t('strikeManagement.dateOfExecution') }} <b>{{ formatDate(summary.notice.strike_date) }}</b>
                   <span class="q-mx-sm">•</span>
-                  Termine limite per il personale: <b>{{ formatDateTime(summary.notice.declaration_deadline) }}</b>
+                  {{ t('strikeManagement.staffDeadline') }} <b>{{ formatDateTime(summary.notice.declaration_deadline) }}</b>
                 </div>
                 <div v-if="summary.notice.notes" class="bg-slate-50 border border-slate-200 rounded-borders q-pa-sm q-mt-sm text-caption text-slate-700">
                   <q-icon name="sticky_note_2" color="primary" class="q-mr-xs" />
-                  <b>Disposizioni / Note di Servizio:</b> {{ summary.notice.notes }}
+                  <b>{{ t('strikeManagement.serviceNotes') }}</b> {{ summary.notice.notes }}
                 </div>
               </div>
 
@@ -227,7 +227,7 @@
                 <q-btn
                   color="positive"
                   icon="download"
-                  label="Esporta CSV Nominativo"
+                  :label="t('strikeManagement.exportCsvBtn')"
                   no-caps
                   rounded
                   class="text-weight-bold shadow-1 q-px-md"
@@ -245,14 +245,14 @@
             <q-card class="rounded-xl border border-slate-200 shadow-sm kpi-card bg-white">
               <q-card-section class="q-pb-xs">
                 <div class="row items-center justify-between">
-                  <span class="text-caption text-weight-bold text-slate-500 uppercase">Personale Coinvolto</span>
+                  <span class="text-caption text-weight-bold text-slate-500 uppercase">{{ t('strikeManagement.statTotalPersonnel') }}</span>
                   <q-avatar size="32px" color="indigo-50" text-color="indigo-7" icon="people" />
                 </div>
                 <div class="text-h4 text-weight-bolder text-slate-800 q-my-xs">
                   {{ summary.total_staff }}
                 </div>
                 <div class="text-caption text-slate-600">
-                  <b class="text-primary">{{ summary.answered_count }}</b> hanno risposto ({{ summary.response_rate }}%)
+                  {{ t('strikeManagement.answeredStat', { answered: summary.answered_count, rate: summary.response_rate }) }}
                 </div>
               </q-card-section>
               <q-linear-progress
@@ -269,14 +269,14 @@
             <q-card class="rounded-xl border border-positive-subtle shadow-sm kpi-card bg-emerald-50">
               <q-card-section class="q-pb-xs">
                 <div class="row items-center justify-between">
-                  <span class="text-caption text-weight-bold text-positive uppercase">Aderiscono</span>
+                  <span class="text-caption text-weight-bold text-positive uppercase">{{ t('strikeManagement.statParticipates') }}</span>
                   <q-avatar size="32px" color="positive" text-color="white" icon="check_circle" />
                 </div>
                 <div class="text-h4 text-weight-bolder text-positive q-my-xs">
                   {{ summary.participates_count }}
                 </div>
                 <div class="text-caption text-positive">
-                  <b>{{ summary.participates_rate }}%</b> del personale complessivo
+                  <b>{{ summary.participates_rate }}%</b> {{ t('strikeManagement.overallPersonnel') }}
                 </div>
               </q-card-section>
               <q-linear-progress
@@ -293,14 +293,14 @@
             <q-card class="rounded-xl border border-negative-subtle shadow-sm kpi-card bg-rose-50">
               <q-card-section class="q-pb-xs">
                 <div class="row items-center justify-between">
-                  <span class="text-caption text-weight-bold text-negative uppercase">Non Aderiscono</span>
+                  <span class="text-caption text-weight-bold text-negative uppercase">{{ t('strikeManagement.statNotParticipates') }}</span>
                   <q-avatar size="32px" color="negative" text-color="white" icon="cancel" />
                 </div>
                 <div class="text-h4 text-weight-bolder text-negative q-my-xs">
                   {{ summary.not_participates_count }}
                 </div>
                 <div class="text-caption text-negative">
-                  <b>{{ summary.not_participates_rate }}%</b> del personale complessivo
+                  <b>{{ summary.not_participates_rate }}%</b> {{ t('strikeManagement.overallPersonnel') }}
                 </div>
               </q-card-section>
               <q-linear-progress
@@ -317,14 +317,14 @@
             <q-card class="rounded-xl border border-amber-200 shadow-sm kpi-card bg-amber-50">
               <q-card-section class="q-pb-xs">
                 <div class="row items-center justify-between">
-                  <span class="text-caption text-weight-bold text-amber-9 uppercase">Non Ancora Deciso</span>
+                  <span class="text-caption text-weight-bold text-amber-9 uppercase">{{ t('strikeManagement.statUndecided') }}</span>
                   <q-avatar size="32px" color="amber-8" text-color="white" icon="help_outline" />
                 </div>
                 <div class="text-h4 text-weight-bolder text-amber-9 q-my-xs">
                   {{ summary.undecided_count }}
                 </div>
                 <div class="text-caption text-amber-9">
-                  <b>{{ summary.undecided_rate }}%</b> • In attesa: <b>{{ summary.unanswered_count }}</b>
+                  <b>{{ summary.undecided_rate }}%</b> • {{ t('strikeManagement.waitingStat', { count: summary.unanswered_count }) }}
                 </div>
               </q-card-section>
               <q-linear-progress
@@ -343,10 +343,10 @@
             <div>
               <h2 class="text-h6 text-weight-bold text-slate-800 q-my-none flex items-center">
                 <q-icon name="pie_chart" color="primary" class="q-mr-sm" size="22px" />
-                Ripartizione per Categoria Professionale
+                {{ t('strikeManagement.roleBreakdownTitle') }}
               </h2>
               <div class="text-caption text-slate-500">
-                Adesioni preventive distinte tra Docenti, Personale Amministrativo e Collaboratori Scolastici
+                {{ t('strikeManagement.roleBreakdownSubtitle') }}
               </div>
             </div>
           </div>
@@ -366,25 +366,25 @@
                       text-color="white"
                       class="text-weight-bolder text-caption"
                     >
-                      {{ cat.role_display }}
+                      {{ t('roles.' + cat.role) || cat.role_display }}
                     </q-chip>
                     <div class="text-caption text-weight-bold text-slate-400">
-                      Totale: {{ cat.total }}
+                      {{ cat.total }}
                     </div>
                   </div>
 
                   <div class="row items-center justify-between q-mt-sm">
                     <span class="text-caption text-positive text-weight-bold">
-                      <q-icon name="check_circle" size="14px" /> Aderiscono: {{ cat.participates }}
+                      <q-icon name="check_circle" size="14px" /> {{ t('strikeManagement.statParticipates') }}: {{ cat.participates }}
                     </span>
                     <span class="text-caption text-negative text-weight-bold">
-                      <q-icon name="cancel" size="14px" /> Non ad.: {{ cat.not_participates }}
+                      <q-icon name="cancel" size="14px" /> {{ t('strikeManagement.statNotParticipates') }}: {{ cat.not_participates }}
                     </span>
                   </div>
 
                   <div class="row items-center justify-between q-mt-xs text-caption text-slate-600">
-                    <span><q-icon name="help" size="14px" class="text-amber-8" /> Indecisi: {{ cat.undecided }}</span>
-                    <span><q-icon name="hourglass_empty" size="14px" class="text-grey-6" /> In attesa: {{ cat.unanswered }}</span>
+                    <span><q-icon name="help" size="14px" class="text-amber-8" /> {{ t('strikeManagement.statUndecided') }}: {{ cat.undecided }}</span>
+                    <span><q-icon name="hourglass_empty" size="14px" class="text-grey-6" /> {{ t('strikeManagement.waitingStat', { count: cat.unanswered }) }}</span>
                   </div>
 
                   <!-- Stacked-like visual indicators -->
@@ -409,10 +409,10 @@
               <div>
                 <h3 class="text-h6 text-weight-bold text-slate-800 q-my-none flex items-center">
                   <q-icon name="format_list_bulleted" color="primary" class="q-mr-sm" size="22px" />
-                  Elenco Nominativo Personale e Dichiarazioni Preventivi
+                  {{ t('strikeManagement.nominativeTableTitle') }}
                 </h3>
                 <div class="text-caption text-slate-500">
-                  Consultazione nominativa delle scelte espresse entro la scadenza per la predisposizione dell'orario e dei servizi minimi
+                  {{ t('strikeManagement.nominativeTableSubtitle') }}
                 </div>
               </div>
 
@@ -422,7 +422,7 @@
                   dense
                   outlined
                   rounded
-                  placeholder="Cerca dipendente..."
+                  :placeholder="t('strikeManagement.searchStaffPlaceholder')"
                   class="search-input"
                 >
                   <template v-slot:prepend>
@@ -465,7 +465,7 @@
             flat
             :pagination="{ rowsPerPage: 15 }"
             class="nominative-table"
-            no-data-label="Nessun dipendente trovato con i filtri selezionati"
+            :no-data-label="t('strikeManagement.noStaffFound')"
           >
             <!-- Col: Person / Name -->
             <template v-slot:body-cell-person="props">
@@ -495,7 +495,7 @@
                   text-color="white"
                   class="text-weight-bold text-caption"
                 >
-                  {{ props.row.role_display }}
+                  {{ t('roles.' + props.row.role) || props.row.role_display }}
                 </q-chip>
               </q-td>
             </template>
@@ -522,7 +522,7 @@
                   {{ formatDateTime(props.row.declared_at) }}
                 </div>
                 <div v-else class="text-caption text-slate-400 text-italic">
-                  Non pervenuta
+                  {{ t('strikeManagement.notReceived') }}
                 </div>
               </q-td>
             </template>
@@ -537,95 +537,94 @@
         <q-card-section class="row items-center justify-between bg-primary text-white">
           <div class="text-h6 text-weight-bold flex items-center">
             <q-icon name="campaign" size="24px" class="q-mr-sm" />
-            Nuova Comunicazione di Sciopero
+            {{ t('strikeManagement.dialogNewTitle') }}
           </div>
           <q-btn flat round dense icon="close" color="white" v-close-popup />
         </q-card-section>
 
         <q-card-section class="q-pa-md q-gutter-y-md">
           <div class="text-caption text-slate-600">
-            Pubblica l'avviso di sciopero in bacheca e attiva la rilevazione preventiva con termine perentorio di risposta per il personale.
+            {{ t('strikeManagement.noNoticesDesc') }}
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Titolo Sciopero / Oggetto *</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('strikeManagement.noticeTitleLabel') }}</label>
             <q-input
               v-model="createForm.title"
               outlined
               dense
               placeholder="es. Sciopero generale del comparto Istruzione e Ricerca"
-              :rules="[val => !!val || 'Il titolo è obbligatorio']"
+              :rules="[val => !!val || t('strikeManagement.notifyFillRequired')]"
             />
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Proclamato da (Sigle sindacali) *</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('strikeManagement.proclaimedByLabel') }}</label>
             <q-input
               v-model="createForm.proclaimed_by"
               outlined
               dense
               placeholder="es. FLC CGIL, CISL FSUR, UIL SCUOLA RUA, SNALS CONFSAL"
-              :rules="[val => !!val || 'Le sigle proclamanti sono obbligatorie']"
+              :rules="[val => !!val || t('strikeManagement.notifyFillRequired')]"
             />
           </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-12 col-sm-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Data dello Sciopero *</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('strikeManagement.strikeDateLabel') }}</label>
               <q-input
                 v-model="createForm.strike_date"
                 outlined
                 dense
                 type="date"
-                :rules="[val => !!val || 'La data di sciopero è obbligatoria']"
+                :rules="[val => !!val || t('strikeManagement.notifyFillRequired')]"
               />
             </div>
 
             <div class="col-12 col-sm-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Termine Ultimo Scelta (Data e Ora) *</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('strikeManagement.deadlineLabel') }}</label>
               <q-input
                 v-model="createForm.declaration_deadline"
                 outlined
                 dense
                 type="datetime-local"
                 :rules="[
-                  val => !!val || 'La scadenza è obbligatoria',
-                  val => isDeadlineValid(val, createForm.strike_date) || 'La scadenza deve precedere o coincidere con la data di sciopero'
+                  val => !!val || t('strikeManagement.notifyFillRequired'),
+                  val => isDeadlineValid(val, createForm.strike_date) || t('strikeManagement.notifyFillRequired')
                 ]"
               />
             </div>
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Note, Circolare e Disposizioni di Servizio</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('strikeManagement.notesLabel') }}</label>
             <q-input
               v-model="createForm.notes"
               type="textarea"
               rows="3"
               outlined
               dense
-              placeholder="Indicazioni per il personale, funzionamento dei servizi minimi essenziali, orari ridotti previsti..."
             />
           </div>
 
           <div class="bg-indigo-50 border border-indigo-100 rounded-borders q-pa-sm">
             <q-checkbox
               v-model="createForm.publish_to_bacheca"
-              label="Pubblica contestualmente come Comunicazione / Circolare in Bacheca"
+              :label="t('strikeManagement.publishToBachecaLabel')"
               color="primary"
               class="text-weight-bold text-slate-800"
             />
             <div class="text-caption text-slate-600 q-ml-lg">
-              L'avviso apparirà anche nella bacheca comunicazioni con priorità alta per tutti i docenti e il personale ATA.
+              {{ t('strikeManagement.publishToBachecaHint') }}
             </div>
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md border-t border-slate-100">
-          <q-btn flat label="Annulla" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('strikeManagement.cancelBtn')" color="grey-7" v-close-popup />
           <q-btn
             color="primary"
-            label="Pubblica Comunicazione"
+            :label="t('strikeManagement.publishNoticeBtn')"
             no-caps
             rounded
             class="q-px-md text-weight-bold shadow-1"
@@ -641,22 +640,20 @@
       <q-card class="rounded-xl shadow-3" style="min-width: 400px;">
         <q-card-section class="row items-center q-pb-none">
           <q-avatar icon="warning" color="negative" text-color="white" />
-          <span class="q-ml-sm text-h6 text-weight-bold">Conferma Eliminazione</span>
+          <span class="q-ml-sm text-h6 text-weight-bold">{{ t('strikeManagement.confirmDeleteNoticeTitle') }}</span>
         </q-card-section>
 
         <q-card-section class="q-pt-sm text-body2 text-slate-600">
-          Sei sicuro di voler eliminare la comunicazione di sciopero:
+          {{ t('strikeManagement.confirmDeleteNoticeMsg', { title: noticeToDelete?.title || '' }) }}
           <br />
-          <b class="text-slate-900">{{ noticeToDelete?.title }}</b>?
-          <br />
-          Tutte le dichiarazioni preventive raccolte per questo avviso verranno rimosse.
+          {{ t('strikeManagement.deleteWarningMsg') }}
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Annulla" color="grey-7" v-close-popup />
+          <q-btn flat :label="t('strikeManagement.cancelBtn')" color="grey-7" v-close-popup />
           <q-btn
             color="negative"
-            label="Elimina Definitivamente"
+            :label="t('strikeManagement.deletePermanentlyBtn')"
             no-caps
             rounded
             :loading="deletingNotice"
@@ -671,9 +668,11 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
 import strikeService from '@/services/strikeService'
 
 const $q = useQuasar()
+const { t, locale } = useI18n()
 
 const notices = ref([])
 const selectedNoticeId = ref(null)
@@ -701,30 +700,30 @@ const createForm = ref({
   publish_to_bacheca: true
 })
 
-const columns = [
-  { name: 'person', label: 'Dipendente', align: 'left', field: 'last_name', sortable: true },
-  { name: 'role', label: 'Categoria', align: 'left', field: 'role', sortable: true },
-  { name: 'intention', label: 'Intenzione Espressa', align: 'center', field: 'intention', sortable: true },
-  { name: 'declared_at', label: 'Data & Ora Scelta', align: 'left', field: 'declared_at', sortable: true }
-]
+const columns = computed(() => [
+  { name: 'person', label: t('strikeManagement.colStaff'), align: 'left', field: 'last_name', sortable: true },
+  { name: 'role', label: t('strikeManagement.colCategory'), align: 'left', field: 'role', sortable: true },
+  { name: 'intention', label: t('strikeManagement.colIntention'), align: 'center', field: 'intention', sortable: true },
+  { name: 'declared_at', label: t('strikeManagement.colChoiceDate'), align: 'left', field: 'declared_at', sortable: true }
+])
 
-const roleFilterOptions = [
-  { label: 'Tutte le categorie', value: 'all' },
-  { label: 'Docenti', value: 'teacher' },
-  { label: 'DSGA', value: 'dsga' },
-  { label: 'Assistenti Amministrativi', value: 'assistente_amministrativo' },
-  { label: 'Collaboratori D.S.', value: 'collaboratore_ds' },
-  { label: 'Collaboratori Scolastici', value: 'collaboratore_scolastico' },
-  { label: 'Segreteria', value: 'secretary' }
-]
+const roleFilterOptions = computed(() => [
+  { label: t('strikeManagement.allCategories'), value: 'all' },
+  { label: t('roles.teacher'), value: 'teacher' },
+  { label: t('roles.dsga'), value: 'dsga' },
+  { label: t('roles.assistente_amministrativo'), value: 'assistente_amministrativo' },
+  { label: t('roles.collaboratore_ds'), value: 'collaboratore_ds' },
+  { label: t('roles.collaboratore_scolastico'), value: 'collaboratore_scolastico' },
+  { label: t('roles.secretary'), value: 'secretary' }
+])
 
-const intentionFilterOptions = [
-  { label: 'Tutte le intenzioni', value: 'all' },
-  { label: 'Aderisce (Aderisco)', value: 'participates' },
-  { label: 'Non aderisce', value: 'not_participates' },
-  { label: 'Non ha ancora deciso', value: 'undecided' },
-  { label: 'Nessuna risposta', value: 'unanswered' }
-]
+const intentionFilterOptions = computed(() => [
+  { label: t('strikeManagement.allIntentions'), value: 'all' },
+  { label: `${t('strikeManagement.statParticipates')} (${t('strikeManagement.participates')})`, value: 'participates' },
+  { label: t('strikeManagement.statNotParticipates'), value: 'not_participates' },
+  { label: t('strikeManagement.statUndecided'), value: 'undecided' },
+  { label: t('strikeManagement.noResponse'), value: 'unanswered' }
+])
 
 const filteredStaff = computed(() => {
   if (!summary.value || !summary.value.staff) return []
@@ -767,7 +766,7 @@ const loadNotices = async () => {
   } catch (err) {
     $q.notify({
       type: 'negative',
-      message: 'Errore nel caricamento delle comunicazioni di sciopero'
+      message: t('strikeManagement.notifyLoadError')
     })
   } finally {
     loadingNotices.value = false
@@ -788,7 +787,7 @@ const loadSummary = async (noticeId) => {
   } catch (err) {
     $q.notify({
       type: 'negative',
-      message: 'Errore nel recupero del quadro riepilogativo adesioni'
+      message: t('strikeManagement.notifyLoadError')
     })
   } finally {
     loadingSummary.value = false
@@ -832,7 +831,7 @@ const submitCreateNotice = async () => {
   if (!createForm.value.title || !createForm.value.proclaimed_by || !createForm.value.strike_date || !createForm.value.declaration_deadline) {
     $q.notify({
       type: 'warning',
-      message: 'Compila tutti i campi obbligatori contrassegnati da *'
+      message: t('strikeManagement.notifyFillRequired')
     })
     return
   }
@@ -855,7 +854,7 @@ const submitCreateNotice = async () => {
     showCreateDialog.value = false
     $q.notify({
       type: 'positive',
-      message: 'Comunicazione di sciopero pubblicata con successo!',
+      message: t('strikeManagement.notifyNoticePublished'),
       caption: payload.publish_to_bacheca ? 'Notifica inoltrata anche in bacheca' : ''
     })
     await loadNotices()
@@ -866,7 +865,7 @@ const submitCreateNotice = async () => {
   } catch (err) {
     $q.notify({
       type: 'negative',
-      message: err.response?.data?.error || 'Errore nella creazione della comunicazione'
+      message: err.response?.data?.error || t('strikeManagement.notifyLoadError')
     })
   } finally {
     savingNotice.value = false
@@ -886,14 +885,14 @@ const executeDeleteNotice = async () => {
     showDeleteDialog.value = false
     $q.notify({
       type: 'positive',
-      message: 'Avviso di sciopero eliminato con successo'
+      message: t('strikeManagement.notifyNoticeDeleted')
     })
     noticeToDelete.value = null
     await loadNotices()
   } catch (err) {
     $q.notify({
       type: 'negative',
-      message: 'Errore durante l\'eliminazione'
+      message: t('strikeManagement.notifyLoadError')
     })
   } finally {
     deletingNotice.value = false
@@ -921,7 +920,7 @@ const exportCsv = () => {
       `"${s.role || ''}"`,
       `"${(s.role_display || '').replace(/"/g, '""')}"`,
       `"${getIntentionLabel(s.intention)}"`,
-      `"${s.declared_at ? formatDateTime(s.declared_at) : 'Nessuna risposta'}"`
+      `"${s.declared_at ? formatDateTime(s.declared_at) : t('strikeManagement.notReceived')}"`
     ])
   })
 
@@ -946,10 +945,10 @@ const exportCsv = () => {
 
 const getIntentionLabel = (intention) => {
   switch (intention) {
-    case 'participates': return 'Aderisco'
-    case 'not_participates': return 'Non aderisco'
-    case 'undecided': return 'Non ho ancora deciso'
-    default: return 'Nessuna risposta'
+    case 'participates': return t('strikeManagement.participates')
+    case 'not_participates': return t('strikeManagement.notParticipates')
+    case 'undecided': return t('strikeManagement.undecided')
+    default: return t('strikeManagement.noResponse')
   }
 }
 
@@ -995,7 +994,7 @@ const formatDate = (isoDate) => {
   if (!isoDate) return '-'
   try {
     const d = new Date(isoDate)
-    return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
+    return d.toLocaleDateString(locale.value || 'it-IT', { day: '2-digit', month: 'long', year: 'numeric' })
   } catch {
     return isoDate
   }
@@ -1005,7 +1004,7 @@ const formatDateTime = (isoDate) => {
   if (!isoDate) return '-'
   try {
     const d = new Date(isoDate)
-    return d.toLocaleDateString('it-IT', {
+    return d.toLocaleDateString(locale.value || 'it-IT', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',

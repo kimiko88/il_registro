@@ -348,16 +348,42 @@ const articleBodyRef = ref(null)
 // ── Role ──────────────────────────────────────────────────────────────────────
 const userRole = computed(() => {
   const role = authStore.userRole || authStore.user?.role || 'student'
-  const r = role.toLowerCase()
-  if (r === 'superadmin') return 'admin'
-  if (['teacher', 'student', 'parent', 'secretary', 'admin',
-       'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'dsga'].includes(r)) {
-    return r
+  const r = role.toLowerCase().trim()
+  if (['principal', 'vice_principal', 'dirigente_scolastico', 'collaboratore_vicario'].includes(r)) {
+    return 'principal'
+  }
+  if (['admin', 'superadmin', 'system_auditor', 'dpo'].includes(r)) {
+    return 'admin'
+  }
+  if (['secretary', 'staff', 'responsabile_gestione_documentale', 'responsabile_conservazione'].includes(r)) {
+    return 'secretary'
+  }
+  if (r === 'dsga') {
+    return 'dsga'
+  }
+  if (['collaboratore_ds', 'responsabile_servizio'].includes(r)) {
+    return 'collaboratore_ds'
+  }
+  if (r === 'collaboratore_scolastico') {
+    return 'collaboratore_scolastico'
+  }
+  if (['assistente_amministrativo', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico'].includes(r)) {
+    return 'assistente_amministrativo'
+  }
+  if (['teacher', 'docente', 'coordinator', 'coordinatore_classe', 'segretario_consiglio', 'referente_progetto', 'referente_inclusione', 'responsabile_dipartimento', 'tutor_orientatore', 'animatore_digitale'].includes(r)) {
+    return 'teacher'
+  }
+  if (['parent', 'genitore'].includes(r)) {
+    return 'parent'
+  }
+  if (['student', 'studente'].includes(r)) {
+    return 'student'
   }
   return 'student'
 })
 
 const roleMeta = {
+  principal:                 { icon: 'account_balance',     color: 'deep-purple', label: 'roles.principal' },
   teacher:                   { icon: 'school',              color: 'indigo',      label: 'roles.teacher' },
   student:                   { icon: 'face',                color: 'teal',        label: 'roles.student' },
   parent:                    { icon: 'family_restroom',      color: 'purple',      label: 'roles.parent' },
@@ -374,6 +400,22 @@ const roleLabel = computed(() => t(roleMeta[userRole.value]?.label || 'roles.use
 
 // ── Guide definitions ─────────────────────────────────────────────────────────
 const GUIDE_DEFS = {
+  principal: {
+    categories: [
+      { key: 'dashboard',     label: 'Direzione & Quadro Generale', icon: 'account_balance', color: 'deep-purple', description: 'Panoramica strategica sull\'istituto e attività giornaliere' },
+      { key: 'personnel',     label: 'Personale & Decreti',         icon: 'badge',           color: 'indigo',      description: 'Nomine, incarichi funzionali e autorizzazione istanze' },
+      { key: 'substitutions', label: 'Sostituzioni & Emergenze',     icon: 'swap_horiz',      color: 'blue',        description: 'Supervisione delle sostituzioni e delle classi scoperte' },
+      { key: 'verbali',       label: 'Atti & Verbali Collegiali',   icon: 'gavel',           color: 'teal',        description: 'Approvazione e conformità CAD di verbali e delibere' },
+      { key: 'strike',        label: 'Scioperi & Servizi Minimi',   icon: 'how_to_reg',      color: 'orange',      description: 'Organizzazione contingenti essenziali e adempimenti di legge' }
+    ],
+    guides: {
+      dashboard:     { key: 'dashboard',     icon: 'account_balance', color: 'deep-purple', readTime: 4 },
+      personnel:     { key: 'personnel',     icon: 'badge',           color: 'indigo',      readTime: 4 },
+      substitutions: { key: 'substitutions', icon: 'swap_horiz',      color: 'blue',        readTime: 3 },
+      verbali:       { key: 'verbali',       icon: 'gavel',           color: 'teal',        readTime: 4 },
+      strike:        { key: 'strike',        icon: 'how_to_reg',      color: 'orange',      readTime: 3 }
+    }
+  },
   teacher: {
     categories: [
       { key: 'dashboard',       label: 'Dashboard',         icon: 'dashboard',       color: 'indigo', description: 'Tutto sulla tua area di lavoro principale' },
@@ -540,6 +582,7 @@ const GUIDE_DEFS = {
 
 // FAQ definitions per ruolo (from help.* i18n keys)
 const FAQ_CATEGORY_MAP = {
+  principal:                 { dashboard: [1, 6], personnel: [2, 3], substitutions: [], verbali: [4], strike: [5] },
   teacher:                   { dashboard: [1,2], attendance: [3,4], grades: [5,6], agenda: [7], communications: [8], meetings: [9], scrutiny: [10], pdp: [] },
   student:                   { dashboard: [1], grades: [2,3], homework: [4,5], attendance: [6], documents: [7], simulator: [8,9], pcto: [10] },
   parent:                    { monitoring: [1,2], meetings: [3,4], communications: [5], pagopa: [6,7], documents: [8], justifications: [9,10] },
@@ -1095,6 +1138,7 @@ defineExpose({ open, close })
 .art-pink    { background: linear-gradient(135deg, #ec4899, #db2777); }
 .art-amber   { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .art-deep-orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
+.art-deep-purple { background: linear-gradient(135deg, #7c3aed, #4c1d95); }
 
 .article-icon {
   background: rgba(255,255,255,0.2);
@@ -1287,6 +1331,7 @@ defineExpose({ open, close })
 .si-pink    { background: #fdf2f8; color: #db2777; }
 .si-amber   { background: #fffbeb; color: #d97706; }
 .si-deep-orange { background: #fff7ed; color: #c2410c; }
+.si-deep-purple { background: #f5f3ff; color: #6d28d9; }
 
 /* ── Transition: article panel ───────────────────────────────────── */
 .article-slide-enter-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }

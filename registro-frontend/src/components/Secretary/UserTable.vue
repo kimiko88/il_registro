@@ -128,7 +128,7 @@
                 
                 <q-item v-if="canManageUserAssignments(props.row)" clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('manage-assignments', props.row)">
                   <q-item-section avatar><q-icon name="assignment_ind" color="secondary" /></q-item-section>
-                  <q-item-section class="text-slate-700">Incarichi & Coordinamento</q-item-section>
+                  <q-item-section class="text-slate-700">{{ t('usersPage.manageAssignments') || 'Incarichi & Funzioni' }}</q-item-section>
                 </q-item>
 
                 <q-item clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('reset-pwd', props.row)">
@@ -177,29 +177,29 @@ const selected = ref([])
 
 const roleFilterOptions = computed(() => [
   { label: t('common.all') || 'Tutti', value: 'all' },
-  { label: t('usersPage.roleStudents') || 'Studenti', value: 'student' },
-  { label: t('usersPage.roleTeachers') || 'Docenti', value: 'teacher' },
-  { label: t('usersPage.roleParents') || 'Genitori', value: 'parent' },
-  { label: 'Assistenti Amministrativi', value: 'assistente_amministrativo' },
-  { label: 'Assistenti Alunni', value: 'assistente_alunni' },
-  { label: 'Assistenti Personale', value: 'assistente_personale' },
-  { label: 'Assistenti Contabilità', value: 'assistente_contabilita' },
-  { label: 'Assistenti Protocollo', value: 'assistente_protocollo' },
-  { label: 'Assistenti Sportello', value: 'assistente_sportello' },
-  { label: 'Assistenti Tecnici', value: 'assistente_tecnico' },
-  { label: 'Collaboratori Scolastici', value: 'collaboratore_scolastico' },
-  { label: 'Collaboratori D.S.', value: 'collaboratore_ds' },
-  { label: 'Responsabili di Servizio', value: 'responsabile_servizio' },
-  { label: 'DSGA', value: 'dsga' },
-  { label: t('usersPage.roleSecretary') || 'Segreteria', value: 'secretary' },
-  { label: t('usersPage.rolePrincipal') || 'Preside', value: 'principal' },
-  { label: t('usersPage.roleVicePrincipal') || 'Vicepreside', value: 'vice_principal' },
-  { label: 'Resp. Gestione Documentale', value: 'responsabile_gestione_documentale' },
-  { label: 'Resp. Conservazione', value: 'responsabile_conservazione' },
-  { label: 'DPO', value: 'dpo' },
-  { label: t('usersPage.roleAdmin') || 'Amministratore', value: 'admin' },
-  { label: 'Super Admin', value: 'superadmin' },
-  { label: t('usersPage.roleStaff') || 'Staff', value: 'staff' }
+  { label: t('roles.student') || 'Studenti', value: 'student' },
+  { label: t('roles.teacher') || 'Docenti', value: 'teacher' },
+  { label: t('roles.parent') || 'Genitori', value: 'parent' },
+  { label: t('roles.assistente_amministrativo') || 'Assistenti Amministrativi', value: 'assistente_amministrativo' },
+  { label: t('roles.assistente_alunni') || 'Assistenti Alunni', value: 'assistente_alunni' },
+  { label: t('roles.assistente_personale') || 'Assistenti Personale', value: 'assistente_personale' },
+  { label: t('roles.assistente_contabilita') || 'Assistenti Contabilità', value: 'assistente_contabilita' },
+  { label: t('roles.assistente_protocollo') || 'Assistenti Protocollo', value: 'assistente_protocollo' },
+  { label: t('roles.assistente_sportello') || 'Assistenti Sportello', value: 'assistente_sportello' },
+  { label: t('roles.assistente_tecnico') || 'Assistenti Tecnici', value: 'assistente_tecnico' },
+  { label: t('roles.collaboratore_scolastico') || 'Collaboratori Scolastici', value: 'collaboratore_scolastico' },
+  { label: t('roles.collaboratore_ds') || 'Collaboratori D.S.', value: 'collaboratore_ds' },
+  { label: t('roles.responsabile_servizio') || 'Responsabili di Servizio', value: 'responsabile_servizio' },
+  { label: t('roles.dsga') || 'DSGA', value: 'dsga' },
+  { label: t('roles.secretary') || 'Segreteria', value: 'secretary' },
+  { label: t('roles.principal') || 'Preside', value: 'principal' },
+  { label: t('roles.vice_principal') || 'Vicepreside', value: 'vice_principal' },
+  { label: t('roles.responsabile_gestione_documentale') || 'Resp. Gestione Documentale', value: 'responsabile_gestione_documentale' },
+  { label: t('roles.responsabile_conservazione') || 'Resp. Conservazione', value: 'responsabile_conservazione' },
+  { label: t('roles.dpo') || 'DPO', value: 'dpo' },
+  { label: t('roles.admin') || 'Amministratore', value: 'admin' },
+  { label: t('roles.superadmin') || 'Super Admin', value: 'superadmin' },
+  { label: t('roles.staff') || 'Staff', value: 'staff' }
 ])
 
 const columns = computed(() => [
@@ -253,31 +253,7 @@ const getRoleColor = (role) => {
 }
 
 const getRoleLabel = (role) => {
-    switch(role) {
-        case 'student': return t('usersPage.roleStudents') || 'Studente'
-        case 'teacher': return t('usersPage.roleTeachers') || 'Docente'
-        case 'parent': return t('usersPage.roleParents') || 'Genitore'
-        case 'staff': return t('usersPage.roleStaff') || 'Personale'
-        case 'secretary': return t('usersPage.roleSecretary') || 'Segreteria'
-        case 'principal': return t('usersPage.rolePrincipal') || 'Preside'
-        case 'vice_principal': return t('usersPage.roleVicePrincipal') || 'Vicepreside'
-        case 'dsga': return 'DSGA'
-        case 'assistente_amministrativo': return 'Assistente Amministrativo'
-        case 'assistente_alunni': return 'Assistente Alunni'
-        case 'assistente_personale': return 'Assistente Personale'
-        case 'assistente_contabilita': return 'Assistente Contabilità'
-        case 'assistente_protocollo': return 'Assistente Protocollo'
-        case 'assistente_sportello': return 'Assistente Sportello'
-        case 'assistente_tecnico': return 'Assistente Tecnico'
-        case 'collaboratore_ds': return 'Collaboratore D.S.'
-        case 'collaboratore_scolastico': return 'Collaboratore Scolastico'
-        case 'responsabile_servizio': return 'Responsabile Servizio'
-        case 'responsabile_gestione_documentale': return 'Resp. Documentale'
-        case 'responsabile_conservazione': return 'Resp. Conservazione'
-        case 'dpo': return 'DPO'
-        case 'admin': return t('usersPage.roleAdmin') || 'Amministratore'
-        case 'superadmin': return 'Super Admin'
-        default: return role
-    }
+    if (!role) return ''
+    return t(`roles.${role}`) || role
 }
 </script>

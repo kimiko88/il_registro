@@ -75,7 +75,7 @@ func (h *Handler) Create(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
 			return
 		}
-		if err == ErrEmailExists || err == ErrFiscalCode || strings.Contains(err.Error(), "password") || strings.Contains(err.Error(), "fiscal code") {
+		if err == ErrInvalidRole || err == ErrEmailExists || err == ErrFiscalCode || strings.Contains(err.Error(), "password") || strings.Contains(err.Error(), "fiscal code") || strings.Contains(err.Error(), "role") {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -212,7 +212,7 @@ func (h *Handler) Update(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 			return
 		}
-		if err == ErrEmailExists || err == ErrFiscalCode || (err.Error() != "" && strings.Contains(err.Error(), "fiscal code")) {
+		if err == ErrInvalidRole || err == ErrEmailExists || err == ErrFiscalCode || (err.Error() != "" && (strings.Contains(err.Error(), "fiscal code") || strings.Contains(err.Error(), "role"))) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -450,6 +450,14 @@ func (h *Handler) AssignRoles(c *gin.Context) {
 		Role: &req.Role,
 	})
 	if err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: cannot assign this role"})
+			return
+		}
+		if err == ErrInvalidRole {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

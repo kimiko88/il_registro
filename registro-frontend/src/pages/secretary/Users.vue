@@ -307,10 +307,10 @@
         <q-card style="width: min(700px, 95vw); max-width: 95vw; max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white column">
             <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center justify-between">
                 <div>
-                    <div class="text-h5 text-weight-bold">Incarichi & Coordinamento</div>
+                    <div class="text-h5 text-weight-bold">{{ t('usersPage.assignmentsDialog.title') }}</div>
                     <div class="text-subtitle2 opacity-80">
                         {{ targetUserForAssignments?.last_name }} {{ targetUserForAssignments?.first_name }} 
-                        <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full ml-2 uppercase">{{ targetUserForAssignments?.role }}</span>
+                        <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full ml-2 uppercase">{{ t('roles.' + targetUserForAssignments?.role) || targetUserForAssignments?.role }}</span>
                     </div>
                 </div>
                 <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
@@ -322,14 +322,14 @@
                     <div class="row items-center justify-between q-mb-sm">
                         <div class="text-subtitle1 text-weight-bold text-purple-900">
                             <q-icon name="co_present" size="20px" class="q-mr-xs" />
-                            Coordinamento di Classe (1 o più classi)
+                            {{ t('usersPage.assignmentsDialog.classCoordinationTitle') }}
                         </div>
                         <q-badge v-if="!canAssignCoordinator" color="warning" text-color="dark">
-                            Nomina riservata a Dirigente Scolastico / Admin
+                            {{ t('usersPage.assignmentsDialog.classCoordinationReserved') }}
                         </q-badge>
                     </div>
                     <p class="text-caption text-purple-800 q-mb-md">
-                        Il docente coordinatore presiede il consiglio di classe su delega, cura i contatti con le famiglie e gestisce le operazioni di scrutinio.
+                        {{ t('usersPage.assignmentsDialog.classCoordinationDesc') }}
                     </p>
                     <q-select
                         v-model="selectedCoordinatedClasses"
@@ -341,13 +341,13 @@
                         :options="classOptions"
                         emit-value
                         map-options
-                        label="Classi Coordinate"
+                        :label="t('usersPage.assignmentsDialog.coordinatedClassesLabel')"
                         :disable="!canAssignCoordinator"
-                        hint="Seleziona le classi di cui questo docente è coordinatore"
+                        :hint="t('usersPage.assignmentsDialog.coordinatedClassesHint')"
                     />
                     <div class="row justify-end q-mt-sm">
                         <q-btn 
-                            label="Aggiorna Coordinamento Classi" 
+                            :label="t('usersPage.assignmentsDialog.updateCoordinationBtn')" 
                             color="purple" 
                             size="sm" 
                             unelevated 
@@ -363,10 +363,10 @@
                 <div v-if="targetUserForAssignments?.role === 'teacher'" class="q-mb-lg p-4 bg-blue-50 rounded-xl border border-blue-200">
                     <div class="text-subtitle1 text-weight-bold text-blue-900 q-mb-xs">
                         <q-icon name="stars" size="20px" class="q-mr-xs" />
-                        Incarichi Didattici & Funzioni Strumentali
+                        {{ t('usersPage.assignmentsDialog.teacherDutiesTitle') }}
                     </div>
                     <p class="text-caption text-blue-800 q-mb-md">
-                        Incarichi attribuiti dal Dirigente Scolastico con poteri e funzioni specifiche per l'anno scolastico.
+                        {{ t('usersPage.assignmentsDialog.teacherDutiesDesc') }}
                     </p>
                     <div class="row q-col-gutter-sm">
                         <div v-for="duty in teacherDutyPresets" :key="duty.type" class="col-12 col-md-6">
@@ -387,7 +387,7 @@
                                             :disable="!canAssignThisDuty(duty.type)"
                                             @click="removeDutyByType(duty.type)"
                                         >
-                                            <q-tooltip>Revoca incarico</q-tooltip>
+                                            <q-tooltip>{{ t('usersPage.assignmentsDialog.revokeDutyTooltip') }}</q-tooltip>
                                         </q-btn>
                                         <q-btn
                                             v-else
@@ -395,7 +395,7 @@
                                             color="primary"
                                             unelevated
                                             no-caps
-                                            label="Nomina"
+                                            :label="t('usersPage.assignmentsDialog.assignDutyBtn')"
                                             :disable="!canAssignThisDuty(duty.type)"
                                             @click="assignDutyQuick(duty)"
                                         />
@@ -410,22 +410,22 @@
                 <div v-if="isATARole(targetUserForAssignments?.role)" class="q-mb-lg p-4 bg-teal-50 rounded-xl border border-teal-200">
                     <div class="text-subtitle1 text-weight-bold text-teal-900 q-mb-xs">
                         <q-icon name="build" size="20px" class="q-mr-xs" />
-                        Responsabilità di Servizio / Reparto (ATA)
+                        {{ t('usersPage.assignmentsDialog.ataResponsibilitiesTitle') }}
                     </div>
                     <p class="text-caption text-teal-800 q-mb-md">
-                        Nomina di competenza del DSGA (o Dirigente) per la conduzione di laboratori, biblioteca, magazzino o reparti ausiliari.
+                        {{ t('usersPage.assignmentsDialog.ataResponsibilitiesDesc') }}
                     </p>
                     <div class="row q-gutter-sm items-center">
                         <q-input 
                             v-model="newServiceTitle" 
-                            label="Servizio / Reparto (es. Lab. Informatica, Biblioteca, Magazzino)" 
+                            :label="t('usersPage.assignmentsDialog.serviceDepartmentLabel')" 
                             outlined 
                             dense 
                             class="col bg-white"
                             :disable="!canAssignService"
                         />
                         <q-btn 
-                            label="Attribuisci Servizio" 
+                            :label="t('usersPage.assignmentsDialog.assignServiceBtn')" 
                             color="teal" 
                             unelevated 
                             no-caps 
@@ -438,10 +438,10 @@
                 <!-- Elenco Incarichi Attualmente Assegnati -->
                 <div>
                     <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">
-                        Incarichi Assegnati Attivi ({{ currentTargetAssignments.length }})
+                        {{ t('usersPage.assignmentsDialog.activeDutiesTitle', { count: currentTargetAssignments.length }) }}
                     </div>
                     <div v-if="currentTargetAssignments.length === 0" class="text-caption text-slate-400 italic">
-                        Nessun incarico aggiuntivo attivo per questo profilo.
+                        {{ t('usersPage.assignmentsDialog.noActiveDuties') }}
                     </div>
                     <q-list v-else separator class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50">
                         <q-item v-for="assign in currentTargetAssignments" :key="assign.id" class="bg-white">
@@ -462,7 +462,7 @@
                                     :disable="!canAssignThisDuty(assign.assignment_type)"
                                     @click="deleteSingleAssignment(assign.id)"
                                 >
-                                    <q-tooltip>Revoca Incarico</q-tooltip>
+                                    <q-tooltip>{{ t('usersPage.assignmentsDialog.revokeDutyTooltip') }}</q-tooltip>
                                 </q-btn>
                             </q-item-section>
                         </q-item>
@@ -471,7 +471,7 @@
             </q-card-section>
             
             <q-card-actions align="right" class="q-pa-md bg-slate-100 border-t border-slate-200">
-                <q-btn flat label="Chiudi" v-close-popup color="slate-600" no-caps />
+                <q-btn flat :label="t('common.close') || 'Chiudi'" v-close-popup color="slate-600" no-caps />
             </q-card-actions>
         </q-card>
     </q-dialog>
@@ -644,46 +644,46 @@ const roleOptions = computed(() => {
     const isDSGA = role === 'dsga';
 
     const options = [
-        { label: 'Studente', value: 'student' },
-        { label: 'Docente', value: 'teacher' },
-        { label: 'Genitore', value: 'parent' }
+        { label: t('roles.student') || 'Studente', value: 'student' },
+        { label: t('roles.teacher') || 'Docente', value: 'teacher' },
+        { label: t('roles.parent') || 'Genitore', value: 'parent' }
     ];
 
     if (isAdmin || isPrincipal || isDSGA) {
         options.push(
-            { label: 'Assistente Amministrativo (Generale)', value: 'assistente_amministrativo' },
-            { label: 'Assistente Amministrativo (Alunni)', value: 'assistente_alunni' },
-            { label: 'Assistente Amministrativo (Personale)', value: 'assistente_personale' },
-            { label: 'Assistente Amministrativo (Contabilità)', value: 'assistente_contabilita' },
-            { label: 'Assistente Amministrativo (Protocollo)', value: 'assistente_protocollo' },
-            { label: 'Assistente Amministrativo (Sportello)', value: 'assistente_sportello' },
-            { label: 'Assistente Tecnico', value: 'assistente_tecnico' },
-            { label: 'Collaboratore Scolastico', value: 'collaboratore_scolastico' },
-            { label: 'Responsabile di Servizio (ATA)', value: 'responsabile_servizio' }
+            { label: `${t('roles.assistente_amministrativo')}`, value: 'assistente_amministrativo' },
+            { label: t('roles.assistente_alunni'), value: 'assistente_alunni' },
+            { label: t('roles.assistente_personale'), value: 'assistente_personale' },
+            { label: t('roles.assistente_contabilita'), value: 'assistente_contabilita' },
+            { label: t('roles.assistente_protocollo'), value: 'assistente_protocollo' },
+            { label: t('roles.assistente_sportello'), value: 'assistente_sportello' },
+            { label: t('roles.assistente_tecnico'), value: 'assistente_tecnico' },
+            { label: t('roles.collaboratore_scolastico'), value: 'collaboratore_scolastico' },
+            { label: t('roles.responsabile_servizio'), value: 'responsabile_servizio' }
         );
     }
 
     if (isAdmin || isPrincipal) {
         options.push(
-            { label: 'Collaboratore della D.S. (Staff)', value: 'collaboratore_ds' },
-            { label: 'Vicepreside (Collaboratore Vicario)', value: 'vice_principal' },
-            { label: 'Preside / Dirigente Scolastico', value: 'principal' },
-            { label: 'DSGA (Direttore SGA)', value: 'dsga' },
-            { label: 'Segreteria', value: 'secretary' },
-            { label: 'Responsabile Gestione Documentale', value: 'responsabile_gestione_documentale' },
-            { label: 'Responsabile Conservazione Digitale', value: 'responsabile_conservazione' },
-            { label: 'DPO (Data Protection Officer)', value: 'dpo' }
+            { label: t('roles.collaboratore_ds'), value: 'collaboratore_ds' },
+            { label: t('roles.vice_principal'), value: 'vice_principal' },
+            { label: t('roles.principal'), value: 'principal' },
+            { label: t('roles.dsga'), value: 'dsga' },
+            { label: t('roles.secretary'), value: 'secretary' },
+            { label: t('roles.responsabile_gestione_documentale'), value: 'responsabile_gestione_documentale' },
+            { label: t('roles.responsabile_conservazione'), value: 'responsabile_conservazione' },
+            { label: t('roles.dpo'), value: 'dpo' }
         );
     }
 
     if (isAdmin) {
         options.push(
-            { label: 'Amministratore Applicativo', value: 'admin' }
+            { label: t('roles.admin'), value: 'admin' }
         );
     }
     if (isSuper) {
         options.push(
-            { label: 'Super Amministratore', value: 'superadmin' }
+            { label: t('roles.superadmin') || 'Super Amministratore', value: 'superadmin' }
         );
     }
 
@@ -934,15 +934,15 @@ const savingCoordinatedClasses = ref(false);
 const currentTargetAssignments = ref([]);
 const newServiceTitle = ref('');
 
-const teacherDutyPresets = [
-    { type: 'segretario_verbale', label: 'Segretario del Consiglio', desc: 'Verbalizzazione ufficiale delle sedute del CdC' },
-    { type: 'referente_inclusione', label: 'Referente Inclusione / BES / DSA', desc: 'Coordinamento GLI, stesura PDP e monitoraggio PEI' },
-    { type: 'referente_progetto', label: 'Referente Progetti PNRR / FSE', desc: 'Gestione e rendicontazione progetti istituzionali' },
-    { type: 'responsabile_dipartimento', label: 'Responsabile di Dipartimento', desc: 'Coordinamento disciplinare e programmazione UdA' },
-    { type: 'tutor_orientamento', label: 'Tutor per l\'Orientamento', desc: 'Supporto studenti ed E-Portfolio orientamento' },
-    { type: 'animatore_digitale', label: 'Animatore Digitale', desc: 'Innovazione didattica, formazione PNSD ed E-Learning' },
-    { type: 'referente_bullismo', label: 'Referente Cyberbullismo', desc: 'Prevenzione e contrasto del bullismo e cyberbullismo' }
-];
+const teacherDutyPresets = computed(() => [
+    { type: 'segretario_verbale', label: t('usersPage.assignmentsDialog.dutySecretaryLabel'), desc: t('usersPage.assignmentsDialog.dutySecretaryDesc') },
+    { type: 'referente_inclusione', label: t('usersPage.assignmentsDialog.dutyInclusionLabel'), desc: t('usersPage.assignmentsDialog.dutyInclusionDesc') },
+    { type: 'referente_progetto', label: t('usersPage.assignmentsDialog.dutyProjectsLabel'), desc: t('usersPage.assignmentsDialog.dutyProjectsDesc') },
+    { type: 'responsabile_dipartimento', label: t('usersPage.assignmentsDialog.dutyDeptHeadLabel'), desc: t('usersPage.assignmentsDialog.dutyDeptHeadDesc') },
+    { type: 'tutor_orientamento', label: t('usersPage.assignmentsDialog.dutyOrientationLabel'), desc: t('usersPage.assignmentsDialog.dutyOrientationDesc') },
+    { type: 'animatore_digitale', label: t('usersPage.assignmentsDialog.dutyDigitalAnimLabel'), desc: t('usersPage.assignmentsDialog.dutyDigitalAnimDesc') },
+    { type: 'referente_bullismo', label: t('usersPage.assignmentsDialog.dutyAntiBullyingLabel'), desc: t('usersPage.assignmentsDialog.dutyAntiBullyingDesc') }
+]);
 
 const actorRole = computed(() => (authStore.userRole || authStore.user?.role || '').toLowerCase());
 const canAssignCoordinator = computed(() => canAssignDuty(actorRole.value, 'coordinatore_classe'));
@@ -1000,11 +1000,11 @@ const saveCoordinatedClasses = async () => {
     savingCoordinatedClasses.value = true;
     try {
         await userService.setCoordinatedClasses(targetUserForAssignments.value.id, selectedCoordinatedClasses.value);
-        $q.notify({ type: 'positive', message: 'Coordinamento classi aggiornato con successo' });
+        $q.notify({ type: 'positive', message: t('usersPage.assignmentsDialog.notifyCoordUpdated') });
         await loadUserAssignments(targetUserForAssignments.value.id);
         fetchUsers();
     } catch (e) {
-        $q.notify({ type: 'negative', message: 'Errore nell\'aggiornamento del coordinamento', caption: e.message });
+        $q.notify({ type: 'negative', message: t('usersPage.assignmentsDialog.notifyCoordUpdateError'), caption: e.message });
     } finally {
         savingCoordinatedClasses.value = false;
     }
@@ -1018,11 +1018,11 @@ const assignDutyQuick = async (duty) => {
             scope_type: 'school',
             title: duty.label
         });
-        $q.notify({ type: 'positive', message: `Incarico "${duty.label}" attribuito` });
+        $q.notify({ type: 'positive', message: t('usersPage.assignmentsDialog.notifyDutyAssigned', { duty: duty.label }) });
         await loadUserAssignments(targetUserForAssignments.value.id);
         fetchUsers();
     } catch (e) {
-        $q.notify({ type: 'negative', message: 'Errore durante l\'attribuzione dell\'incarico', caption: e.message });
+        $q.notify({ type: 'negative', message: t('usersPage.assignmentsDialog.notifyDutyAssignError'), caption: e.message });
     }
 };
 
@@ -1042,12 +1042,12 @@ const assignServiceDuty = async () => {
             scope_type: 'service',
             title: `Responsabile ${newServiceTitle.value}`
         });
-        $q.notify({ type: 'positive', message: 'Responsabilità di servizio attribuita' });
+        $q.notify({ type: 'positive', message: t('usersPage.assignmentsDialog.notifyServiceAssigned') });
         newServiceTitle.value = '';
         await loadUserAssignments(targetUserForAssignments.value.id);
         fetchUsers();
     } catch (e) {
-        $q.notify({ type: 'negative', message: 'Errore durante l\'attribuzione del servizio', caption: e.message });
+        $q.notify({ type: 'negative', message: t('usersPage.assignmentsDialog.notifyServiceAssignError'), caption: e.message });
     }
 };
 
@@ -1055,11 +1055,11 @@ const deleteSingleAssignment = async (assignmentId) => {
     if (!targetUserForAssignments.value) return;
     try {
         await userService.deleteAssignment(targetUserForAssignments.value.id, assignmentId);
-        $q.notify({ type: 'positive', message: 'Incarico revocato con successo' });
+        $q.notify({ type: 'positive', message: t('usersPage.assignmentsDialog.notifyDutyRevoked') });
         await loadUserAssignments(targetUserForAssignments.value.id);
         fetchUsers();
     } catch (e) {
-        $q.notify({ type: 'negative', message: 'Errore durante la revoca dell\'incarico', caption: e.message });
+        $q.notify({ type: 'negative', message: t('usersPage.assignmentsDialog.notifyDutyRevokeError'), caption: e.message });
     }
 };
 

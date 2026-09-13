@@ -7,6 +7,62 @@ import VisitorRegistry from '@/pages/ata/VisitorRegistry.vue'
 import Timecard from '@/pages/ata/Timecard.vue'
 import PersonnelDesk from '@/pages/ata/PersonnelDesk.vue'
 
+vi.mock('@/services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: [] }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
+    patch: vi.fn().mockResolvedValue({ data: {} }),
+    delete: vi.fn().mockResolvedValue({ data: {} })
+  }
+}))
+
+vi.mock('@/services/userService', () => ({
+  default: {
+    getUsers: vi.fn().mockResolvedValue({ data: [] })
+  }
+}))
+
+vi.mock('@/services/schoolService', () => ({
+  default: {
+    getClasses: vi.fn().mockResolvedValue({ data: [] })
+  }
+}))
+
+vi.mock('@/services/substitutionService', () => ({
+  default: {
+    getEmergencyDashboard: vi.fn().mockResolvedValue({ data: { open: [], assigned: [], daily_summary: {} } })
+  }
+}))
+
+vi.mock('@/services/visitorService', () => ({
+  default: {
+    getVisitors: vi.fn().mockResolvedValue({ data: [] }),
+    getDailyStats: vi.fn().mockResolvedValue({ data: {} })
+  }
+}))
+
+vi.mock('@/services/timecardService', () => ({
+  default: {
+    getMonthlyEntries: vi.fn().mockResolvedValue({ data: [] }),
+    getLeaveRequests: vi.fn().mockResolvedValue({ data: [] }),
+    getAllStaffTimecards: vi.fn().mockResolvedValue({ data: [] })
+  }
+}))
+
+vi.mock('@/services/personnelDeskService', () => ({
+  default: {
+    getRequests: vi.fn().mockResolvedValue({ data: [] })
+  }
+}))
+
+vi.mock('@/services/staffAttendanceService', () => ({
+  default: {
+    getDailySummary: vi.fn().mockResolvedValue({ data: {} }),
+    getAttendanceList: vi.fn().mockResolvedValue({ data: [] })
+  }
+}))
+
 describe('ATA Specialist 4 Vertical Modules E2E Workflow', () => {
   let pinia
 

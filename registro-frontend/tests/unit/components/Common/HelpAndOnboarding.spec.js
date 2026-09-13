@@ -66,6 +66,78 @@ describe('Onboarding & Help Center Components', () => {
 
       expect(localStorage.getItem('onboarding_done_teacher')).toBe('true')
     })
+
+    it('resolves principal role and loads 6 dedicated tour steps with valid titles', () => {
+      const principalPinia = createTestingPinia({
+        createSpy: vi.fn,
+        initialState: {
+          auth: {
+            user: { role: 'principal', first_name: 'Giulia', last_name: 'Verdi' },
+            userRole: 'principal',
+            token: 'jwt-token'
+          }
+        }
+      })
+
+      const wrapper = mount(OnboardingTour, {
+        global: {
+          plugins: [principalPinia, i18n],
+          stubs: {
+            'q-dialog': { template: '<div class="q-dialog-stub" v-if="modelValue"><slot /></div>', props: ['modelValue'] },
+            'q-icon': true,
+            'q-chip': true,
+            'q-btn': true
+          }
+        }
+      })
+
+      expect(wrapper.vm.userRole).toBe('principal')
+      expect(wrapper.vm.tourSteps).toHaveLength(6)
+      expect(wrapper.vm.tourSteps[0].title).toBe('Dashboard Direzione & Quadro Generale')
+      expect(wrapper.vm.tourSteps[1].title).toBe('Personale, Nomine & Incarichi')
+      expect(wrapper.vm.tourSteps[2].title).toBe('Decreti & Visti Personale')
+      expect(wrapper.vm.tourSteps[3].title).toBe('Sostituzioni Docenti & Gestione Emergenze')
+      expect(wrapper.vm.tourSteps[4].title).toBe('Atti, Verbali & Delibere Collegiali')
+      expect(wrapper.vm.tourSteps[5].title).toBe('Monitoraggio Didattico, Scrutini & Dispersione')
+    })
+
+    it('correctly maps various institutional roles to canonical roles', () => {
+      const rolesToTest = [
+        { role: 'vice_principal', expected: 'principal' },
+        { role: 'coordinator', expected: 'teacher' },
+        { role: 'responsabile_servizio', expected: 'collaboratore_ds' },
+        { role: 'assistente_alunni', expected: 'assistente_amministrativo' },
+        { role: 'system_auditor', expected: 'admin' },
+        { role: 'responsabile_conservazione', expected: 'secretary' }
+      ]
+
+      for (const { role, expected } of rolesToTest) {
+        const testPinia = createTestingPinia({
+          createSpy: vi.fn,
+          initialState: {
+            auth: {
+              user: { role, first_name: 'Test', last_name: 'User' },
+              userRole: role,
+              token: 'jwt-token'
+            }
+          }
+        })
+
+        const wrapper = mount(OnboardingTour, {
+          global: {
+            plugins: [testPinia, i18n],
+            stubs: {
+              'q-dialog': true,
+              'q-icon': true,
+              'q-chip': true,
+              'q-btn': true
+            }
+          }
+        })
+
+        expect(wrapper.vm.userRole).toBe(expected)
+      }
+    })
   })
 
   describe('HelpFab.vue', () => {
@@ -113,6 +185,44 @@ describe('Onboarding & Help Center Components', () => {
       wrapper.vm.close()
       expect(wrapper.vm.isOpen).toBe(false)
     })
+
+    it('loads 5 categories and dedicated articles for principal', () => {
+      const principalPinia = createTestingPinia({
+        createSpy: vi.fn,
+        initialState: {
+          auth: {
+            user: { role: 'principal', first_name: 'Giulia', last_name: 'Verdi' },
+            userRole: 'principal',
+            token: 'jwt-token'
+          }
+        }
+      })
+
+      const wrapper = mount(HelpDrawer, {
+        global: {
+          plugins: [principalPinia, i18n],
+          stubs: {
+            'q-drawer': { template: '<div class="q-drawer-stub" v-if="modelValue"><slot /></div>', props: ['modelValue'] },
+            'q-icon': true,
+            'q-btn': true,
+            'q-input': true,
+            'q-expansion-item': true
+          }
+        }
+      })
+
+      expect(wrapper.vm.userRole).toBe('principal')
+      expect(wrapper.vm.categories).toHaveLength(5)
+      expect(wrapper.vm.categories.map(c => c.key)).toEqual([
+        'cat_direction',
+        'cat_personnel',
+        'cat_substitutions',
+        'cat_verbali',
+        'cat_strike'
+      ])
+      expect(wrapper.vm.articles.length).toBeGreaterThanOrEqual(6)
+      expect(wrapper.vm.articles[0].question).toContain('quadro generale delle assenze')
+    })
   })
 
   describe('HelpCenterPanel.vue', () => {
@@ -138,6 +248,42 @@ describe('Onboarding & Help Center Components', () => {
 
       wrapper.vm.close()
       expect(wrapper.vm.isOpen).toBe(false)
+    })
+
+    it('loads 5 categories and guides for principal', () => {
+      const principalPinia = createTestingPinia({
+        createSpy: vi.fn,
+        initialState: {
+          auth: {
+            user: { role: 'principal', first_name: 'Giulia', last_name: 'Verdi' },
+            userRole: 'principal',
+            token: 'jwt-token'
+          }
+        }
+      })
+
+      const wrapper = mount(HelpCenterPanel, {
+        global: {
+          plugins: [principalPinia, i18n],
+          stubs: {
+            'q-dialog': { template: '<div class="q-dialog-stub" v-if="modelValue"><slot /></div>', props: ['modelValue'] },
+            'q-icon': true,
+            'q-btn': true,
+            'q-input': true,
+            'q-expansion-item': true
+          }
+        }
+      })
+
+      expect(wrapper.vm.userRole).toBe('principal')
+      expect(wrapper.vm.categories).toHaveLength(5)
+      expect(wrapper.vm.categories.map(c => c.key)).toEqual([
+        'dashboard',
+        'personnel',
+        'substitutions',
+        'verbali',
+        'strike'
+      ])
     })
   })
 })

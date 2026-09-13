@@ -116,8 +116,8 @@
                   <q-icon name="timelapse" size="24px" />
                 </div>
                 <div class="q-ml-md">
-                  <div class="text-caption text-teal-800 text-weight-bold">Ore Lavorate</div>
-                  <div class="text-h5 text-weight-bolder text-teal-900">{{ timecardData.worked_hours || 0 }} h</div>
+                  <div class="text-caption text-teal-800 text-weight-bold">{{ t('timecard.statWorkedHours') }}</div>
+                  <div class="text-h5 text-weight-bolder text-teal-900">{{ timecardData.worked_hours || 0 }} {{ t('timecard.hoursSuffix') }}</div>
                 </div>
               </q-card-section>
             </q-card>
@@ -129,8 +129,8 @@
                   <q-icon name="schedule" size="24px" />
                 </div>
                 <div class="q-ml-md">
-                  <div class="text-caption text-blue-800 text-weight-bold">Ore Contrattuali</div>
-                  <div class="text-h5 text-weight-bolder text-blue-900">{{ timecardData.contract_hours || 156 }} h</div>
+                  <div class="text-caption text-blue-800 text-weight-bold">{{ t('timecard.statContractHours') }}</div>
+                  <div class="text-h5 text-weight-bolder text-blue-900">{{ timecardData.contract_hours || 156 }} {{ t('timecard.hoursSuffix') }}</div>
                 </div>
               </q-card-section>
             </q-card>
@@ -143,10 +143,10 @@
                 </div>
                 <div class="q-ml-md">
                   <div class="text-caption text-weight-bold" :class="overtimeBalance >= 0 ? 'text-emerald-800' : 'text-orange-800'">
-                    Saldo / Straordinario
+                    {{ t('timecard.statBalance') }}
                   </div>
                   <div class="text-h5 text-weight-bolder" :class="overtimeBalance >= 0 ? 'text-emerald-900' : 'text-orange-900'">
-                    {{ overtimeBalance >= 0 ? '+' : '' }}{{ overtimeBalance.toFixed(1) }} h
+                    {{ overtimeBalance >= 0 ? '+' : '' }}{{ overtimeBalance.toFixed(1) }} {{ t('timecard.hoursSuffix') }}
                   </div>
                 </div>
               </q-card-section>
@@ -159,9 +159,9 @@
                   <q-icon name="beach_access" size="24px" />
                 </div>
                 <div class="q-ml-md">
-                  <div class="text-caption text-amber-800 text-weight-bold">Ferie / Assenze Mese</div>
+                  <div class="text-caption text-amber-800 text-weight-bold">{{ t('timecard.statLeaveAbsence') }}</div>
                   <div class="text-h5 text-weight-bolder text-amber-900">
-                    {{ (timecardData.leave_days || 0) + (timecardData.absence_days || 0) }} gg
+                    {{ (timecardData.leave_days || 0) + (timecardData.absence_days || 0) }} {{ t('timecard.daysSuffix') }}
                   </div>
                 </div>
               </q-card-section>
@@ -173,10 +173,10 @@
         <q-card class="rounded-2xl shadow-sm border border-slate-200 bg-white">
           <q-card-section class="border-b border-slate-100 row items-center justify-between">
             <div class="text-subtitle1 text-weight-bold text-slate-800">
-              Dettaglio Giornaliero Timbrature Badge
+              {{ t('timecard.dailyTableTitle') }}
             </div>
             <div class="text-caption text-slate-400">
-              CCNL Scuola: 36h/settimana • 7.2h medie su 5gg
+              {{ t('timecard.dailyTableSubtitle') }}
             </div>
           </q-card-section>
 
@@ -191,7 +191,7 @@
             <template v-slot:body-cell-status="props">
               <q-td :props="props">
                 <q-badge :color="getEntryStatusColor(props.row.status)" class="q-px-sm q-py-xs">
-                  {{ props.row.status || 'Presente' }}
+                  {{ getEntryStatusLabel(props.row.status) }}
                 </q-badge>
               </q-td>
             </template>
@@ -204,12 +204,12 @@
         <q-card class="rounded-2xl shadow-sm border border-slate-200 bg-white">
           <q-card-section class="border-b border-slate-100 row items-center justify-between">
             <div class="text-subtitle1 text-weight-bold text-slate-800">
-              Richieste di Ferie, Permessi e Malattia
+              {{ t('timecard.leavesTableTitle') }}
             </div>
             <q-btn
               color="teal-8"
               icon="add"
-              label="Nuova Istanza"
+              :label="t('timecard.newLeaveBtn')"
               no-caps
               dense
               rounded
@@ -223,7 +223,7 @@
             :columns="leaveColumns"
             row-key="id"
             :loading="loading"
-            no-data-label="Nessuna richiesta ferie registrata"
+            :no-data-label="t('timecard.noLeaves')"
             class="no-shadow"
             :pagination="{ rowsPerPage: 15 }"
           >
@@ -252,7 +252,7 @@
                     flat
                     dense
                     icon="check"
-                    label="Approva"
+                    :label="t('timecard.approve')"
                     size="sm"
                     no-caps
                     @click="approveLeave(props.row)"
@@ -262,7 +262,7 @@
                     flat
                     dense
                     icon="close"
-                    label="Rifiuta"
+                    :label="t('timecard.reject')"
                     size="sm"
                     no-caps
                     @click="rejectLeave(props.row)"
@@ -290,13 +290,13 @@
         <q-card class="rounded-2xl shadow-sm border border-slate-200 bg-white">
           <q-card-section class="border-b border-slate-100 row items-center justify-between">
             <div class="text-subtitle1 text-weight-bold text-slate-800">
-              Prospetto Personale ATA — Mese: {{ selectedMonth }}
+              {{ t('timecard.overviewTitle', { month: selectedMonth }) }}
             </div>
             <q-btn
               outline
               color="primary"
               icon="download"
-              label="Esporta Tutti (CSV)"
+              :label="t('timecard.exportAllCsv')"
               no-caps
               dense
               rounded
@@ -316,7 +316,7 @@
             <template v-slot:body-cell-balance="props">
               <q-td :props="props">
                 <span :class="props.row.overtime_hours >= 0 ? 'text-positive text-weight-bold' : 'text-negative text-weight-bold'">
-                  {{ props.row.overtime_hours >= 0 ? '+' : '' }}{{ Number(props.row.overtime_hours).toFixed(1) }} h
+                  {{ props.row.overtime_hours >= 0 ? '+' : '' }}{{ Number(props.row.overtime_hours).toFixed(1) }} {{ t('timecard.hoursSuffix') }}
                 </span>
               </q-td>
             </template>
@@ -338,7 +338,7 @@
 
         <q-card-section class="q-gutter-md q-pt-md">
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Tipologia Istanza *</label>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogLeaveTypeLabel') }}</label>
             <q-select
               v-model="leaveForm.type"
               :options="leaveTypeOptions"
@@ -351,29 +351,29 @@
 
           <div class="row q-col-gutter-sm">
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Data Inizio *</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogStartDateLabel') }}</label>
               <q-input v-model="leaveForm.start_date" type="date" outlined dense />
             </div>
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Data Fine *</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogEndDateLabel') }}</label>
               <q-input v-model="leaveForm.end_date" type="date" outlined dense />
             </div>
           </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Numero Giorni Lavorativi</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogWorkingDaysLabel') }}</label>
               <q-input v-model.number="leaveForm.days" type="number" step="0.5" outlined dense />
             </div>
             <div class="col-6">
-              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Ore (se permesso breve)</label>
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogHoursLabel') }}</label>
               <q-input v-model.number="leaveForm.hours" type="number" step="0.5" outlined dense />
             </div>
           </div>
 
           <div>
-            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">Note / Protocollo</label>
-            <q-input v-model="leaveForm.notes" outlined dense type="textarea" rows="2" placeholder="Note per il DSGA o la segreteria..." />
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogNotesLabel') }}</label>
+            <q-input v-model="leaveForm.notes" outlined dense type="textarea" rows="2" :placeholder="t('timecard.dialogNotesPlaceholder')" />
           </div>
         </q-card-section>
 
@@ -435,14 +435,14 @@ const overtimeBalance = computed(() => {
   return (timecardData.value.worked_hours || 0) - (timecardData.value.contract_hours || 156)
 })
 
-const dailyColumns = [
-  { name: 'date', label: 'Data', field: 'date', align: 'left', sortable: true },
-  { name: 'entry_time', label: 'Entrata', field: 'entry_time', align: 'center' },
-  { name: 'exit_time', label: 'Uscita', field: 'exit_time', align: 'center' },
-  { name: 'hours', label: 'Ore Effettive', field: row => row.hours ? `${row.hours} h` : '—', align: 'center' },
-  { name: 'status', label: 'Stato', align: 'center' },
-  { name: 'notes', label: 'Note / Giustificativo', field: 'notes', align: 'left' }
-]
+const dailyColumns = computed(() => [
+  { name: 'date', label: t('timecard.colDate'), field: 'date', align: 'left', sortable: true },
+  { name: 'entry_time', label: t('timecard.colEntryTime'), field: 'entry_time', align: 'center' },
+  { name: 'exit_time', label: t('timecard.colExitTime'), field: 'exit_time', align: 'center' },
+  { name: 'hours', label: t('timecard.colActualHours'), field: row => row.hours ? `${row.hours} ${t('timecard.hoursSuffix')}` : '—', align: 'center' },
+  { name: 'status', label: t('timecard.colStatus'), align: 'center' },
+  { name: 'notes', label: t('timecard.colNotes'), field: 'notes', align: 'left' }
+])
 
 // Leaves
 const leavesList = ref([])
@@ -456,38 +456,38 @@ const leaveForm = ref({
   notes: ''
 })
 
-const leaveTypeOptions = [
-  { label: 'Ferie Ordinarie', value: 'ferie' },
-  { label: 'Permesso Retribuito (motivi personali)', value: 'permesso' },
-  { label: 'Permesso Breve (ore)', value: 'permesso_breve' },
-  { label: 'Malattia', value: 'malattia' },
-  { label: 'Diritto allo Studio (150 ore)', value: 'permesso_studio' },
-  { label: 'Recupero Straordinario', value: 'recupero' }
-]
+const leaveTypeOptions = computed(() => [
+  { label: t('timecard.leaveTypeFerie'), value: 'ferie' },
+  { label: t('timecard.leaveTypePermesso'), value: 'permesso' },
+  { label: t('timecard.leaveTypePermessoBreve'), value: 'permesso_breve' },
+  { label: t('timecard.leaveTypeMalattia'), value: 'malattia' },
+  { label: t('timecard.leaveTypePermessoStudio'), value: 'permesso_studio' },
+  { label: t('timecard.leaveTypeRecupero'), value: 'recupero' }
+])
 
-const leaveColumns = [
-  { name: 'user_name', label: 'Dipendente', field: 'user_name', align: 'left', sortable: true },
-  { name: 'type', label: 'Tipo', align: 'center' },
-  { name: 'period', label: 'Periodo', field: row => `${row.start_date} → ${row.end_date}`, align: 'left' },
-  { name: 'days', label: 'Giorni / Ore', field: row => row.days ? `${row.days} gg` : `${row.hours} h`, align: 'center' },
-  { name: 'status', label: 'Stato', align: 'center' },
-  { name: 'notes', label: 'Note', field: 'notes', align: 'left' },
-  { name: 'actions', label: 'Azioni', align: 'right' }
-]
+const leaveColumns = computed(() => [
+  { name: 'user_name', label: t('timecard.colEmployee'), field: 'user_name', align: 'left', sortable: true },
+  { name: 'type', label: t('timecard.colType'), align: 'center' },
+  { name: 'period', label: t('timecard.colPeriod'), field: row => `${row.start_date} → ${row.end_date}`, align: 'left' },
+  { name: 'days', label: t('timecard.colDaysHours'), field: row => row.days ? `${row.days} ${t('timecard.daysSuffix')}` : `${row.hours} ${t('timecard.hoursSuffix')}`, align: 'center' },
+  { name: 'status', label: t('timecard.colStatus'), align: 'center' },
+  { name: 'notes', label: t('timecard.colNotes'), field: 'notes', align: 'left' },
+  { name: 'actions', label: t('timecard.colActions'), align: 'right' }
+])
 
 // DSGA Overview
 const allTimecards = ref([])
 const staffOptions = ref([])
 
-const allTimecardColumns = [
-  { name: 'user_name', label: 'Dipendente', field: 'user_name', align: 'left', sortable: true },
-  { name: 'role', label: 'Ruolo', field: 'role', align: 'center' },
-  { name: 'contract_hours', label: 'Ore Contrattuali', field: 'contract_hours', align: 'center' },
-  { name: 'worked_hours', label: 'Ore Lavorate', field: 'worked_hours', align: 'center' },
-  { name: 'balance', label: 'Saldo Straordinari', align: 'center' },
-  { name: 'leave_days', label: 'Ferie Godute', field: 'leave_days', align: 'center' },
-  { name: 'sick_days', label: 'Malattia', field: 'sick_days', align: 'center' }
-]
+const allTimecardColumns = computed(() => [
+  { name: 'user_name', label: t('timecard.colEmployee'), field: 'user_name', align: 'left', sortable: true },
+  { name: 'role', label: t('timecard.colRole'), field: 'role', align: 'center' },
+  { name: 'contract_hours', label: t('timecard.statContractHours'), field: 'contract_hours', align: 'center' },
+  { name: 'worked_hours', label: t('timecard.statWorkedHours'), field: 'worked_hours', align: 'center' },
+  { name: 'balance', label: t('timecard.colOvertimeBalance'), align: 'center' },
+  { name: 'leave_days', label: t('timecard.colLeaveDays'), field: 'leave_days', align: 'center' },
+  { name: 'sick_days', label: t('timecard.colSickDays'), field: 'sick_days', align: 'center' }
+])
 
 async function loadCurrentTab() {
   if (activeTab.value === 'cartellino') {
@@ -513,7 +513,7 @@ async function loadTimecard() {
     dailyEntries.value = res?.daily_entries || res?.entries || []
   } catch (err) {
     console.error('Errore caricamento cartellino:', err)
-    $q.notify({ type: 'negative', message: 'Errore durante il caricamento del cartellino mensile' })
+    $q.notify({ type: 'negative', message: t('timecard.notifyLoadError') })
     timecardData.value = {}
     dailyEntries.value = []
   } finally {
@@ -527,7 +527,7 @@ async function loadLeaves() {
     const res = await staffAttendanceService.listLeaves({})
     leavesList.value = res || []
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore caricamento richieste ferie' })
+    $q.notify({ type: 'negative', message: t('personnelDesk.notifyLoadError') || 'Errore caricamento richieste ferie' })
   } finally {
     loading.value = false
   }
@@ -560,17 +560,17 @@ function openNewLeaveDialog() {
 
 async function submitLeave() {
   if (!leaveForm.value.start_date || !leaveForm.value.end_date) {
-    $q.notify({ type: 'warning', message: 'Date obbligatorie' })
+    $q.notify({ type: 'warning', message: t('timecard.notifyDatesRequired') })
     return
   }
   savingLeave.value = true
   try {
     await staffAttendanceService.createLeave(leaveForm.value)
-    $q.notify({ type: 'positive', message: 'Richiesta inoltrata con successo al DSGA' })
+    $q.notify({ type: 'positive', message: t('timecard.notifyLeaveSent') })
     leaveDialog.value = false
     await loadLeaves()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore invio richiesta' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('common.error') })
   } finally {
     savingLeave.value = false
   }
@@ -579,30 +579,30 @@ async function submitLeave() {
 async function approveLeave(row) {
   try {
     await staffAttendanceService.approveLeave(row.id, { notes: 'Approvato da DSGA' })
-    $q.notify({ type: 'positive', message: 'Richiesta approvata' })
+    $q.notify({ type: 'positive', message: t('timecard.notifyLeaveApproved') })
     await loadLeaves()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore approvazione' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 
 async function rejectLeave(row) {
   try {
     await staffAttendanceService.rejectLeave(row.id, { reason: 'Rifiutato per esigenze di servizio' })
-    $q.notify({ type: 'positive', message: 'Richiesta respinta' })
+    $q.notify({ type: 'positive', message: t('timecard.notifyLeaveRejected') })
     await loadLeaves()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore rifiuto' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 
 async function deleteLeave(row) {
   try {
     await staffAttendanceService.deleteLeave(row.id)
-    $q.notify({ type: 'positive', message: 'Richiesta eliminata' })
+    $q.notify({ type: 'positive', message: t('common.success') })
     await loadLeaves()
   } catch (err) {
-    $q.notify({ type: 'negative', message: 'Errore eliminazione richiesta' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 
@@ -619,7 +619,7 @@ async function exportCsv() {
     a.click()
     window.URL.revokeObjectURL(url)
   } catch {
-    $q.notify({ type: 'negative', message: 'Errore esportazione CSV' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 
@@ -635,19 +635,19 @@ async function exportAllCsv() {
     a.click()
     window.URL.revokeObjectURL(url)
   } catch {
-    $q.notify({ type: 'negative', message: 'Errore esportazione CSV' })
+    $q.notify({ type: 'negative', message: t('common.error') })
   }
 }
 
-function getLeaveTypeLabel(t) {
-  switch (t) {
-    case 'ferie': return 'Ferie'
-    case 'permesso': return 'Permesso Retribuito'
-    case 'permesso_breve': return 'Permesso Breve'
-    case 'malattia': return 'Malattia'
-    case 'permesso_studio': return 'Diritto allo Studio'
-    case 'recupero': return 'Recupero'
-    default: return t
+function getLeaveTypeLabel(type) {
+  switch (type) {
+    case 'ferie': return t('timecard.leaveTypeFerie')
+    case 'permesso': return t('timecard.leaveTypePermesso')
+    case 'permesso_breve': return t('timecard.leaveTypePermessoBreve')
+    case 'malattia': return t('timecard.leaveTypeMalattia')
+    case 'permesso_studio': return t('timecard.leaveTypePermessoStudio')
+    case 'recupero': return t('timecard.leaveTypeRecupero')
+    default: return type
   }
 }
 
@@ -664,9 +664,9 @@ function getLeaveTypeColor(t) {
 
 function getLeaveStatusLabel(s) {
   switch (s) {
-    case 'pending': return 'In attesa'
-    case 'approved': return 'Approvata'
-    case 'rejected': return 'Respinta'
+    case 'pending': return t('timecard.leaveStatusPending')
+    case 'approved': return t('timecard.leaveStatusApproved')
+    case 'rejected': return t('timecard.leaveStatusRejected')
     default: return s
   }
 }
@@ -690,6 +690,16 @@ function getEntryStatusColor(st) {
   }
 }
 
+function getEntryStatusLabel(st) {
+  switch (st) {
+    case 'Presente': return t('timecard.entryStatusPresent')
+    case 'Assente': return t('timecard.entryStatusAbsent')
+    case 'Ferie': return t('timecard.leaveTypeFerie')
+    case 'Permesso': return t('timecard.entryStatusLeave')
+    default: return st || t('timecard.entryStatusPresent')
+  }
+}
+
 onMounted(async () => {
   await loadTimecard()
   if (isDSGAOrAdmin.value) {
@@ -700,7 +710,7 @@ onMounted(async () => {
         .filter(u => ['assistente_amministrativo', 'collaboratore_scolastico', 'collaboratore_ds', 'dsga', 'secretary'].includes(u.role))
         .map(u => ({
           id: u.id,
-          name: `${u.last_name || ''} ${u.first_name || ''} (${u.role})`
+          name: `${u.last_name || ''} ${u.first_name || ''} (${t('roles.' + u.role) || u.role})`
         }))
     } catch (err) {
       console.error('Errore nel caricamento dei dipendenti per il cartellino:', err)

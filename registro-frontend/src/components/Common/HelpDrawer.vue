@@ -119,17 +119,43 @@ const activeCategory = ref('')
 
 const userRole = computed(() => {
   const role = authStore.userRole || authStore.user?.role || 'student'
-  const r = role.toLowerCase()
-  if (r === 'superadmin') return 'admin'
-  if (['teacher', 'student', 'parent', 'secretary', 'admin',
-       'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'dsga'].includes(r)) {
-    return r
+  const r = role.toLowerCase().trim()
+  if (['principal', 'vice_principal', 'dirigente_scolastico', 'collaboratore_vicario'].includes(r)) {
+    return 'principal'
+  }
+  if (['admin', 'superadmin', 'system_auditor', 'dpo'].includes(r)) {
+    return 'admin'
+  }
+  if (['secretary', 'staff', 'responsabile_gestione_documentale', 'responsabile_conservazione'].includes(r)) {
+    return 'secretary'
+  }
+  if (r === 'dsga') {
+    return 'dsga'
+  }
+  if (['collaboratore_ds', 'responsabile_servizio'].includes(r)) {
+    return 'collaboratore_ds'
+  }
+  if (r === 'collaboratore_scolastico') {
+    return 'collaboratore_scolastico'
+  }
+  if (['assistente_amministrativo', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico'].includes(r)) {
+    return 'assistente_amministrativo'
+  }
+  if (['teacher', 'docente', 'coordinator', 'coordinatore_classe', 'segretario_consiglio', 'referente_progetto', 'referente_inclusione', 'responsabile_dipartimento', 'tutor_orientatore', 'animatore_digitale'].includes(r)) {
+    return 'teacher'
+  }
+  if (['parent', 'genitore'].includes(r)) {
+    return 'parent'
+  }
+  if (['student', 'studente'].includes(r)) {
+    return 'student'
   }
   return 'student'
 })
 
 // Category definitions per role
 const roleCategoryKeys = {
+  principal: ['cat_direction', 'cat_personnel', 'cat_substitutions', 'cat_verbali', 'cat_strike'],
   teacher: ['cat_register', 'cat_grades', 'cat_attendance', 'cat_agenda', 'cat_settings'],
   student: ['cat_grades', 'cat_attendance', 'cat_homework', 'cat_documents', 'cat_settings'],
   parent: ['cat_monitoring', 'cat_communications', 'cat_meetings', 'cat_documents', 'cat_settings'],
@@ -142,6 +168,8 @@ const roleCategoryKeys = {
 }
 
 const categoryIcons = {
+  cat_direction: 'account_balance',
+  cat_personnel: 'badge',
   cat_register: 'menu_book',
   cat_grades: 'grade',
   cat_attendance: 'event_available',
@@ -188,7 +216,7 @@ const categories = computed(() => {
 const articles = computed(() => {
   const role = userRole.value
   const result = []
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 10; i++) {
     const q = t(`help.${role}.q${i}`)
     const a = t(`help.${role}.a${i}`)
     if (q && a && !q.startsWith('help.')) {
