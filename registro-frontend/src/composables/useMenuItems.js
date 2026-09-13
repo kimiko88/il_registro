@@ -20,6 +20,7 @@ export function useMenuItems(role) {
             { label: 'La Mia Scuola', icon: 'school', path: '/admin/schools' },
             { label: 'Gestione Utenti', icon: 'people', path: '/admin/users' },
             { label: 'Presenze Personale', icon: 'co_present', path: '/ata/attendance' },
+            { label: 'Rilevazione Scioperi', icon: 'campaign', path: '/ata/strike' },
             { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
             { label: 'Feature Flags & Istituto', icon: 'toggle_on', path: '/admin/school-settings' },
             { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
@@ -56,6 +57,7 @@ export function useMenuItems(role) {
                 icon: 'manage_accounts',
                 children: [
                     { label: 'Presenze Personale', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Rilevazione Scioperi', icon: 'campaign', path: '/ata/strike' },
                     { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
                     { label: 'Flussi SIDI', icon: 'cloud_sync', path: '/secretary/sidi' },
                     { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' },
@@ -193,6 +195,7 @@ export function useMenuItems(role) {
                 icon: 'co_present',
                 children: [
                     { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Rilevazione Scioperi', icon: 'campaign', path: '/ata/strike' },
                     { label: 'Cartellino & Piano Ferie', icon: 'calendar_month', path: '/ata/timecard' },
                     { label: 'Anagrafica Personale', icon: 'people', path: '/secretary/users' },
                     { label: 'Sostituzioni Docenti', icon: 'swap_horiz', path: '/secretary/substitutions' }
@@ -217,6 +220,7 @@ export function useMenuItems(role) {
                 icon: 'co_present',
                 children: [
                     { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Rilevazione Scioperi', icon: 'campaign', path: '/ata/strike' },
                     { label: 'Cartellino & Piano Ferie', icon: 'calendar_month', path: '/ata/timecard' },
                     { label: 'Anagrafica Utenti', icon: 'people', path: '/secretary/users' },
                     { label: 'Studenti', icon: 'school', path: '/secretary/students' }
@@ -243,6 +247,7 @@ export function useMenuItems(role) {
                 children: [
                     { label: 'Emergenza Sostituzioni', icon: 'bolt', path: '/ata/emergency-substitutions' },
                     { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Rilevazione Scioperi', icon: 'campaign', path: '/ata/strike' },
                     { label: 'Cartellino & Piano Ferie', icon: 'calendar_month', path: '/ata/timecard' },
                     { label: 'Sostituzioni Docenti', icon: 'swap_horiz', path: '/secretary/substitutions' },
                     { label: 'Orario Scolastico', icon: 'schedule', path: '/secretary/timetable' }

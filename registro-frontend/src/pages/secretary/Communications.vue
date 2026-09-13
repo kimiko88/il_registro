@@ -1,5 +1,8 @@
 <template>
   <q-page padding class="bg-slate-50">
+    <!-- Active Strike Notice & Intention Banner -->
+    <ActiveStrikeNoticeBanner />
+
     <div class="row items-center justify-between q-mb-xl">
       <div>
         <h1 class="text-h4 text-weight-bold text-outfit q-my-none text-gradient-premium">
@@ -97,6 +100,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useCommunicationsStore } from '@/stores/communications'
 import CircularCreator from '@/components/Secretary/CircularCreator.vue'
+import ActiveStrikeNoticeBanner from '@/components/Common/ActiveStrikeNoticeBanner.vue'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()

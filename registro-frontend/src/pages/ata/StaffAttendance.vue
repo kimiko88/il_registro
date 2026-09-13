@@ -52,6 +52,16 @@
         />
         <q-btn
           outline
+          color="negative"
+          icon="campaign"
+          label="Rilevazione Scioperi"
+          no-caps
+          rounded
+          to="/ata/strike"
+          class="text-weight-bold"
+        />
+        <q-btn
+          outline
           color="primary"
           icon="refresh"
           round

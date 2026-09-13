@@ -63,6 +63,7 @@ import (
 	"registro-backend/internal/sidi"
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/staff_attendance"
+	"registro-backend/internal/strike"
 	"registro-backend/internal/student_goals"
 	"registro-backend/internal/students"
 	"registro-backend/internal/subjects"
@@ -241,6 +242,10 @@ func main() {
 	staffAttSvc := staff_attendance.NewService(staffAttRepo)
 	staffAttH := staff_attendance.NewHandler(staffAttSvc)
 	staffAttLeaveH := staff_attendance.NewLeaveHandler(staffAttRepo)
+
+	strikeRepo := strike.NewRepository(database)
+	strikeSvc := strike.NewService(strikeRepo)
+	strikeH := strike.NewHandler(strikeSvc)
 
 	visitorsRepo := visitors.NewRepository(database)
 	visitorsSvc := visitors.NewService(visitorsRepo)
@@ -577,6 +582,9 @@ func main() {
 			// Presenze Personale (Docenti in sciopero + Personale ATA)
 			staffAttH.RegisterRoutes(protected)
 			staffAttLeaveH.RegisterLeaveRoutes(protected)
+
+			// Rilevazione Preventiva Scioperi
+			strikeH.RegisterRoutes(protected)
 
 			// Registro Visitatori, Uscite Anticipate & Segnalazioni Guasti
 			visitorsH.RegisterRoutes(protected)
