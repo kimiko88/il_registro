@@ -18,6 +18,7 @@ import (
 
 var (
 	ErrUnauthorized = errors.New("unauthorized")
+	ErrForbidden    = errors.New("forbidden")
 )
 
 // bcryptCost è il cost factor usato per tutti gli hash bcrypt nel package users.
@@ -26,11 +27,55 @@ const bcryptCost = 12
 
 // allowedCreators maps each role to the set of roles it is allowed to create.
 var allowedCreators = map[string]map[string]bool{
-	"superadmin":                {"superadmin": true, "admin": true, "secretary": true, "teacher": true, "student": true, "parent": true, "dsga": true, "collaboratore_ds": true, "assistente_amministrativo": true, "collaboratore_scolastico": true},
-	"admin":                     {"secretary": true, "teacher": true, "student": true, "parent": true, "dsga": true, "collaboratore_ds": true, "assistente_amministrativo": true, "collaboratore_scolastico": true},
-	"secretary":                 {"teacher": true, "student": true, "parent": true, "collaboratore_ds": true, "assistente_amministrativo": true, "collaboratore_scolastico": true},
-	"dsga":                      {"collaboratore_ds": true, "assistente_amministrativo": true, "collaboratore_scolastico": true},
-	"assistente_amministrativo": {"student": true, "parent": true},
+	"superadmin": {
+		"superadmin": true, "admin": true, "principal": true, "vice_principal": true,
+		"secretary": true, "teacher": true, "student": true, "parent": true,
+		"dsga": true, "collaboratore_ds": true, "collaboratore_scolastico": true,
+		"assistente_amministrativo": true, "assistente_alunni": true, "assistente_personale": true,
+		"assistente_contabilita": true, "assistente_protocollo": true, "assistente_sportello": true,
+		"assistente_tecnico": true, "responsabile_servizio": true,
+		"responsabile_gestione_documentale": true, "responsabile_conservazione": true, "dpo": true,
+		"coordinator": true, "coordinatore_classe": true, "system_auditor": true,
+	},
+	"admin": {
+		"admin": true, "principal": true, "vice_principal": true,
+		"secretary": true, "teacher": true, "student": true, "parent": true,
+		"dsga": true, "collaboratore_ds": true, "collaboratore_scolastico": true,
+		"assistente_amministrativo": true, "assistente_alunni": true, "assistente_personale": true,
+		"assistente_contabilita": true, "assistente_protocollo": true, "assistente_sportello": true,
+		"assistente_tecnico": true, "responsabile_servizio": true,
+		"responsabile_gestione_documentale": true, "responsabile_conservazione": true, "dpo": true,
+		"coordinator": true, "coordinatore_classe": true,
+	},
+	"principal": {
+		"vice_principal": true, "secretary": true, "teacher": true, "student": true, "parent": true,
+		"dsga": true, "collaboratore_ds": true, "collaboratore_scolastico": true,
+		"assistente_amministrativo": true, "assistente_alunni": true, "assistente_personale": true,
+		"assistente_contabilita": true, "assistente_protocollo": true, "assistente_sportello": true,
+		"assistente_tecnico": true, "responsabile_servizio": true,
+		"responsabile_gestione_documentale": true, "responsabile_conservazione": true, "dpo": true,
+		"coordinator": true, "coordinatore_classe": true,
+	},
+	"secretary": {
+		"teacher": true, "student": true, "parent": true, "collaboratore_ds": true,
+		"assistente_amministrativo": true, "assistente_alunni": true, "assistente_personale": true,
+		"assistente_contabilita": true, "assistente_protocollo": true, "assistente_sportello": true,
+		"collaboratore_scolastico": true, "assistente_tecnico": true, "coordinator": true,
+	},
+	"dsga": {
+		"assistente_amministrativo": true, "assistente_alunni": true, "assistente_personale": true,
+		"assistente_contabilita": true, "assistente_protocollo": true, "assistente_sportello": true,
+		"collaboratore_scolastico": true, "assistente_tecnico": true, "responsabile_servizio": true,
+	},
+	"assistente_amministrativo": {
+		"student": true, "parent": true,
+	},
+	"assistente_alunni": {
+		"student": true, "parent": true,
+	},
+	"assistente_personale": {
+		"teacher": true, "collaboratore_scolastico": true, "assistente_tecnico": true,
+	},
 }
 
 // Service handles business logic for user management.
@@ -46,7 +91,14 @@ func NewService(repo Repository) *Service {
 // ─── Auth helpers ────────────────────────────────────────────────────────────
 
 func isPrivileged(role string) bool {
-	return role == "admin" || role == "superadmin" || role == "secretary" || role == "dsga" || role == "assistente_amministrativo"
+	switch role {
+	case "admin", "superadmin", "principal", "vice_principal", "secretary", "dsga",
+		"assistente_amministrativo", "assistente_alunni", "assistente_personale",
+		"assistente_contabilita", "assistente_protocollo", "assistente_sportello":
+		return true
+	default:
+		return false
+	}
 }
 
 // ─── CRUD ────────────────────────────────────────────────────────────────────
@@ -702,4 +754,143 @@ func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, s
 		Summary:     summary,
 		GeneratedAt: time.Now(),
 	}, nil
+}
+
+// ─── Incarichi Aggiuntivi & Funzionali ──────────────────────────────────────────
+
+func canAssignDuty(actorRole string, dutyType string) bool {
+	switch actorRole {
+	case "superadmin", "admin", "principal", "vice_principal", "collaboratore_ds":
+		return true
+	case "dsga":
+		// DSGA governs ATA staff duties and administrative assignments
+		return dutyType == "responsabile_servizio" ||
+			dutyType == "addetto_sicurezza" ||
+			dutyType == "assistente_alunni" ||
+			dutyType == "assistente_personale" ||
+			dutyType == "assistente_contabilita" ||
+			dutyType == "assistente_protocollo" ||
+			dutyType == "assistente_sportello"
+	case "secretary", "assistente_personale":
+		// Secretary / Personnel staff can record class coordinator or meeting secretary assignments
+		return dutyType == "coordinatore_classe" ||
+			dutyType == "coordinator" ||
+			dutyType == "segretario_consiglio"
+	default:
+		return false
+	}
+}
+
+// GetUserAssignments returns active assignments for a user.
+func (s *Service) GetUserAssignments(ctx context.Context, actorRole, targetUserID string) ([]UserAssignment, error) {
+	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "student" && actorRole != "parent" {
+		return nil, ErrUnauthorized
+	}
+	return s.repo.GetAssignments(ctx, targetUserID)
+}
+
+// AddUserAssignment assigns an extra duty/assignment to a user enforcing authority rules.
+func (s *Service) AddUserAssignment(ctx context.Context, actorRole, actorUserID, actorSchoolID, targetUserID string, req CreateAssignmentRequest) (*UserAssignment, error) {
+	if !canAssignDuty(actorRole, req.AssignmentType) {
+		return nil, fmt.Errorf("%w: non hai i permessi per attribuire questo incarico", ErrForbidden)
+	}
+
+	targetUser, err := s.repo.GetByID(ctx, targetUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	schoolID := actorSchoolID
+	if schoolID == "" && targetUser.SchoolID != nil {
+		schoolID = *targetUser.SchoolID
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && targetUser.SchoolID != nil && *targetUser.SchoolID != actorSchoolID {
+		return nil, ErrUnauthorized
+	}
+
+	assignment := &UserAssignment{
+		ID:             uuid.New().String(),
+		SchoolID:       schoolID,
+		UserID:         targetUserID,
+		AssignmentType: req.AssignmentType,
+		ScopeType:      req.ScopeType,
+		ScopeID:        req.ScopeID,
+		Title:          req.Title,
+		AssignedBy:     &actorUserID,
+		Metadata:       req.Metadata,
+		IsActive:       true,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+	if assignment.ScopeType == "" {
+		assignment.ScopeType = "school"
+	}
+	if assignment.Title == "" {
+		assignment.Title = req.AssignmentType
+	}
+
+	if err := s.repo.CreateAssignment(ctx, assignment); err != nil {
+		return nil, err
+	}
+
+	// Sincronizzazione automatica se incarico è coordinatore di classe
+	if req.AssignmentType == "coordinatore_classe" && req.ScopeID != nil && *req.ScopeID != "" {
+		_ = s.repo.SetCoordinatedClasses(ctx, schoolID, targetUserID, []string{*req.ScopeID})
+	}
+
+	return assignment, nil
+}
+
+// DeleteUserAssignment revokes an assignment from a user.
+func (s *Service) DeleteUserAssignment(ctx context.Context, actorRole, actorSchoolID, targetUserID, assignmentID string) error {
+	targetUser, err := s.repo.GetByID(ctx, targetUserID)
+	if err != nil {
+		return err
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && targetUser.SchoolID != nil && *targetUser.SchoolID != actorSchoolID {
+		return ErrUnauthorized
+	}
+
+	assignments, err := s.repo.GetAssignments(ctx, targetUserID)
+	if err != nil {
+		return err
+	}
+
+	var targetAssignment *UserAssignment
+	for _, a := range assignments {
+		if a.ID == assignmentID {
+			targetAssignment = &a
+			break
+		}
+	}
+	if targetAssignment == nil {
+		return errors.New("assignment not found")
+	}
+
+	if !canAssignDuty(actorRole, targetAssignment.AssignmentType) {
+		return fmt.Errorf("%w: non hai i permessi per revocare questo incarico", ErrForbidden)
+	}
+
+	return s.repo.DeleteAssignment(ctx, assignmentID)
+}
+
+// SetCoordinatedClasses sets all classes coordinated by a teacher (1 or more classes).
+func (s *Service) SetCoordinatedClasses(ctx context.Context, actorRole, actorSchoolID, teacherUserID string, classIDs []string) error {
+	if !canAssignDuty(actorRole, "coordinatore_classe") {
+		return fmt.Errorf("%w: solo Dirigente Scolastico, Admin o Segreteria possono assegnare coordinatori di classe", ErrForbidden)
+	}
+
+	teacher, err := s.repo.GetByID(ctx, teacherUserID)
+	if err != nil {
+		return err
+	}
+	schoolID := actorSchoolID
+	if schoolID == "" && teacher.SchoolID != nil {
+		schoolID = *teacher.SchoolID
+	}
+	if actorRole != "superadmin" && actorSchoolID != "" && teacher.SchoolID != nil && *teacher.SchoolID != actorSchoolID {
+		return ErrUnauthorized
+	}
+
+	return s.repo.SetCoordinatedClasses(ctx, schoolID, teacherUserID, classIDs)
 }

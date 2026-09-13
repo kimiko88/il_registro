@@ -19,13 +19,14 @@ describe('useMenuItems', () => {
         it('should return admin menu items', () => {
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(9)
+            expect(menuItems).toHaveLength(11)
             expect(menuItems[0].label).toBe('Dashboard')
             expect(menuItems[1].label).toBe('La Mia Scuola')
             expect(menuItems[2].label).toBe('Gestione Utenti')
             expect(menuItems[3].label).toBe('Presenze Personale')
-            expect(menuItems[4].label).toBe('Gestione Sostituzioni')
-            expect(menuItems[5].label).toBe('Feature Flags & Istituto')
+            expect(menuItems[4].label).toBe('Rilevazione Scioperi')
+            expect(menuItems[5].label).toBe('Gestione Sostituzioni')
+            expect(menuItems[6].label).toBe('Feature Flags & Istituto')
         })
 
         it('should have correct paths for admin', () => {
@@ -35,8 +36,9 @@ describe('useMenuItems', () => {
             expect(menuItems[1].path).toBe('/admin/schools')
             expect(menuItems[2].path).toBe('/admin/users')
             expect(menuItems[3].path).toBe('/ata/attendance')
-            expect(menuItems[4].path).toBe('/secretary/substitutions')
-            expect(menuItems[5].path).toBe('/admin/school-settings')
+            expect(menuItems[4].path).toBe('/ata/strike')
+            expect(menuItems[5].path).toBe('/secretary/substitutions')
+            expect(menuItems[6].path).toBe('/admin/school-settings')
         })
 
         it('should have exact flag for dashboard', () => {
@@ -50,7 +52,7 @@ describe('useMenuItems', () => {
         it('should return secretary menu items', () => {
             const flatItems = getFlatItems('secretary')
 
-            expect(flatItems).toHaveLength(18)
+            expect(flatItems).toHaveLength(20)
             expect(flatItems.map(item => item.label)).toContain('Documenti')
             expect(flatItems.map(item => item.label)).toContain('Studenti')
             expect(flatItems.map(item => item.label)).toContain('Flussi SIDI')
@@ -187,6 +189,51 @@ describe('useMenuItems', () => {
                     expect(flatItems[0].path).toBe('/')
                 }
             })
+        })
+    })
+
+    describe('Enhanced Roles & Dynamic Incarichi Aggiuntivi', () => {
+        it('should return valid menus for new educational & technical profiles', () => {
+            const profiles = [
+                'assistente_alunni', 'assistente_personale', 'assistente_contabilita',
+                'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico',
+                'responsabile_servizio', 'responsabile_gestione_documentale',
+                'responsabile_conservazione', 'dpo'
+            ]
+            profiles.forEach(prof => {
+                const items = useMenuItems(prof)
+                expect(items.length).toBeGreaterThan(0)
+                expect(items[0].label).toMatch(/Dashboard/)
+            })
+        })
+
+        it('should dynamically inject duty menu items for teachers with assignments', () => {
+            const assignments = [
+                { assignment_type: 'referente_progetto', is_active: true },
+                { assignment_type: 'tutor_orientamento', is_active: true },
+                { assignment_type: 'animatore_digitale', is_active: true }
+            ]
+            const items = useMenuItems('teacher', assignments)
+            const flat = []
+            items.forEach(cat => {
+                if (cat.children) flat.push(...cat.children)
+                else flat.push(cat)
+            })
+
+            const labels = flat.map(i => i.label)
+            expect(labels).toContain('Progetti & Finanziamenti')
+            expect(labels).toContain('Tutor Orientamento')
+            expect(labels).toContain('Team Digitale & E-Learning')
+        })
+
+        it('should enable coordinator items for teacher with coordinatore_classe assignment', () => {
+            const assignments = [
+                { assignment_type: 'coordinatore_classe', scope_id: 'class-1', is_active: true }
+            ]
+            const items = useMenuItems('teacher', assignments)
+            const didattica = items.find(c => c.category === 'Didattica & Valutazione')
+            const coordItem = didattica.children.find(c => c.label === 'Coordinamento')
+            expect(coordItem.coordinatorOnly).toBe(false)
         })
     })
 })

@@ -399,6 +399,10 @@ func main() {
 				usersGroup.DELETE("/:id/guardians/:guardianId", usersH.RemoveGuardian)
 				usersGroup.POST("/me/switch-child/:studentId", usersH.SwitchChild)
 				usersGroup.GET("/students/:id/fascicolo", usersH.GetFascicolo)
+				usersGroup.GET("/:id/assignments", usersH.GetAssignments)
+				usersGroup.POST("/:id/assignments", usersH.AddAssignment)
+				usersGroup.DELETE("/:id/assignments/:assignmentId", usersH.DeleteAssignment)
+				usersGroup.PUT("/:id/coordinated-classes", usersH.SetCoordinatedClasses)
 			}
 
 			classesH.RegisterRoutes(protected)

@@ -109,6 +109,56 @@ func TestScuolaDiProvaWorkflow(t *testing.T) {
 	err = db.QueryRowContext(ctx, `SELECT id FROM users WHERE email = $1 AND school_id = $2`, "dsga.prova@scuola.it", schoolID).Scan(&dsgaID)
 	require.NoError(t, err, "DSGA user must exist")
 
+	// 2c. Verify All Specialized Profiles Exist in Scuola di Prova
+	specializedRoles := []string{
+		"vice_principal",
+		"assistente_alunni",
+		"assistente_personale",
+		"assistente_contabilita",
+		"assistente_protocollo",
+		"assistente_sportello",
+		"assistente_tecnico",
+		"responsabile_servizio",
+		"responsabile_gestione_documentale",
+		"responsabile_conservazione",
+		"dpo",
+		"system_auditor",
+		"coordinator",
+		"superadmin",
+	}
+	for _, r := range specializedRoles {
+		var cnt int
+		err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM users WHERE school_id = $1 AND role = $2`, schoolID, r).Scan(&cnt)
+		require.NoError(t, err, "Query for specialized role %s must succeed", r)
+		assert.GreaterOrEqual(t, cnt, 1, "Expected at least 1 user with role %s", r)
+	}
+
+	// 2d. Verify Users with Multiple Enhanced Duties (Incarichi Aggiuntivi)
+	var docIncID string
+	err = db.QueryRowContext(ctx, `SELECT id FROM users WHERE email = 'docente.incarichi@scuola.it' AND school_id = $1`, schoolID).Scan(&docIncID)
+	require.NoError(t, err, "User docente.incarichi@scuola.it must exist")
+
+	var docAssignmentsCount int
+	err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM user_assignments WHERE user_id = $1 AND is_active = true`, docIncID).Scan(&docAssignmentsCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, docAssignmentsCount, 6, "docente.incarichi must have multiple active duties")
+
+	// Verify docente.incarichi coordinates at least 2 distinct classes
+	var coordCount int
+	err = db.QueryRowContext(ctx, `SELECT COUNT(DISTINCT scope_id) FROM user_assignments WHERE user_id = $1 AND assignment_type = 'coordinatore_classe' AND is_active = true`, docIncID).Scan(&coordCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, coordCount, 2, "docente.incarichi must coordinate at least 2 classes")
+
+	// Verify ATA duties for tecnico.incarichi
+	var tecIncID string
+	err = db.QueryRowContext(ctx, `SELECT id FROM users WHERE email = 'tecnico.incarichi@scuola.it' AND school_id = $1`, schoolID).Scan(&tecIncID)
+	require.NoError(t, err, "User tecnico.incarichi@scuola.it must exist")
+
+	var tecAssignmentsCount int
+	err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM user_assignments WHERE user_id = $1 AND is_active = true`, tecIncID).Scan(&tecAssignmentsCount)
+	require.NoError(t, err)
+	assert.GreaterOrEqual(t, tecAssignmentsCount, 2, "tecnico.incarichi must have at least 2 active duties")
+
 	// 3. Verify 4 Subjects
 	var subjectCount int
 	err = db.QueryRowContext(ctx, `SELECT COUNT(*) FROM subjects WHERE school_id = $1`, schoolID).Scan(&subjectCount)

@@ -747,3 +747,88 @@ func (h *Handler) GetFascicolo(c *gin.Context) {
 
 	c.JSON(http.StatusOK, fascicolo)
 }
+
+func (h *Handler) GetAssignments(c *gin.Context) {
+	userID := c.Param("id")
+	actorRole := getActorRole(c)
+
+	assignments, err := h.service.GetUserAssignments(c.Request.Context(), actorRole, userID)
+	if err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if assignments == nil {
+		assignments = []UserAssignment{}
+	}
+	c.JSON(http.StatusOK, assignments)
+}
+
+func (h *Handler) AddAssignment(c *gin.Context) {
+	userID := c.Param("id")
+	actorRole := getActorRole(c)
+	actorID := getActorID(c)
+	schoolID := getSchoolID(c)
+
+	var req CreateAssignmentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	assignment, err := h.service.AddUserAssignment(c.Request.Context(), actorRole, actorID, schoolID, userID, req)
+	if err != nil {
+		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, assignment)
+}
+
+func (h *Handler) DeleteAssignment(c *gin.Context) {
+	userID := c.Param("id")
+	assignmentID := c.Param("assignmentId")
+	actorRole := getActorRole(c)
+	schoolID := getSchoolID(c)
+
+	if err := h.service.DeleteUserAssignment(c.Request.Context(), actorRole, schoolID, userID, assignmentID); err != nil {
+		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "assignment revoked successfully"})
+}
+
+func (h *Handler) SetCoordinatedClasses(c *gin.Context) {
+	userID := c.Param("id")
+	actorRole := getActorRole(c)
+	schoolID := getSchoolID(c)
+
+	var req SetCoordinatedClassesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.SetCoordinatedClasses(c.Request.Context(), actorRole, schoolID, userID, req.ClassIDs); err != nil {
+		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "forbidden") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "coordinated classes updated successfully"})
+}

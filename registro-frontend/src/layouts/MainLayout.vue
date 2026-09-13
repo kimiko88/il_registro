@@ -1179,13 +1179,14 @@ const isTeacherCoordinator = computed(() => {
 
 // Get menu items based on role
 const menuItems = ref([])
-watch([userRole, isTeacherCoordinator, () => classesStore.classes], ([newRole, isCoord]) => {
+watch([userRole, isTeacherCoordinator, () => classesStore.classes, () => authStore.user?.assignments], ([newRole, isCoord, _classes, assignments]) => {
   if (!newRole) {
     menuItems.value = []
     return
   }
-  let items = useMenuItems(newRole)
-  if (newRole === 'teacher' && !isCoord) {
+  let items = useMenuItems(newRole, assignments)
+  const isActuallyCoordinator = isCoord || (assignments || []).some(a => (a.assignment_type === 'coordinatore_classe' || a.assignment_type === 'coordinator') && a.is_active !== false)
+  if (newRole === 'teacher' && !isActuallyCoordinator) {
     items = items.map(cat => {
       if (!cat.children) return cat
       return {

@@ -53,6 +53,18 @@ export const userService = {
     },
     getStudentFascicolo(studentId) {
         return api.get(`/users/students/${studentId}/fascicolo`)
+    },
+    getAssignments(userId) {
+        return api.get(`/users/${userId}/assignments`)
+    },
+    addAssignment(userId, data) {
+        return api.post(`/users/${userId}/assignments`, data)
+    },
+    deleteAssignment(userId, assignmentId) {
+        return api.delete(`/users/${userId}/assignments/${assignmentId}`)
+    },
+    setCoordinatedClasses(userId, classIds) {
+        return api.put(`/users/${userId}/coordinated-classes`, { class_ids: classIds })
     }
 }
 

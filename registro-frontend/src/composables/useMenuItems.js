@@ -1,8 +1,14 @@
 /**
- * Menu configuration for different user roles
- * Returns menu items based on user role
+ * Menu configuration for all 25 institutional roles & dynamic duties
+ * Returns menu items based on user role and active user assignments
  */
-export function useMenuItems(role) {
+export function useMenuItems(role, assignments = []) {
+    const normRole = (role || '').toLowerCase()
+
+    if (!normRole) {
+        return []
+    }
+
     const menuConfig = {
         superadmin: [
             { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
@@ -239,6 +245,89 @@ export function useMenuItems(role) {
                 ]
             }
         ],
+        assistente_alunni: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Didattica & Studenti',
+                icon: 'school',
+                children: [
+                    { label: 'Studenti & Fascicoli', icon: 'school', path: '/secretary/students' },
+                    { label: 'Certificati Alunni', icon: 'workspace_premium', path: '/secretary/certificates' },
+                    { label: 'Flussi SIDI Alunni', icon: 'cloud_sync', path: '/secretary/sidi' },
+                    { label: 'Scrutinio & Esami', icon: 'analytics', path: '/secretary/scrutiny' },
+                    { label: 'Libri di Testo', icon: 'auto_stories', path: '/secretary/textbooks' },
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                ]
+            }
+        ],
+        assistente_personale: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Gestione Personale',
+                icon: 'co_present',
+                children: [
+                    { label: 'Anagrafica Personale', icon: 'people', path: '/secretary/users' },
+                    { label: 'Presenze Personale', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Rilevazione Scioperi', icon: 'campaign', path: '/ata/strike' },
+                    { label: 'Cartellino & Ferie', icon: 'calendar_month', path: '/ata/timecard' },
+                    { label: 'Sostituzioni Docenti', icon: 'swap_horiz', path: '/secretary/substitutions' },
+                    { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                ]
+            }
+        ],
+        assistente_contabilita: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Bilancio & Contabilità',
+                icon: 'account_balance',
+                children: [
+                    { label: 'Documenti & Mandati', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
+                    { label: 'Certificati & Ricevute', icon: 'workspace_premium', path: '/secretary/certificates' },
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                ]
+            }
+        ],
+        assistente_protocollo: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Protocollo & Archivi',
+                icon: 'mark_email_read',
+                children: [
+                    { label: 'Registro Protocollo', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Verbali & Delibere', icon: 'gavel', path: '/secretary/verbali' },
+                    { label: 'Comunicazioni & Circolari', icon: 'email', path: '/secretary/communications' },
+                    { label: 'Riunioni', icon: 'groups', path: '/secretary/meetings' }
+                ]
+            }
+        ],
+        assistente_sportello: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Front-Office & Sportello',
+                icon: 'support_agent',
+                children: [
+                    { label: 'Sportello Utenza', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
+                    { label: 'Registro Visitatori', icon: 'door_front', path: '/ata/visitor-registry' },
+                    { label: 'Rilascio Certificati', icon: 'workspace_premium', path: '/secretary/certificates' },
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                ]
+            }
+        ],
+        assistente_tecnico: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Laboratori & Tecnologie',
+                icon: 'computer',
+                children: [
+                    { label: 'Cartellino Presenze', icon: 'calendar_month', path: '/ata/timecard' },
+                    { label: 'Google & Teams E-Learning', icon: 'hub', path: '/admin/elearning' },
+                    { label: 'Sportello Tecnico', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                ]
+            }
+        ],
         collaboratore_ds: [
             { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
             {
@@ -277,21 +366,127 @@ export function useMenuItems(role) {
                     { label: 'Comunicazioni & Circolari', icon: 'email', path: '/secretary/communications' }
                 ]
             }
+        ],
+        responsabile_servizio: [
+            { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
+            {
+                category: 'Gestione Servizio & Struttura',
+                icon: 'room_preferences',
+                children: [
+                    { label: 'Registro Visitatori', icon: 'door_front', path: '/ata/visitor-registry' },
+                    { label: 'Cartellino Presenze', icon: 'calendar_month', path: '/ata/timecard' },
+                    { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                ]
+            }
+        ],
+        responsabile_gestione_documentale: [
+            { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
+            {
+                category: 'Gestione Documentale & Archivi',
+                icon: 'archive',
+                children: [
+                    { label: 'Documenti & Atti', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
+                    { label: 'Comunicazioni & Circolari', icon: 'email', path: '/secretary/communications' }
+                ]
+            }
+        ],
+        responsabile_conservazione: [
+            { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
+            {
+                category: 'Conservazione Digitale',
+                icon: 'inventory_2',
+                children: [
+                    { label: 'Documenti & Archivio', icon: 'description', path: '/secretary/documents' },
+                    { label: 'Verbali & Delibere', icon: 'gavel', path: '/secretary/verbali' },
+                    { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
+                ]
+            }
+        ],
+        dpo: [
+            { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
+            { label: 'Audit Logs & Sicurezza', icon: 'history', path: '/admin/audit-logs' },
+            { label: 'Monitoraggio Sistema', icon: 'monitor_heart', path: '/admin/monitoring' },
+            { label: 'Impostazioni Privacy', icon: 'security', path: '/admin/settings' },
+            { label: 'Comunicazioni', icon: 'email', path: '/secretary/communications' }
         ]
     }
 
-    const normRole = (role || '').toLowerCase()
-    if (normRole === 'principal' || normRole === 'vice_principal') {
+    // Principal / Vice-Principal map to secretary menu structure (incorporating institutional governance)
+    if (normRole === 'principal' || normRole === 'vice_principal' || normRole === 'dirigente_scolastico' || normRole === 'collaboratore_vicario') {
         return menuConfig.secretary
     }
-    if (normRole === 'coordinator' || normRole === 'docente') {
-        return menuConfig.teacher
-    }
+
     if (normRole === 'system_auditor') {
         return menuConfig.superadmin
     }
+
     if (normRole === 'staff') {
         return menuConfig.secretary
+    }
+
+    if (normRole === 'studente') {
+        return menuConfig.student
+    }
+
+    if (normRole === 'genitore') {
+        return menuConfig.parent
+    }
+
+    // Teacher & dynamic assignment enhancement
+    if (normRole === 'teacher' || normRole === 'docente' || normRole === 'coordinator' || normRole === 'coordinatore_classe') {
+        const baseTeacherMenu = JSON.parse(JSON.stringify(menuConfig.teacher))
+        const activeAssignments = (assignments || []).filter(a => a.is_active !== false)
+        const hasAssignment = (type) => activeAssignments.some(a => a.assignment_type === type)
+        const isCoord = normRole === 'coordinator' || normRole === 'coordinatore_classe' || hasAssignment('coordinatore_classe') || hasAssignment('coordinator')
+
+        // If teacher is coordinator, enable coordinator-only items
+        if (isCoord) {
+            baseTeacherMenu.forEach(cat => {
+                if (cat.children) {
+                    cat.children.forEach(child => {
+                        if (child.coordinatorOnly) {
+                            child.coordinatorOnly = false
+                        }
+                    })
+                }
+            })
+        }
+
+        // Project lead enhancement
+        if (hasAssignment('referente_progetto')) {
+            const orgCat = baseTeacherMenu.find(c => c.category === 'Organizzazione & Orario')
+            if (orgCat && !orgCat.children.some(c => c.path === '/secretary/pcto')) {
+                orgCat.children.push({ label: 'Progetti & Finanziamenti', icon: 'rocket_launch', path: '/secretary/pcto' })
+            }
+        }
+
+        // Guidance tutor enhancement
+        if (hasAssignment('tutor_orientamento')) {
+            const didCat = baseTeacherMenu.find(c => c.category === 'Didattica & Valutazione')
+            if (didCat && !didCat.children.some(c => c.path === '/student/orientamento')) {
+                didCat.children.push({ label: 'Tutor Orientamento', icon: 'explore', path: '/student/orientamento' })
+            }
+        }
+
+        // Inclusion lead enhancement
+        if (hasAssignment('referente_inclusione')) {
+            const didCat = baseTeacherMenu.find(c => c.category === 'Didattica & Valutazione')
+            if (didCat && !didCat.children.some(c => c.label === 'Inclusione (BES / DSA)')) {
+                didCat.children.push({ label: 'Inclusione (BES / DSA)', icon: 'accessibility_new', path: '/teacher/pdp' })
+            }
+        }
+
+        // Digital animator enhancement
+        if (hasAssignment('animatore_digitale')) {
+            const commCat = baseTeacherMenu.find(c => c.category === 'Comunicazioni & Atti')
+            if (commCat && !commCat.children.some(c => c.path === '/admin/elearning')) {
+                commCat.children.push({ label: 'Team Digitale & E-Learning', icon: 'hub', path: '/admin/elearning' })
+            }
+        }
+
+        return baseTeacherMenu
     }
 
     return menuConfig[normRole] || []

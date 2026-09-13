@@ -99,15 +99,43 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 		// 2 Collaboratori Scolastici (Portineria / Personale ausiliario)
 		{"collaboratore_scolastico1.prova@scuola.it", "Salvatore", "Esposito", "collaboratore_scolastico", "BADGE-CS-001"},
 		{"collaboratore_scolastico2.prova@scuola.it", "Carmela", "Russo", "collaboratore_scolastico", "BADGE-CS-002"},
+
+		// Ruoli Governance & Direzione Aggiuntivi
+		{"vicario.prova@scuola.it", "Roberto", "Vicario", "vice_principal", "BADGE-VIC-001"},
+
+		// Ruoli Specializzati Segreteria (Amministrazione & ATA)
+		{"alunni.prova@scuola.it", "Mario", "Alunni", "assistente_alunni", "BADGE-ALU-001"},
+		{"personale.prova@scuola.it", "Anna", "Personale", "assistente_personale", "BADGE-PER-001"},
+		{"contabilita.prova@scuola.it", "Luigi", "Contabile", "assistente_contabilita", "BADGE-CON-001"},
+		{"protocollo.prova@scuola.it", "Sara", "Protocollo", "assistente_protocollo", "BADGE-PRO-001"},
+		{"sportello.prova@scuola.it", "Giorgio", "Sportello", "assistente_sportello", "BADGE-SPO-001"},
+
+		// Ruoli Operativi ATA & Tecnici
+		{"tecnico.prova@scuola.it", "Alessandro", "Tecnico", "assistente_tecnico", "BADGE-TEC-001"},
+		{"servizio.prova@scuola.it", "Maria", "Servizio", "responsabile_servizio", "BADGE-SER-001"},
+
+		// Ruoli Garanzia & Tecnici Applicativi
+		{"documenti.prova@scuola.it", "Carla", "Documenti", "responsabile_gestione_documentale", "BADGE-DOC-001"},
+		{"conservazione.prova@scuola.it", "Paolo", "Conservatore", "responsabile_conservazione", "BADGE-CNS-001"},
+		{"dpo.prova@scuola.it", "Francesca", "DPO", "dpo", "BADGE-DPO-001"},
+		{"auditor.prova@scuola.it", "Michele", "Auditor", "system_auditor", "BADGE-AUD-001"},
+
+		// Ruolo Legacy Coordinatore & Superadmin scuola
+		{"coordinatore.legacy@scuola.it", "Andrea", "Coordinatore", "coordinator", "BADGE-COO-001"},
+		{"superadmin.prova@scuola.it", "Super", "AdminProva", "superadmin", "BADGE-SUP-001"},
 	}
 
 	var hasUserBadgesTable bool
 	_ = dbConn.QueryRowContext(ctx, "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_badges')").Scan(&hasUserBadgesTable)
 
+	var dsgaID string
 	for _, ata := range ataStaff {
 		ataID, err := createUser(ata.email, ata.firstName, ata.lastName, ata.role)
 		if err != nil {
-			return fmt.Errorf("failed to create ATA user %s (%s): %w", ata.email, ata.role, err)
+			return fmt.Errorf("failed to create staff user %s (%s): %w", ata.email, ata.role, err)
+		}
+		if ata.role == "dsga" {
+			dsgaID = ataID
 		}
 
 		if hasUserBadgesTable {
@@ -115,9 +143,9 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 				INSERT INTO user_badges (id, school_id, user_id, badge_code, notes, is_active, assigned_at, created_at)
 				VALUES ($1, $2, $3, $4, $5, TRUE, NOW(), NOW())
 				ON CONFLICT (school_id, badge_code) DO NOTHING
-			`, uuid.New().String(), schoolID, ataID, ata.badgeCode, "Badge di prova ATA")
+			`, uuid.New().String(), schoolID, ataID, ata.badgeCode, "Badge di prova")
 		}
-		fmt.Printf("[SEED] ATA User created: %s (%s, ID: %s)\n", ata.email, ata.role, ataID)
+		fmt.Printf("[SEED] Staff User created: %s (%s, ID: %s)\n", ata.email, ata.role, ataID)
 	}
 
 	// 3. 4 Subjects
@@ -231,6 +259,104 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 		`, uuid.New().String(), a.ClassID, subID, a.TeacherProfID)
 	}
 	fmt.Println("[SEED] Subject-Teacher assignments created for 2A and 2B.")
+
+	// 6b. Users with Multiple Enhanced Duties (Incarichi Aggiuntivi)
+	// 1) Docente con incarichi multipli (Coordinatore di 2 classi, Inclusione, Progetti, Dipartimento, Orientamento, Animatore Digitale)
+	docenteIncarichiID, err := createUser("docente.incarichi@scuola.it", "Valerio", "IncarichiMultipli", "teacher")
+	if err != nil {
+		return fmt.Errorf("failed to create docente.incarichi: %w", err)
+	}
+	var docIncProfID string
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM teachers WHERE user_id = $1 AND school_id = $2`, docenteIncarichiID, schoolID).Scan(&docIncProfID)
+	if err != nil {
+		docIncProfID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO teachers (id, user_id, school_id, hiring_date, created_at, updated_at)
+			VALUES ($1, $2, $3, CURRENT_DATE, NOW(), NOW())
+		`, docIncProfID, docenteIncarichiID, schoolID)
+	}
+
+	type assignmentData struct {
+		assignmentType string
+		scopeType      string
+		scopeID        string
+		title          string
+		assignedBy     string
+	}
+
+	docenteAssignments := []assignmentData{
+		{"coordinatore_classe", "class", class2AID, "Coordinatore Classe 2A", dirigenteID},
+		{"coordinatore_classe", "class", class2BID, "Coordinatore Classe 2B", dirigenteID},
+		{"segretario_consiglio", "school", "", "Segretario Verbalizzante del Consiglio", dirigenteID},
+		{"referente_inclusione", "school", "", "Referente Inclusione, BES e DSA", dirigenteID},
+		{"referente_progetto", "school", "", "Referente Progetti PTOF e PNRR", dirigenteID},
+		{"responsabile_dipartimento", "department", "Dipartimento Scientifico", "Coordinatore Dipartimento Scientifico", dirigenteID},
+		{"tutor_orientatore", "school", "", "Tutor dell'Orientamento Scolastico", dirigenteID},
+		{"animatore_digitale", "school", "", "Animatore Digitale PNSD", dirigenteID},
+	}
+
+	for _, asgn := range docenteAssignments {
+		var existingAsgnID string
+		_ = dbConn.QueryRowContext(ctx, `
+			SELECT id FROM user_assignments 
+			WHERE user_id = $1 AND assignment_type = $2 AND COALESCE(scope_id, '') = $3 AND is_active = true
+		`, docenteIncarichiID, asgn.assignmentType, asgn.scopeID).Scan(&existingAsgnID)
+
+		if existingAsgnID == "" {
+			_, err = dbConn.ExecContext(ctx, `
+				INSERT INTO user_assignments (id, school_id, user_id, assignment_type, scope_type, scope_id, title, assigned_by, is_active, created_at, updated_at)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NOW(), NOW())
+			`, uuid.New().String(), schoolID, docenteIncarichiID, asgn.assignmentType, asgn.scopeType, asgn.scopeID, asgn.title, asgn.assignedBy)
+			if err != nil {
+				fmt.Printf("[WARN] user_assignments insert error for docente: %v\n", err)
+			}
+		}
+	}
+
+	// 2) Assistente Tecnico con incarichi (Responsabile Laboratorio e Addetto Sicurezza)
+	tecnicoIncarichiID, err := createUser("tecnico.incarichi@scuola.it", "Simone", "TecnicoIncarichi", "assistente_tecnico")
+	if err == nil {
+		tecnicoAssignments := []assignmentData{
+			{"responsabile_servizio", "service", "Laboratorio Multimediale", "Responsabile Laboratorio Multimediale e Robotica", dsgaID},
+			{"addetto_sicurezza", "school", "", "Addetto Primo Soccorso ed Emergenze", dsgaID},
+		}
+		for _, asgn := range tecnicoAssignments {
+			var existingAsgnID string
+			_ = dbConn.QueryRowContext(ctx, `
+				SELECT id FROM user_assignments 
+				WHERE user_id = $1 AND assignment_type = $2 AND COALESCE(scope_id, '') = $3 AND is_active = true
+			`, tecnicoIncarichiID, asgn.assignmentType, asgn.scopeID).Scan(&existingAsgnID)
+
+			if existingAsgnID == "" {
+				_, err = dbConn.ExecContext(ctx, `
+					INSERT INTO user_assignments (id, school_id, user_id, assignment_type, scope_type, scope_id, title, assigned_by, is_active, created_at, updated_at)
+					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NOW(), NOW())
+				`, uuid.New().String(), schoolID, tecnicoIncarichiID, asgn.assignmentType, asgn.scopeType, asgn.scopeID, asgn.title, asgn.assignedBy)
+				if err != nil {
+					fmt.Printf("[WARN] user_assignments insert error for tecnico: %v\n", err)
+				}
+			}
+		}
+	}
+
+	// 3) Collaboratore Scolastico con incarichi (Addetto Sicurezza)
+	collabIncarichiID, err := createUser("collaboratore.incarichi@scuola.it", "Giovanni", "CollaboratoreIncarichi", "collaboratore_scolastico")
+	if err == nil {
+		var existingAsgnID string
+		_ = dbConn.QueryRowContext(ctx, `
+			SELECT id FROM user_assignments 
+			WHERE user_id = $1 AND assignment_type = 'addetto_sicurezza' AND is_active = true
+		`, collabIncarichiID).Scan(&existingAsgnID)
+
+		if existingAsgnID == "" {
+			_, _ = dbConn.ExecContext(ctx, `
+				INSERT INTO user_assignments (id, school_id, user_id, assignment_type, scope_type, scope_id, title, assigned_by, is_active, created_at, updated_at)
+				VALUES ($1, $2, $3, 'addetto_sicurezza', 'school', '', 'Addetto Emergenze e Antincendio', $4, true, NOW(), NOW())
+			`, uuid.New().String(), schoolID, collabIncarichiID, dsgaID)
+		}
+	}
+
+	fmt.Println("[SEED] Users with enhanced duties (user_assignments) created successfully!")
 
 	// 7. Create 10 Students & 10 Parents for 2A, and 10 Students & 10 Parents for 2B
 	seedClassPeople := func(classID, className string) error {
@@ -448,31 +574,25 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 	fmt.Println("[SEED] Class Lessons created.")
 
 	// 12. Attendance Records & Justifications
-	if st2A1_ProfID != "" && st2A2_ProfID != "" {
+	if st2A1_UserID != "" && st2A2_UserID != "" {
 		// Attendance for Student 1 (Present)
 		var att1ID string
-		err = dbConn.QueryRowContext(ctx, `SELECT id FROM attendance WHERE student_id = $1 AND date = '2024-10-10'::date`, st2A1_ProfID).Scan(&att1ID)
+		err = dbConn.QueryRowContext(ctx, `SELECT id FROM attendance WHERE student_id = $1 AND date = '2024-10-10'::date`, st2A1_UserID).Scan(&att1ID)
 		if err != nil {
-			_, err = dbConn.ExecContext(ctx, `
+			_, _ = dbConn.ExecContext(ctx, `
 				INSERT INTO attendance (id, school_id, student_id, class_id, date, status, justified, created_at, updated_at)
-				VALUES ($1, $2, $3, $4, '2024-10-10'::date, 'Present', TRUE, NOW(), NOW())
-			`, uuid.New().String(), schoolID, st2A1_ProfID, class2AID)
-			if err != nil {
-				fmt.Printf("[WARN] attendance 1 insert error: %v\n", err)
-			}
+				VALUES ($1, $2, $3, $4, '2024-10-10'::date, 'present', TRUE, NOW(), NOW())
+			`, uuid.New().String(), schoolID, st2A1_UserID, class2AID)
 		}
 
 		// Attendance for Student 2 (Absent on 2024-10-10, justified)
 		var att2ID string
-		err = dbConn.QueryRowContext(ctx, `SELECT id FROM attendance WHERE student_id = $1 AND date = '2024-10-10'::date`, st2A2_ProfID).Scan(&att2ID)
+		err = dbConn.QueryRowContext(ctx, `SELECT id FROM attendance WHERE student_id = $1 AND date = '2024-10-10'::date`, st2A2_UserID).Scan(&att2ID)
 		if err != nil {
-			_, err = dbConn.ExecContext(ctx, `
+			_, _ = dbConn.ExecContext(ctx, `
 				INSERT INTO attendance (id, school_id, student_id, class_id, date, status, justified, notes, created_at, updated_at)
-				VALUES ($1, $2, $3, $4, '2024-10-10'::date, 'Absent', TRUE, 'Motivi di salute', NOW(), NOW())
-			`, uuid.New().String(), schoolID, st2A2_ProfID, class2AID)
-			if err != nil {
-				fmt.Printf("[WARN] attendance 2 insert error: %v\n", err)
-			}
+				VALUES ($1, $2, $3, $4, '2024-10-10'::date, 'absent', TRUE, 'Motivi di salute', NOW(), NOW())
+			`, uuid.New().String(), schoolID, st2A2_UserID, class2AID)
 		}
 
 		if p2A2_UserID != "" {

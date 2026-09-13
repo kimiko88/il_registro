@@ -6,8 +6,18 @@ type RegisterRequest struct {
 	Password  string `json:"password" validate:"required,min=10"`
 	FirstName string `json:"first_name" validate:"required"`
 	LastName  string `json:"last_name" validate:"required"`
-	Role      string `json:"role" validate:"required,oneof=student teacher parent admin"`
+	Role      string `json:"role" validate:"required"`
 	SchoolID  string `json:"school_id,omitempty"`
+}
+
+// UserAssignmentResponse represents a lightweight active assignment returned with user profile
+type UserAssignmentResponse struct {
+	ID             string  `json:"id"`
+	AssignmentType string  `json:"assignment_type"`
+	ScopeType      string  `json:"scope_type"`
+	ScopeID        *string `json:"scope_id,omitempty"`
+	Title          string  `json:"title"`
+	IsActive       bool    `json:"is_active"`
 }
 
 // LoginRequest represents login credentials
@@ -53,15 +63,16 @@ type AuthResponse struct {
 
 // UserResponse represents user data in responses
 type UserResponse struct {
-	ID            string  `json:"id"`
-	Email         string  `json:"email"`
-	FirstName     string  `json:"first_name"`
-	LastName      string  `json:"last_name"`
-	Role          string  `json:"role"`
-	SchoolID      *string `json:"school_id,omitempty"`
-	IsStaff       bool    `json:"is_staff"`
-	EmailVerified bool    `json:"email_verified"`
-	MFAEnabled    bool    `json:"mfa_enabled"`
+	ID            string                   `json:"id"`
+	Email         string                   `json:"email"`
+	FirstName     string                   `json:"first_name"`
+	LastName      string                   `json:"last_name"`
+	Role          string                   `json:"role"`
+	SchoolID      *string                  `json:"school_id,omitempty"`
+	IsStaff       bool                     `json:"is_staff"`
+	EmailVerified bool                     `json:"email_verified"`
+	MFAEnabled    bool                     `json:"mfa_enabled"`
+	Assignments   []UserAssignmentResponse `json:"assignments,omitempty"`
 }
 
 // MFASetupResponse represents MFA setup response with QR code

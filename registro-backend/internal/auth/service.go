@@ -231,6 +231,7 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 			IsStaff:       user.IsStaff,
 			EmailVerified: user.EmailVerified,
 			MFAEnabled:    user.MFAEnabled,
+			Assignments:   user.Assignments,
 		},
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,

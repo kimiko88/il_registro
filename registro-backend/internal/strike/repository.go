@@ -220,13 +220,13 @@ func (r *PostgresRepository) GetNoticeSummary(ctx context.Context, noticeID, sch
 	defer func() { _ = rows.Close() }()
 
 	roleNames := map[string]string{
-		"teacher":                  "Docente",
-		"coordinator":              "Coordinatore",
-		"dsga":                     "DSGA",
+		"teacher":                   "Docente",
+		"coordinator":               "Coordinatore",
+		"dsga":                      "DSGA",
 		"assistente_amministrativo": "Assistente Amministrativo",
-		"collaboratore_ds":         "Collaboratore D.S.",
-		"collaboratore_scolastico": "Collaboratore Scolastico",
-		"secretary":                "Segreteria",
+		"collaboratore_ds":          "Collaboratore D.S.",
+		"collaboratore_scolastico":  "Collaboratore Scolastico",
+		"secretary":                 "Segreteria",
 	}
 
 	roleStatsMap := make(map[string]*RoleDeclarationSummary)

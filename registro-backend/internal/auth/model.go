@@ -6,22 +6,23 @@ import (
 
 // User represents the authenticated user profile
 type User struct {
-	ID                string     `json:"id"`
-	Email             string     `json:"email"`
-	PasswordHash      string     `json:"-"` // Never expose in JSON
-	FirstName         string     `json:"first_name"`
-	LastName          string     `json:"last_name"`
-	Role              string     `json:"role"`
-	SchoolID          *string    `json:"school_id,omitempty"`
-	IsActive          bool       `json:"is_active"`
-	IsStaff           bool       `json:"is_staff"`
-	EmailVerified     bool       `json:"email_verified"`
-	MFAEnabled        bool       `json:"mfa_enabled"`
-	MFASecret         string     `json:"-"`
-	CreatedAt         time.Time  `json:"created_at"`
-	UpdatedAt         time.Time  `json:"updated_at"`
-	LastLogin         *time.Time `json:"last_login,omitempty"`
-	PasswordChangedAt *time.Time `json:"password_changed_at,omitempty"`
+	ID                string                   `json:"id"`
+	Email             string                   `json:"email"`
+	PasswordHash      string                   `json:"-"` // Never expose in JSON
+	FirstName         string                   `json:"first_name"`
+	LastName          string                   `json:"last_name"`
+	Role              string                   `json:"role"`
+	SchoolID          *string                  `json:"school_id,omitempty"`
+	IsActive          bool                     `json:"is_active"`
+	IsStaff           bool                     `json:"is_staff"`
+	EmailVerified     bool                     `json:"email_verified"`
+	MFAEnabled        bool                     `json:"mfa_enabled"`
+	MFASecret         string                   `json:"-"`
+	CreatedAt         time.Time                `json:"created_at"`
+	UpdatedAt         time.Time                `json:"updated_at"`
+	LastLogin         *time.Time               `json:"last_login,omitempty"`
+	PasswordChangedAt *time.Time               `json:"password_changed_at,omitempty"`
+	Assignments       []UserAssignmentResponse `json:"assignments,omitempty"`
 }
 
 // RefreshToken represents a refresh token in the database
