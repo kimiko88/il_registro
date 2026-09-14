@@ -63,7 +63,6 @@ func (r *PostgresRepository) ListLeaveRequests(ctx context.Context, schoolID, us
 	if status != "" {
 		query += fmt.Sprintf(" AND lr.status = $%d", idx)
 		args = append(args, status)
-		idx++
 	}
 	query += " ORDER BY lr.created_at DESC"
 
