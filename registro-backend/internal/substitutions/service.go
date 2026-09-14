@@ -43,7 +43,7 @@ func (s *serviceImpl) SetNotificationService(ns notifications.Service) {
 }
 
 func (s *serviceImpl) CreateSubstitution(ctx context.Context, actorRole, schoolID string, req CreateSubstitutionRequest) (*Substitution, error) {
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "coordinator" && actorRole != "staff" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "coordinator" && actorRole != "staff" && actorRole != "collaboratore_ds" && actorRole != "dsga" {
 		return nil, fmt.Errorf("unauthorized: insufficient permissions to create substitution")
 	}
 	d, err := time.Parse("2006-01-02", req.Date)
@@ -103,7 +103,7 @@ func (s *serviceImpl) ListMyToday(ctx context.Context, teacherID string) ([]*Sub
 
 // AssignSubstitute assigns a substitute teacher to a substitution.
 func (s *serviceImpl) AssignSubstitute(ctx context.Context, id, actorRole string, req AssignSubstituteRequest) error {
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "staff" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "staff" && actorRole != "collaboratore_ds" && actorRole != "dsga" {
 		return fmt.Errorf("unauthorized: solo admin, segreteria e coordinatori possono assegnare sostituzioni")
 	}
 	return s.repo.AssignSubstitute(ctx, id, req.SubstituteTeacherID, req.Notes)

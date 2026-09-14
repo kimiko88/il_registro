@@ -190,6 +190,7 @@
                            label="Password Attuale *"
                            :type="showCurrentPwd ? 'text' : 'password'"
                            outlined dense
+                           autocomplete="current-password"
                            :rules="[v => !!v || 'Campo obbligatorio']"
                          >
                            <template v-slot:append>
@@ -201,6 +202,7 @@
                            label="Nuova Password * (min. 10 caratteri)"
                            :type="showNewPwd ? 'text' : 'password'"
                            outlined dense
+                           autocomplete="new-password"
                            :rules="[v => !!v || 'Campo obbligatorio', v => v.length >= 10 || 'Minimo 10 caratteri']"
                          >
                            <template v-slot:append>
@@ -212,6 +214,7 @@
                            label="Conferma Nuova Password *"
                            :type="showNewPwd ? 'text' : 'password'"
                            outlined dense
+                           autocomplete="new-password"
                            :rules="[v => !!v || 'Campo obbligatorio', v => v === pwdForm.newPwd || 'Le password non coincidono']"
                          />
                          <div class="q-mt-md">

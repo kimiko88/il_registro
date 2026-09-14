@@ -1,0 +1,1039 @@
+<template>
+  <q-page class="q-pa-md q-pa-lg-xl timecard-page">
+    <!-- Hero Header -->
+    <div class="row items-center justify-between q-mb-lg gap-md">
+      <div class="col-12 col-md-7">
+        <div class="row items-center q-gutter-sm q-mb-xs">
+          <q-badge color="teal-8" text-color="white" class="q-px-sm q-py-xs text-weight-bold text-caption rounded-borders">
+            <q-icon name="schedule" size="14px" class="q-mr-xs" />
+            {{ t('timecard.badge') || 'GESTIONE ORARIO • CCNL SCUOLA 36H' }}
+          </q-badge>
+          <q-badge outline color="primary" class="q-px-sm q-py-xs text-weight-bold">
+            {{ selectedMonthLabel }}
+          </q-badge>
+          <q-badge v-if="badgeCode" color="indigo-8" text-color="white" class="q-px-sm q-py-xs text-weight-bold rounded-borders shadow-xs">
+            <q-icon name="qr_code" size="14px" class="q-mr-xs" />
+            Badge: {{ badgeCode }}
+          </q-badge>
+        </div>
+        <h1 class="text-h4 text-weight-bolder text-slate-800 q-my-none flex items-center">
+          <q-icon name="calendar_month" color="teal-8" class="q-mr-sm" size="36px" />
+          {{ t('timecard.title') || 'Cartellino & Piano Ferie' }}
+        </h1>
+        <div class="text-subtitle1 text-slate-500 q-mt-xs">
+          {{ t('timecard.subtitle') || 'Riepilogo ore lavorate, timbrature badge, saldo straordinari e gestione istanze ferie/permessi' }}
+        </div>
+      </div>
+
+      <!-- Controls & Actions -->
+      <div class="col-12 col-md-5 row items-center justify-end q-gutter-sm">
+        <q-btn
+          color="teal-8"
+          icon="add"
+          :label="t('timecard.requestLeaveBtn') || 'Richiedi Ferie / Permesso'"
+          no-caps
+          rounded
+          class="shadow-2 text-weight-bold"
+          @click="openNewLeaveDialog"
+        />
+        <q-btn
+          outline
+          color="primary"
+          icon="download"
+          :label="t('timecard.exportCsv') || 'Esporta CSV'"
+          no-caps
+          rounded
+          class="bg-white"
+          @click="exportCsv"
+        />
+        <q-btn
+          flat
+          round
+          dense
+          color="primary"
+          icon="refresh"
+          :loading="loading"
+          @click="loadCurrentTab"
+        >
+          <q-tooltip>{{ t('common.refresh') || 'Aggiorna' }}</q-tooltip>
+        </q-btn>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <q-tabs
+      v-model="activeTab"
+      dense
+      class="bg-white rounded-xl shadow-1 text-slate-600 q-mb-lg"
+      active-color="teal-8"
+      indicator-color="teal-8"
+      align="left"
+      narrow-indicator
+      @update:model-value="loadCurrentTab"
+    >
+      <q-tab name="cartellino" icon="access_time" :label="t('timecard.tabCartellino') || 'Cartellino Mensile'" />
+      <q-tab name="ferie" icon="beach_access" :label="t('timecard.tabFerie') || 'Piano Ferie & Permessi'" />
+      <q-tab v-if="isDSGAOrAdmin" name="dsga_overview" icon="badge" :label="t('timecard.tabOverview') || 'Riepilogo Personale (DSGA)'" />
+    </q-tabs>
+
+    <!-- TAB PANELS -->
+    <q-tab-panels v-model="activeTab" animated class="bg-transparent">
+      <!-- PANEL 1: CARTELLINO MENSILE -->
+      <q-tab-panel name="cartellino" class="q-pa-none">
+        <!-- Month & User Selector Bar -->
+        <div class="row items-center q-col-gutter-md q-mb-lg">
+          <div class="col-12 col-sm-4 col-md-3">
+            <q-input
+              v-model="selectedMonth"
+              type="month"
+              outlined
+              dense
+              bg-color="white"
+              :label="t('timecard.selectMonth') || 'Mese di riferimento'"
+              @update:model-value="loadTimecard"
+            />
+          </div>
+          <div v-if="isDSGAOrAdmin" class="col-12 col-sm-6 col-md-4">
+            <q-select
+              v-model="selectedStaffUserId"
+              :options="staffOptions"
+              option-value="id"
+              option-label="name"
+              emit-value
+              map-options
+              outlined
+              dense
+              clearable
+              bg-color="white"
+              :label="t('timecard.selectStaff') || 'Dipendente'"
+              @update:model-value="loadTimecard"
+            />
+          </div>
+        </div>
+
+        <!-- KPI Cards Summary -->
+        <div class="row q-col-gutter-md q-mb-lg">
+          <div class="col-6 col-md-3">
+            <q-card class="stat-card bg-teal-50 border-teal-200">
+              <q-card-section class="row items-center no-wrap">
+                <div class="stat-icon bg-teal-100 text-teal-800">
+                  <q-icon name="timelapse" size="24px" />
+                </div>
+                <div class="q-ml-md">
+                  <div class="text-caption text-teal-800 text-weight-bold">{{ t('timecard.statWorkedHours') }}</div>
+                  <div class="text-h5 text-weight-bolder text-teal-900">{{ formatHoursAndMinutes(timecardData.worked_hours) }}</div>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+          <div class="col-6 col-md-3">
+            <q-card class="stat-card bg-blue-50 border-blue-200">
+              <q-card-section class="row items-center no-wrap">
+                <div class="stat-icon bg-blue-100 text-blue-800">
+                  <q-icon name="schedule" size="24px" />
+                </div>
+                <div class="q-ml-md">
+                  <div class="text-caption text-blue-800 text-weight-bold">{{ t('timecard.statContractHours') }}</div>
+                  <div class="text-h5 text-weight-bolder text-blue-900">{{ timecardData.contract_hours || 156 }} {{ t('timecard.hoursSuffix') }}</div>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+          <div class="col-6 col-md-3">
+            <q-card class="stat-card" :class="overtimeBalance >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-orange-50 border-orange-200'">
+              <q-card-section class="row items-center no-wrap">
+                <div class="stat-icon" :class="overtimeBalance >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800'">
+                  <q-icon :name="overtimeBalance >= 0 ? 'trending_up' : 'trending_down'" size="24px" />
+                </div>
+                <div class="q-ml-md">
+                  <div class="text-caption text-weight-bold" :class="overtimeBalance >= 0 ? 'text-emerald-800' : 'text-orange-800'">
+                    {{ t('timecard.statBalance') }}
+                  </div>
+                  <div class="text-h5 text-weight-bolder" :class="overtimeBalance >= 0 ? 'text-emerald-900' : 'text-orange-900'">
+                    {{ formatBalanceHours(overtimeBalance) }}
+                  </div>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+          <div class="col-6 col-md-3">
+            <q-card class="stat-card bg-amber-50 border-amber-200">
+              <q-card-section class="row items-center no-wrap">
+                <div class="stat-icon bg-amber-100 text-amber-800">
+                  <q-icon name="beach_access" size="24px" />
+                </div>
+                <div class="q-ml-md">
+                  <div class="text-caption text-amber-800 text-weight-bold">{{ t('timecard.statLeaveAbsence') }}</div>
+                  <div class="text-h5 text-weight-bolder text-amber-900">
+                    {{ (timecardData.leave_days || 0) + (timecardData.absence_days || 0) }} {{ t('timecard.daysSuffix') }}
+                  </div>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+
+        <!-- Dettaglio Giornaliero Cartellino -->
+        <q-card class="rounded-2xl shadow-sm border border-slate-200 bg-white">
+          <q-card-section class="border-b border-slate-100 row items-center justify-between">
+            <div class="text-subtitle1 text-weight-bold text-slate-800">
+              {{ t('timecard.dailyTableTitle') }}
+            </div>
+            <div class="text-caption text-slate-400">
+              {{ t('timecard.dailyTableSubtitle') }}
+            </div>
+          </q-card-section>
+
+          <q-table
+            :rows="dailyEntries"
+            :columns="dailyColumns"
+            row-key="date"
+            :loading="loading"
+            class="no-shadow"
+            :pagination="{ rowsPerPage: 31 }"
+          >
+            <template v-slot:body-cell-entry_time="props">
+              <q-td :props="props">
+                <span :class="props.row.entry_time ? 'text-weight-medium text-slate-800' : 'text-slate-400'">
+                  {{ formatTimeHHMMSS(props.row.entry_time) }}
+                </span>
+              </q-td>
+            </template>
+            <template v-slot:body-cell-exit_time="props">
+              <q-td :props="props">
+                <span :class="props.row.exit_time ? 'text-weight-medium text-slate-800' : 'text-slate-400'">
+                  {{ formatTimeHHMMSS(props.row.exit_time) }}
+                </span>
+              </q-td>
+            </template>
+            <template v-slot:body-cell-hours="props">
+              <q-td :props="props">
+                <span :class="hasWorkedTime(props.row) ? 'text-weight-bold text-teal-9' : 'text-slate-400'">
+                  {{ formatDailyWorked(props.row) }}
+                </span>
+              </q-td>
+            </template>
+            <template v-slot:body-cell-status="props">
+              <q-td :props="props">
+                <q-badge :color="getEntryStatusColor(props.row.status)" class="q-px-sm q-py-xs">
+                  {{ getEntryStatusLabel(props.row.status) }}
+                </q-badge>
+              </q-td>
+            </template>
+          </q-table>
+        </q-card>
+      </q-tab-panel>
+
+      <!-- PANEL 2: PIANO FERIE & PERMESSI -->
+      <q-tab-panel name="ferie" class="q-pa-none">
+        <q-card class="rounded-2xl shadow-sm border border-slate-200 bg-white">
+          <q-card-section class="border-b border-slate-100 row items-center justify-between">
+            <div class="text-subtitle1 text-weight-bold text-slate-800">
+              {{ t('timecard.leavesTableTitle') }}
+            </div>
+            <q-btn
+              color="teal-8"
+              icon="add"
+              :label="t('timecard.newLeaveBtn')"
+              no-caps
+              dense
+              rounded
+              class="q-px-md"
+              @click="openNewLeaveDialog"
+            />
+          </q-card-section>
+
+          <q-table
+            :rows="leavesList"
+            :columns="leaveColumns"
+            row-key="id"
+            :loading="loading"
+            :no-data-label="t('timecard.noLeaves')"
+            class="no-shadow"
+            :pagination="{ rowsPerPage: 15 }"
+          >
+            <template v-slot:body-cell-type="props">
+              <q-td :props="props">
+                <q-badge :color="getLeaveTypeColor(props.row.type)" class="text-weight-bold">
+                  {{ getLeaveTypeLabel(props.row.type) }}
+                </q-badge>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-status="props">
+              <q-td :props="props">
+                <q-badge :color="getLeaveStatusColor(props.row.status)" class="q-px-sm q-py-xs">
+                  {{ getLeaveStatusLabel(props.row.status) }}
+                </q-badge>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-actions="props">
+              <q-td :props="props" align="right">
+                <!-- DSGA Approval buttons -->
+                <div v-if="isDSGAOrAdmin && props.row.status === 'pending'" class="row items-center justify-end q-gutter-xs">
+                  <q-btn
+                    color="positive"
+                    flat
+                    dense
+                    icon="check"
+                    :label="t('timecard.approve')"
+                    size="sm"
+                    no-caps
+                    @click="approveLeave(props.row)"
+                  />
+                  <q-btn
+                    color="negative"
+                    flat
+                    dense
+                    icon="close"
+                    :label="t('timecard.reject')"
+                    size="sm"
+                    no-caps
+                    @click="rejectLeave(props.row)"
+                  />
+                </div>
+                <!-- Delete user's own pending request -->
+                <q-btn
+                  v-else-if="props.row.status === 'pending' && props.row.user_id === user?.id"
+                  color="grey-6"
+                  flat
+                  dense
+                  icon="delete"
+                  size="sm"
+                  @click="deleteLeave(props.row)"
+                />
+                <span v-else class="text-caption text-slate-400">—</span>
+              </q-td>
+            </template>
+          </q-table>
+        </q-card>
+      </q-tab-panel>
+
+      <!-- PANEL 3: RIEPILOGO PERSONALE (DSGA) -->
+      <q-tab-panel v-if="isDSGAOrAdmin" name="dsga_overview" class="q-pa-none">
+        <q-card class="rounded-2xl shadow-sm border border-slate-200 bg-white">
+          <q-card-section class="border-b border-slate-100 row items-center justify-between gap-md">
+            <div>
+              <div class="text-subtitle1 text-weight-bold text-slate-800">
+                {{ t('timecard.overviewTitle', { month: selectedMonth }) }}
+              </div>
+              <div class="text-caption text-slate-500">
+                Riepilogo mensile ore lavorate, straordinari e assenze per tutto il personale ATA
+              </div>
+            </div>
+            <div class="row items-center q-gutter-sm">
+              <q-input
+                v-model="filterStaff"
+                dense
+                outlined
+                :placeholder="t('staffAttendance.searchPlaceholder') || 'Cerca personale o badge...'"
+                class="bg-white"
+                style="min-width: 240px"
+                clearable
+              >
+                <template v-slot:prepend>
+                  <q-icon name="search" size="18px" color="grey-6" />
+                </template>
+              </q-input>
+              <q-btn
+                outline
+                color="primary"
+                icon="download"
+                :label="t('timecard.exportAllCsv')"
+                no-caps
+                dense
+                rounded
+                class="q-px-md"
+                @click="exportAllCsv"
+              />
+            </div>
+          </q-card-section>
+
+          <q-table
+            :rows="allTimecards"
+            :columns="allTimecardColumns"
+            :filter="filterStaff"
+            row-key="user_id"
+            :loading="loading"
+            class="no-shadow"
+            :pagination="{ rowsPerPage: 20 }"
+          >
+            <template v-slot:body-cell-user_name="props">
+              <q-td :props="props">
+                <div class="row items-center no-wrap">
+                  <q-avatar size="32px" color="indigo-100" text-color="indigo-9" class="q-mr-sm text-weight-bold text-caption">
+                    {{ (props.row.first_name?.[0] || '') + (props.row.last_name?.[0] || '') }}
+                  </q-avatar>
+                  <div>
+                    <div class="text-weight-bold text-slate-800">
+                      {{ props.row.last_name }} {{ props.row.first_name }}
+                    </div>
+                    <div v-if="props.row.badge_code" class="text-caption text-slate-500 font-mono">
+                      Badge: {{ props.row.badge_code }}
+                    </div>
+                  </div>
+                </div>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-role="props">
+              <q-td :props="props">
+                <q-chip
+                  dense
+                  size="sm"
+                  :color="getRoleBadgeColor(props.row.role)"
+                  text-color="white"
+                  class="text-weight-bold text-caption"
+                >
+                  {{ roleLabel(props.row.role) }}
+                </q-chip>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-contract_hours="props">
+              <q-td :props="props">
+                <span class="text-slate-600">
+                  {{ props.row.contract_hours || 156 }} {{ t('timecard.hoursSuffix') || 'h' }}
+                </span>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-worked_hours="props">
+              <q-td :props="props">
+                <span class="text-weight-medium text-slate-800">
+                  {{ formatHoursAndMinutes(props.row.worked_hours) }}
+                </span>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-balance="props">
+              <q-td :props="props">
+                <span :class="props.row.overtime_hours >= 0 ? 'text-positive text-weight-bold' : 'text-negative text-weight-bold'">
+                  {{ formatBalanceHours(props.row.overtime_hours) }}
+                </span>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-leave_days="props">
+              <q-td :props="props">
+                <span :class="props.row.leave_days > 0 ? 'text-teal-8 text-weight-bold' : 'text-slate-500'">
+                  {{ props.row.leave_days || 0 }} {{ t('timecard.daysSuffix') || 'gg' }}
+                </span>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-sick_days="props">
+              <q-td :props="props">
+                <span :class="props.row.sick_days > 0 ? 'text-negative text-weight-bold' : 'text-slate-500'">
+                  {{ props.row.sick_days || 0 }} {{ t('timecard.daysSuffix') || 'gg' }}
+                </span>
+              </q-td>
+            </template>
+          </q-table>
+        </q-card>
+      </q-tab-panel>
+    </q-tab-panels>
+
+    <!-- Dialog: Nuova Richiesta Ferie / Permesso -->
+    <q-dialog v-model="leaveDialog" persistent>
+      <q-card style="min-width: 480px" class="rounded-2xl">
+        <q-card-section class="row items-center justify-between border-b border-slate-100">
+          <div class="text-h6 text-weight-bold text-slate-900 flex items-center">
+            <q-icon name="beach_access" color="teal-8" class="q-mr-sm" size="24px" />
+            {{ t('timecard.dialogLeaveTitle') || 'Richiesta Assenza / Permesso' }}
+          </div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-gutter-md q-pt-md">
+          <div>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogLeaveTypeLabel') }}</label>
+            <q-select
+              v-model="leaveForm.type"
+              :options="leaveTypeOptions"
+              emit-value
+              map-options
+              outlined
+              dense
+            />
+          </div>
+
+          <div class="row q-col-gutter-sm">
+            <div class="col-6">
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogStartDateLabel') }}</label>
+              <q-input v-model="leaveForm.start_date" type="date" outlined dense />
+            </div>
+            <div class="col-6">
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogEndDateLabel') }}</label>
+              <q-input v-model="leaveForm.end_date" type="date" outlined dense />
+            </div>
+          </div>
+
+          <div class="row q-col-gutter-sm">
+            <div class="col-6">
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogWorkingDaysLabel') }}</label>
+              <q-input v-model.number="leaveForm.days" type="number" step="0.5" outlined dense />
+            </div>
+            <div class="col-6">
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogHoursLabel') }}</label>
+              <q-input v-model.number="leaveForm.hours" type="number" step="0.5" outlined dense />
+            </div>
+          </div>
+
+          <div>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('timecard.dialogNotesLabel') }}</label>
+            <q-input v-model="leaveForm.notes" outlined dense type="textarea" rows="2" :placeholder="t('timecard.dialogNotesPlaceholder')" />
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md border-t border-slate-100">
+          <q-btn flat :label="t('common.cancel') || 'Annulla'" color="grey-7" v-close-popup />
+          <q-btn
+            color="teal-8"
+            :label="t('timecard.submitLeave') || 'Invia Richiesta'"
+            no-caps
+            rounded
+            class="q-px-md text-weight-bold shadow-1"
+            :loading="savingLeave"
+            @click="submitLeave"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </q-page>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import { storeToRefs } from 'pinia'
+import { useQuasar } from 'quasar'
+import { useI18n } from 'vue-i18n'
+import staffAttendanceService from '@/services/staffAttendanceService'
+import userService from '@/services/userService'
+
+const $q = useQuasar()
+const { t, te, locale } = useI18n()
+const authStore = useAuthStore()
+const { user, userRole } = storeToRefs(authStore)
+
+const activeTab = ref('cartellino')
+const loading = ref(false)
+const savingLeave = ref(false)
+
+const now = new Date()
+const selectedMonth = ref(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
+const selectedStaffUserId = ref('')
+
+const isDSGAOrAdmin = computed(() => {
+  const r = (userRole.value || '').toLowerCase()
+  return r === 'dsga' || r === 'admin' || r === 'superadmin'
+})
+
+const selectedMonthLabel = computed(() => {
+  if (!selectedMonth.value) return ''
+  const [y, m] = selectedMonth.value.split('-')
+  const d = new Date(Number(y), Number(m) - 1, 1)
+  return d.toLocaleDateString(locale.value || 'it-IT', { month: 'long', year: 'numeric' })
+})
+
+// Timecard
+const timecardData = ref({})
+const badgeCode = computed(() => timecardData.value.badge_code || user.value?.badge_code || '')
+const dailyEntries = ref([])
+const overtimeBalance = computed(() => {
+  return (timecardData.value.worked_hours || 0) - (timecardData.value.contract_hours || 156)
+})
+
+const dailyColumns = computed(() => [
+  { name: 'date', label: t('timecard.colDate'), field: 'date', align: 'left', sortable: true },
+  { name: 'entry_time', label: t('timecard.colEntryTime'), field: row => formatTimeHHMMSS(row.entry_time), align: 'center' },
+  { name: 'exit_time', label: t('timecard.colExitTime'), field: row => formatTimeHHMMSS(row.exit_time), align: 'center' },
+  { name: 'hours', label: t('timecard.colActualHours'), field: row => formatDailyWorked(row), align: 'center' },
+  { name: 'status', label: t('timecard.colStatus'), align: 'center' },
+  { name: 'notes', label: t('timecard.colNotes'), field: 'notes', align: 'left' }
+])
+
+// Leaves
+const leavesList = ref([])
+const leaveDialog = ref(false)
+const leaveForm = ref({
+  type: 'ferie',
+  start_date: '',
+  end_date: '',
+  days: 1,
+  hours: 0,
+  notes: ''
+})
+
+const leaveTypeOptions = computed(() => [
+  { label: t('timecard.leaveTypeFerie'), value: 'ferie' },
+  { label: t('timecard.leaveTypePermesso'), value: 'permesso' },
+  { label: t('timecard.leaveTypePermessoBreve'), value: 'permesso_breve' },
+  { label: t('timecard.leaveTypeMalattia'), value: 'malattia' },
+  { label: t('timecard.leaveTypePermessoStudio'), value: 'permesso_studio' },
+  { label: t('timecard.leaveTypeRecupero'), value: 'recupero' }
+])
+
+const leaveColumns = computed(() => [
+  { name: 'user_name', label: t('timecard.colEmployee'), field: 'user_name', align: 'left', sortable: true },
+  { name: 'type', label: t('timecard.colType'), align: 'center' },
+  { name: 'period', label: t('timecard.colPeriod'), field: row => `${row.start_date} → ${row.end_date}`, align: 'left' },
+  { name: 'days', label: t('timecard.colDaysHours'), field: row => row.days ? `${row.days} ${t('timecard.daysSuffix')}` : `${row.hours} ${t('timecard.hoursSuffix')}`, align: 'center' },
+  { name: 'status', label: t('timecard.colStatus'), align: 'center' },
+  { name: 'notes', label: t('timecard.colNotes'), field: 'notes', align: 'left' },
+  { name: 'actions', label: t('timecard.colActions'), align: 'right' }
+])
+
+// DSGA Overview
+const allTimecards = ref([])
+const staffOptions = ref([])
+const filterStaff = ref('')
+
+const allTimecardColumns = computed(() => [
+  {
+    name: 'user_name',
+    label: t('timecard.colEmployee'),
+    field: row => row.user_name || `${row.last_name || ''} ${row.first_name || ''}`.trim(),
+    align: 'left',
+    sortable: true
+  },
+  {
+    name: 'role',
+    label: t('timecard.colRole'),
+    field: 'role',
+    align: 'center',
+    sortable: true
+  },
+  { name: 'contract_hours', label: t('timecard.statContractHours'), field: 'contract_hours', align: 'center', sortable: true },
+  { name: 'worked_hours', label: t('timecard.statWorkedHours'), field: row => formatHoursAndMinutes(row.worked_hours), align: 'center', sortable: true },
+  { name: 'balance', label: t('timecard.colOvertimeBalance'), field: row => formatBalanceHours(row.overtime_hours), align: 'center', sortable: true },
+  { name: 'leave_days', label: t('timecard.colLeaveDays'), field: 'leave_days', align: 'center', sortable: true },
+  { name: 'sick_days', label: t('timecard.colSickDays'), field: 'sick_days', align: 'center', sortable: true }
+])
+
+function roleLabel(role) {
+  if (role && te('roles.' + role)) {
+    return t('roles.' + role)
+  }
+  const map = {
+    superadmin: 'Super Admin',
+    admin: 'Amministratore',
+    principal: 'Dirigente Scolastico',
+    vice_principal: 'Collaboratore Vicario',
+    dsga: 'DSGA (Direttore SGA)',
+    collaboratore_ds: 'Collaboratore D.S.',
+    assistente_amministrativo: 'Assistente Amministrativo',
+    assistente_tecnico: 'Assistente Tecnico',
+    assistente_alunni: 'Assistente Alunni',
+    assistente_personale: 'Assistente Personale',
+    assistente_contabilita: 'Assistente Contabilità',
+    assistente_protocollo: 'Assistente Protocollo',
+    assistente_sportello: 'Assistente Sportello',
+    responsabile_servizio: 'Responsabile Servizio',
+    collaboratore_scolastico: 'Collaboratore Scolastico',
+    secretary: 'Segreteria',
+    teacher: 'Docente'
+  }
+  return map[role] || role
+}
+
+function getRoleBadgeColor(role) {
+  switch (role) {
+    case 'dsga': return 'purple-8'
+    case 'collaboratore_ds': return 'deep-purple-7'
+    case 'assistente_amministrativo': return 'blue-8'
+    case 'assistente_tecnico': return 'teal-8'
+    case 'assistente_alunni': return 'cyan-8'
+    case 'assistente_personale': return 'indigo-7'
+    case 'assistente_contabilita': return 'green-8'
+    case 'assistente_protocollo': return 'amber-9'
+    case 'assistente_sportello': return 'deep-orange-7'
+    case 'collaboratore_scolastico': return 'orange-8'
+    case 'secretary': return 'blue-grey-7'
+    default: return 'primary'
+  }
+}
+
+async function loadCurrentTab() {
+  if (activeTab.value === 'cartellino') {
+    await loadTimecard()
+  } else if (activeTab.value === 'ferie') {
+    await loadLeaves()
+  } else if (activeTab.value === 'dsga_overview') {
+    await loadAllTimecards()
+  }
+}
+
+async function loadTimecard() {
+  loading.value = true
+  try {
+    const params = {
+      month: selectedMonth.value
+    }
+    if (selectedStaffUserId.value && isDSGAOrAdmin.value) {
+      params.user_id = selectedStaffUserId.value
+    }
+    const res = await staffAttendanceService.getTimecard(params)
+    timecardData.value = res || {}
+    dailyEntries.value = res?.daily_entries || res?.entries || []
+  } catch (err) {
+    console.error('Errore caricamento cartellino:', err)
+    $q.notify({ type: 'negative', message: t('timecard.notifyLoadError') })
+    timecardData.value = {}
+    dailyEntries.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadLeaves() {
+  loading.value = true
+  try {
+    const res = await staffAttendanceService.listLeaves({})
+    leavesList.value = res || []
+  } catch (err) {
+    $q.notify({ type: 'negative', message: t('personnelDesk.notifyLoadError') || 'Errore caricamento richieste ferie' })
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadAllTimecards() {
+  loading.value = true
+  try {
+    const res = await staffAttendanceService.getTimecard({ month: selectedMonth.value, all: true })
+    allTimecards.value = Array.isArray(res) ? res : (res ? [res] : [])
+  } catch (err) {
+    console.error('Errore caricamento riepilogo cartellini:', err)
+    allTimecards.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+function openNewLeaveDialog() {
+  leaveForm.value = {
+    type: 'ferie',
+    start_date: new Date().toISOString().substring(0, 10),
+    end_date: new Date().toISOString().substring(0, 10),
+    days: 1,
+    hours: 0,
+    notes: ''
+  }
+  leaveDialog.value = true
+}
+
+async function submitLeave() {
+  if (!leaveForm.value.start_date || !leaveForm.value.end_date) {
+    $q.notify({ type: 'warning', message: t('timecard.notifyDatesRequired') })
+    return
+  }
+  savingLeave.value = true
+  try {
+    await staffAttendanceService.createLeave(leaveForm.value)
+    $q.notify({ type: 'positive', message: t('timecard.notifyLeaveSent') })
+    leaveDialog.value = false
+    await loadLeaves()
+  } catch (err) {
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('common.error') })
+  } finally {
+    savingLeave.value = false
+  }
+}
+
+async function approveLeave(row) {
+  try {
+    await staffAttendanceService.approveLeave(row.id, { notes: 'Approvato da DSGA' })
+    $q.notify({ type: 'positive', message: t('timecard.notifyLeaveApproved') })
+    await loadLeaves()
+  } catch (err) {
+    $q.notify({ type: 'negative', message: t('common.error') })
+  }
+}
+
+async function rejectLeave(row) {
+  try {
+    await staffAttendanceService.rejectLeave(row.id, { reason: 'Rifiutato per esigenze di servizio' })
+    $q.notify({ type: 'positive', message: t('timecard.notifyLeaveRejected') })
+    await loadLeaves()
+  } catch (err) {
+    $q.notify({ type: 'negative', message: t('common.error') })
+  }
+}
+
+async function deleteLeave(row) {
+  try {
+    await staffAttendanceService.deleteLeave(row.id)
+    $q.notify({ type: 'positive', message: t('common.success') })
+    await loadLeaves()
+  } catch (err) {
+    $q.notify({ type: 'negative', message: t('common.error') })
+  }
+}
+
+async function exportCsv() {
+  try {
+    const blob = await staffAttendanceService.exportTimecard({
+      month: selectedMonth.value,
+      user_id: selectedStaffUserId.value
+    })
+    const url = window.URL.createObjectURL(new Blob([blob]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `cartellino_${selectedMonth.value}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
+  } catch {
+    $q.notify({ type: 'negative', message: t('common.error') })
+  }
+}
+
+async function exportAllCsv() {
+  try {
+    const blob = await staffAttendanceService.exportTimecard({
+      month: selectedMonth.value
+    })
+    const url = window.URL.createObjectURL(new Blob([blob]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `cartellino_personale_${selectedMonth.value}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
+  } catch {
+    $q.notify({ type: 'negative', message: t('common.error') })
+  }
+}
+
+function getLeaveTypeLabel(type) {
+  switch (type) {
+    case 'ferie': return t('timecard.leaveTypeFerie')
+    case 'permesso': return t('timecard.leaveTypePermesso')
+    case 'permesso_breve': return t('timecard.leaveTypePermessoBreve')
+    case 'malattia': return t('timecard.leaveTypeMalattia')
+    case 'permesso_studio': return t('timecard.leaveTypePermessoStudio')
+    case 'recupero': return t('timecard.leaveTypeRecupero')
+    default: return type
+  }
+}
+
+function getLeaveTypeColor(t) {
+  switch (t) {
+    case 'ferie': return 'teal-8'
+    case 'permesso': return 'blue-8'
+    case 'permesso_breve': return 'indigo-8'
+    case 'malattia': return 'negative'
+    case 'permesso_studio': return 'purple-8'
+    default: return 'grey-7'
+  }
+}
+
+function getLeaveStatusLabel(s) {
+  switch (s) {
+    case 'pending': return t('timecard.leaveStatusPending')
+    case 'approved': return t('timecard.leaveStatusApproved')
+    case 'rejected': return t('timecard.leaveStatusRejected')
+    default: return s
+  }
+}
+
+function getLeaveStatusColor(s) {
+  switch (s) {
+    case 'pending': return 'amber-9'
+    case 'approved': return 'positive'
+    case 'rejected': return 'negative'
+    default: return 'grey-7'
+  }
+}
+
+function formatHoursAndMinutes(hoursFloat) {
+  if (hoursFloat === null || hoursFloat === undefined || isNaN(Number(hoursFloat))) {
+    return '0h 00m'
+  }
+  const totalMinutes = Math.round(Number(hoursFloat) * 60)
+  const isNegative = totalMinutes < 0
+  const absMinutes = Math.abs(totalMinutes)
+  const h = Math.floor(absMinutes / 60)
+  const m = absMinutes % 60
+  const formattedMinutes = String(m).padStart(2, '0')
+  return `${isNegative ? '-' : ''}${h}h ${formattedMinutes}m`
+}
+
+function formatBalanceHours(hoursFloat) {
+  if (hoursFloat === null || hoursFloat === undefined || isNaN(Number(hoursFloat))) {
+    return '0h 00m'
+  }
+  const totalMinutes = Math.round(Number(hoursFloat) * 60)
+  const isNegative = totalMinutes < 0
+  const absMinutes = Math.abs(totalMinutes)
+  const h = Math.floor(absMinutes / 60)
+  const m = absMinutes % 60
+  const formattedMinutes = String(m).padStart(2, '0')
+  const sign = isNegative ? '-' : '+'
+  return `${sign}${h}h ${formattedMinutes}m`
+}
+
+function formatDailyWorked(row) {
+  if (!row) return '—'
+  let minutes = null
+  if (row.worked_minutes !== undefined && row.worked_minutes !== null) {
+    minutes = Number(row.worked_minutes)
+  } else if (row.hours !== undefined && row.hours !== null) {
+    minutes = Math.round(Number(row.hours) * 60)
+  }
+  if (minutes === null || (minutes === 0 && !row.entry_time)) {
+    return '—'
+  }
+  const isNegative = minutes < 0
+  const absMinutes = Math.abs(minutes)
+  const h = Math.floor(absMinutes / 60)
+  const m = absMinutes % 60
+  const formattedMinutes = String(m).padStart(2, '0')
+  return `${isNegative ? '-' : ''}${h}h ${formattedMinutes}m`
+}
+
+function hasWorkedTime(row) {
+  if (!row) return false
+  if (row.worked_minutes && Number(row.worked_minutes) > 0) return true
+  if (row.hours && Number(row.hours) > 0) return true
+  return false
+}
+
+function formatTimeHHMMSS(val) {
+  if (!val) return '—'
+  if (typeof val === 'string') {
+    const trimmed = val.trim()
+    if (/^\d{2}:\d{2}:\d{2}$/.test(trimmed)) return trimmed
+    if (/^\d{2}:\d{2}$/.test(trimmed)) return `${trimmed}:00`
+  }
+  try {
+    const d = new Date(val)
+    if (isNaN(d.getTime())) return String(val)
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mm = String(d.getMinutes()).padStart(2, '0')
+    const ss = String(d.getSeconds()).padStart(2, '0')
+    return `${hh}:${mm}:${ss}`
+  } catch {
+    return String(val)
+  }
+}
+
+function getEntryStatusColor(st) {
+  const norm = String(st || '').toLowerCase().trim()
+  switch (norm) {
+    case 'present':
+    case 'presente':
+      return 'positive'
+    case 'absent':
+    case 'assente':
+      return 'negative'
+    case 'late':
+    case 'in ritardo':
+      return 'warning'
+    case 'on_strike':
+    case 'strike':
+    case 'in sciopero':
+      return 'deep-purple-7'
+    case 'sick':
+    case 'sick_leave':
+    case 'malattia':
+      return 'negative'
+    case 'leave':
+    case 'ferie':
+      return 'teal-7'
+    case 'permit':
+    case 'permesso':
+      return 'blue-7'
+    case 'mission':
+    case 'missione':
+      return 'indigo-7'
+    case 'holiday':
+    case 'festivo':
+      return 'amber-8'
+    default:
+      return 'grey-7'
+  }
+}
+
+function getEntryStatusLabel(st) {
+  const norm = String(st || '').toLowerCase().trim()
+  switch (norm) {
+    case 'present':
+    case 'presente':
+      return t('timecard.entryStatusPresent')
+    case 'absent':
+    case 'assente':
+      return t('timecard.entryStatusAbsent')
+    case 'late':
+    case 'in ritardo':
+      return t('staffAttendance.statusLate') || 'In Ritardo'
+    case 'on_strike':
+    case 'strike':
+    case 'in sciopero':
+      return t('staffAttendance.statusOnStrike') || 'In Sciopero'
+    case 'sick':
+    case 'sick_leave':
+    case 'malattia':
+      return t('timecard.entryStatusSick')
+    case 'leave':
+    case 'ferie':
+      return t('timecard.entryStatusLeave')
+    case 'permit':
+    case 'permesso':
+      return t('staffAttendance.statusPermit') || t('timecard.entryStatusLeave')
+    case 'mission':
+    case 'missione':
+      return t('staffAttendance.statusMission') || 'Missione'
+    case 'holiday':
+    case 'festivo':
+      return t('timecard.entryStatusHoliday')
+    default:
+      return st || t('timecard.entryStatusPresent')
+  }
+}
+
+onMounted(async () => {
+  await loadTimecard()
+  if (isDSGAOrAdmin.value) {
+    try {
+      const res = await userService.getAll({ page_size: 200 })
+      const raw = res.data?.users || res.data || []
+      staffOptions.value = raw
+        .filter(u => [
+          'dsga', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_amministrativo',
+          'assistente_tecnico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita',
+          'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio', 'secretary'
+        ].includes(u.role))
+        .map(u => ({
+          id: u.id,
+          name: `${u.last_name || ''} ${u.first_name || ''} (${t('roles.' + u.role) || u.role})`
+        }))
+    } catch (err) {
+      console.error('Errore nel caricamento dei dipendenti per il cartellino:', err)
+    }
+  }
+})
+</script>
+
+<style scoped>
+.timecard-page {
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+.stat-card {
+  border-radius: 16px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

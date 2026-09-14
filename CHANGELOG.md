@@ -3,6 +3,33 @@
 Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
+## [1.1.0-beta] — 2026-09-13
+
+### Aggiunto & Migliorato
+
+- **Backend (`registro-backend`)**:
+  - **Validazione Stringente Ruoli Istituzionali (`internal/users`)**: Aggiunto controllo preventivo `IsValidRole` sui 25 ruoli istituzionali ammessi nella creazione, aggiornamento e assegnazione incarichi utente (`POST /api/v1/users`, `PUT /api/v1/users/:id`, `POST /api/v1/users/:id/roles`). Restituzione uniforme di `HTTP 400 Bad Request` (`{"error": "invalid role"}`) e test di integrazione dedicato.
+  - **Aggiornamento Dipendenze**: Bump `golang.org/x/time` a `v0.16.0` e `golang.org/x/crypto` a `v0.57.0`.
+
+- **Frontend (`registro-frontend`)**:
+  - **Risoluzione Canonica Ruoli (Tour & Assistenza)**: Mappatura gerarchica completa di tutti i 25 ruoli istituzionali (dirigenza, ATA, docenti con funzioni strumentali, studenti, genitori) sui 10 profili canonici in `OnboardingTour.vue`, `HelpDrawer.vue` e `HelpCenterPanel.vue`, eliminando fallback anomali a studente.
+  - **Onboarding Tour Dirigente Scolastico (`principal`)**: Aggiunto tour guidato a 6 passaggi dedicato alla presidenza con dashboard strategica, gestione personale e nomine, decreti dirigenziali con visto DSGA, sostituzioni live, verbali collegiali conformi al CAD e validazione scrutini.
+  - **Help Drawer & Help Center Panel Adattivi**: Sezioni, guide passo-passo e risposte FAQ contestualizzate per il Dirigente Scolastico (`dashboard`, `personnel`, `substitutions`, `verbali`, `strike`), con classi e temi dedicati deep-purple.
+  - **Allineamento i18n Totale su 11 Lingue**: Sincronizzazione al 100% delle etichette di onboarding, aiuto e gestione utenti, nonché localizzazione integrale su tutte le 11 lingue di tutti i moduli specialistici ATA e delle pagine per incarichi istituzionali (`StrikeManagement.vue`, `ActiveStrikeNoticeBanner.vue`, `CoordinatorView.vue`, `PersonnelDesk.vue`, `Timecard.vue`, `StaffAttendance.vue`, `Users.vue`, `UserTable.vue`, e drawer `MainLayout.vue` con traduzione dinamica per tutte le 24 categorie e 34 voci di navigazione per tutti i 25 ruoli).
+  - **Aggiornamento Dipendenze**: Aggiornamento a `vitest` v5.0.0, `@vitest/coverage-v8` v5.0.0, `quasar` 2.31.0, `globals` 17.12.0 e `postcss` 8.5.28.
+  - **Test Suite**: Espansione a **195 test file** e **1294 test passati al 100%** su Vitest v5, con **231/231 test di parità i18n superati**.
+
+## [1.0.0-beta] — 2026-09-11
+
+### Aggiunto & Adeguato per la Pubblica Amministrazione (AgID / Developers Italia)
+
+- **Conformità Riuso PA & Developers Italia**:
+  - **Scheda Metadati `publiccode.yml`**: Integrazione della scheda informativa v0.2 per l'indicizzazione nel Catalogo del Software a Riuso della Pubblica Amministrazione di Developers Italia.
+  - **Licenza & Trasparenza PA (`LICENSE`)**: Chiarimento della licenza **PolyForm Noncommercial 1.0.0** con riferimento alla clausola *Permitted Organizations* che garantisce l'uso gratuito ed illimitato a tutte le Scuole Statali, Università ed Enti Pubblici.
+  - **Relazione Motivazionale Eccezione AgID (`docs/AGID_LICENSE_JUSTIFICATION.md`)**: Redazione del documento formale di motivazione dell'eccezione di licenza ex art. 69 CAD e Sezione 1 delle Linee Guida AgID.
+  - **Moduli ATA Specialistici**: Integrazione completa e testata dei 4 moduli per il personale ATA (Emergenza Sostituzioni `collaboratore_ds`, Registro Visitatori & Portineria `collaboratore_scolastico`, Cartellino Mensile `dsga`, Sportello Digitale Personale per istanze dipendenti).
+  - **Documentazione**: Aggiornamento coordinato di `README.md`, `README_EN.md` e `CONTRIBUTING.md` con badge e link a Developers Italia.
+
 ## [0.8.0] — 2026-09-06
 
 ### Aggiunto & Migliorato

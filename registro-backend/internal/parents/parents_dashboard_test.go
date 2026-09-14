@@ -102,6 +102,18 @@ func (m *mockUserRepoForParentTest) ChangePasswordTx(ctx context.Context, userID
 func (m *mockUserRepoForParentTest) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
 	return 0, nil
 }
+func (m *mockUserRepoForParentTest) GetAssignments(ctx context.Context, userID string) ([]users.UserAssignment, error) {
+	return nil, nil
+}
+func (m *mockUserRepoForParentTest) CreateAssignment(ctx context.Context, assignment *users.UserAssignment) error {
+	return nil
+}
+func (m *mockUserRepoForParentTest) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	return nil
+}
+func (m *mockUserRepoForParentTest) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
+	return nil
+}
 
 type mockGradesRepoForParentTest struct{ mock.Mock }
 

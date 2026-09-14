@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"registro-backend/internal/auth"
+	"registro-backend/pkg/version"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -684,7 +685,7 @@ func (h *Handler) GetSystemHealth(c *gin.Context) {
 			"goroutines":      runtime.NumGoroutine(),
 			"memory_alloc_mb": float64(memStats.Alloc) / 1024 / 1024,
 		},
-		"api_version": "1.0.0",
+		"api_version": version.Version,
 		"environment": "production",
 		"uptime":      uptimeStr,
 		"last_deploy": startTime.Format(time.RFC3339),

@@ -51,9 +51,9 @@ describe('T01 — unauthenticated on protected route', () => {
 describe('T02 — authenticated user on /login', () => {
   it.each([
     ['admin', '/admin/dashboard'], ['superadmin', '/admin/dashboard'], ['system_auditor', '/admin/dashboard'],
-    ['teacher', '/teacher'], ['coordinator', '/teacher'],
+    ['teacher', '/teacher'], ['coordinator', '/teacher'], ['vice_principal', '/teacher'],
     ['student', '/student'], ['parent', '/parent'],
-    ['secretary', '/secretary'], ['principal', '/secretary'], ['vice_principal', '/secretary'],
+    ['secretary', '/secretary'], ['principal', '/secretary'],
   ])('role %s redirected to %s', async (role, expected) => {
     Object.assign(mockAuthStore, { isAuthenticated: true, userRole: role, token: makeToken() })
     const to = { path: '/login', meta: { requiresAuth: false }, matched: [{ path: '/login', meta: { requiresAuth: false } }] }

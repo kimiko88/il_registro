@@ -36,6 +36,55 @@ flags:
       - registro-frontend/
     carryforward: true
 
+# Gestione Componenti di Test (Codecov Components: https://app.codecov.io/github/kimiko88/il_registro/components)
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: auto
+        threshold: 1%
+  individual_components:
+    - component_id: backend_verbali
+      name: "Backend - Verbali & Riunioni"
+      paths:
+        - "registro-backend/internal/verbali/**"
+    - component_id: backend_auth
+      name: "Backend - Autenticazione & RBAC"
+      paths:
+        - "registro-backend/internal/auth/**"
+    - component_id: backend_grades
+      name: "Backend - Valutazioni & Voti"
+      paths:
+        - "registro-backend/internal/grades/**"
+    - component_id: backend_attendance
+      name: "Backend - Registro Presenze"
+      paths:
+        - "registro-backend/internal/attendance/**"
+        - "registro-backend/internal/staff_attendance/**"
+    - component_id: backend_scrutiny
+      name: "Backend - Scrutini & Pagelle"
+      paths:
+        - "registro-backend/internal/scrutiny/**"
+    - component_id: frontend_teacher
+      name: "Frontend - Area Docenti & Verbali"
+      paths:
+        - "registro-frontend/src/pages/teacher/**"
+    - component_id: frontend_secretary
+      name: "Frontend - Segreteria & Gestione Verbali"
+      paths:
+        - "registro-frontend/src/pages/secretary/**"
+    - component_id: frontend_services
+      name: "Frontend - Servizi API"
+      paths:
+        - "registro-frontend/src/services/**"
+    - component_id: frontend_components
+      name: "Frontend - Componenti Riutilizzabili"
+      paths:
+        - "registro-frontend/src/components/**"
+
+comment:
+  layout: "header, diff, flags, components"
+
 ignore:
   # Backend exclusions: entrypoints, migrations, and database adapter layer
   - "registro-backend/cmd/**"

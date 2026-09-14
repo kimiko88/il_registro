@@ -40,7 +40,7 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, school
 		userQuery := `
 			SELECT id::text, role, (first_name || ' ' || last_name) AS name, email, COALESCE(fiscal_code, '')
 			FROM users
-			WHERE (school_id = $1::uuid OR $1 = '')
+			WHERE (school_id = NULLIF($1, '')::uuid OR $1 = '')
 			  AND (first_name ILIKE $2 OR last_name ILIKE $2 OR email ILIKE $2 OR fiscal_code ILIKE $2 OR role ILIKE $2)
 			LIMIT 20
 		`
@@ -94,7 +94,7 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, school
 		classQuery := `
 			SELECT id::text, COALESCE(section, 'A'), COALESCE(specialization, 'Generale')
 			FROM classes
-			WHERE (school_id = $1::uuid OR $1 = '')
+			WHERE (school_id = NULLIF($1, '')::uuid OR $1 = '')
 			  AND (section ILIKE $2 OR specialization ILIKE $2)
 			LIMIT 10
 		`
@@ -125,7 +125,7 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, school
 		commQuery := `
 			SELECT id::text, subject, type, body
 			FROM communications
-			WHERE (school_id = $1::uuid OR $1 = '')
+			WHERE (school_id = NULLIF($1, '')::uuid OR $1 = '')
 			  AND (subject ILIKE $2 OR body ILIKE $2)
 			LIMIT 20
 		`
@@ -160,7 +160,7 @@ func (r *PostgresRepository) GlobalSearch(ctx context.Context, actorRole, school
 			SELECT cl.id::text, cl.topic, COALESCE(cl.notes, ''), cl.type
 			FROM class_lessons cl
 			JOIN classes c ON cl.class_id = c.id
-			WHERE (c.school_id = $1::uuid OR $1 = '')
+			WHERE (c.school_id = NULLIF($1, '')::uuid OR $1 = '')
 			  AND (cl.topic ILIKE $2 OR cl.notes ILIKE $2)
 			LIMIT 20
 		`

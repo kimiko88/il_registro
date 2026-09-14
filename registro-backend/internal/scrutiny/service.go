@@ -251,8 +251,8 @@ type ClassReportStudentRow struct {
 // filters classes by schoolID to prevent cross-tenant data leaks.
 func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID string, semester ...int) ([]ClassScrutinyOverview, error) {
 	if actorRole != "principal" && actorRole != "vice_principal" &&
-		actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" && actorRole != "secretary" {
-		return nil, errors.New("unauthorized: solo coordinatori, dirigenza, segreteria e admin possono vedere l'overview dello scrutinio")
+		actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "assistente_alunni" {
+		return nil, errors.New("unauthorized: solo dirigenza, segreteria e admin possono vedere l'overview dello scrutinio")
 	}
 	if schoolID == "" && actorRole != "superadmin" {
 		return nil, errors.New("unauthorized: school_id mancante per utente non superadmin")
@@ -423,7 +423,7 @@ func (s *Service) FinalizeClass(ctx context.Context, actorID, actorRole, classID
 
 // ExportAll exports scrutiny data for all classes in the actor's school as CSV.
 func (s *Service) ExportAll(ctx context.Context, actorID, actorRole, schoolID string, semester int) ([]byte, error) {
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" && actorRole != "assistente_alunni" {
 		return nil, errors.New("unauthorized: solo dirigenza e admin possono esportare tutti gli scrutini")
 	}
 	if semester <= 0 {

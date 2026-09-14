@@ -182,7 +182,7 @@
               <div :key="currentStep" class="step-content-area">
                 <div class="step-badge" :class="`badge-${activeStep.color}`">
                   <q-icon :name="activeStep.icon" size="14px" />
-                  {{ activeStep.category || '' }}
+                  {{ activeStep.category || roleLabel }}
                 </div>
 
                 <h2 class="step-title">{{ activeStep.title }}</h2>
@@ -279,17 +279,51 @@ const COMPLETION_STEP = 999
 // ── Role helpers ─────────────────────────────────────────────────────────────
 const userRole = computed(() => {
   const role = authStore.userRole || authStore.user?.role || 'student'
-  const r = role.toLowerCase()
-  if (r === 'superadmin') return 'admin'
-  return ['teacher','student','parent','secretary','admin'].includes(r) ? r : 'student'
+  const r = role.toLowerCase().trim()
+  if (['principal', 'vice_principal', 'dirigente_scolastico', 'collaboratore_vicario'].includes(r)) {
+    return 'principal'
+  }
+  if (['admin', 'superadmin', 'system_auditor', 'dpo'].includes(r)) {
+    return 'admin'
+  }
+  if (['secretary', 'staff', 'responsabile_gestione_documentale', 'responsabile_conservazione'].includes(r)) {
+    return 'secretary'
+  }
+  if (r === 'dsga') {
+    return 'dsga'
+  }
+  if (['collaboratore_ds', 'responsabile_servizio'].includes(r)) {
+    return 'collaboratore_ds'
+  }
+  if (r === 'collaboratore_scolastico') {
+    return 'collaboratore_scolastico'
+  }
+  if (['assistente_amministrativo', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico'].includes(r)) {
+    return 'assistente_amministrativo'
+  }
+  if (['teacher', 'docente', 'coordinator', 'coordinatore_classe', 'segretario_consiglio', 'referente_progetto', 'referente_inclusione', 'responsabile_dipartimento', 'tutor_orientatore', 'animatore_digitale'].includes(r)) {
+    return 'teacher'
+  }
+  if (['parent', 'genitore'].includes(r)) {
+    return 'parent'
+  }
+  if (['student', 'studente'].includes(r)) {
+    return 'student'
+  }
+  return 'student'
 })
 
 const roleMeta = {
-  teacher:   { icon: 'school',              color: 'indigo',  primary: 'indigo',  label: 'roles.teacher' },
-  student:   { icon: 'face',                color: 'teal',    primary: 'teal',    label: 'roles.student' },
-  parent:    { icon: 'family_restroom',      color: 'purple',  primary: 'purple',  label: 'roles.parent' },
-  secretary: { icon: 'admin_panel_settings', color: 'orange',  primary: 'orange',  label: 'roles.secretary' },
-  admin:     { icon: 'manage_accounts',      color: 'red',     primary: 'red',     label: 'roles.admin' }
+  principal:                 { icon: 'account_balance',      color: 'deep-purple', primary: 'deep-purple-8', label: 'roles.principal' },
+  teacher:                   { icon: 'school',              color: 'indigo',      primary: 'indigo',        label: 'roles.teacher' },
+  student:                   { icon: 'face',                color: 'teal',        primary: 'teal',          label: 'roles.student' },
+  parent:                    { icon: 'family_restroom',      color: 'purple',      primary: 'purple',        label: 'roles.parent' },
+  secretary:                 { icon: 'admin_panel_settings', color: 'orange',      primary: 'orange',        label: 'roles.secretary' },
+  admin:                     { icon: 'manage_accounts',      color: 'red',         primary: 'red',           label: 'roles.admin' },
+  assistente_amministrativo: { icon: 'manage_accounts',      color: 'cyan',        primary: 'cyan-8',        label: 'roles.assistente_amministrativo' },
+  collaboratore_ds:          { icon: 'co_present',          color: 'amber',       primary: 'amber-9',       label: 'roles.collaboratore_ds' },
+  collaboratore_scolastico:  { icon: 'door_front',          color: 'teal',        primary: 'teal-8',        label: 'roles.collaboratore_scolastico' },
+  dsga:                      { icon: 'account_balance',     color: 'deep-orange', primary: 'deep-orange-8', label: 'roles.dsga' }
 }
 
 const roleIcon    = computed(() => roleMeta[userRole.value]?.icon    || 'person')
@@ -299,6 +333,14 @@ const roleLabel   = computed(() => t(roleMeta[userRole.value]?.label || 'roles.u
 
 // ── Steps definition ─────────────────────────────────────────────────────────
 const STEP_DEFS = {
+  principal: [
+    { icon: 'dashboard',         color: 'deep-purple' },
+    { icon: 'manage_accounts',   color: 'indigo' },
+    { icon: 'verified',          color: 'teal' },
+    { icon: 'swap_horiz',        color: 'orange' },
+    { icon: 'gavel',             color: 'blue' },
+    { icon: 'assessment',        color: 'purple' }
+  ],
   teacher: [
     { icon:'dashboard',       color:'indigo'  },
     { icon:'menu_book',       color:'blue'    },
@@ -348,6 +390,34 @@ const STEP_DEFS = {
     { icon:'settings',        color:'grey'    },
     { icon:'corporate_fare',  color:'indigo'  },
     { icon:'api',             color:'cyan'    }
+  ],
+  assistente_amministrativo: [
+    { icon: 'dashboard',        color: 'cyan' },
+    { icon: 'calendar_month',   color: 'blue' },
+    { icon: 'forward_to_inbox', color: 'purple' },
+    { icon: 'cloud_sync',       color: 'indigo' },
+    { icon: 'gavel',            color: 'teal' }
+  ],
+  collaboratore_ds: [
+    { icon: 'dashboard',        color: 'amber' },
+    { icon: 'bolt',             color: 'red' },
+    { icon: 'swap_horiz',       color: 'blue' },
+    { icon: 'co_present',       color: 'orange' },
+    { icon: 'gavel',            color: 'purple' }
+  ],
+  collaboratore_scolastico: [
+    { icon: 'dashboard',        color: 'teal' },
+    { icon: 'door_front',       color: 'blue' },
+    { icon: 'logout',           color: 'orange' },
+    { icon: 'build',            color: 'red' },
+    { icon: 'badge',            color: 'green' }
+  ],
+  dsga: [
+    { icon: 'dashboard',        color: 'deep-orange' },
+    { icon: 'assessment',       color: 'blue' },
+    { icon: 'verified',         color: 'green' },
+    { icon: 'cloud_sync',       color: 'indigo' },
+    { icon: 'gavel',            color: 'purple' }
   ]
 }
 
@@ -364,7 +434,7 @@ const tourSteps = computed(() => {
       : `onboardingExtra.${role}.step${n}_desc`
     const bulletsKey = `onboardingExtra.${role}.step${n}_bullets`
 
-    const rawBullets = tm(bulletsKey)
+    const rawBullets = typeof tm === 'function' ? tm(bulletsKey) : []
     const bullets = Array.isArray(rawBullets) ? rawBullets : []
 
     return {
@@ -528,6 +598,10 @@ function floatIconStyle(i) {
 .hero-purple  { background: linear-gradient(160deg, #a855f7, #7c3aed); }
 .hero-orange  { background: linear-gradient(160deg, #f97316, #ea580c); }
 .hero-red     { background: linear-gradient(160deg, #ef4444, #dc2626); }
+.hero-cyan    { background: linear-gradient(160deg, #06b6d4, #0891b2); }
+.hero-amber   { background: linear-gradient(160deg, #f59e0b, #d97706); }
+.hero-deep-orange { background: linear-gradient(160deg, #f97316, #c2410c); }
+.hero-deep-purple { background: linear-gradient(160deg, #7c3aed, #4c1d95); }
 
 .hero-rings { position: absolute; inset: 0; }
 .ring {
@@ -661,6 +735,8 @@ function floatIconStyle(i) {
 .icon-cyan    { background: #ecfeff; color: #0891b2; }
 .icon-pink    { background: #fdf2f8; color: #db2777; }
 .icon-amber   { background: #fffbeb; color: #d97706; }
+.icon-deep-orange { background: #fff7ed; color: #c2410c; }
+.icon-deep-purple { background: #f5f3ff; color: #6d28d9; }
 
 .welcome-actions {
   display: flex;
@@ -700,6 +776,7 @@ function floatIconStyle(i) {
   position: relative;
   overflow: hidden;
   padding: 28px 16px;
+  background: linear-gradient(160deg, #667eea, #4338ca);
 }
 
 .panel-indigo  { background: linear-gradient(160deg, #667eea, #4338ca); }
@@ -713,6 +790,8 @@ function floatIconStyle(i) {
 .panel-cyan    { background: linear-gradient(160deg, #22d3ee, #0891b2); }
 .panel-pink    { background: linear-gradient(160deg, #ec4899, #db2777); }
 .panel-amber   { background: linear-gradient(160deg, #f59e0b, #d97706); }
+.panel-deep-orange { background: linear-gradient(160deg, #ea580c, #c2410c); }
+.panel-deep-purple { background: linear-gradient(160deg, #7c3aed, #4c1d95); }
 
 /* Sidebar step dots */
 .sidebar-steps {
@@ -752,7 +831,7 @@ function floatIconStyle(i) {
   font-weight: 700;
   color: rgba(255,255,255,0.7);
 }
-.sidebar-dot.active .dot-num { color: #4338ca; }
+.sidebar-dot.active .dot-num { color: #1f2937; }
 
 /* Step visual */
 .step-visual {
@@ -870,6 +949,7 @@ function floatIconStyle(i) {
 .badge-cyan    { background: #ecfeff; color: #0891b2; }
 .badge-pink    { background: #fdf2f8; color: #db2777; }
 .badge-amber   { background: #fffbeb; color: #d97706; }
+.badge-deep-orange { background: #fff7ed; color: #c2410c; }
 
 .step-title {
   font-size: 1.45rem;
@@ -922,6 +1002,7 @@ function floatIconStyle(i) {
 .dot-cyan    { background: #22d3ee; }
 .dot-pink    { background: #ec4899; }
 .dot-amber   { background: #f59e0b; }
+.dot-deep-orange { background: #ea580c; }
 
 .step-tip {
   display: flex;

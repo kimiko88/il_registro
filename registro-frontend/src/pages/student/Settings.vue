@@ -255,6 +255,7 @@
               :label="t('settingsPage.currentPassword') || 'Password Attuale'"
               outlined
               dense
+              autocomplete="current-password"
               class="rounded-lg"
             />
             <q-input
@@ -263,6 +264,7 @@
               :label="(t('settingsPage.newPassword') || 'Nuova Password') + ' (' + (t('settingsPage.passwordMinLength') || 'almeno 8 caratteri') + ')'"
               outlined
               dense
+              autocomplete="new-password"
               class="rounded-lg"
             />
             <q-input
@@ -271,6 +273,7 @@
               :label="t('settingsPage.confirmPassword') || 'Conferma Nuova Password'"
               outlined
               dense
+              autocomplete="new-password"
               class="rounded-lg"
             />
 

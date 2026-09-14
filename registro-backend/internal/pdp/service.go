@@ -241,7 +241,7 @@ func (s *Service) DeletePlan(ctx context.Context, actorRole, actorSchoolID, id s
 
 func canManagePDP(role string) bool {
 	switch role {
-	case "teacher", "secretary", "principal", "vice_principal", "admin", "superadmin":
+	case "teacher", "coordinator", "coordinatore_classe", "referente_inclusione", "secretary", "principal", "vice_principal", "admin", "superadmin":
 		return true
 	}
 	return false
@@ -249,7 +249,7 @@ func canManagePDP(role string) bool {
 
 func canViewClassPDP(role string) bool {
 	switch role {
-	case "teacher", "secretary", "principal", "vice_principal", "admin", "superadmin":
+	case "teacher", "coordinator", "coordinatore_classe", "referente_inclusione", "secretary", "principal", "vice_principal", "admin", "superadmin":
 		return true
 	}
 	return false

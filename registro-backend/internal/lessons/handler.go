@@ -91,7 +91,7 @@ func (h *Handler) CreateLesson(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" {
+	if role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only teachers can create lessons"})
 		return
 	}
@@ -138,7 +138,7 @@ func (h *Handler) CreateHomework(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" {
+	if role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only teachers can create homework"})
 		return
 	}
@@ -188,7 +188,7 @@ func (h *Handler) UpdateLesson(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+	if role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only teachers or staff can update lessons"})
 		return
 	}
@@ -217,7 +217,7 @@ func (h *Handler) DeleteLesson(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo docenti, dirigenti o segreteria possono eliminare le lezioni"})
 		return
 	}
@@ -240,7 +240,7 @@ func (h *Handler) UpdateHomework(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo docenti, dirigenti o segreteria possono modificare i compiti"})
 		return
 	}
@@ -269,7 +269,7 @@ func (h *Handler) DeleteHomework(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" {
+	if role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo docenti, dirigenti o segreteria possono eliminare i compiti"})
 		return
 	}
@@ -292,7 +292,7 @@ func (h *Handler) GetMyDiary(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+	if role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only staff can access my-diary"})
 		return
 	}

@@ -6,7 +6,7 @@ export default [
         component: () => import('@/layouts/MainLayout.vue'),
         meta: { requiresAuth: true },
         children: [
-            { path: '', component: () => import('@/pages/Dashboard.vue'), meta: { title: 'Dashboard', titleKey: 'routeTitles.dashboard', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'staff', 'system_auditor'] } },
+            { path: '', component: () => import('@/pages/Dashboard.vue'), meta: { title: 'Dashboard', titleKey: 'routeTitles.dashboard', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'staff', 'system_auditor', 'auditor', 'docente', 'studente', 'genitore', 'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'responsabile_gestione_documentale', 'responsabile_conservazione', 'dpo'] } },
             { path: 'dashboard', redirect: '/' },
 
             // Admin Routes (SuperAdmin + Admin)
@@ -52,7 +52,7 @@ export default [
             {
                 path: 'admin/elearning',
                 component: () => import('@/pages/admin/ElearningIntegration.vue'),
-                meta: { title: 'Google Classroom & Teams', titleKey: 'routeTitles.elearning', roles: ['superadmin', 'admin'] }
+                meta: { title: 'Google Classroom & Teams', titleKey: 'routeTitles.elearning', roles: ['superadmin', 'admin', 'assistente_tecnico', 'teacher', 'principal', 'vice_principal'] }
             },
             {
                 path: 'admin/settings',
@@ -73,7 +73,7 @@ export default [
                 path: 'admin/audit-logs',
                 component: () => import('@/pages/admin/AuditLog.vue'),
                 // admin included so the dashboard menu item works correctly
-                meta: { title: 'Registro Eventi & Audit', titleKey: 'routeTitles.auditLogs', roles: ['superadmin', 'admin', 'system_auditor'] }
+                meta: { title: 'Registro Eventi & Audit', titleKey: 'routeTitles.auditLogs', roles: ['superadmin', 'admin', 'system_auditor', 'dpo'] }
             },
             { path: 'admin/audit-log', redirect: '/admin/audit-logs' },
             {
@@ -91,56 +91,67 @@ export default [
             // Secretary Routes
             { path: 'secretary', component: () => import('@/pages/secretary/Index.vue'), meta: { title: 'Pannello Segreteria', titleKey: 'routeTitles.secretaryPanel', roles: ['secretary', 'principal', 'vice_principal'] } },
             { path: 'secretary/dashboard', redirect: '/secretary' },
-            { path: 'secretary/documents', component: () => import('@/pages/secretary/Documents.vue'), meta: { title: 'Gestione Documenti', titleKey: 'routeTitles.documents', roles: ['secretary', 'principal', 'vice_principal'] } },
-            { path: 'secretary/users', component: () => import('@/pages/secretary/Users.vue'), meta: { title: 'Anagrafica Utenti', titleKey: 'routeTitles.users', roles: ['secretary', 'principal', 'vice_principal'] } },
-            { path: 'secretary/students', component: () => import('@/pages/secretary/Students.vue'), meta: { title: 'Anagrafica Studenti', titleKey: 'routeTitles.students', roles: ['secretary', 'principal', 'vice_principal'] } },
-            { path: 'secretary/communications', component: () => import('@/pages/secretary/Communications.vue'), meta: { title: 'Circolari & Comunicazioni', titleKey: 'routeTitles.communications', roles: ['secretary', 'principal', 'vice_principal'] } },
-            { path: 'secretary/reports', component: () => import('@/pages/secretary/Reports.vue'), meta: { title: 'Reportistica Scolastica', titleKey: 'routeTitles.reports', roles: ['secretary', 'principal', 'vice_principal'] } },
-            { path: 'secretary/pcto', component: () => import('@/pages/secretary/PCTO.vue'), meta: { title: 'Gestione PCTO', titleKey: 'routeTitles.pcto', roles: ['secretary'] } },
-            { path: 'secretary/textbooks', component: () => import('@/pages/secretary/Textbooks.vue'), meta: { title: 'Adozione Libri di Testo', titleKey: 'routeTitles.textbooks', roles: ['secretary'] } },
+            { path: 'secretary/documents', component: () => import('@/pages/secretary/Documents.vue'), meta: { title: 'Gestione Documenti', titleKey: 'routeTitles.documents', roles: ['secretary', 'principal', 'vice_principal', 'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'assistente_contabilita', 'assistente_protocollo', 'responsabile_gestione_documentale', 'responsabile_conservazione'] } },
+            { path: 'secretary/users', component: () => import('@/pages/secretary/Users.vue'), meta: { title: 'Anagrafica Utenti', titleKey: 'routeTitles.users', roles: ['secretary', 'principal', 'vice_principal', 'dsga', 'assistente_amministrativo', 'assistente_personale'] } },
+            { path: 'secretary/students', component: () => import('@/pages/secretary/Students.vue'), meta: { title: 'Anagrafica Studenti', titleKey: 'routeTitles.students', roles: ['secretary', 'principal', 'vice_principal', 'assistente_amministrativo', 'assistente_alunni'] } },
+            { path: 'secretary/communications', component: () => import('@/pages/secretary/Communications.vue'), meta: { title: 'Circolari & Comunicazioni', titleKey: 'routeTitles.communications', roles: ['secretary', 'principal', 'vice_principal', 'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'responsabile_gestione_documentale', 'responsabile_conservazione', 'dpo'] } },
+            { path: 'secretary/reports', component: () => import('@/pages/secretary/Reports.vue'), meta: { title: 'Reportistica Scolastica', titleKey: 'routeTitles.reports', roles: ['secretary', 'principal', 'vice_principal', 'coordinator'] } },
+            { path: 'secretary/pcto', component: () => import('@/pages/secretary/PCTO.vue'), meta: { title: 'Gestione PCTO', titleKey: 'routeTitles.pcto', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'teacher', 'coordinator'] } },
+            { path: 'secretary/textbooks', component: () => import('@/pages/secretary/Textbooks.vue'), meta: { title: 'Adozione Libri di Testo', titleKey: 'routeTitles.textbooks', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'assistente_alunni', 'coordinator'] } },
             { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { title: 'Impostazioni Segreteria', titleKey: 'routeTitles.settings', roles: ['secretary', 'principal', 'vice_principal'] } },
             { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { title: 'Gestione Classi', titleKey: 'routeTitles.classes', roles: ['secretary', 'principal', 'vice_principal'] } },
-            { path: 'secretary/timetable', component: () => import('@/pages/secretary/Timetable.vue'), meta: { title: 'Orario Scolastico & Cattedre', titleKey: 'routeTitles.timetable', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
-            { path: 'secretary/scrutiny', component: () => import('@/pages/secretary/Scrutiny.vue'), meta: { title: 'Scrutini Scolastici', titleKey: 'routeTitles.scrutiny', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/timetable', component: () => import('@/pages/secretary/Timetable.vue'), meta: { title: 'Orario Scolastico & Cattedre', titleKey: 'routeTitles.timetable', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'collaboratore_ds', 'dsga'] } },
+            { path: 'secretary/scrutiny', component: () => import('@/pages/secretary/Scrutiny.vue'), meta: { title: 'Scrutini Scolastici', titleKey: 'routeTitles.scrutiny', roles: ['secretary', 'principal', 'vice_principal', 'assistente_alunni'] } },
 
-            { path: 'secretary/groups', component: () => import('@/pages/secretary/Groups.vue'), meta: { title: 'Gruppi Linguistici / Articolati', titleKey: 'routeTitles.classes', roles: ['secretary'] } },
-            { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { title: 'Organizzazione Riunioni', titleKey: 'routeTitles.meetings', roles: ['secretary'] } },
-            { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { title: 'Certificati & Attestati', titleKey: 'routeTitles.certificates', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
-            { path: 'secretary/substitutions', component: () => import('@/pages/secretary/Substitutions.vue'), meta: { title: 'Gestione Sostituzioni Docenti', titleKey: 'routeTitles.substitutions', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
-            { path: 'secretary/sidi', component: () => import('@/pages/secretary/SidiExports.vue'), meta: { title: 'Flussi SIDI (MIM)', titleKey: 'routeTitles.sidiExports', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
+            { path: 'secretary/groups', component: () => import('@/pages/secretary/Groups.vue'), meta: { title: 'Gruppi Linguistici / Articolati', titleKey: 'routeTitles.classes', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
+            { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { title: 'Organizzazione Riunioni', titleKey: 'routeTitles.meetings', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
+            { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { title: 'Certificati & Attestati', titleKey: 'routeTitles.certificates', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'assistente_amministrativo', 'assistente_alunni', 'assistente_contabilita', 'assistente_sportello', 'dsga'] } },
+            { path: 'secretary/substitutions', component: () => import('@/pages/secretary/Substitutions.vue'), meta: { title: 'Gestione Sostituzioni Docenti', titleKey: 'routeTitles.substitutions', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'dsga', 'collaboratore_ds'] } },
+            { path: 'secretary/sidi', component: () => import('@/pages/secretary/SidiExports.vue'), meta: { title: 'Flussi SIDI (MIM)', titleKey: 'routeTitles.sidiExports', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'dsga', 'assistente_amministrativo', 'assistente_alunni'] } },
+            { path: 'secretary/verbali', component: () => import('@/pages/secretary/VerbaliManagement.vue'), meta: { title: 'Verbali & Modelli Riunioni', titleKey: 'routeTitles.verbali', roles: ['secretary', 'principal', 'vice_principal', 'admin', 'superadmin', 'dsga', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_protocollo', 'responsabile_gestione_documentale', 'responsabile_conservazione'] } },
             { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { title: 'Fascicolo Studente', titleKey: 'routeTitles.fascicolo', roles: ['secretary', 'principal', 'vice_principal'] } },
             { path: 'secretary/audit-logs', redirect: '/admin/audit-logs' },
             { path: 'secretary/audit-log', redirect: '/admin/audit-logs' },
 
-            // Teacher Routes (Supports both 'teacher' and 'coordinator')
-            { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { title: 'Pannello Docente', titleKey: 'routeTitles.teacherPanel', roles: ['teacher', 'coordinator'] } },
+            // ATA Routes & Staff Attendance (Presenze ATA e Docenti)
+            { path: 'ata', component: () => import('@/pages/ata/Index.vue'), meta: { title: 'Pannello ATA', titleKey: 'routeTitles.ataPanel', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
+            { path: 'ata/attendance', component: () => import('@/pages/ata/StaffAttendance.vue'), meta: { title: 'Presenze Personale & Docenti', titleKey: 'routeTitles.staffAttendance', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'assistente_personale', 'collaboratore_scolastico', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
+            { path: 'ata/emergency-substitutions', component: () => import('@/pages/ata/EmergencySubstitutions.vue'), meta: { title: 'Emergenza Sostituzioni', titleKey: 'routeTitles.emergencySubstitutions', roles: ['collaboratore_ds', 'dsga', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
+            { path: 'ata/visitor-registry', component: () => import('@/pages/ata/VisitorRegistry.vue'), meta: { title: 'Registro Visitatori', titleKey: 'routeTitles.visitorRegistry', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_scolastico', 'collaboratore_ds', 'assistente_sportello', 'responsabile_servizio', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
+            { path: 'ata/timecard', component: () => import('@/pages/ata/Timecard.vue'), meta: { title: 'Cartellino & Piano Ferie', titleKey: 'routeTitles.timecard', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'principal', 'vice_principal', 'admin', 'superadmin'] } },
+            { path: 'ata/strike', component: () => import('@/pages/ata/StrikeManagement.vue'), meta: { title: 'Rilevazione Preventiva Scioperi', titleKey: 'routeTitles.strikeManagement', roles: ['dsga', 'principal', 'vice_principal', 'admin', 'superadmin', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_personale', 'secretary'] } },
+            { path: 'ata/personnel-desk', component: () => import('@/pages/ata/PersonnelDesk.vue'), meta: { title: 'Sportello Digitale Personale', titleKey: 'routeTitles.personnelDesk', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'teacher', 'coordinator', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
+            { path: 'ata/settings', component: () => import('@/pages/ata/Settings.vue'), meta: { title: 'Impostazioni Profilo', titleKey: 'routeTitles.settings', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
+
+            // Teacher Routes (Supports 'teacher', 'coordinator', and 'vice_principal')
+            { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { title: 'Pannello Docente', titleKey: 'routeTitles.teacherPanel', roles: ['teacher', 'coordinator', 'vice_principal'] } },
             { path: 'teacher/dashboard', redirect: '/teacher' },
-            { path: 'teacher/grades', component: () => import('@/pages/teacher/Grades.vue'), meta: { title: 'Gestione Voti', titleKey: 'routeTitles.grades', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/attendance', component: () => import('@/pages/teacher/Attendance.vue'), meta: { title: 'Registro Appello & Presenze', titleKey: 'routeTitles.attendance', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/classes', component: () => import('@/pages/teacher/Classes.vue'), meta: { title: 'Le Mie Classi', titleKey: 'routeTitles.classes', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/groups', component: () => import('@/pages/teacher/Groups.vue'), meta: { title: 'Gruppi e Laboratori', titleKey: 'routeTitles.classes', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/coordinator', component: () => import('@/pages/teacher/CoordinatorView.vue'), meta: { title: 'Pannello Coordinatore', titleKey: 'routeTitles.coordinator', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/documents', component: () => import('@/pages/teacher/Documents.vue'), meta: { title: 'Documentazione Didattica', titleKey: 'routeTitles.documents', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/colloqui', component: () => import('@/pages/teacher/Colloqui.vue'), meta: { title: 'Ricevimento Famiglie', titleKey: 'routeTitles.colloqui', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/communications', component: () => import('@/pages/teacher/Communications.vue'), meta: { title: 'Comunicazioni Scuola', titleKey: 'routeTitles.communications', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/lessons', component: () => import('@/components/Teacher/LessonPlanner.vue'), meta: { title: 'Registro Lezioni', titleKey: 'routeTitles.timetable', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/didactics', component: () => import('@/pages/teacher/Didactics.vue'), meta: { title: 'Materiale Didattico', titleKey: 'routeTitles.didactics', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/timetable', component: () => import('@/pages/teacher/Timetable.vue'), meta: { title: 'Orario Docente', titleKey: 'routeTitles.timetable', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/scrutiny', component: () => import('@/pages/teacher/Scrutiny.vue'), meta: { title: 'Gestione Scrutini', titleKey: 'routeTitles.scrutiny', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/verbali', component: () => import('@/pages/teacher/Verbali.vue'), meta: { title: 'Verbali Consiglio di Classe', titleKey: 'routeTitles.verbali', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/substitutions', component: () => import('@/pages/teacher/Substitutions.vue'), meta: { title: 'Sostituzioni Docenti', titleKey: 'routeTitles.substitutions', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/grade-weights', component: () => import('@/pages/teacher/GradeWeights.vue'), meta: { title: 'Pesi e Criteri Valutazione', titleKey: 'routeTitles.grades', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/agenda', component: () => import('@/pages/teacher/Agenda.vue'), meta: { title: 'Agenda di Classe', titleKey: 'routeTitles.agenda', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/notes', component: () => import('@/pages/teacher/Notes.vue'), meta: { title: 'Note & Richiami', titleKey: 'routeTitles.notes', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/rubrics', component: () => import('@/pages/teacher/Rubrics.vue'), meta: { title: 'Rubriche Valutative', titleKey: 'routeTitles.rubrics', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/pdp', component: () => import('@/pages/teacher/PdpPlans.vue'), meta: { title: 'Piani PDP / PEI', titleKey: 'routeTitles.pdp', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/uda', component: () => import('@/pages/teacher/UdaPlanner.vue'), meta: { title: 'Programmazione Didattica UdA', titleKey: 'routeTitles.uda', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/competencies', component: () => import('@/pages/teacher/Competencies.vue'), meta: { title: 'Valutazione per Competenze', titleKey: 'routeTitles.eportfolio', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/settings', component: () => import('@/pages/teacher/Settings.vue'), meta: { title: 'Impostazioni Docente', titleKey: 'routeTitles.settings', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/recovery', component: () => import('@/pages/teacher/RecoveryCourses.vue'), meta: { title: 'Corsi di Recupero & PAI', titleKey: 'routeTitles.recovery', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/credits', component: () => import('@/pages/teacher/SchoolCredits.vue'), meta: { title: 'Credito Scolastico Triennio', titleKey: 'routeTitles.credits', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/support', component: () => import('@/pages/teacher/SupportRegister.vue'), meta: { title: 'Registro di Sostegno & PEI', titleKey: 'routeTitles.supportRegister', roles: ['teacher', 'coordinator'] } },
-            { path: 'teacher/general-meetings', component: () => import('@/pages/teacher/GeneralMeetingLiveQueue.vue'), meta: { title: 'Ricevimento Generale Pomeridiano', titleKey: 'routeTitles.liveQueue', roles: ['teacher', 'coordinator'] } },
+            { path: 'teacher/grades', component: () => import('@/pages/teacher/Grades.vue'), meta: { title: 'Gestione Voti', titleKey: 'routeTitles.grades', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/attendance', component: () => import('@/pages/teacher/Attendance.vue'), meta: { title: 'Registro Appello & Presenze', titleKey: 'routeTitles.attendance', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/classes', component: () => import('@/pages/teacher/Classes.vue'), meta: { title: 'Le Mie Classi', titleKey: 'routeTitles.classes', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/groups', component: () => import('@/pages/teacher/Groups.vue'), meta: { title: 'Gruppi e Laboratori', titleKey: 'routeTitles.classes', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/coordinator', component: () => import('@/pages/teacher/CoordinatorView.vue'), meta: { title: 'Pannello Coordinatore', titleKey: 'routeTitles.coordinator', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/documents', component: () => import('@/pages/teacher/Documents.vue'), meta: { title: 'Documentazione Didattica', titleKey: 'routeTitles.documents', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/colloqui', component: () => import('@/pages/teacher/Colloqui.vue'), meta: { title: 'Ricevimento Famiglie', titleKey: 'routeTitles.colloqui', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/communications', component: () => import('@/pages/teacher/Communications.vue'), meta: { title: 'Comunicazioni Scuola', titleKey: 'routeTitles.communications', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/lessons', component: () => import('@/components/Teacher/LessonPlanner.vue'), meta: { title: 'Registro Lezioni', titleKey: 'routeTitles.timetable', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/didactics', component: () => import('@/pages/teacher/Didactics.vue'), meta: { title: 'Materiale Didattico', titleKey: 'routeTitles.didactics', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/timetable', component: () => import('@/pages/teacher/Timetable.vue'), meta: { title: 'Orario Docente', titleKey: 'routeTitles.timetable', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/scrutiny', component: () => import('@/pages/teacher/Scrutiny.vue'), meta: { title: 'Gestione Scrutini', titleKey: 'routeTitles.scrutiny', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/verbali', component: () => import('@/pages/teacher/Verbali.vue'), meta: { title: 'Verbali Consiglio di Classe', titleKey: 'routeTitles.verbali', roles: ['teacher', 'coordinator', 'principal', 'vice_principal'] } },
+            { path: 'teacher/substitutions', component: () => import('@/pages/teacher/Substitutions.vue'), meta: { title: 'Sostituzioni Docenti', titleKey: 'routeTitles.substitutions', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/grade-weights', component: () => import('@/pages/teacher/GradeWeights.vue'), meta: { title: 'Pesi e Criteri Valutazione', titleKey: 'routeTitles.grades', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/agenda', component: () => import('@/pages/teacher/Agenda.vue'), meta: { title: 'Agenda di Classe', titleKey: 'routeTitles.agenda', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/notes', component: () => import('@/pages/teacher/Notes.vue'), meta: { title: 'Note & Richiami', titleKey: 'routeTitles.notes', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/rubrics', component: () => import('@/pages/teacher/Rubrics.vue'), meta: { title: 'Rubriche Valutative', titleKey: 'routeTitles.rubrics', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/pdp', component: () => import('@/pages/teacher/PdpPlans.vue'), meta: { title: 'Piani PDP / PEI', titleKey: 'routeTitles.pdp', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/uda', component: () => import('@/pages/teacher/UdaPlanner.vue'), meta: { title: 'Programmazione Didattica UdA', titleKey: 'routeTitles.uda', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/competencies', component: () => import('@/pages/teacher/Competencies.vue'), meta: { title: 'Valutazione per Competenze', titleKey: 'routeTitles.eportfolio', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/settings', component: () => import('@/pages/teacher/Settings.vue'), meta: { title: 'Impostazioni Docente', titleKey: 'routeTitles.settings', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/recovery', component: () => import('@/pages/teacher/RecoveryCourses.vue'), meta: { title: 'Corsi di Recupero & PAI', titleKey: 'routeTitles.recovery', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/credits', component: () => import('@/pages/teacher/SchoolCredits.vue'), meta: { title: 'Credito Scolastico Triennio', titleKey: 'routeTitles.credits', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/support', component: () => import('@/pages/teacher/SupportRegister.vue'), meta: { title: 'Registro di Sostegno & PEI', titleKey: 'routeTitles.supportRegister', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/general-meetings', component: () => import('@/pages/teacher/GeneralMeetingLiveQueue.vue'), meta: { title: 'Ricevimento Generale Pomeridiano', titleKey: 'routeTitles.liveQueue', roles: ['teacher', 'coordinator', 'vice_principal'] } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { title: 'Pannello Studente', titleKey: 'routeTitles.studentPanel', roles: ['student'] } },
@@ -150,7 +161,7 @@ export default [
             { path: 'student/documents', component: () => import('@/pages/student/Documents.vue'), meta: { title: 'Documenti Studente', titleKey: 'routeTitles.documents', roles: ['student'] } },
             { path: 'student/profile', component: () => import('@/pages/student/Profile.vue'), meta: { title: 'Profilo Studente', titleKey: 'routeTitles.settings', roles: ['student'] } },
             { path: 'student/pcto', component: () => import('@/pages/student/PCTO.vue'), meta: { title: 'Percorsi PCTO', titleKey: 'routeTitles.pcto', roles: ['student'] } },
-            { path: 'student/orientamento', component: () => import('@/pages/student/Orientamento.vue'), meta: { title: 'Orientamento Scolastico', titleKey: 'routeTitles.eportfolio', roles: ['student'] } },
+            { path: 'student/orientamento', component: () => import('@/pages/student/Orientamento.vue'), meta: { title: 'Orientamento Scolastico', titleKey: 'routeTitles.eportfolio', roles: ['student', 'teacher', 'coordinator'] } },
             { path: 'student/communications', component: () => import('@/pages/student/Communications.vue'), meta: { title: 'Comunicati Scolastici', titleKey: 'routeTitles.communications', roles: ['student'] } },
             { path: 'student/homework', component: () => import('@/pages/student/Homework.vue'), meta: { title: 'Compiti & Attività', titleKey: 'routeTitles.homework', roles: ['student'] } },
             { path: 'student/agenda', component: () => import('@/pages/student/AgendaCalendar.vue'), meta: { title: 'Calendario Agenda', titleKey: 'routeTitles.agenda', roles: ['student'] } },
@@ -191,12 +202,16 @@ export default [
                         if (role === 'teacher' || role === 'coordinator') return '/teacher/communications'
                         if (role === 'student') return '/student/communications'
                         if (role === 'parent') return '/parent/communications'
-                        if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary/communications'
+                        if (role === 'secretary' || role === 'principal' || role === 'vice_principal' || [
+                            'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico',
+                            'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico',
+                            'responsabile_servizio', 'responsabile_gestione_documentale', 'responsabile_conservazione', 'dpo'
+                        ].includes(role)) return '/secretary/communications'
                         if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') return '/admin/dashboard'
                     } catch { /* store not ready */ }
                     return '/'
                 },
-                meta: { title: 'Comunicazioni', titleKey: 'routeTitles.communications', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'system_auditor'] }
+                meta: { title: 'Comunicazioni', titleKey: 'routeTitles.communications', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'system_auditor', 'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'responsabile_gestione_documentale', 'responsabile_conservazione', 'dpo'] }
             },
             {
                 path: 'profile',
@@ -209,10 +224,11 @@ export default [
                         if (role === 'admin' || role === 'superadmin') return '/admin/settings'
                         if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary/settings'
                         if (role === 'teacher' || role === 'coordinator') return '/teacher/settings'
+                        if (['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio'].includes(role)) return '/ata/settings'
                     } catch { /* store not ready */ }
                     return '/'
                 },
-                meta: { title: 'Profilo Utente', titleKey: 'routeTitles.settings', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator'] }
+                meta: { title: 'Profilo Utente', titleKey: 'routeTitles.settings', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent', 'principal', 'vice_principal', 'coordinator', 'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio'] }
             },
             { path: 'support', component: () => import('@/pages/Support.vue'), meta: { title: 'Supporto & Assistenza', titleKey: 'routeTitles.support', roles: ['superadmin', 'admin', 'secretary', 'teacher', 'student', 'parent'] } },
             { path: 'accessibility-statement', component: () => import('@/pages/AccessibilityStatement.vue'), meta: { title: 'Dichiarazione di Accessibilità (AgID)', titleKey: 'routeTitles.accessibility', requiresAuth: false } },

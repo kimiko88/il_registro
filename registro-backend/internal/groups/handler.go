@@ -27,10 +27,19 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	}
 }
 
+func isGroupManagementAuthorizedRole(role string) bool {
+	switch role {
+	case "secretary", "admin", "superadmin", "principal", "vice_principal":
+		return true
+	default:
+		return false
+	}
+}
+
 func (h *Handler) CreateGroup(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	if userID == "" || (role != "secretary" && role != "admin" && role != "superadmin") {
+	if userID == "" || !isGroupManagementAuthorizedRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -137,7 +146,7 @@ func (h *Handler) UpdateGroup(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if userID == "" || (role != "secretary" && role != "admin" && role != "superadmin") {
+	if userID == "" || !isGroupManagementAuthorizedRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -162,7 +171,7 @@ func (h *Handler) DeleteGroup(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if userID == "" || (role != "secretary" && role != "admin" && role != "superadmin") {
+	if userID == "" || !isGroupManagementAuthorizedRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -180,7 +189,7 @@ func (h *Handler) AddStudents(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if userID == "" || (role != "secretary" && role != "admin" && role != "superadmin") {
+	if userID == "" || !isGroupManagementAuthorizedRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -204,7 +213,7 @@ func (h *Handler) RemoveStudent(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if userID == "" || (role != "secretary" && role != "admin" && role != "superadmin") {
+	if userID == "" || !isGroupManagementAuthorizedRole(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

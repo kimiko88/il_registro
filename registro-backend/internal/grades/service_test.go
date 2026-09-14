@@ -507,6 +507,18 @@ func (m *MockUserRepo) GetFascicoloSummary(ctx context.Context, studentID string
 func (m *MockUserRepo) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
 	return 0, nil
 }
+func (m *MockUserRepo) GetAssignments(ctx context.Context, userID string) ([]users.UserAssignment, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) CreateAssignment(ctx context.Context, assignment *users.UserAssignment) error {
+	return nil
+}
+func (m *MockUserRepo) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	return nil
+}
+func (m *MockUserRepo) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
+	return nil
+}
 
 func TestAddGrade(t *testing.T) {
 	mockRepo := new(MockRepository)

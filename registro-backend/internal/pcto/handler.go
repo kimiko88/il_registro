@@ -65,11 +65,18 @@ func (h *Handler) GetStats(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func isPctoStaff(role string) bool {
+	return role == "teacher" || role == "coordinator" || role == "coordinatore_classe" ||
+		role == "referente_progetto" || role == "admin" || role == "superadmin" ||
+		role == "secretary" || role == "principal" || role == "vice_principal" ||
+		role == "collaboratore_ds"
+}
+
 func (h *Handler) CreateProject(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+	if userID == "" || !isPctoStaff(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -93,7 +100,7 @@ func (h *Handler) GetProjects(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "tutor" && role != "principal" && role != "vice_principal" {
+	if !isPctoStaff(role) && role != "tutor" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: consultazione progetti PCTO riservata al personale scolastico"})
 		return
 	}
@@ -114,7 +121,7 @@ func (h *Handler) AssignStudent(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" {
+	if !isPctoStaff(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -138,7 +145,7 @@ func (h *Handler) CreateCompany(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := getSchoolID(c)
-	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary") {
+	if userID == "" || !isPctoStaff(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -224,8 +231,8 @@ func (h *Handler) UpdateProject(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	if userID == "" || !isPctoStaff(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -245,8 +252,8 @@ func (h *Handler) DeleteProject(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	if userID == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	if userID == "" || !isPctoStaff(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
 
@@ -261,6 +268,10 @@ func (h *Handler) ApproveHours(c *gin.Context) {
 	id := c.Param("id")
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
+	if userID == "" || (!isPctoStaff(role) && role != "tutor") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
 	var req struct {
 		Approved bool `json:"approved"`
 	}

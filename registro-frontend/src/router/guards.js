@@ -1,5 +1,6 @@
 import { useAuthStore } from 'src/stores/auth'
 import { isTokenExpired } from 'src/utils/jwt'
+import { getUserDashboard } from 'src/utils/roleUtils'
 import { Notify } from 'quasar'
 
 // Shared in-flight promise to prevent concurrent initAuth calls
@@ -30,15 +31,6 @@ export const authGuard = async (to, from, ...rest) => {
     }
 
     const publicRoutes = ['/login', '/register', '/forgot-password']
-
-    const getUserDashboard = (role) => {
-        if (role === 'admin' || role === 'superadmin' || role === 'system_auditor') return '/admin/dashboard'
-        if (role === 'teacher' || role === 'coordinator') return '/teacher'
-        if (role === 'student') return '/student'
-        if (role === 'parent') return '/parent'
-        if (role === 'secretary' || role === 'principal' || role === 'vice_principal') return '/secretary'
-        return '/login'
-    }
 
     const currentRole = authStore.userRole
 
@@ -75,22 +67,38 @@ export const authGuard = async (to, from, ...rest) => {
             ? to.meta.roles
             : (to.meta.role ? [to.meta.role] : null)
 
-        if (requiredRoles && requiredRoles.length > 0 && !requiredRoles.includes(currentRole)) {
-            if (import.meta.env.DEV) {
-                console.warn(`Access denied: role '${currentRole}' is not allowed for path '${to.path}'`)
-            }
-            try {
-                if (typeof Notify !== 'undefined' && typeof Notify.create === 'function') {
-                    Notify.create({
-                        type: 'warning',
-                        message: 'Accesso negato: non disponi dei permessi necessari per questa sezione.',
-                        icon: 'lock',
-                        position: 'top',
-                        timeout: 3000
-                    })
+        if (requiredRoles && requiredRoles.length > 0) {
+            const userRoles = [currentRole]
+            const assignments = authStore.user?.assignments || []
+            const activeAssignments = Array.isArray(assignments) ? assignments.filter(a => a && a.is_active !== false) : []
+            activeAssignments.forEach(a => {
+                const type = a.assignment_type || a.type
+                if (type) {
+                    userRoles.push(type)
+                    if (type === 'coordinatore_classe') {
+                        userRoles.push('coordinator')
+                    }
                 }
-            } catch { /* ignore notification failure in test/headless */ }
-            return proceed(getUserDashboard(currentRole))
+            })
+
+            const hasAccess = requiredRoles.some(r => userRoles.includes(r))
+            if (!hasAccess) {
+                if (import.meta.env.DEV) {
+                    console.warn(`Access denied: role '${currentRole}' is not allowed for path '${to.path}'`)
+                }
+                try {
+                    if (typeof Notify !== 'undefined' && typeof Notify.create === 'function') {
+                        Notify.create({
+                            type: 'warning',
+                            message: 'Accesso negato: non disponi dei permessi necessari per questa sezione.',
+                            icon: 'lock',
+                            position: 'top',
+                            timeout: 3000
+                        })
+                    }
+                } catch { /* ignore notification failure in test/headless */ }
+                return proceed(getUserDashboard(currentRole))
+            }
         }
     }
 

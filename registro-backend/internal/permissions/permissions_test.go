@@ -340,4 +340,54 @@ func TestRoleDefinitions(t *testing.T) {
 		assert.NotEmpty(t, parentPerms)
 		assert.Contains(t, parentPerms, GradeRead)
 	})
+
+	// Verify all 25 official roles & duty profiles exist
+	all25Roles := []string{
+		"superadmin", "principal", "vice_principal", "dsga", "teacher",
+		"coordinatore_classe", "segretario_consiglio", "referente_progetto", "referente_inclusione",
+		"responsabile_dipartimento", "tutor_orientatore", "animatore_digitale",
+		"assistente_alunni", "assistente_personale", "assistente_contabilita", "assistente_protocollo", "assistente_sportello",
+		"collaboratore_scolastico", "assistente_tecnico", "responsabile_servizio",
+		"responsabile_gestione_documentale", "responsabile_conservazione", "dpo",
+		"student", "parent",
+	}
+
+	for _, r := range all25Roles {
+		t.Run("verify_25_role_"+r, func(t *testing.T) {
+			_, exists := RoleDefinitions[r]
+			assert.True(t, exists, "Role or duty %s must exist in RoleDefinitions", r)
+		})
+	}
+}
+
+func TestManager_HasUserPermission(t *testing.T) {
+	mgr := NewManager()
+
+	t.Run("Teacher without assignments cannot sign verbali or edit scrutiny", func(t *testing.T) {
+		assert.False(t, mgr.HasUserPermission("teacher", nil, VerbaliSign))
+		assert.False(t, mgr.HasUserPermission("teacher", []string{}, ScrutinyUpdate))
+	})
+
+	t.Run("Teacher with coordinatore_classe assignment gains scrutiny update", func(t *testing.T) {
+		assert.True(t, mgr.HasUserPermission("teacher", []string{"coordinatore_classe"}, ScrutinyUpdate))
+		assert.True(t, mgr.HasUserPermission("teacher", []string{"coordinatore_classe"}, GradeRead))
+	})
+
+	t.Run("Teacher with segretario_consiglio assignment gains verbali sign", func(t *testing.T) {
+		assert.True(t, mgr.HasUserPermission("teacher", []string{"segretario_consiglio"}, VerbaliSign))
+	})
+
+	t.Run("Teacher with multiple assignments gains combined permissions", func(t *testing.T) {
+		assignments := []string{"coordinatore_classe", "referente_inclusione", "animatore_digitale"}
+		assert.True(t, mgr.HasUserPermission("teacher", assignments, ScrutinyUpdate))
+		assert.True(t, mgr.HasUserPermission("teacher", assignments, InclusionUpdate))
+		assert.True(t, mgr.HasUserPermission("teacher", assignments, TechnicalConfig))
+		assert.False(t, mgr.HasUserPermission("teacher", assignments, UserDelete))
+	})
+
+	t.Run("Principal has broad institutional permissions", func(t *testing.T) {
+		assert.True(t, mgr.HasPermission("principal", ScrutinyValidate))
+		assert.True(t, mgr.HasPermission("principal", VerbaliValidate))
+		assert.True(t, mgr.HasPermission("principal", AuditRead))
+	})
 }

@@ -150,6 +150,7 @@
                     :label="t('settingsPage.currentPasswordLabel') || 'Password Attuale *'"
                     outlined
                     dense
+                    autocomplete="current-password"
                     class="rounded-lg"
                     :rules="[val => !!val || (t('settingsPage.currentPasswordReq') || 'Inserisci la password attuale')]"
                   >
@@ -168,6 +169,7 @@
                     :label="t('settingsPage.newPasswordLabel') || 'Nuova Password *'"
                     outlined
                     dense
+                    autocomplete="new-password"
                     class="rounded-lg"
                     :rules="[
                       val => !!val || (t('settingsPage.newPasswordReq') || 'Inserisci la nuova password'),
@@ -198,6 +200,7 @@
                     :label="t('settingsPage.confirmPasswordLabel') || 'Conferma Nuova Password *'"
                     outlined
                     dense
+                    autocomplete="new-password"
                     class="rounded-lg"
                     :rules="[
                       val => !!val || (t('settingsPage.confirmPasswordReq') || 'Conferma la nuova password'),

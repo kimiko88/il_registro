@@ -141,6 +141,22 @@ Crea una nuova classe. Per il ruolo `superadmin`, accetta lo `school_id` all'int
 
 ## Utenti & Fascicolo
 
+### `POST /api/v1/users`
+Crea una nuova utenza nel sistema.
+- **Autorizzazione**: `superadmin`, `admin`, `secretary`.
+- **Validazione Ruoli**: Il campo `role` deve contenere uno dei 25 ruoli istituzionali validi. Se il ruolo non è riconosciuto, il server risponde con `HTTP 400 Bad Request` (`{"error": "invalid role"}`).
+- **Restrizioni**: Solo `superadmin` può creare altri `superadmin` o `admin`. La segreteria può creare docenti, studenti, genitori e personale ATA autorizzato.
+
+### `PUT /api/v1/users/:id`
+Aggiorna le informazioni anagrafiche e/o il ruolo primario dell'utente.
+- **Autorizzazione**: `superadmin`, `admin`, `secretary`.
+- **Validazione Ruoli**: Se `role` viene modificato, deve rispettare l'elenco dei ruoli validi, altrimenti restituisce `HTTP 400 Bad Request`.
+
+### `POST /api/v1/users/:id/roles`
+Assegna incarichi o ruoli multipli secondari all'utente (es. coordinatore di classe, referente inclusione, tutor orientatore).
+- **Autorizzazione**: `superadmin`, `admin`, `principal`, `secretary`.
+- **Validazione Ruoli**: Restituisce `HTTP 400 Bad Request` se uno qualsiasi dei ruoli forniti non è valido.
+
 ### `GET /api/v1/students/:id/fascicolo`
 Restituisce lo storico completo dello studente (valutazioni, presenze, note, PDP, attestati PCTO).
 - **Autorizzazione**: Accessibile da docenti, personale di segreteria, dirigente, dallo studente stesso o dai genitori con tutela legale verificata.

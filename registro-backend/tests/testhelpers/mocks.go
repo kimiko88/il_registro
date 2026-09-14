@@ -352,6 +352,25 @@ func (m *MockUsersRepository) ApplyDataRetention(ctx context.Context, schoolID *
 	args := m.Called(ctx, schoolID, cutoffDate)
 	return args.Int(0), args.Error(1)
 }
+func (m *MockUsersRepository) GetAssignments(ctx context.Context, userID string) ([]users.UserAssignment, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]users.UserAssignment), args.Error(1)
+}
+func (m *MockUsersRepository) CreateAssignment(ctx context.Context, assignment *users.UserAssignment) error {
+	args := m.Called(ctx, assignment)
+	return args.Error(0)
+}
+func (m *MockUsersRepository) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	args := m.Called(ctx, assignmentID)
+	return args.Error(0)
+}
+func (m *MockUsersRepository) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
+	args := m.Called(ctx, schoolID, teacherUserID, classIDs)
+	return args.Error(0)
+}
 
 // MockGradesRepository mocks grades.Repository
 type MockGradesRepository struct {

@@ -22,6 +22,7 @@ _*Note*_: Some passwords, such as the superadmin account, may have been updated 
 [![Anthropic Claude](https://img.shields.io/badge/AI-Anthropic%20Claude-D97757?logo=anthropic&logoColor=white)](https://anthropic.com)
 [![Status](https://img.shields.io/badge/status-web%20beta%20%7C%20mobile%20alpha-orange)](https://github.com/kimiko88/il_registro)
 [![codecov](https://codecov.io/github/kimiko88/il_registro/graph/badge.svg?token=2946K0BLDX)](https://codecov.io/github/kimiko88/il_registro)
+[![Codecov Components](https://img.shields.io/badge/Codecov-Tested%20Components-brightgreen?logo=codecov)](https://app.codecov.io/github/kimiko88/il_registro/components)
 
 ---
 
@@ -227,7 +228,9 @@ Go was chosen for the backend for reasons beyond technology trends:
 
 ## 🧪 Testing & Quality
 
-The project includes a comprehensive automated test suite for both backend (Go) and frontend (Vue/Quasar):
+The project includes a comprehensive automated test suite for both backend (Go) and frontend (Vue/Quasar), integrated with granular per-module coverage tracking:
+
+👉 **[View Tested Components on Codecov (Modules Dashboard)](https://app.codecov.io/github/kimiko88/il_registro/components)**
 
 ### Backend Testing (Go)
 
@@ -267,12 +270,17 @@ cd ios && swift test
 
 ---
 
-## License
+## License & Public Administration Reuse
 
-This project — **including the Go backend, the web frontend, and all native mobile applications for Android and iOS** — is licensed under the **[PolyForm Noncommercial 1.0.0](./LICENSE)**.
+This project — **including the Go backend, the web frontend, and native mobile apps for Android and iOS** — is licensed under **[PolyForm Noncommercial 1.0.0](./LICENSE)** and adheres to the **[AgID Guidelines for Software Reuse in Public Administrations](./docs/AGID_LICENSE_JUSTIFICATION.md)** with **[`publiccode.yml`](./publiccode.yml)** metadata metadata indexing for **Developers Italia**.
 
-> 📄 **Mobile License Notice**: The native Android and iOS applications (including all Student, Parent, Teacher, and Secretary modules) share the exact same license as the rest of the project.
+> 🏛️ **Free Use for Public Schools and Administrations**: Under the *Permitted Organizations* clause of the PolyForm license, **use by public schools, universities, municipalities, regional authorities, and research institutions is free, unrestricted, and cost-free**.  
+> The non-commercial clause prevents for-profit third-party vendors from re-packaging or re-selling the software as a paid private service.
 
-**Use for public schools, municipalities, regional authorities, universities, research institutions, and public entities is completely free and unrestricted** — because student data and educational tools belong in public hands.
+For the formal justification under Italian Public Administration guidelines, see **[`docs/AGID_LICENSE_JUSTIFICATION.md`](./docs/AGID_LICENSE_JUSTIFICATION.md)**.
 
-Commercial use by private companies or for-profit entities requires a separate commercial license.
+---
+
+## Versioning & Releases
+
+Coordinated SemVer versioning across frontend, backend, and public metadata is managed via `npm run bump` (or `.\scripts\bump-version.ps1`). See the **[Versioning Guide (`docs/VERSIONING.md`)](./docs/VERSIONING.md)** for detailed instructions.

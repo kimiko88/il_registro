@@ -48,6 +48,7 @@ import (
 	"registro-backend/internal/pcto"
 	"registro-backend/internal/pdfworker"
 	"registro-backend/internal/pdp"
+	"registro-backend/internal/personnel_desk"
 
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/recovery"
@@ -61,6 +62,8 @@ import (
 	"registro-backend/internal/search"
 	"registro-backend/internal/sidi"
 	"registro-backend/internal/signatures"
+	"registro-backend/internal/staff_attendance"
+	"registro-backend/internal/strike"
 	"registro-backend/internal/student_goals"
 	"registro-backend/internal/students"
 	"registro-backend/internal/subjects"
@@ -75,10 +78,12 @@ import (
 	"registro-backend/internal/uda"
 	"registro-backend/internal/users"
 	"registro-backend/internal/verbali"
+	"registro-backend/internal/visitors"
 	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 	"registro-backend/pkg/upload"
+	"registro-backend/pkg/version"
 	"registro-backend/pkg/wsticket"
 )
 
@@ -233,6 +238,23 @@ func main() {
 
 	wsHandler := ws.NewHandler(wsHub)
 
+	staffAttRepo := staff_attendance.NewRepository(database)
+	staffAttSvc := staff_attendance.NewService(staffAttRepo)
+	staffAttH := staff_attendance.NewHandler(staffAttSvc)
+	staffAttLeaveH := staff_attendance.NewLeaveHandler(staffAttRepo)
+
+	strikeRepo := strike.NewRepository(database)
+	strikeSvc := strike.NewService(strikeRepo)
+	strikeH := strike.NewHandler(strikeSvc)
+
+	visitorsRepo := visitors.NewRepository(database)
+	visitorsSvc := visitors.NewService(visitorsRepo)
+	visitorsH := visitors.NewHandler(visitorsSvc)
+
+	deskRepo := personnel_desk.NewRepository(database)
+	deskSvc := personnel_desk.NewService(deskRepo)
+	deskH := personnel_desk.NewHandler(deskSvc)
+
 	adminMiddleware := admin.NewMiddleware()
 	healthH := handler.NewHealthHandler(database)
 
@@ -377,6 +399,10 @@ func main() {
 				usersGroup.DELETE("/:id/guardians/:guardianId", usersH.RemoveGuardian)
 				usersGroup.POST("/me/switch-child/:studentId", usersH.SwitchChild)
 				usersGroup.GET("/students/:id/fascicolo", usersH.GetFascicolo)
+				usersGroup.GET("/:id/assignments", usersH.GetAssignments)
+				usersGroup.POST("/:id/assignments", usersH.AddAssignment)
+				usersGroup.DELETE("/:id/assignments/:assignmentId", usersH.DeleteAssignment)
+				usersGroup.PUT("/:id/coordinated-classes", usersH.SetCoordinatedClasses)
 			}
 
 			classesH.RegisterRoutes(protected)
@@ -557,6 +583,19 @@ func main() {
 			sidiH := sidi.NewHandler(sidiSvc)
 			sidiH.RegisterRoutes(protected)
 
+			// Presenze Personale (Docenti in sciopero + Personale ATA)
+			staffAttH.RegisterRoutes(protected)
+			staffAttLeaveH.RegisterLeaveRoutes(protected)
+
+			// Rilevazione Preventiva Scioperi
+			strikeH.RegisterRoutes(protected)
+
+			// Registro Visitatori, Uscite Anticipate & Segnalazioni Guasti
+			visitorsH.RegisterRoutes(protected)
+
+			// Sportello Digitale Personale
+			deskH.RegisterRoutes(protected)
+
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}
 	}
@@ -568,7 +607,7 @@ func main() {
 	}
 
 	go func() {
-		logger.Log.Infof("Server starting on port %s", cfg.Server.Port)
+		logger.Log.Infof("il_registro API Server %s starting on port %s", version.String(), cfg.Server.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Log.Fatalf("Server error: %v", err)
 		}

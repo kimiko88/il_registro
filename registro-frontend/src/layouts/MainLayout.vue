@@ -411,7 +411,16 @@
     >
       <div class="column full-height no-wrap">
         <!-- User Profile Section -->
-        <div class="q-pa-md bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" :aria-label="t('layout.userProfile')">
+        <div
+          class="q-pa-md bg-primary text-white relative-position overflow-hidden cursor-pointer user-profile-box"
+          v-if="userName"
+          role="button"
+          tabindex="0"
+          :aria-label="t('nav.profile') || 'Profilo utente'"
+          @click="navigateToProfile"
+          @keydown.enter.prevent="navigateToProfile"
+          @keydown.space.prevent="navigateToProfile"
+        >
           <div class="row items-center relative-position" style="z-index: 1">
             <q-avatar size="42px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
               <q-icon name="person" size="24px" />
@@ -420,8 +429,10 @@
               <div class="text-subtitle1 text-weight-bold no-wrap ellipsis" :aria-label="t('layout.connectedUser', { name: userName })">{{ userName }}</div>
               <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="t('layout.userRole', { role: roleLabel })">{{ roleLabel }}</div>
             </div>
+            <q-icon name="chevron_right" size="20px" class="opacity-70 q-ml-xs" />
           </div>
           <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
+          <q-tooltip>{{ t('nav.profile') || 'Impostazioni Profilo' }}</q-tooltip>
         </div>
 
         <!-- School Year Selector for Teachers on Mobile Drawer -->
@@ -1021,7 +1032,41 @@ const menuLabelToKeyMap = {
   'Fascicolo Documentale & Atti': 'documents',
   'Fascicolo Documentale': 'documents',
   'Compiti a casa': 'homework',
-  'Media Voti': 'averageGrade'
+  'Media Voti': 'averageGrade',
+  'Dashboard ATA': 'dashboardAta',
+  'Presenze Personale & Docenti': 'staffAttendanceDocenti',
+  'Presenze Personale': 'staffAttendance',
+  'Rilevazione Scioperi': 'strikeDetection',
+  'Cartellino & Piano Ferie': 'timecardLeave',
+  'Cartellino Presenze': 'timecard',
+  'Cartellino & Ferie': 'timecardShort',
+  'Anagrafica Personale': 'personnelRegistry',
+  'Sostituzioni Docenti': 'teacherSubstitutions',
+  'Sportello Personale': 'personnelDesk',
+  'Documenti & Atti': 'documentsActs',
+  'Documenti & Archivio': 'documentsArchive',
+  'Verbali & Modelli Riunioni': 'verbaliMeetings',
+  'Anagrafica Utenti': 'usersRegistry',
+  'Studenti & Fascicoli': 'studentsFiles',
+  'Certificati Alunni': 'studentCertificates',
+  'Flussi SIDI Alunni': 'sidiStudents',
+  'Scrutinio & Esami': 'scrutinyExams',
+  'Documenti & Mandati': 'documentsMandates',
+  'Certificati & Ricevute': 'certificatesReceipts',
+  'Registro Protocollo': 'protocolRegistry',
+  'Verbali & Delibere': 'verbaliResolutions',
+  'Comunicazioni & Circolari': 'commsCirculars',
+  'Sportello Utenza': 'deskUsers',
+  'Registro Visitatori': 'visitorRegistry',
+  'Rilascio Certificati': 'issueCertificates',
+  'Sportello Tecnico': 'technicalDesk',
+  'Emergenza Sostituzioni': 'emergencySubstitutions',
+  'Audit Logs & Sicurezza': 'auditSecurity',
+  'Impostazioni Privacy': 'privacySettings',
+  'Progetti & Finanziamenti': 'projectsFunding',
+  'Tutor Orientamento': 'orientationTutor',
+  'Inclusione (BES / DSA)': 'inclusionBesDsa',
+  'Team Digitale & E-Learning': 'digitalTeamELearning'
 }
 
 const categoryToKeyMap = {
@@ -1034,7 +1079,21 @@ const categoryToKeyMap = {
   'Percorsi & Comunicazioni': 'percorsiComunicazioni',
   'Valutazione & Didattica': 'valutazioneDidattica',
   'Servizi & Orari': 'serviziOrari',
-  'Comunicazioni & Account': 'comunicazioniAccount'
+  'Comunicazioni & Account': 'comunicazioniAccount',
+  'Presenze & Personale': 'presenzePersonale',
+  'Atti & Gestione': 'attiGestione',
+  'Segreteria & Atti': 'segreteriaAtti',
+  'Didattica & Studenti': 'didatticaStudenti',
+  'Gestione Personale': 'gestionePersonale',
+  'Bilancio & Contabilità': 'bilancioContabilita',
+  'Protocollo & Archivi': 'protocolloArchivi',
+  'Front-Office & Sportello': 'frontOfficeSportello',
+  'Laboratori & Tecnologie': 'laboratoriTecnologie',
+  'Presenze & Organizzazione': 'presenzeOrganizzazione',
+  'Servizi di Sede': 'serviziSede',
+  'Gestione Servizio & Struttura': 'gestioneServizioStruttura',
+  'Gestione Documentale & Archivi': 'gestioneDocumentaleArchivi',
+  'Conservazione Digitale': 'conservazioneDigitale'
 }
 
 function translateMenuLabel(label) {
@@ -1080,6 +1139,20 @@ const navigateToProfile = () => {
     router.push('/admin/settings')
   } else if (role === 'secretary' || role === 'principal' || role === 'vice_principal' || role === 'staff') {
     router.push('/secretary/settings')
+  } else if ([
+    'dsga',
+    'assistente_amministrativo',
+    'collaboratore_ds',
+    'collaboratore_scolastico',
+    'assistente_alunni',
+    'assistente_personale',
+    'assistente_contabilita',
+    'assistente_protocollo',
+    'assistente_sportello',
+    'assistente_tecnico',
+    'responsabile_servizio'
+  ].includes(role)) {
+    router.push('/ata/settings')
   } else {
     router.push('/dashboard')
   }
@@ -1120,6 +1193,8 @@ const breadcrumbs = computed(() => {
     items.push({ label: t('roles.admin') || 'Amministrazione', icon: 'admin_panel_settings', path: '/admin/dashboard' })
   } else if (route.path.startsWith('/secretary/') && route.path !== '/secretary') {
     items.push({ label: t('roles.secretary') || 'Segreteria', icon: 'badge', path: '/secretary' })
+  } else if (route.path.startsWith('/ata/') && route.path !== '/ata') {
+    items.push({ label: 'Pannello ATA', icon: 'badge', path: '/ata' })
   }
 
   items.push(current)
@@ -1140,6 +1215,15 @@ const roleLabel = computed(() => {
   const roleKey = userRole.value.toLowerCase()
   if (te('roles.' + roleKey)) {
     return t('roles.' + roleKey)
+  }
+  const ataRolesMap = {
+    dsga: 'DSGA',
+    assistente_amministrativo: 'Assistente Amministrativo',
+    collaboratore_ds: 'Collaboratore D.S.',
+    collaboratore_scolastico: 'Collaboratore Scolastico'
+  }
+  if (ataRolesMap[roleKey]) {
+    return ataRolesMap[roleKey]
   }
   return userRole.value
 })
@@ -1166,13 +1250,14 @@ const isTeacherCoordinator = computed(() => {
 
 // Get menu items based on role
 const menuItems = ref([])
-watch([userRole, isTeacherCoordinator, () => classesStore.classes], ([newRole, isCoord]) => {
+watch([userRole, isTeacherCoordinator, () => classesStore.classes, () => authStore.user?.assignments], ([newRole, isCoord, _classes, assignments]) => {
   if (!newRole) {
     menuItems.value = []
     return
   }
-  let items = useMenuItems(newRole)
-  if (newRole === 'teacher' && !isCoord) {
+  let items = useMenuItems(newRole, assignments)
+  const isActuallyCoordinator = isCoord || (assignments || []).some(a => (a.assignment_type === 'coordinatore_classe' || a.assignment_type === 'coordinator') && a.is_active !== false)
+  if (newRole === 'teacher' && !isActuallyCoordinator) {
     items = items.map(cat => {
       if (!cat.children) return cat
       return {

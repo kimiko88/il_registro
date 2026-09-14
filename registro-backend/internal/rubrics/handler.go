@@ -32,7 +32,7 @@ func (h *Handler) Create(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+	if userID == "" || (role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "vice_principal" && role != "principal") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -135,7 +135,7 @@ func (h *Handler) Delete(c *gin.Context) {
 func (h *Handler) AssessStudent(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+	if userID == "" || (role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "vice_principal" && role != "principal") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -192,7 +192,7 @@ func (h *Handler) ListByClass(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
+	if role != "teacher" && role != "coordinator" && role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

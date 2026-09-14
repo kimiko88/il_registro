@@ -307,3 +307,15 @@ func (m *mockUserRepoForComms) ChangePasswordTx(ctx context.Context, userID, new
 func (m *mockUserRepoForComms) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
 	return 0, nil
 }
+func (m *mockUserRepoForComms) GetAssignments(ctx context.Context, userID string) ([]users.UserAssignment, error) {
+	return nil, nil
+}
+func (m *mockUserRepoForComms) CreateAssignment(ctx context.Context, assignment *users.UserAssignment) error {
+	return nil
+}
+func (m *mockUserRepoForComms) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	return nil
+}
+func (m *mockUserRepoForComms) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
+	return nil
+}

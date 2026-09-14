@@ -22,6 +22,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		g.GET("", h.ListBySchool)
 		g.GET("/my", h.ListByTeacher)
 		g.GET("/my-today", h.ListMyToday)
+		g.GET("/today-summary", h.TodaySummary)
 		g.PUT("/:id/assign", h.AssignSubstitute)
 		g.PATCH("/:id/confirm", h.Confirm)
 		g.POST("/:id/sign-register", h.SignRegister)
@@ -37,7 +38,7 @@ func isStaffRole(role string, c *gin.Context) bool {
 }
 
 func isManagementRole(role string, c *gin.Context) bool {
-	if role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" {
+	if role == "admin" || role == "superadmin" || role == "secretary" || role == "principal" || role == "vice_principal" || role == "collaboratore_ds" || role == "dsga" {
 		return true
 	}
 	return c.GetBool("is_staff")
@@ -231,4 +232,55 @@ func (h *Handler) RecommendSubstitutes(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, recs)
+}
+
+// TodaySummary restituisce un riepilogo rapido delle sostituzioni per il giorno corrente.
+// Usato dal pannello "Emergenza Sostituzioni" del Collaboratore DS.
+func (h *Handler) TodaySummary(c *gin.Context) {
+	uid := c.GetString("user_id")
+	role := c.GetString("role")
+	if uid == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !isManagementRole(role, c) && !isStaffRole(role, c) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	schoolID := c.GetString("school_id")
+	today := c.Query("date") // optional override; se vuoto usa today
+	if today == "" {
+		today = "" // service ListBySchool con date="" restituisce tutto il giorno corrente
+	}
+
+	subs, err := h.service.ListBySchool(c.Request.Context(), schoolID, today)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Calcola conteggi per il pannello emergency
+	summary := gin.H{
+		"total":     len(subs),
+		"pending":   0,
+		"assigned":  0,
+		"confirmed": 0,
+		"cancelled": 0,
+	}
+	for _, s := range subs {
+		switch s.Status {
+		case StatusPending:
+			summary["pending"] = summary["pending"].(int) + 1
+		case StatusAssigned:
+			summary["assigned"] = summary["assigned"].(int) + 1
+		case StatusConfirmed:
+			summary["confirmed"] = summary["confirmed"].(int) + 1
+		case StatusCancelled:
+			summary["cancelled"] = summary["cancelled"].(int) + 1
+		}
+	}
+	summary["substitutions"] = subs
+
+	c.JSON(http.StatusOK, summary)
 }

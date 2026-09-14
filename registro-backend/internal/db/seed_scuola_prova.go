@@ -73,7 +73,80 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to create secretary: %w", err)
 	}
-	fmt.Printf("[SEED] Admin ID: %s, Secretary ID: %s\n", adminID, secID)
+	dirigenteID, err := createUser("dirigente.prova@scuola.it", "Laura", "Dirigente", "principal")
+	if err != nil {
+		return fmt.Errorf("failed to create dirigente: %w", err)
+	}
+	fmt.Printf("[SEED] Admin ID: %s, Secretary ID: %s, Dirigente ID: %s\n", adminID, secID, dirigenteID)
+
+	// 2b. Personale ATA (1 DSGA + almeno 2 per ciascun nuovo ruolo ATA: assistente_amministrativo, collaboratore_ds, collaboratore_scolastico)
+	type ataUserData struct {
+		email     string
+		firstName string
+		lastName  string
+		role      string
+		badgeCode string
+	}
+	ataStaff := []ataUserData{
+		// 1 DSGA
+		{"dsga.prova@scuola.it", "Giovanna", "Conti", "dsga", "BADGE-DSGA-001"},
+		// 2 Assistenti Amministrativi
+		{"assistente1.prova@scuola.it", "Marco", "Ferrari", "assistente_amministrativo", "BADGE-AA-001"},
+		{"assistente2.prova@scuola.it", "Lucia", "Romano", "assistente_amministrativo", "BADGE-AA-002"},
+		// 2 Collaboratori del Dirigente Scolastico (Collaboratore DS)
+		{"collaboratore_ds1.prova@scuola.it", "Roberto", "Mancini", "collaboratore_ds", "BADGE-CDS-001"},
+		{"collaboratore_ds2.prova@scuola.it", "Elena", "Galli", "collaboratore_ds", "BADGE-CDS-002"},
+		// 2 Collaboratori Scolastici (Portineria / Personale ausiliario)
+		{"collaboratore_scolastico1.prova@scuola.it", "Salvatore", "Esposito", "collaboratore_scolastico", "BADGE-CS-001"},
+		{"collaboratore_scolastico2.prova@scuola.it", "Carmela", "Russo", "collaboratore_scolastico", "BADGE-CS-002"},
+
+		// Ruoli Governance & Direzione Aggiuntivi
+		{"vicario.prova@scuola.it", "Roberto", "Vicario", "vice_principal", "BADGE-VIC-001"},
+
+		// Ruoli Specializzati Segreteria (Amministrazione & ATA)
+		{"alunni.prova@scuola.it", "Mario", "Alunni", "assistente_alunni", "BADGE-ALU-001"},
+		{"personale.prova@scuola.it", "Anna", "Personale", "assistente_personale", "BADGE-PER-001"},
+		{"contabilita.prova@scuola.it", "Luigi", "Contabile", "assistente_contabilita", "BADGE-CON-001"},
+		{"protocollo.prova@scuola.it", "Sara", "Protocollo", "assistente_protocollo", "BADGE-PRO-001"},
+		{"sportello.prova@scuola.it", "Giorgio", "Sportello", "assistente_sportello", "BADGE-SPO-001"},
+
+		// Ruoli Operativi ATA & Tecnici
+		{"tecnico.prova@scuola.it", "Alessandro", "Tecnico", "assistente_tecnico", "BADGE-TEC-001"},
+		{"servizio.prova@scuola.it", "Maria", "Servizio", "responsabile_servizio", "BADGE-SER-001"},
+
+		// Ruoli Garanzia & Tecnici Applicativi
+		{"documenti.prova@scuola.it", "Carla", "Documenti", "responsabile_gestione_documentale", "BADGE-DOC-001"},
+		{"conservazione.prova@scuola.it", "Paolo", "Conservatore", "responsabile_conservazione", "BADGE-CNS-001"},
+		{"dpo.prova@scuola.it", "Francesca", "DPO", "dpo", "BADGE-DPO-001"},
+		{"auditor.prova@scuola.it", "Michele", "Auditor", "system_auditor", "BADGE-AUD-001"},
+
+		// Ruolo Legacy Coordinatore & Superadmin scuola
+		{"coordinatore.legacy@scuola.it", "Andrea", "Coordinatore", "coordinator", "BADGE-COO-001"},
+		{"superadmin.prova@scuola.it", "Super", "AdminProva", "superadmin", "BADGE-SUP-001"},
+	}
+
+	var hasUserBadgesTable bool
+	_ = dbConn.QueryRowContext(ctx, "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'user_badges')").Scan(&hasUserBadgesTable)
+
+	var dsgaID string
+	for _, ata := range ataStaff {
+		ataID, err := createUser(ata.email, ata.firstName, ata.lastName, ata.role)
+		if err != nil {
+			return fmt.Errorf("failed to create staff user %s (%s): %w", ata.email, ata.role, err)
+		}
+		if ata.role == "dsga" {
+			dsgaID = ataID
+		}
+
+		if hasUserBadgesTable {
+			_, _ = dbConn.ExecContext(ctx, `
+				INSERT INTO user_badges (id, school_id, user_id, badge_code, notes, is_active, assigned_at, created_at)
+				VALUES ($1, $2, $3, $4, $5, TRUE, NOW(), NOW())
+				ON CONFLICT (school_id, badge_code) DO NOTHING
+			`, uuid.New().String(), schoolID, ataID, ata.badgeCode, "Badge di prova")
+		}
+		fmt.Printf("[SEED] Staff User created: %s (%s, ID: %s)\n", ata.email, ata.role, ataID)
+	}
 
 	// 3. 4 Subjects
 	subjectNames := []string{"Matematica", "Italiano", "Inglese", "Storia"}
@@ -186,6 +259,104 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 		`, uuid.New().String(), a.ClassID, subID, a.TeacherProfID)
 	}
 	fmt.Println("[SEED] Subject-Teacher assignments created for 2A and 2B.")
+
+	// 6b. Users with Multiple Enhanced Duties (Incarichi Aggiuntivi)
+	// 1) Docente con incarichi multipli (Coordinatore di 2 classi, Inclusione, Progetti, Dipartimento, Orientamento, Animatore Digitale)
+	docenteIncarichiID, err := createUser("docente.incarichi@scuola.it", "Valerio", "IncarichiMultipli", "teacher")
+	if err != nil {
+		return fmt.Errorf("failed to create docente.incarichi: %w", err)
+	}
+	var docIncProfID string
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM teachers WHERE user_id = $1 AND school_id = $2`, docenteIncarichiID, schoolID).Scan(&docIncProfID)
+	if err != nil {
+		docIncProfID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO teachers (id, user_id, school_id, hiring_date, created_at, updated_at)
+			VALUES ($1, $2, $3, CURRENT_DATE, NOW(), NOW())
+		`, docIncProfID, docenteIncarichiID, schoolID)
+	}
+
+	type assignmentData struct {
+		assignmentType string
+		scopeType      string
+		scopeID        string
+		title          string
+		assignedBy     string
+	}
+
+	docenteAssignments := []assignmentData{
+		{"coordinatore_classe", "class", class2AID, "Coordinatore Classe 2A", dirigenteID},
+		{"coordinatore_classe", "class", class2BID, "Coordinatore Classe 2B", dirigenteID},
+		{"segretario_consiglio", "school", "", "Segretario Verbalizzante del Consiglio", dirigenteID},
+		{"referente_inclusione", "school", "", "Referente Inclusione, BES e DSA", dirigenteID},
+		{"referente_progetto", "school", "", "Referente Progetti PTOF e PNRR", dirigenteID},
+		{"responsabile_dipartimento", "department", "Dipartimento Scientifico", "Coordinatore Dipartimento Scientifico", dirigenteID},
+		{"tutor_orientatore", "school", "", "Tutor dell'Orientamento Scolastico", dirigenteID},
+		{"animatore_digitale", "school", "", "Animatore Digitale PNSD", dirigenteID},
+	}
+
+	for _, asgn := range docenteAssignments {
+		var existingAsgnID string
+		_ = dbConn.QueryRowContext(ctx, `
+			SELECT id FROM user_assignments 
+			WHERE user_id = $1 AND assignment_type = $2 AND COALESCE(scope_id, '') = $3 AND is_active = true
+		`, docenteIncarichiID, asgn.assignmentType, asgn.scopeID).Scan(&existingAsgnID)
+
+		if existingAsgnID == "" {
+			_, err = dbConn.ExecContext(ctx, `
+				INSERT INTO user_assignments (id, school_id, user_id, assignment_type, scope_type, scope_id, title, assigned_by, is_active, created_at, updated_at)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NOW(), NOW())
+			`, uuid.New().String(), schoolID, docenteIncarichiID, asgn.assignmentType, asgn.scopeType, asgn.scopeID, asgn.title, asgn.assignedBy)
+			if err != nil {
+				fmt.Printf("[WARN] user_assignments insert error for docente: %v\n", err)
+			}
+		}
+	}
+
+	// 2) Assistente Tecnico con incarichi (Responsabile Laboratorio e Addetto Sicurezza)
+	tecnicoIncarichiID, err := createUser("tecnico.incarichi@scuola.it", "Simone", "TecnicoIncarichi", "assistente_tecnico")
+	if err == nil {
+		tecnicoAssignments := []assignmentData{
+			{"responsabile_servizio", "service", "Laboratorio Multimediale", "Responsabile Laboratorio Multimediale e Robotica", dsgaID},
+			{"addetto_sicurezza", "school", "", "Addetto Primo Soccorso ed Emergenze", dsgaID},
+		}
+		for _, asgn := range tecnicoAssignments {
+			var existingAsgnID string
+			_ = dbConn.QueryRowContext(ctx, `
+				SELECT id FROM user_assignments 
+				WHERE user_id = $1 AND assignment_type = $2 AND COALESCE(scope_id, '') = $3 AND is_active = true
+			`, tecnicoIncarichiID, asgn.assignmentType, asgn.scopeID).Scan(&existingAsgnID)
+
+			if existingAsgnID == "" {
+				_, err = dbConn.ExecContext(ctx, `
+					INSERT INTO user_assignments (id, school_id, user_id, assignment_type, scope_type, scope_id, title, assigned_by, is_active, created_at, updated_at)
+					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NOW(), NOW())
+				`, uuid.New().String(), schoolID, tecnicoIncarichiID, asgn.assignmentType, asgn.scopeType, asgn.scopeID, asgn.title, asgn.assignedBy)
+				if err != nil {
+					fmt.Printf("[WARN] user_assignments insert error for tecnico: %v\n", err)
+				}
+			}
+		}
+	}
+
+	// 3) Collaboratore Scolastico con incarichi (Addetto Sicurezza)
+	collabIncarichiID, err := createUser("collaboratore.incarichi@scuola.it", "Giovanni", "CollaboratoreIncarichi", "collaboratore_scolastico")
+	if err == nil {
+		var existingAsgnID string
+		_ = dbConn.QueryRowContext(ctx, `
+			SELECT id FROM user_assignments 
+			WHERE user_id = $1 AND assignment_type = 'addetto_sicurezza' AND is_active = true
+		`, collabIncarichiID).Scan(&existingAsgnID)
+
+		if existingAsgnID == "" {
+			_, _ = dbConn.ExecContext(ctx, `
+				INSERT INTO user_assignments (id, school_id, user_id, assignment_type, scope_type, scope_id, title, assigned_by, is_active, created_at, updated_at)
+				VALUES ($1, $2, $3, 'addetto_sicurezza', 'school', '', 'Addetto Emergenze e Antincendio', $4, true, NOW(), NOW())
+			`, uuid.New().String(), schoolID, collabIncarichiID, dsgaID)
+		}
+	}
+
+	fmt.Println("[SEED] Users with enhanced duties (user_assignments) created successfully!")
 
 	// 7. Create 10 Students & 10 Parents for 2A, and 10 Students & 10 Parents for 2B
 	seedClassPeople := func(classID, className string) error {
@@ -403,31 +574,25 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 	fmt.Println("[SEED] Class Lessons created.")
 
 	// 12. Attendance Records & Justifications
-	if st2A1_ProfID != "" && st2A2_ProfID != "" {
+	if st2A1_UserID != "" && st2A2_UserID != "" {
 		// Attendance for Student 1 (Present)
 		var att1ID string
-		err = dbConn.QueryRowContext(ctx, `SELECT id FROM attendance WHERE student_id = $1 AND date = '2024-10-10'::date`, st2A1_ProfID).Scan(&att1ID)
+		err = dbConn.QueryRowContext(ctx, `SELECT id FROM attendance WHERE student_id = $1 AND date = '2024-10-10'::date`, st2A1_UserID).Scan(&att1ID)
 		if err != nil {
-			_, err = dbConn.ExecContext(ctx, `
+			_, _ = dbConn.ExecContext(ctx, `
 				INSERT INTO attendance (id, school_id, student_id, class_id, date, status, justified, created_at, updated_at)
-				VALUES ($1, $2, $3, $4, '2024-10-10'::date, 'Present', TRUE, NOW(), NOW())
-			`, uuid.New().String(), schoolID, st2A1_ProfID, class2AID)
-			if err != nil {
-				fmt.Printf("[WARN] attendance 1 insert error: %v\n", err)
-			}
+				VALUES ($1, $2, $3, $4, '2024-10-10'::date, 'present', TRUE, NOW(), NOW())
+			`, uuid.New().String(), schoolID, st2A1_UserID, class2AID)
 		}
 
 		// Attendance for Student 2 (Absent on 2024-10-10, justified)
 		var att2ID string
-		err = dbConn.QueryRowContext(ctx, `SELECT id FROM attendance WHERE student_id = $1 AND date = '2024-10-10'::date`, st2A2_ProfID).Scan(&att2ID)
+		err = dbConn.QueryRowContext(ctx, `SELECT id FROM attendance WHERE student_id = $1 AND date = '2024-10-10'::date`, st2A2_UserID).Scan(&att2ID)
 		if err != nil {
-			_, err = dbConn.ExecContext(ctx, `
+			_, _ = dbConn.ExecContext(ctx, `
 				INSERT INTO attendance (id, school_id, student_id, class_id, date, status, justified, notes, created_at, updated_at)
-				VALUES ($1, $2, $3, $4, '2024-10-10'::date, 'Absent', TRUE, 'Motivi di salute', NOW(), NOW())
-			`, uuid.New().String(), schoolID, st2A2_ProfID, class2AID)
-			if err != nil {
-				fmt.Printf("[WARN] attendance 2 insert error: %v\n", err)
-			}
+				VALUES ($1, $2, $3, $4, '2024-10-10'::date, 'absent', TRUE, 'Motivi di salute', NOW(), NOW())
+			`, uuid.New().String(), schoolID, st2A2_UserID, class2AID)
 		}
 
 		if p2A2_UserID != "" {
@@ -699,6 +864,111 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 		}
 		fmt.Println("[SEED] Student Goals & Badges created.")
 	}
+
+	// 18. Verbali & Modelli Riunioni (Templates con ODG, Verbali Firmati e Bozze Riservate)
+	_, _ = dbConn.ExecContext(ctx, `ALTER TABLE council_meetings ALTER COLUMN class_id DROP NOT NULL`)
+	_, _ = dbConn.ExecContext(ctx, `ALTER TABLE council_meetings ADD COLUMN IF NOT EXISTS meeting_type VARCHAR(100) DEFAULT 'consiglio_classe'`)
+	_, _ = dbConn.ExecContext(ctx, `ALTER TABLE meeting_verbali ADD COLUMN IF NOT EXISTS is_signed BOOLEAN DEFAULT FALSE`)
+	_, _ = dbConn.ExecContext(ctx, `ALTER TABLE meeting_verbali ADD COLUMN IF NOT EXISTS signed_at TIMESTAMP WITH TIME ZONE`)
+	_, _ = dbConn.ExecContext(ctx, `ALTER TABLE meeting_verbali ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'draft'`)
+	_, _ = dbConn.ExecContext(ctx, `
+		CREATE TABLE IF NOT EXISTS meeting_verbale_templates (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+			title VARCHAR(255) NOT NULL,
+			meeting_type VARCHAR(100) NOT NULL DEFAULT 'consiglio_classe',
+			description TEXT,
+			default_agenda TEXT NOT NULL,
+			template_content TEXT NOT NULL,
+			created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+			updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+		)
+	`)
+
+	templatesSeed := []struct {
+		Title, MeetingType, Description, Agenda, Content string
+	}{
+		{
+			Title:       "Consiglio di Classe — Valutazione Intermedia e Andamento Didattico",
+			MeetingType: "consiglio_classe",
+			Description: "Modello standard per le sedute periodiche dei consigli di classe con analisi andamento e monitoraggio BES/DSA.",
+			Agenda:      "1. Approvazione verbale seduta precedente\n2. Andamento didattico e disciplinare generale della classe\n3. Verifica esiti valutativi intermedi ed eventuali interventi di recupero\n4. Monitoraggio casi particolari, studenti con BES/DSA e verifica PDP/PEI\n5. Varie ed eventuali",
+			Content:     "L'anno scolastico 2024/2025, in data odierna, nei locali dell'istituto si è riunito il Consiglio di Classe per discutere l'Ordine del Giorno stabilito.\n\nPresiede la seduta il coordinatore/presidente. Svolge le funzioni di segretario verbalista il docente designato.\n\nPunto 1: Il verbale della seduta precedente viene approvato all'unanimità.\nPunto 2: I docenti relazionano sull'andamento didattico generale. Il clima di classe risulta positivo e partecipativo.\nPunto 3: Vengono concordate strategie di supporto e recupero per gli studenti con lievi incertezze disciplinari.\nPunto 4: Si conferma la piena attuazione dei piani personalizzati (PDP/PEI) concordati.\n\nEsauriti i punti all'ODG, la seduta è tolta.",
+		},
+		{
+			Title:       "Collegio dei Docenti — Delibere Organizzative e Aggiornamento PTOF",
+			MeetingType: "collegio_docenti",
+			Description: "Schema per il Collegio Docenti plenario presieduto dal Dirigente Scolastico.",
+			Agenda:      "1. Approvazione verbale della seduta precedente\n2. Comunicazioni del Dirigente Scolastico\n3. Approvazione aggiornamento annuale Piano Triennale Offerta Formativa (PTOF)\n4. Criteri generali per la valutazione e assegnazione ore di potenziamento\n5. Delibere su viaggi di istruzione ed uscite didattiche",
+			Content:     "Nell'Aula Magna dell'istituto, si riunisce il Collegio dei Docenti presieduto dal Dirigente Scolastico.\nSvolge le funzioni di segretario verbalista il docente designato.\n\nConstatata la validità del numero legale, il Presidente apre la seduta trattando i punti all'Ordine del Giorno.\nIl Collegio all'unanimità delibera l'approvazione delle proposte illustrative presentate.\nLa seduta è tolta al termine dei lavori.",
+		},
+		{
+			Title:       "Riunione di Dipartimento Disciplinare — Programmazione e Prove Comuni",
+			MeetingType: "dipartimento",
+			Description: "Schema per le riunioni per assi culturali e dipartimenti disciplinari.",
+			Agenda:      "1. Definizione obiettivi minimi e competenze trasversali\n2. Calendario e struttura delle prove parallele\n3. Monitoraggio adozioni libri di testo e proposte sussidi\n4. Proposte corsi di recupero e progetti di potenziamento",
+			Content:     "Nei locali dell'istituto si riunisce il Dipartimento Disciplinare per esaminare i punti all'ODG.\nI docenti presenti concordano all'unanimità le griglie valutative e le tipologie di prove comuni da somministrare.",
+		},
+	}
+
+	for _, tpl := range templatesSeed {
+		var existingTplID string
+		_ = dbConn.QueryRowContext(ctx, `SELECT id FROM meeting_verbale_templates WHERE school_id = $1 AND title = $2`, schoolID, tpl.Title).Scan(&existingTplID)
+		if existingTplID == "" {
+			_, _ = dbConn.ExecContext(ctx, `
+				INSERT INTO meeting_verbale_templates (id, school_id, title, meeting_type, description, default_agenda, template_content, created_by, created_at, updated_at)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+			`, uuid.New().String(), schoolID, tpl.Title, tpl.MeetingType, tpl.Description, tpl.Agenda, tpl.Content, dirigenteID)
+		}
+	}
+	fmt.Println("[SEED] 3 Verbali & ODG Templates created by Dirigente Scolastica.")
+
+	// Meeting 1: Consiglio di Classe 2A - Verbale UFFICIALE FIRMATO (visibile alla Dirigente e bloccato in sola lettura)
+	var meeting1ID string
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM council_meetings WHERE school_id = $1 AND title = $2`, schoolID, "Consiglio di Classe 2A - Periodo Intermedio").Scan(&meeting1ID)
+	if err != nil {
+		meeting1ID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO council_meetings (id, school_id, class_id, meeting_type, title, date, start_time, end_time, agenda, created_by, created_at)
+			VALUES ($1, $2, $3, 'consiglio_classe', $4, '2024-11-15'::date, '15:00', '16:30', $5, $6, NOW())
+		`, meeting1ID, schoolID, class2AID, "Consiglio di Classe 2A - Periodo Intermedio", templatesSeed[0].Agenda, teacherUserIDs[0])
+
+		verbale1ID := uuid.New().String()
+		coordUser := teacherUserIDs[0]
+		secUser := teacherUserIDs[1]
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO meeting_verbali (id, meeting_id, title, content, secretary_id, president_id, is_published, is_signed, signed_at, status, created_at, updated_at)
+			VALUES ($1, $2, 'Verbale n. 1 - Consiglio di Classe 2A (Approvato e Firmato)', $3, $4, $5, TRUE, TRUE, NOW(), 'signed', NOW(), NOW())
+		`, verbale1ID, meeting1ID, templatesSeed[0].Content, secUser, coordUser)
+
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO verbale_signatures (id, verbale_id, user_id, signed_at, ip_address)
+			VALUES ($1, $2, $3, NOW() - INTERVAL '1 hour', '192.168.1.50'),
+			       ($4, $2, $5, NOW(), '192.168.1.51')
+			ON CONFLICT DO NOTHING
+		`, uuid.New().String(), verbale1ID, secUser, uuid.New().String(), coordUser)
+	}
+
+	// Meeting 2: Consiglio di Classe Straordinario 2A - Verbale IN BOZZA (modificabile SOLO da Coordinatore e Verbalista, NASCOSTO alla Dirigente)
+	var meeting2ID string
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM council_meetings WHERE school_id = $1 AND title = $2`, schoolID, "Consiglio di Classe Straordinario 2A").Scan(&meeting2ID)
+	if err != nil {
+		meeting2ID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO council_meetings (id, school_id, class_id, meeting_type, title, date, start_time, end_time, agenda, created_by, created_at)
+			VALUES ($1, $2, $3, 'consiglio_classe', $4, '2024-12-05'::date, '16:30', '17:30', '1. Verifica andamento didattico e provvedimenti disciplinari', $5, NOW())
+		`, meeting2ID, schoolID, class2AID, "Consiglio di Classe Straordinario 2A", teacherUserIDs[0])
+
+		verbale2ID := uuid.New().String()
+		coordUser := teacherUserIDs[0]
+		secUser := teacherUserIDs[1]
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO meeting_verbali (id, meeting_id, title, content, secretary_id, president_id, is_published, is_signed, status, created_at, updated_at)
+			VALUES ($1, $2, 'Bozza Verbale n. 2 - Consiglio Straordinario 2A', 'Bozza provvisoria in corso di stesura da parte del verbalista...', $3, $4, FALSE, FALSE, 'draft', NOW(), NOW())
+		`, verbale2ID, meeting2ID, secUser, coordUser)
+	}
+	fmt.Println("[SEED] Sample Signed Verbale & Confidential Draft Verbale created.")
 
 	fmt.Println("[SEED] Complete seeding for 'Scuola di Prova' finished successfully!")
 	return nil

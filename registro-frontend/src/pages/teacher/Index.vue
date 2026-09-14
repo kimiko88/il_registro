@@ -3,9 +3,14 @@
     <!-- Header -->
     <div class="row items-center q-mb-xl justify-between">
       <div>
-        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
-          {{ t('roleDashboards.teacherPanel') }}
-        </h1>
+        <div class="row items-center q-gutter-x-sm">
+          <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">
+            {{ isVicePrincipal ? (t('roleDashboards.vicePrincipalPanel') || 'Pannello Docente & Vicario') : t('roleDashboards.teacherPanel') }}
+          </h1>
+          <q-badge v-if="isVicePrincipal" color="amber-9" text-color="white" class="q-pa-xs text-weight-bold text-caption">
+            <q-icon name="stars" class="q-mr-xs" /> {{ t('roleDashboards.vicePrincipalBadge') || 'Docente Vicario — Staff D.S.' }}
+          </q-badge>
+        </div>
         <div class="text-subtitle1 text-slate-500 q-mt-sm">{{ t('roleDashboards.welcomeTeacher', { name: teacherStore.fullName }) }}</div>
       </div>
       <div class="text-right">
@@ -110,6 +115,39 @@
     <div class="row q-col-gutter-md">
       <!-- Quick Actions -->
       <div class="col-12 col-md-8">
+        <!-- Funzioni Presidenza & Vicariato (Visibili al Docente Vicario) -->
+        <q-card v-if="isVicePrincipal" class="q-mb-md shadow-md" style="border: 1px solid #c7d2fe;">
+          <q-card-section class="bg-indigo-9 text-white row items-center justify-between q-py-sm">
+            <div class="text-subtitle1 text-weight-bold row items-center">
+              <q-icon name="account_balance" class="q-mr-sm" size="20px" />
+              {{ t('roleDashboards.vicePrincipalActions') || 'Presidenza & Vicariato — Funzioni Esecutive' }}
+            </div>
+            <q-chip size="sm" color="amber-5" text-color="dark" class="text-weight-bold">Staff Dirigenza</q-chip>
+          </q-card-section>
+          <q-card-section class="q-pa-md bg-indigo-50">
+            <div class="row q-col-gutter-sm">
+              <div class="col-6 col-sm-4 col-md-2">
+                <q-btn push color="deep-purple-7" icon="swap_horiz" :label="t('roleDashboards.manageSubstitutions') || 'Sostituzioni'" class="full-width text-weight-bold" to="/secretary/substitutions" />
+              </div>
+              <div class="col-6 col-sm-4 col-md-2">
+                <q-btn push color="teal-7" icon="schedule" :label="t('roleDashboards.schoolTimetable') || 'Orario'" class="full-width text-weight-bold" to="/secretary/timetable" />
+              </div>
+              <div class="col-6 col-sm-4 col-md-2">
+                <q-btn push color="indigo-7" icon="co_present" :label="t('roleDashboards.staffAttendance') || 'Presenze'" class="full-width text-weight-bold" to="/ata/attendance" />
+              </div>
+              <div class="col-6 col-sm-4 col-md-2">
+                <q-btn push color="red-8" icon="campaign" :label="t('roleDashboards.strikeTracking') || 'Scioperi'" class="full-width text-weight-bold" to="/ata/strike" />
+              </div>
+              <div class="col-6 col-sm-4 col-md-2">
+                <q-btn push color="brown-7" icon="gavel" :label="t('roleDashboards.meetingsMinutes') || 'Verbali'" class="full-width text-weight-bold" to="/secretary/verbali" />
+              </div>
+              <div class="col-6 col-sm-4 col-md-2">
+                <q-btn push color="blue-9" icon="groups" :label="t('roleDashboards.manageGroups') || 'Gruppi'" class="full-width text-weight-bold" to="/secretary/groups" />
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+
         <q-card class="q-mb-md">
           <q-card-section>
             <div class="text-h6 q-mb-md">{{ t('roleDashboards.quickActionsTitle') }}</div>
@@ -205,14 +243,18 @@
 import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { useAuthStore } from '@/stores/auth';
 import { useTeacherStore } from 'src/stores/teacher';
 import { useClassesStore } from 'src/stores/classes';
 import { normalizeLocale } from '@/utils/locale';
 
 const router = useRouter();
+const authStore = useAuthStore();
 const teacherStore = useTeacherStore();
 const classesStore = useClassesStore();
 const { t, locale } = useI18n();
+
+const isVicePrincipal = computed(() => authStore.userRole === 'vice_principal' || authStore.user?.role === 'vice_principal');
 
 const todayDate = computed(() => {
   const loc = normalizeLocale(locale.value) || 'it-IT';
