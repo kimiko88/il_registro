@@ -118,10 +118,10 @@ func (h *LeaveHandler) ExportTimecard(c *gin.Context) {
 	c.Header("Content-Disposition", "attachment; filename=\"cartellino_"+month+".csv\"")
 
 	// BOM UTF-8 per Excel italiano
-	c.Writer.Write([]byte("\xef\xbb\xbf"))
-	c.Writer.WriteString("Cognome,Nome,Ruolo,Mese,Ore Contratto,Ore Lavorate,Straordinari,Giorni Assenza,Giorni Ferie,Giorni Malattia,Ore Permesso\n")
+	_, _ = c.Writer.Write([]byte("\xef\xbb\xbf"))
+	_, _ = c.Writer.WriteString("Cognome,Nome,Ruolo,Mese,Ore Contratto,Ore Lavorate,Straordinari,Giorni Assenza,Giorni Ferie,Giorni Malattia,Ore Permesso\n")
 	for _, t := range summaries {
-		c.Writer.WriteString(
+		_, _ = c.Writer.WriteString(
 			t.LastName + "," + t.FirstName + "," + t.Role + "," + t.Month + "," +
 				formatFloat(t.ContractHours) + "," + formatFloat(t.WorkedHours) + "," +
 				formatFloat(t.OvertimeHours) + "," + itoa(t.AbsenceDays) + "," +

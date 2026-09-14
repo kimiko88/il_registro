@@ -1,0 +1,8 @@
+# Trivy Ignore File
+# GO-2026-5932 / CVE-2021-38561 / GHSA-m425-mq94-257g
+# golang.org/x/crypto/openpgp is deprecated and unmaintained by upstream Go team.
+# The codebase only imports and uses golang.org/x/crypto/bcrypt and golang.org/x/crypto/argon2.
+# openpgp is never imported or reachable.
+GO-2026-5932
+CVE-2021-38561
+GHSA-m425-mq94-257g

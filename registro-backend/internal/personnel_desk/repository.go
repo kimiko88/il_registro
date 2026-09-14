@@ -170,7 +170,6 @@ func (r *postgresRepository) List(ctx context.Context, schoolID, applicantID, st
 	if status != "" {
 		query += fmt.Sprintf(" AND pdr.status = $%d", idx)
 		args = append(args, status)
-		idx++
 	}
 
 	query += " ORDER BY pdr.created_at DESC"
