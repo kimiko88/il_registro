@@ -725,19 +725,29 @@ func (r *PostgresRepository) ListBadges(ctx context.Context, schoolID string) ([
 
 // SetStrikeMode imposta o revoca la modalità sciopero per una determinata data
 func (r *PostgresRepository) SetStrikeMode(ctx context.Context, schoolID, actorID, date string, isStrikeDay bool) error {
+	var schoolUUID *string
+	if s := strings.TrimSpace(schoolID); s != "" {
+		schoolUUID = &s
+	}
+	var actorUUID *string
+	if a := strings.TrimSpace(actorID); a != "" {
+		actorUUID = &a
+	}
+
 	if isStrikeDay {
 		// Aggiorna le presenze esistenti o inserisce una riga per il personale attivo indicando is_strike_day = true
 		upsertQuery := `
 			INSERT INTO staff_attendance (school_id, user_id, date, status, is_strike_day, recorded_by, created_at, updated_at)
-			SELECT $1::uuid, u.id, $2::date, 'absent', true, NULLIF($3, '')::uuid, NOW(), NOW()
+			SELECT COALESCE($1::uuid, u.school_id), u.id, $2::date, 'absent', true, $3::uuid, NOW(), NOW()
 			FROM users u
-			WHERE (u.school_id = NULLIF($1, '')::uuid OR $1 = '')
+			WHERE ($1::uuid IS NULL OR u.school_id = $1::uuid)
+			  AND (u.school_id IS NOT NULL OR $1::uuid IS NOT NULL)
 			  AND u.is_active = true
 			  AND u.role IN ('teacher', 'coordinator', 'dsga', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_tecnico', 'collaboratore_scolastico', 'collaboratore_mensa', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio', 'secretary')
 			ON CONFLICT (school_id, user_id, date)
 			DO UPDATE SET is_strike_day = true, updated_at = NOW()
 		`
-		_, err := r.db.ExecContext(ctx, upsertQuery, schoolID, date, actorID)
+		_, err := r.db.ExecContext(ctx, upsertQuery, schoolUUID, date, actorUUID)
 		if err != nil {
 			return fmt.Errorf("SetStrikeMode upsert error: %w", err)
 		}
@@ -746,9 +756,9 @@ func (r *PostgresRepository) SetStrikeMode(ctx context.Context, schoolID, actorI
 		updateQuery := `
 			UPDATE staff_attendance
 			SET is_strike_day = false, updated_at = NOW()
-			WHERE (school_id = NULLIF($1, '')::uuid OR $1 = '') AND date = $2::date
+			WHERE ($1::uuid IS NULL OR school_id = $1::uuid) AND date = $2::date
 		`
-		_, err := r.db.ExecContext(ctx, updateQuery, schoolID, date)
+		_, err := r.db.ExecContext(ctx, updateQuery, schoolUUID, date)
 		if err != nil {
 			return fmt.Errorf("SetStrikeMode deactivate error: %w", err)
 		}

@@ -121,7 +121,7 @@
                 </div>
                 <div class="q-ml-md">
                   <div class="text-caption text-teal-800 text-weight-bold">{{ t('timecard.statWorkedHours') }}</div>
-                  <div class="text-h5 text-weight-bolder text-teal-900">{{ timecardData.worked_hours || 0 }} {{ t('timecard.hoursSuffix') }}</div>
+                  <div class="text-h5 text-weight-bolder text-teal-900">{{ formatHoursAndMinutes(timecardData.worked_hours) }}</div>
                 </div>
               </q-card-section>
             </q-card>
@@ -150,7 +150,7 @@
                     {{ t('timecard.statBalance') }}
                   </div>
                   <div class="text-h5 text-weight-bolder" :class="overtimeBalance >= 0 ? 'text-emerald-900' : 'text-orange-900'">
-                    {{ overtimeBalance >= 0 ? '+' : '' }}{{ overtimeBalance.toFixed(1) }} {{ t('timecard.hoursSuffix') }}
+                    {{ formatBalanceHours(overtimeBalance) }}
                   </div>
                 </div>
               </q-card-section>
@@ -192,6 +192,27 @@
             class="no-shadow"
             :pagination="{ rowsPerPage: 31 }"
           >
+            <template v-slot:body-cell-entry_time="props">
+              <q-td :props="props">
+                <span :class="props.row.entry_time ? 'text-weight-medium text-slate-800' : 'text-slate-400'">
+                  {{ formatTimeHHMMSS(props.row.entry_time) }}
+                </span>
+              </q-td>
+            </template>
+            <template v-slot:body-cell-exit_time="props">
+              <q-td :props="props">
+                <span :class="props.row.exit_time ? 'text-weight-medium text-slate-800' : 'text-slate-400'">
+                  {{ formatTimeHHMMSS(props.row.exit_time) }}
+                </span>
+              </q-td>
+            </template>
+            <template v-slot:body-cell-hours="props">
+              <q-td :props="props">
+                <span :class="hasWorkedTime(props.row) ? 'text-weight-bold text-teal-9' : 'text-slate-400'">
+                  {{ formatDailyWorked(props.row) }}
+                </span>
+              </q-td>
+            </template>
             <template v-slot:body-cell-status="props">
               <q-td :props="props">
                 <q-badge :color="getEntryStatusColor(props.row.status)" class="q-px-sm q-py-xs">
@@ -381,7 +402,7 @@
             <template v-slot:body-cell-worked_hours="props">
               <q-td :props="props">
                 <span class="text-weight-medium text-slate-800">
-                  {{ Number(props.row.worked_hours || 0).toFixed(1) }} {{ t('timecard.hoursSuffix') || 'h' }}
+                  {{ formatHoursAndMinutes(props.row.worked_hours) }}
                 </span>
               </q-td>
             </template>
@@ -389,7 +410,7 @@
             <template v-slot:body-cell-balance="props">
               <q-td :props="props">
                 <span :class="props.row.overtime_hours >= 0 ? 'text-positive text-weight-bold' : 'text-negative text-weight-bold'">
-                  {{ props.row.overtime_hours >= 0 ? '+' : '' }}{{ Number(props.row.overtime_hours).toFixed(1) }} {{ t('timecard.hoursSuffix') || 'h' }}
+                  {{ formatBalanceHours(props.row.overtime_hours) }}
                 </span>
               </q-td>
             </template>
@@ -527,9 +548,9 @@ const overtimeBalance = computed(() => {
 
 const dailyColumns = computed(() => [
   { name: 'date', label: t('timecard.colDate'), field: 'date', align: 'left', sortable: true },
-  { name: 'entry_time', label: t('timecard.colEntryTime'), field: 'entry_time', align: 'center' },
-  { name: 'exit_time', label: t('timecard.colExitTime'), field: 'exit_time', align: 'center' },
-  { name: 'hours', label: t('timecard.colActualHours'), field: row => row.hours ? `${row.hours} ${t('timecard.hoursSuffix')}` : '—', align: 'center' },
+  { name: 'entry_time', label: t('timecard.colEntryTime'), field: row => formatTimeHHMMSS(row.entry_time), align: 'center' },
+  { name: 'exit_time', label: t('timecard.colExitTime'), field: row => formatTimeHHMMSS(row.exit_time), align: 'center' },
+  { name: 'hours', label: t('timecard.colActualHours'), field: row => formatDailyWorked(row), align: 'center' },
   { name: 'status', label: t('timecard.colStatus'), align: 'center' },
   { name: 'notes', label: t('timecard.colNotes'), field: 'notes', align: 'left' }
 ])
@@ -586,8 +607,8 @@ const allTimecardColumns = computed(() => [
     sortable: true
   },
   { name: 'contract_hours', label: t('timecard.statContractHours'), field: 'contract_hours', align: 'center', sortable: true },
-  { name: 'worked_hours', label: t('timecard.statWorkedHours'), field: 'worked_hours', align: 'center', sortable: true },
-  { name: 'balance', label: t('timecard.colOvertimeBalance'), field: 'overtime_hours', align: 'center', sortable: true },
+  { name: 'worked_hours', label: t('timecard.statWorkedHours'), field: row => formatHoursAndMinutes(row.worked_hours), align: 'center', sortable: true },
+  { name: 'balance', label: t('timecard.colOvertimeBalance'), field: row => formatBalanceHours(row.overtime_hours), align: 'center', sortable: true },
   { name: 'leave_days', label: t('timecard.colLeaveDays'), field: 'leave_days', align: 'center', sortable: true },
   { name: 'sick_days', label: t('timecard.colSickDays'), field: 'sick_days', align: 'center', sortable: true }
 ])
@@ -826,23 +847,149 @@ function getLeaveStatusColor(s) {
   }
 }
 
+function formatHoursAndMinutes(hoursFloat) {
+  if (hoursFloat === null || hoursFloat === undefined || isNaN(Number(hoursFloat))) {
+    return '0h 00m'
+  }
+  const totalMinutes = Math.round(Number(hoursFloat) * 60)
+  const isNegative = totalMinutes < 0
+  const absMinutes = Math.abs(totalMinutes)
+  const h = Math.floor(absMinutes / 60)
+  const m = absMinutes % 60
+  const formattedMinutes = String(m).padStart(2, '0')
+  return `${isNegative ? '-' : ''}${h}h ${formattedMinutes}m`
+}
+
+function formatBalanceHours(hoursFloat) {
+  if (hoursFloat === null || hoursFloat === undefined || isNaN(Number(hoursFloat))) {
+    return '0h 00m'
+  }
+  const totalMinutes = Math.round(Number(hoursFloat) * 60)
+  const isNegative = totalMinutes < 0
+  const absMinutes = Math.abs(totalMinutes)
+  const h = Math.floor(absMinutes / 60)
+  const m = absMinutes % 60
+  const formattedMinutes = String(m).padStart(2, '0')
+  const sign = isNegative ? '-' : '+'
+  return `${sign}${h}h ${formattedMinutes}m`
+}
+
+function formatDailyWorked(row) {
+  if (!row) return '—'
+  let minutes = null
+  if (row.worked_minutes !== undefined && row.worked_minutes !== null) {
+    minutes = Number(row.worked_minutes)
+  } else if (row.hours !== undefined && row.hours !== null) {
+    minutes = Math.round(Number(row.hours) * 60)
+  }
+  if (minutes === null || (minutes === 0 && !row.entry_time)) {
+    return '—'
+  }
+  const isNegative = minutes < 0
+  const absMinutes = Math.abs(minutes)
+  const h = Math.floor(absMinutes / 60)
+  const m = absMinutes % 60
+  const formattedMinutes = String(m).padStart(2, '0')
+  return `${isNegative ? '-' : ''}${h}h ${formattedMinutes}m`
+}
+
+function hasWorkedTime(row) {
+  if (!row) return false
+  if (row.worked_minutes && Number(row.worked_minutes) > 0) return true
+  if (row.hours && Number(row.hours) > 0) return true
+  return false
+}
+
+function formatTimeHHMMSS(val) {
+  if (!val) return '—'
+  if (typeof val === 'string') {
+    const trimmed = val.trim()
+    if (/^\d{2}:\d{2}:\d{2}$/.test(trimmed)) return trimmed
+    if (/^\d{2}:\d{2}$/.test(trimmed)) return `${trimmed}:00`
+  }
+  try {
+    const d = new Date(val)
+    if (isNaN(d.getTime())) return String(val)
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mm = String(d.getMinutes()).padStart(2, '0')
+    const ss = String(d.getSeconds()).padStart(2, '0')
+    return `${hh}:${mm}:${ss}`
+  } catch {
+    return String(val)
+  }
+}
+
 function getEntryStatusColor(st) {
-  switch (st) {
-    case 'Presente': return 'positive'
-    case 'Assente': return 'negative'
-    case 'Ferie': return 'teal-7'
-    case 'Permesso': return 'blue-7'
-    default: return 'grey-7'
+  const norm = String(st || '').toLowerCase().trim()
+  switch (norm) {
+    case 'present':
+    case 'presente':
+      return 'positive'
+    case 'absent':
+    case 'assente':
+      return 'negative'
+    case 'late':
+    case 'in ritardo':
+      return 'warning'
+    case 'on_strike':
+    case 'strike':
+    case 'in sciopero':
+      return 'deep-purple-7'
+    case 'sick':
+    case 'sick_leave':
+    case 'malattia':
+      return 'negative'
+    case 'leave':
+    case 'ferie':
+      return 'teal-7'
+    case 'permit':
+    case 'permesso':
+      return 'blue-7'
+    case 'mission':
+    case 'missione':
+      return 'indigo-7'
+    case 'holiday':
+    case 'festivo':
+      return 'amber-8'
+    default:
+      return 'grey-7'
   }
 }
 
 function getEntryStatusLabel(st) {
-  switch (st) {
-    case 'Presente': return t('timecard.entryStatusPresent')
-    case 'Assente': return t('timecard.entryStatusAbsent')
-    case 'Ferie': return t('timecard.leaveTypeFerie')
-    case 'Permesso': return t('timecard.entryStatusLeave')
-    default: return st || t('timecard.entryStatusPresent')
+  const norm = String(st || '').toLowerCase().trim()
+  switch (norm) {
+    case 'present':
+    case 'presente':
+      return t('timecard.entryStatusPresent')
+    case 'absent':
+    case 'assente':
+      return t('timecard.entryStatusAbsent')
+    case 'late':
+    case 'in ritardo':
+      return t('staffAttendance.statusLate') || 'In Ritardo'
+    case 'on_strike':
+    case 'strike':
+    case 'in sciopero':
+      return t('staffAttendance.statusOnStrike') || 'In Sciopero'
+    case 'sick':
+    case 'sick_leave':
+    case 'malattia':
+      return t('timecard.entryStatusSick')
+    case 'leave':
+    case 'ferie':
+      return t('timecard.entryStatusLeave')
+    case 'permit':
+    case 'permesso':
+      return t('staffAttendance.statusPermit') || t('timecard.entryStatusLeave')
+    case 'mission':
+    case 'missione':
+      return t('staffAttendance.statusMission') || 'Missione'
+    case 'holiday':
+    case 'festivo':
+      return t('timecard.entryStatusHoliday')
+    default:
+      return st || t('timecard.entryStatusPresent')
   }
 }
 

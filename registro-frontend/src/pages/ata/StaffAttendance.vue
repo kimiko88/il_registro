@@ -209,56 +209,133 @@
             {{ t('staffAttendance.breakdownSubtitle') || 'Conteggio analitico suddiviso per figura professionale della scuola' }}
           </div>
         </div>
+        <div v-if="filterRole !== 'all'" class="row items-center gap-xs">
+          <span class="text-caption text-slate-500">Filtro categoria:</span>
+          <q-chip
+            dense
+            removable
+            color="primary"
+            text-color="white"
+            @remove="filterRole = 'all'"
+            class="text-weight-bold text-caption shadow-xs"
+          >
+            {{ roleLabel(filterRole) }}
+          </q-chip>
+          <q-btn
+            flat
+            dense
+            no-caps
+            size="sm"
+            color="grey-7"
+            label="Mostra tutti"
+            @click="filterRole = 'all'"
+            class="q-px-xs text-caption"
+          />
+        </div>
       </div>
 
-      <div class="row q-col-gutter-md">
-        <div
+      <div class="category-breakdown-grid">
+        <q-card
           v-for="cat in roleSummaries"
           :key="cat.role"
-          class="col-12 col-sm-6 col-lg"
+          @click="selectCategoryFilter(cat.role)"
+          class="role-card rounded-xl border transition-all duration-200 cursor-pointer select-none full-height flex flex-col justify-between"
+          :class="[
+            filterRole === cat.role
+              ? 'ring-2 ring-primary border-primary bg-blue-50/40 shadow-md'
+              : 'border-slate-200 shadow-sm bg-white hover-lift'
+          ]"
         >
-          <q-card class="rounded-xl border border-slate-200 shadow-sm full-height hover-lift">
-            <q-card-section class="q-pb-xs">
-              <div class="row items-center justify-between no-wrap q-mb-xs">
-                <q-chip
-                  dense
+          <q-card-section class="q-pa-md full-width">
+            <!-- Header: Avatar, Role Title, Total Badge -->
+            <div class="row items-center justify-between no-wrap q-mb-sm">
+              <div class="row items-center no-wrap ellipsis q-mr-xs" style="max-width: calc(100% - 58px);">
+                <q-avatar
+                  size="28px"
                   :color="getRoleBadgeColor(cat.role)"
                   text-color="white"
-                  class="text-weight-bolder text-caption"
+                  class="q-mr-xs flex-shrink-0 shadow-xs"
+                >
+                  <q-icon :name="getRoleIcon(cat.role)" size="16px" />
+                </q-avatar>
+                <div
+                  class="text-weight-bold text-slate-800 text-caption ellipsis"
+                  :title="getRoleDisplay(cat.role, cat.role_display)"
                 >
                   {{ getRoleDisplay(cat.role, cat.role_display) }}
-                </q-chip>
-                <div class="text-caption text-weight-bold text-slate-400">
-                  {{ t('staffAttendance.totalShort', { total: cat.total }) }}
                 </div>
               </div>
-            </q-card-section>
+              <q-badge
+                outline
+                color="grey-7"
+                class="text-weight-bolder text-xs flex-shrink-0 q-px-xs q-py-none"
+              >
+                Tot. {{ cat.total }}
+              </q-badge>
+            </div>
 
-            <q-card-section class="q-pt-none q-pb-sm">
-              <div class="row items-baseline q-gutter-x-sm">
-                <div class="text-h4 text-weight-bolder text-positive">{{ cat.present }}</div>
-                <div class="text-caption text-slate-500">{{ t('staffAttendance.presentCount') || 'presenti' }}</div>
-              </div>
-
-              <!-- Progress bar -->
-              <q-linear-progress
-                :value="cat.total > 0 ? (cat.present / cat.total) : 0"
-                :color="cat.present === cat.total ? 'positive' : 'indigo-6'"
-                rounded
-                size="6px"
-                class="q-my-sm"
-              />
-
-              <div class="row items-center justify-between text-caption text-slate-600 q-mt-xs">
-                <span><q-icon name="cancel" color="negative" size="14px" /> {{ t('staffAttendance.absentCount', { count: cat.absent }) }}</span>
-                <span v-if="cat.on_strike > 0" class="text-negative text-weight-bold">
-                  <q-icon name="campaign" size="14px" /> {{ t('staffAttendance.strikeCount', { count: cat.on_strike }) }}
+            <!-- Present Count & Percentage -->
+            <div class="row items-baseline justify-between q-mt-xs">
+              <div class="row items-baseline q-gutter-x-xs">
+                <span
+                  class="text-h4 text-weight-bolder leading-none"
+                  :class="cat.present > 0 ? 'text-positive' : 'text-slate-400'"
+                >
+                  {{ cat.present }}
                 </span>
-                <span><q-icon name="local_hospital" color="amber-8" size="14px" /> {{ t('staffAttendance.leaveCount', { count: cat.on_leave }) }}</span>
+                <span class="text-caption text-slate-500 font-medium">
+                  {{ t('staffAttendance.presentCount') || 'presenti' }}
+                </span>
               </div>
-            </q-card-section>
-          </q-card>
-        </div>
+              <div
+                class="text-caption text-weight-bold"
+                :class="cat.present === cat.total && cat.total > 0 ? 'text-positive' : 'text-slate-500'"
+              >
+                {{ cat.total > 0 ? Math.round((cat.present / cat.total) * 100) : 0 }}%
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <q-linear-progress
+              :value="cat.total > 0 ? (cat.present / cat.total) : 0"
+              :color="cat.present === cat.total && cat.total > 0 ? 'positive' : 'indigo-6'"
+              track-color="slate-100"
+              rounded
+              size="6px"
+              class="q-my-sm"
+            />
+
+            <!-- Sub stats pills: Absent, Strike (if any), Leave -->
+            <div class="row items-center q-gutter-x-xs q-gutter-y-xs text-xs q-mt-xs">
+              <div
+                class="stat-pill flex items-center q-px-xs q-py-none rounded"
+                :class="cat.absent > 0 ? 'bg-red-50 text-negative border border-red-100' : 'bg-slate-50 text-slate-500'"
+                :title="t('staffAttendance.absentCount', { count: cat.absent })"
+              >
+                <q-icon name="cancel" size="12px" class="q-mr-xs" :color="cat.absent > 0 ? 'negative' : 'grey-5'" />
+                <span><b>{{ cat.absent }}</b> ass.</span>
+              </div>
+
+              <div
+                v-if="cat.on_strike > 0"
+                class="stat-pill flex items-center q-px-xs q-py-none rounded bg-purple-50 text-purple-9 border border-purple-200 text-weight-bold"
+                :title="t('staffAttendance.strikeCount', { count: cat.on_strike })"
+              >
+                <q-icon name="campaign" size="12px" class="q-mr-xs text-purple-700" />
+                <span><b>{{ cat.on_strike }}</b> sciop.</span>
+              </div>
+
+              <div
+                class="stat-pill flex items-center q-px-xs q-py-none rounded"
+                :class="cat.on_leave > 0 ? 'bg-amber-50 text-amber-9 border border-amber-200' : 'bg-slate-50 text-slate-500'"
+                :title="t('staffAttendance.leaveCount', { count: cat.on_leave })"
+              >
+                <q-icon name="local_hospital" size="12px" class="q-mr-xs" :color="cat.on_leave > 0 ? 'amber-8' : 'grey-5'" />
+                <span><b>{{ cat.on_leave }}</b> cong.</span>
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
       </div>
     </div>
 
@@ -844,6 +921,37 @@ function getPercentage(num, total) {
   return Math.round((num / total) * 100)
 }
 
+function selectCategoryFilter(role) {
+  if (filterRole.value === role) {
+    filterRole.value = 'all'
+  } else {
+    filterRole.value = role
+  }
+}
+
+function getRoleIcon(role) {
+  const map = {
+    teacher: 'school',
+    coordinator: 'supervisor_account',
+    principal: 'account_balance',
+    vice_principal: 'badge',
+    dsga: 'admin_panel_settings',
+    collaboratore_ds: 'manage_accounts',
+    assistente_amministrativo: 'assignment',
+    assistente_tecnico: 'devices',
+    collaboratore_scolastico: 'support_agent',
+    collaboratore_mensa: 'restaurant',
+    assistente_alunni: 'accessibility_new',
+    assistente_personale: 'person_search',
+    assistente_contabilita: 'calculate',
+    assistente_protocollo: 'mark_email_read',
+    assistente_sportello: 'contact_phone',
+    responsabile_servizio: 'verified',
+    secretary: 'business_center'
+  }
+  return map[role] || 'person'
+}
+
 function roleLabel(role) {
   if (role && te('roles.' + role)) {
     return t('roles.' + role)
@@ -856,7 +964,16 @@ function roleLabel(role) {
     dsga: 'DSGA (Direttore SGA)',
     collaboratore_ds: 'Collaboratore D.S.',
     assistente_amministrativo: 'Assistente Amministrativo',
+    assistente_tecnico: 'Assistente Tecnico',
     collaboratore_scolastico: 'Collaboratore Scolastico',
+    coordinator: 'Coordinatore',
+    assistente_alunni: 'Assistente Alunni',
+    assistente_personale: 'Assistente Personale',
+    assistente_contabilita: 'Assistente Contabilità',
+    assistente_protocollo: 'Assistente Protocollo',
+    assistente_sportello: 'Assistente Sportello',
+    responsabile_servizio: 'Responsabile Servizio',
+    collaboratore_mensa: 'Collaboratore Mensa',
     secretary: 'Segreteria',
     teacher: 'Docente'
   }
@@ -877,10 +994,20 @@ function getRoleBadgeColor(role) {
     dsga: 'teal-8',
     collaboratore_ds: 'deep-orange-7',
     assistente_amministrativo: 'cyan-8',
+    assistente_tecnico: 'blue-grey-7',
     collaboratore_scolastico: 'amber-9',
+    coordinator: 'blue-7',
+    assistente_alunni: 'teal-7',
+    assistente_personale: 'deep-purple-7',
+    assistente_contabilita: 'green-8',
+    assistente_protocollo: 'light-blue-8',
+    assistente_sportello: 'indigo-7',
+    responsabile_servizio: 'deep-orange-8',
+    collaboratore_mensa: 'brown-6',
+    secretary: 'teal-7',
     teacher: 'indigo-6'
   }
-  return map[role] || 'grey-7'
+  return map[role] || 'blue-grey-6'
 }
 
 function getRoleAvatarColor(role) {
@@ -890,10 +1017,20 @@ function getRoleAvatarColor(role) {
     dsga: 'teal-7',
     collaboratore_ds: 'deep-orange-6',
     assistente_amministrativo: 'cyan-7',
+    assistente_tecnico: 'blue-grey-6',
     collaboratore_scolastico: 'amber-8',
+    coordinator: 'blue-6',
+    assistente_alunni: 'teal-6',
+    assistente_personale: 'deep-purple-6',
+    assistente_contabilita: 'green-7',
+    assistente_protocollo: 'light-blue-7',
+    assistente_sportello: 'indigo-6',
+    responsabile_servizio: 'deep-orange-7',
+    collaboratore_mensa: 'brown-5',
+    secretary: 'teal-6',
     teacher: 'indigo-5'
   }
-  return map[role] || 'grey-6'
+  return map[role] || 'blue-grey-5'
 }
 
 function getStatusColor(status) {
@@ -1171,5 +1308,24 @@ onMounted(() => {
 }
 .letter-spacing-1 {
   letter-spacing: 0.05em;
+}
+.category-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+@media (max-width: 600px) {
+  .category-breakdown-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+.role-card {
+  min-height: 140px;
+}
+.stat-pill {
+  font-size: 11px;
+  padding: 3px 7px;
+  line-height: 1.2;
 }
 </style>
