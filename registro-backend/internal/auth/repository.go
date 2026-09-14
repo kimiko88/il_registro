@@ -128,7 +128,18 @@ func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, e
 	}
 	user.MFASecret = mfaSecret.String
 	user.Assignments = r.loadAssignments(ctx, user.ID)
+	user.BadgeCode = r.loadBadgeCode(ctx, user.ID)
 	return user, nil
+}
+
+func (r *repository) loadBadgeCode(ctx context.Context, userID string) string {
+	var badgeCode sql.NullString
+	_ = r.db.QueryRowContext(ctx, `
+		SELECT badge_code FROM user_badges
+		WHERE user_id = $1::uuid AND is_active = true
+		ORDER BY assigned_at DESC LIMIT 1
+	`, userID).Scan(&badgeCode)
+	return badgeCode.String
 }
 
 func (r *repository) loadAssignments(ctx context.Context, userID string) []UserAssignmentResponse {
@@ -181,6 +192,7 @@ func (r *repository) GetUserByID(ctx context.Context, id string) (*User, error) 
 	}
 	user.MFASecret = mfaSecret.String
 	user.Assignments = r.loadAssignments(ctx, user.ID)
+	user.BadgeCode = r.loadBadgeCode(ctx, user.ID)
 	return user, nil
 }
 

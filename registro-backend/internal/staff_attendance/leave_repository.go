@@ -166,12 +166,33 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 		month = time.Now().Format("2006-01")
 	}
 
-	// Recupera dati utente
-	var firstName, lastName, role string
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		t = time.Now()
+		month = t.Format("2006-01")
+	}
+	startDate := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02")
+	endDate := time.Date(t.Year(), t.Month()+1, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02")
+
+	// Recupera dati utente e badge attivo in una singola query
+	var firstName, lastName, role, badgeCode string
 	var userSchoolID sql.NullString
-	err := r.db.QueryRowContext(ctx,
-		`SELECT first_name, last_name, role, school_id::text FROM users WHERE id=$1`,
-		userID).Scan(&firstName, &lastName, &role, &userSchoolID)
+	err = r.db.QueryRowContext(ctx, `
+		SELECT 
+			u.first_name, 
+			u.last_name, 
+			u.role, 
+			u.school_id::text,
+			COALESCE(ub.badge_code, '')
+		FROM users u
+		LEFT JOIN LATERAL (
+			SELECT badge_code 
+			FROM user_badges 
+			WHERE user_id = u.id AND is_active = true 
+			ORDER BY assigned_at DESC 
+			LIMIT 1
+		) ub ON true
+		WHERE u.id = $1`, userID).Scan(&firstName, &lastName, &role, &userSchoolID, &badgeCode)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("utente non trovato")
 	}
@@ -183,56 +204,23 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 		schoolID = userSchoolID.String
 	}
 
-	// Calcolo ore da timbrature badge
-	var workedMins sql.NullFloat64
-	if schoolID != "" {
-		err = r.db.QueryRowContext(ctx, `
-			SELECT COALESCE(SUM(
-			    EXTRACT(EPOCH FROM (COALESCE(badge_exit_time, NOW()) - badge_entry_time)) / 60
-			), 0) AS worked_minutes
-			FROM staff_attendance
-			WHERE school_id=NULLIF($1, '')::uuid AND user_id=$2
-			  AND TO_CHAR(date::date, 'YYYY-MM') = $3
-			  AND badge_entry_time IS NOT NULL`,
-			schoolID, userID, month).Scan(&workedMins)
-	} else {
-		err = r.db.QueryRowContext(ctx, `
-			SELECT COALESCE(SUM(
-			    EXTRACT(EPOCH FROM (COALESCE(badge_exit_time, NOW()) - badge_entry_time)) / 60
-			), 0) AS worked_minutes
-			FROM staff_attendance
-			WHERE user_id=$1
-			  AND TO_CHAR(date::date, 'YYYY-MM') = $2
-			  AND badge_entry_time IS NOT NULL`,
-			userID, month).Scan(&workedMins)
-	}
-	if err != nil {
-		return nil, err
-	}
-	workedHours := workedMins.Float64 / 60.0
-
-	// Dettaglio giornaliero per il cartellino
+	// Dettaglio giornaliero per il cartellino con index range scan
 	var dailyEntries []DailyTimecardEntry
-	var dRows *sql.Rows
-	if schoolID != "" {
-		dRows, err = r.db.QueryContext(ctx, `
-			SELECT date::text, badge_entry_time, badge_exit_time,
-			       COALESCE(EXTRACT(EPOCH FROM (COALESCE(badge_exit_time, NOW()) - badge_entry_time)) / 60, 0)::int as worked_minutes,
-			       status, COALESCE(notes, '')
-			FROM staff_attendance
-			WHERE school_id=NULLIF($1, '')::uuid AND user_id=$2
-			  AND TO_CHAR(date::date, 'YYYY-MM') = $3
-			ORDER BY date ASC`, schoolID, userID, month)
-	} else {
-		dRows, err = r.db.QueryContext(ctx, `
-			SELECT date::text, badge_entry_time, badge_exit_time,
-			       COALESCE(EXTRACT(EPOCH FROM (COALESCE(badge_exit_time, NOW()) - badge_entry_time)) / 60, 0)::int as worked_minutes,
-			       status, COALESCE(notes, '')
-			FROM staff_attendance
-			WHERE user_id=$1
-			  AND TO_CHAR(date::date, 'YYYY-MM') = $2
-			ORDER BY date ASC`, userID, month)
-	}
+	var totalWorkedMinutes float64
+
+	dRows, err := r.db.QueryContext(ctx, `
+		SELECT 
+			date::text, 
+			badge_entry_time, 
+			badge_exit_time,
+			COALESCE(EXTRACT(EPOCH FROM (COALESCE(badge_exit_time, NOW()) - badge_entry_time)) / 60, 0)::int as worked_minutes,
+			status, 
+			COALESCE(notes, '')
+		FROM staff_attendance
+		WHERE ($1 = '' OR school_id = NULLIF($1, '')::uuid) 
+		  AND user_id = $2
+		  AND date >= $3::date AND date < $4::date
+		ORDER BY date ASC`, schoolID, userID, startDate, endDate)
 	if err == nil {
 		defer dRows.Close()
 		for dRows.Next() {
@@ -246,6 +234,7 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 					de.ExitTime = &exitTime.Time
 				}
 				dailyEntries = append(dailyEntries, de)
+				totalWorkedMinutes += float64(de.WorkedMinutes)
 			}
 		}
 		if err := dRows.Err(); err != nil {
@@ -255,36 +244,27 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 	if dailyEntries == nil {
 		dailyEntries = []DailyTimecardEntry{}
 	}
+	workedHours := totalWorkedMinutes / 60.0
 
-	// Conteggi assenze per tipo
+	// Conteggi assenze per tipo con index range scan
 	var absenceDays, leaveDays, sickDays int
 	var permitHours float64
 
-	var rows *sql.Rows
-	if schoolID != "" {
-		rows, err = r.db.QueryContext(ctx, `
-			SELECT type, COUNT(*) as cnt, COALESCE(SUM(hours),0) as hrs
-			FROM staff_leave_requests
-			WHERE school_id=NULLIF($1, '')::uuid AND user_id=$2
-			  AND TO_CHAR(start_date::date, 'YYYY-MM') = $3
-			  AND status='approved'
-			GROUP BY type`, schoolID, userID, month)
-	} else {
-		rows, err = r.db.QueryContext(ctx, `
-			SELECT type, COUNT(*) as cnt, COALESCE(SUM(hours),0) as hrs
-			FROM staff_leave_requests
-			WHERE user_id=$1
-			  AND TO_CHAR(start_date::date, 'YYYY-MM') = $2
-			  AND status='approved'
-			GROUP BY type`, userID, month)
-	}
+	lRows, err := r.db.QueryContext(ctx, `
+		SELECT type, COUNT(*) as cnt, COALESCE(SUM(hours),0) as hrs
+		FROM staff_leave_requests
+		WHERE ($1 = '' OR school_id = NULLIF($1, '')::uuid) 
+		  AND user_id = $2
+		  AND start_date >= $3::date AND start_date < $4::date
+		  AND status = 'approved'
+		GROUP BY type`, schoolID, userID, startDate, endDate)
 	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
+		defer lRows.Close()
+		for lRows.Next() {
 			var ltype string
 			var cnt int
 			var hrs float64
-			if err := rows.Scan(&ltype, &cnt, &hrs); err == nil {
+			if err := lRows.Scan(&ltype, &cnt, &hrs); err == nil {
 				switch LeaveType(ltype) {
 				case LeaveTypeFerie:
 					leaveDays += cnt
@@ -293,26 +273,27 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 				case LeaveTypePermesso, LeaveTypePermessoStudio, LeaveTypeRecupero:
 					permitHours += hrs
 					if hrs == 0 {
-						permitHours += float64(cnt) * 8 // default 8h per giorno
+						permitHours += float64(cnt) * 8.0 // default 8h per giorno
 					}
 				default:
 					absenceDays += cnt
 				}
 			}
 		}
-		if err := rows.Err(); err != nil {
+		if err := lRows.Err(); err != nil {
 			return nil, err
 		}
 	}
 
-	// Ore contrattuali (CCNL Scuola: 36h/settimana = ~156h/mese)
 	const ccnlHoursPerMonth = 156.0
 
 	return &MonthlyTimecard{
 		UserID:        userID,
 		FirstName:     firstName,
 		LastName:      lastName,
+		UserName:      fmt.Sprintf("%s %s", lastName, firstName),
 		Role:          role,
+		BadgeCode:     badgeCode,
 		Month:         month,
 		ContractHours: ccnlHoursPerMonth,
 		WorkedHours:   workedHours,
@@ -325,45 +306,137 @@ func (r *PostgresRepository) GetMonthlyTimecard(ctx context.Context, schoolID, u
 	}, nil
 }
 
-// GetAllMonthlyTimecards restituisce il riepilogo mensile per tutto il personale ATA
+// GetAllMonthlyTimecards restituisce il riepilogo mensile per tutto il personale ATA in una singola query batch ad alte prestazioni
 func (r *PostgresRepository) GetAllMonthlyTimecards(ctx context.Context, schoolID, month string) ([]MonthlyTimecard, error) {
 	if month == "" {
 		month = time.Now().Format("2006-01")
 	}
 
-	var rows *sql.Rows
-	var err error
-	if schoolID != "" {
-		rows, err = r.db.QueryContext(ctx, `
-			SELECT id FROM users
-			WHERE (NULLIF($1, '')::uuid IS NULL OR school_id = NULLIF($1, '')::uuid)
-			  AND role IN ('dsga','assistente_amministrativo','collaboratore_ds','collaboratore_scolastico','secretary')
-			ORDER BY last_name, first_name`, schoolID)
-	} else {
-		rows, err = r.db.QueryContext(ctx, `
-			SELECT id FROM users
-			WHERE role IN ('dsga','assistente_amministrativo','collaboratore_ds','collaboratore_scolastico','secretary')
-			ORDER BY last_name, first_name`)
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		t = time.Now()
+		month = t.Format("2006-01")
 	}
+	startDate := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02")
+	endDate := time.Date(t.Year(), t.Month()+1, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02")
+
+	const ccnlHoursPerMonth = 156.0
+
+	query := `
+		WITH target_users AS (
+			SELECT 
+				u.id, 
+				u.first_name, 
+				u.last_name, 
+				u.role,
+				ub.badge_code
+			FROM users u
+			LEFT JOIN LATERAL (
+				SELECT badge_code 
+				FROM user_badges 
+				WHERE user_id = u.id AND is_active = true 
+				ORDER BY assigned_at DESC 
+				LIMIT 1
+			) ub ON true
+			WHERE ($1 = '' OR u.school_id = NULLIF($1, '')::uuid)
+			  AND u.role IN (
+				  'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico',
+				  'assistente_tecnico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita',
+				  'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio', 'secretary'
+			  )
+		),
+		worked_agg AS (
+			SELECT 
+				sa.user_id,
+				COALESCE(SUM(
+					EXTRACT(EPOCH FROM (COALESCE(sa.badge_exit_time, NOW()) - sa.badge_entry_time)) / 60
+				), 0) AS total_worked_minutes
+			FROM staff_attendance sa
+			WHERE sa.user_id IN (SELECT id FROM target_users)
+			  AND sa.date >= $2::date AND sa.date < $3::date
+			  AND sa.badge_entry_time IS NOT NULL
+			GROUP BY sa.user_id
+		),
+		leaves_agg AS (
+			SELECT 
+				slr.user_id,
+				COUNT(*) FILTER (WHERE slr.type = 'ferie') AS leave_days,
+				COUNT(*) FILTER (WHERE slr.type = 'malattia') AS sick_days,
+				COALESCE(SUM(
+					CASE 
+						WHEN slr.type IN ('permesso', 'permesso_studio', 'recupero') THEN 
+							CASE WHEN slr.hours > 0 THEN slr.hours ELSE (COALESCE(slr.days, 1) * 8.0) END
+						ELSE 0
+					END
+				), 0) AS permit_hours,
+				COUNT(*) FILTER (WHERE slr.type NOT IN ('ferie', 'malattia', 'permesso', 'permesso_studio', 'recupero')) AS absence_days
+			FROM staff_leave_requests slr
+			WHERE slr.user_id IN (SELECT id FROM target_users)
+			  AND slr.start_date >= $2::date AND slr.start_date < $3::date
+			  AND slr.status = 'approved'
+			GROUP BY slr.user_id
+		)
+		SELECT 
+			tu.id,
+			tu.first_name,
+			tu.last_name,
+			tu.role,
+			COALESCE(tu.badge_code, '') AS badge_code,
+			COALESCE(wa.total_worked_minutes, 0) AS total_worked_minutes,
+			COALESCE(la.leave_days, 0) AS leave_days,
+			COALESCE(la.sick_days, 0) AS sick_days,
+			COALESCE(la.permit_hours, 0) AS permit_hours,
+			COALESCE(la.absence_days, 0) AS absence_days
+		FROM target_users tu
+		LEFT JOIN worked_agg wa ON wa.user_id = tu.id
+		LEFT JOIN leaves_agg la ON la.user_id = tu.id
+		ORDER BY tu.last_name, tu.first_name`
+
+	rows, err := r.db.QueryContext(ctx, query, schoolID, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var timecards []MonthlyTimecard
+	timecards := make([]MonthlyTimecard, 0)
 	for rows.Next() {
-		var uid string
-		if err := rows.Scan(&uid); err != nil {
+		var (
+			uid, fName, lName, uRole, bCode string
+			totalMins, permitHrs            float64
+			leaveD, sickD, absenceD         int
+		)
+		if err := rows.Scan(
+			&uid, &fName, &lName, &uRole, &bCode,
+			&totalMins, &leaveD, &sickD, &permitHrs, &absenceD,
+		); err != nil {
 			continue
 		}
-		tc, err := r.GetMonthlyTimecard(ctx, schoolID, uid, month)
-		if err == nil {
-			timecards = append(timecards, *tc)
-		}
+
+		workedHours := totalMins / 60.0
+		overtimeHours := max(0, workedHours-ccnlHoursPerMonth)
+
+		timecards = append(timecards, MonthlyTimecard{
+			UserID:        uid,
+			FirstName:     fName,
+			LastName:      lName,
+			UserName:      fmt.Sprintf("%s %s", lName, fName),
+			Role:          uRole,
+			BadgeCode:     bCode,
+			Month:         month,
+			ContractHours: ccnlHoursPerMonth,
+			WorkedHours:   workedHours,
+			OvertimeHours: overtimeHours,
+			AbsenceDays:   absenceD,
+			LeaveDays:     leaveD,
+			SickDays:      sickD,
+			PermitHours:   permitHrs,
+			DailyEntries:  []DailyTimecardEntry{},
+		})
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+
 	return timecards, nil
 }
 

@@ -41,7 +41,7 @@ func leaveAuthCheck(c *gin.Context) (userID, schoolID, role string, ok bool) {
 	}
 	schoolID = c.GetString("school_id")
 	role = c.GetString("role")
-	if !CanReadAttendance(role) {
+	if !IsATARole(role) && !CanReadAttendance(role) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "accesso non autorizzato"})
 		return "", "", "", false
 	}

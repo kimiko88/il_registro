@@ -98,6 +98,10 @@
                     <span class="text-slate-400">ID Utente:</span>
                     <span class="text-weight-bold font-mono">{{ userId }}</span>
                   </div>
+                  <div class="row items-center justify-between" v-if="userBadgeCode">
+                    <span class="text-slate-400">Codice Badge:</span>
+                    <span class="text-weight-bold font-mono text-primary">{{ userBadgeCode }}</span>
+                  </div>
                   <div class="row items-center justify-between">
                     <span class="text-slate-400">Stato Account:</span>
                     <q-badge color="positive" label="Attivo & Confermato" />
@@ -284,6 +288,7 @@
                     :label="t('settingsPage.currentPasswordLabel') || 'Password Attuale *'"
                     outlined
                     dense
+                    autocomplete="current-password"
                     class="rounded-lg"
                     :rules="[val => !!val || (t('settingsPage.currentPasswordReq') || 'Inserisci la password attuale')]"
                   >
@@ -303,6 +308,7 @@
                     label="Nuova Password * (min. 10 caratteri)"
                     outlined
                     dense
+                    autocomplete="new-password"
                     class="rounded-lg"
                     :rules="[
                       val => !!val || (t('settingsPage.newPasswordReq') || 'Inserisci la nuova password'),
@@ -353,6 +359,7 @@
                     :label="t('settingsPage.confirmPasswordLabel') || 'Conferma Nuova Password *'"
                     outlined
                     dense
+                    autocomplete="new-password"
                     class="rounded-lg"
                     :rules="[
                       val => !!val || (t('settingsPage.confirmPasswordReq') || 'Conferma la nuova password'),
@@ -620,6 +627,7 @@ const activeTab = ref('profile')
 // User details
 const userId = computed(() => user.value?.id || '—')
 const userEmail = computed(() => user.value?.email || '—')
+const userBadgeCode = computed(() => user.value?.badge_code || '')
 const isDsga = computed(() => (userRole.value || '').toLowerCase() === 'dsga')
 
 const roleDisplayName = computed(() => {

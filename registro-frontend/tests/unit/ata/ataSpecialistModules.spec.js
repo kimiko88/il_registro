@@ -109,6 +109,12 @@ describe('ATA Specialist Modules — Services and Router Suite', () => {
       await staffAttendanceService.approveLeave('l-1', { notes: 'ok' })
       expect(api.patch).toHaveBeenCalledWith('/staff-attendance/leaves/l-1/approve', { notes: 'ok' })
     })
+
+    it('sets strike mode via POST /staff-attendance/strike-mode', async () => {
+      const payload = { date: '2026-09-14', is_strike_day: true }
+      await staffAttendanceService.setStrikeMode(payload)
+      expect(api.post).toHaveBeenCalledWith('/staff-attendance/strike-mode', payload)
+    })
   })
 
   describe('Personnel Desk Service (Digital Workflow)', () => {

@@ -62,9 +62,9 @@
               </span>
             </div>
 
-            <div v-if="notice.notes" class="strike-notes-box bg-slate-50 border border-slate-200 rounded-borders q-pa-sm q-mt-sm text-caption text-slate-700">
+            <div v-if="notice.notes || notice.content" class="strike-notes-box bg-slate-50 border border-slate-200 rounded-borders q-pa-sm q-mt-sm text-caption text-slate-700">
               <q-icon name="info" color="primary" class="q-mr-xs" />
-              {{ notice.notes }}
+              {{ notice.notes || notice.content }}
             </div>
 
             <div class="legal-disclaimer text-caption text-slate-500 q-mt-xs">
@@ -196,9 +196,11 @@ const savingNoticeId = ref(null)
 const savingIntention = ref(null)
 
 const staffRoles = [
-  'teacher', 'coordinator', 'dsga', 'assistente_amministrativo',
-  'collaboratore_ds', 'collaboratore_scolastico', 'principal',
-  'vice_principal', 'secretary', 'admin', 'superadmin'
+  'teacher', 'coordinator', 'docente', 'dsga', 'assistente_amministrativo',
+  'collaboratore_ds', 'collaboratore_scolastico', 'assistente_tecnico',
+  'assistente_alunni', 'assistente_personale', 'assistente_contabilita',
+  'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio',
+  'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'
 ]
 
 const isStaffUser = computed(() => {

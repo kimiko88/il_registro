@@ -87,6 +87,15 @@ func TestLeaveHandler_Timecard(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 
+	// 1b. Technical assistant (assistente_tecnico) gets own timecard -> 200
+	rTech := setupLeaveRouter(h, "u-at-1", "school-1", "assistente_tecnico")
+	req, _ = http.NewRequest("GET", "/api/v1/staff-attendance/timecard", nil)
+	w = httptest.NewRecorder()
+	rTech.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 for assistente_tecnico, got %d", w.Code)
+	}
+
 	// 2. ATA user tries to view another user's timecard -> 403
 	req, _ = http.NewRequest("GET", "/api/v1/staff-attendance/timecard?user_id=u-other", nil)
 	w = httptest.NewRecorder()

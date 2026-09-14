@@ -10,6 +10,10 @@
           <q-badge outline color="primary" class="q-px-sm q-py-xs text-weight-bold">
             {{ t('ataDashboard.badgeAta') || 'Personale ATA' }}
           </q-badge>
+          <q-badge v-if="badgeCode" color="teal-8" text-color="white" class="q-px-sm q-py-xs text-weight-bold rounded-borders shadow-xs">
+            <q-icon name="qr_code" size="14px" class="q-mr-xs" />
+            Badge: {{ badgeCode }}
+          </q-badge>
         </div>
         <h1 class="text-h4 text-sm-h3 text-weight-bolder text-slate-900 q-my-none text-primary">
           {{ t('ataDashboard.welcome', { name: user?.first_name || 'Operatore' }) }}
@@ -24,10 +28,13 @@
       </div>
     </div>
 
+    <!-- Active Strike Notice & Intention Banner (per tutti i dipendenti ATA) -->
+    <ActiveStrikeNoticeBanner class="q-mb-xl" />
+
     <!-- Quick Navigation Hub -->
     <div class="row q-col-gutter-lg q-mb-xl">
-      <!-- 1. Presenze Personale & Docenti -->
-      <div class="col-12 col-md-6 col-lg-4">
+      <!-- 1. Presenze Personale & Docenti (DSGA, Collaboratore DS, AA Personale, Dirigenza, Admin) -->
+      <div class="col-12 col-md-6 col-lg-4" v-if="canManageStaffAttendance">
         <q-card
           class="hub-card rounded-2xl p-4 shadow-sm border border-slate-200 cursor-pointer full-height"
           @click="router.push('/ata/attendance')"
@@ -53,8 +60,8 @@
         </q-card>
       </div>
 
-      <!-- 2. Timbratura & Badge -->
-      <div class="col-12 col-md-6 col-lg-4">
+      <!-- 2. Timbratura & Badge ai varchi (per operatori autorizzati) -->
+      <div class="col-12 col-md-6 col-lg-4" v-if="canManageStaffAttendance">
         <q-card
           class="hub-card rounded-2xl p-4 shadow-sm border border-slate-200 cursor-pointer full-height"
           @click="router.push('/ata/attendance')"
@@ -216,7 +223,7 @@
       </div>
 
       <!-- 8. Registro Visitatori & Portineria (Collaboratore Scolastico, DSGA, Admin) -->
-      <div class="col-12 col-md-6 col-lg-4">
+      <div class="col-12 col-md-6 col-lg-4" v-if="canAccessVisitors">
         <q-card
           class="hub-card rounded-2xl p-4 shadow-sm border border-slate-200 cursor-pointer full-height"
           @click="router.push('/ata/visitor-registry')"
@@ -295,6 +302,33 @@
           </q-card-section>
         </q-card>
       </div>
+
+      <!-- 11. Laboratori Didattici & E-Learning (per Assistente Tecnico e Admin) -->
+      <div class="col-12 col-md-6 col-lg-4" v-if="isTechnicalAssistant">
+        <q-card
+          class="hub-card rounded-2xl p-4 shadow-sm border border-slate-200 cursor-pointer full-height"
+          @click="router.push('/admin/elearning')"
+        >
+          <q-card-section>
+            <div class="row items-center justify-between q-mb-md">
+              <div class="icon-bubble bg-cyan-100 text-cyan-800">
+                <q-icon name="computer" size="32px" />
+              </div>
+              <q-icon name="arrow_forward" color="grey-6" size="20px" class="card-arrow" />
+            </div>
+            <div class="text-h6 text-weight-bold text-slate-900 q-mb-xs">
+              {{ t('ataDashboard.cardElearningTitle') || 'Laboratori & E-Learning' }}
+            </div>
+            <div class="text-caption text-slate-600 q-mb-md">
+              {{ t('ataDashboard.cardElearningDesc') || 'Gestione aule informatiche, Google Workspace, Microsoft Teams e dispositivi di laboratorio' }}
+            </div>
+            <div class="row items-center text-cyan-800 text-weight-bold text-caption">
+              {{ t('ataDashboard.cardElearningAction') || 'Accedi ai Laboratori' }}
+              <q-icon name="chevron_right" size="16px" class="q-ml-xs" />
+            </div>
+          </q-card-section>
+        </q-card>
+      </div>
     </div>
   </q-page>
 </template>
@@ -305,11 +339,29 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
+import ActiveStrikeNoticeBanner from '@/components/Common/ActiveStrikeNoticeBanner.vue'
 
 const { t, te, locale } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 const { user, userRole } = storeToRefs(authStore)
+
+const badgeCode = computed(() => user.value?.badge_code || '')
+
+const canManageStaffAttendance = computed(() => {
+  const role = (userRole.value || '').toLowerCase()
+  return ['dsga', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_personale', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'].includes(role)
+})
+
+const canAccessVisitors = computed(() => {
+  const role = (userRole.value || '').toLowerCase()
+  return ['dsga', 'collaboratore_scolastico', 'assistente_sportello', 'assistente_amministrativo', 'collaboratore_ds', 'principal', 'vice_principal', 'admin', 'superadmin', 'secretary'].includes(role)
+})
+
+const isTechnicalAssistant = computed(() => {
+  const role = (userRole.value || '').toLowerCase()
+  return ['assistente_tecnico', 'admin', 'superadmin'].includes(role)
+})
 
 const todayFormatted = computed(() => {
   const d = new Date()
@@ -325,7 +377,14 @@ const roleDisplayName = computed(() => {
     dsga: 'DSGA (Direttore dei Servizi Generali e Amministrativi)',
     collaboratore_ds: 'Collaboratore del Dirigente Scolastico',
     assistente_amministrativo: 'Assistente Amministrativo',
+    assistente_tecnico: 'Assistente Tecnico',
+    assistente_alunni: 'Assistente Amministrativo (Area Alunni)',
+    assistente_personale: 'Assistente Amministrativo (Area Personale)',
+    assistente_contabilita: 'Assistente Amministrativo (Area Contabilità)',
+    assistente_protocollo: 'Assistente Amministrativo (Area Protocollo)',
+    assistente_sportello: 'Assistente Amministrativo (Sportello/Utenza)',
     collaboratore_scolastico: 'Collaboratore Scolastico',
+    responsabile_servizio: 'Responsabile Servizio',
     principal: 'Dirigente Scolastico',
     vice_principal: 'Collaboratore Vicario',
     admin: 'Amministratore',
@@ -339,6 +398,7 @@ function getRoleColor(role) {
     dsga: 'teal-8',
     collaboratore_ds: 'deep-orange-7',
     assistente_amministrativo: 'cyan-8',
+    assistente_tecnico: 'cyan-9',
     collaboratore_scolastico: 'amber-9',
     principal: 'purple-8',
     vice_principal: 'indigo-8'

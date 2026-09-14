@@ -42,6 +42,7 @@
 
         <q-btn flat rounded color="primary" icon="today" :label="t('staffAttendance.today') || 'Oggi'" @click="goToToday" class="bg-indigo-50" />
         <q-btn
+          v-if="canWriteAttendance"
           color="secondary"
           icon="credit_card"
           :label="t('staffAttendance.badgeSwipeBtn') || 'Timbratura Badge'"
@@ -51,6 +52,7 @@
           @click="openBadgeSwipeDialog"
         />
         <q-btn
+          v-if="canManageStrike"
           outline
           color="negative"
           icon="campaign"
@@ -83,19 +85,20 @@
             {{ t('staffAttendance.authorizedOperator') || 'Operatore Autorizzato' }}: <span class="text-primary">{{ user?.first_name }} {{ user?.last_name }}</span> ({{ roleLabel(userRole) }})
           </div>
           <div class="text-caption text-slate-600">
-            {{ t('staffAttendance.authorizedDesc') || 'Autorizzato alla consultazione e registrazione presenze ATA e docenti (anche in occasione di scioperi).' }}
+            {{ canWriteAttendance ? (t('staffAttendance.authorizedDesc') || 'Autorizzato alla consultazione e registrazione presenze ATA e docenti.') : (t('staffAttendance.viewOnlyDesc') || 'Modalità consultazione presenze personale ATA e docenti.') }}
           </div>
         </div>
       </div>
-      <div class="row items-center q-gutter-xs">
+      <div class="row items-center q-gutter-xs" v-if="canActivateStrike">
         <q-btn
           flat
           dense
           no-caps
           color="negative"
           icon="campaign"
+          :loading="togglingStrike"
           :label="isStrikeMode ? (t('staffAttendance.deactivateStrikeMode') || 'Disattiva Vista Sciopero') : (t('staffAttendance.activateStrikeMode') || 'Attiva Modalità Sciopero')"
-          @click="isStrikeMode = !isStrikeMode"
+          @click="toggleStrikeMode"
           class="rounded-lg text-weight-bold"
         />
       </div>
@@ -259,6 +262,44 @@
       </div>
     </div>
 
+    <!-- Active Strike Mode Warning & Quick Action Banner -->
+    <div v-if="isStrikeMode" class="bg-red-50 border border-red-200 rounded-xl q-pa-md q-mb-lg row items-center justify-between gap-md shadow-xs">
+      <div class="row items-center gap-sm">
+        <q-avatar size="36px" color="red-100" text-color="negative" icon="campaign" />
+        <div>
+          <div class="text-weight-bold text-red-9 flex items-center gap-xs">
+            <span>Rilevazione Sciopero Attiva per il {{ formattedSelectedDate }}</span>
+            <q-badge color="negative" text-color="white" class="text-xs q-px-xs">Sciopero Ufficiale</q-badge>
+          </div>
+          <div class="text-caption text-red-700">
+            Per questa data è attiva la rilevazione delle adesioni allo sciopero. Le assenze possono essere registrate con stato "In Sciopero".
+          </div>
+        </div>
+      </div>
+      <div class="row items-center q-gutter-xs">
+        <q-btn
+          flat
+          dense
+          color="negative"
+          label="Filtra Solo Personale in Sciopero"
+          icon="filter_alt"
+          no-caps
+          class="text-weight-bold bg-white shadow-xs rounded-borders q-px-sm"
+          @click="filterStatus = 'on_strike'"
+        />
+        <q-btn
+          flat
+          dense
+          color="primary"
+          label="Quadro Preventivo Scioperi"
+          icon="open_in_new"
+          no-caps
+          to="/ata/strike-management"
+          class="text-weight-bold bg-white shadow-xs rounded-borders q-px-sm"
+        />
+      </div>
+    </div>
+
     <!-- Nominative Attendance Table -->
     <q-card class="rounded-xl border border-slate-200 shadow-1 q-mb-xl">
       <q-card-section class="row items-center justify-between gap-md border-b border-slate-100">
@@ -378,8 +419,8 @@
         <!-- Timbratura Badge Slot -->
         <template v-slot:body-cell-badge="props">
           <q-td :props="props">
-            <div v-if="props.row.badge_entry_time" class="text-slate-800 text-caption">
-              <div class="flex items-center">
+            <div v-if="props.row.badge_entry_time || props.row.badge_exit_time" class="text-slate-800 text-caption">
+              <div v-if="props.row.badge_entry_time" class="flex items-center">
                 <q-icon name="login" color="positive" size="14px" class="q-mr-xs" />
                 {{ t('staffAttendance.entryTime', { time: formatTime(props.row.badge_entry_time) }) }}
               </div>
@@ -405,7 +446,7 @@
         <!-- Azioni Slot -->
         <template v-slot:body-cell-actions="props">
           <q-td :props="props" align="right">
-            <div class="row items-center justify-end q-gutter-xs">
+            <div class="row items-center justify-end q-gutter-xs" v-if="canWriteAttendance">
               <q-btn
                 flat
                 round
@@ -429,6 +470,7 @@
                 <q-tooltip>{{ t('staffAttendance.simulateBadgeTooltip') || 'Simula timbratura badge per questa persona' }}</q-tooltip>
               </q-btn>
             </div>
+            <span v-else class="text-caption text-slate-400">-</span>
           </q-td>
         </template>
       </q-table>
@@ -483,6 +525,38 @@
               :placeholder="t('staffAttendance.strikeCodePlaceholder') || 'es. Sciopero Generale Comparto Scuola'"
               class="q-mt-xs"
             />
+          </div>
+
+          <!-- Orari di Ingresso e Uscita -->
+          <div class="row q-col-gutter-sm">
+            <div class="col-12 col-sm-6">
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">
+                <q-icon name="login" color="positive" class="q-mr-xs" />
+                {{ t('staffAttendance.entryTimeLabel') || 'Orario Entrata' }}
+              </label>
+              <q-input
+                v-model="editForm.entry_time"
+                type="time"
+                outlined
+                dense
+                clearable
+                placeholder="es. 08:00"
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">
+                <q-icon name="logout" color="negative" class="q-mr-xs" />
+                {{ t('staffAttendance.exitTimeLabel') || 'Orario Uscita' }}
+              </label>
+              <q-input
+                v-model="editForm.exit_time"
+                type="time"
+                outlined
+                dense
+                clearable
+                placeholder="es. 14:00"
+              />
+            </div>
           </div>
 
           <!-- Note aggiuntive -->
@@ -547,6 +621,19 @@
           </div>
 
           <div>
+            <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">
+              <q-icon name="schedule" class="q-mr-xs" />
+              {{ t('staffAttendance.swipeTimeLabel') || 'Orario Timbratura' }}
+            </label>
+            <q-input
+              v-model="badgeForm.swipe_time"
+              type="time"
+              outlined
+              dense
+            />
+          </div>
+
+          <div>
             <label class="text-weight-bold text-caption text-slate-700 block q-mb-xs">{{ t('staffAttendance.swipeTypeLabel') || 'Tipo Timbratura' }}</label>
             <q-select
               v-model="badgeForm.swipe_type"
@@ -606,6 +693,7 @@ const { user, userRole } = storeToRefs(authStore)
 
 const selectedDate = ref(new Date().toISOString().substring(0, 10))
 const isStrikeMode = ref(false)
+const togglingStrike = ref(false)
 const loading = ref(false)
 const saving = ref(false)
 const savingBadge = ref(false)
@@ -622,30 +710,56 @@ const editingRecord = ref(null)
 const editForm = ref({
   status: 'present',
   notes: '',
-  strike_code: ''
+  strike_code: '',
+  entry_time: '',
+  exit_time: ''
 })
 
 const showBadgeSwipeDialog = ref(false)
 const badgeForm = ref({
+  user_id: '',
+  date: '',
   badge_code: '',
   swipe_type: 'in',
+  swipe_time: '',
   device_id: 'TERMINAL-INGRESSO-01'
 })
 
-const columns = computed(() => [
-  { name: 'person', label: t('staffAttendance.colStaff') || 'Personale', align: 'left', field: 'last_name', sortable: true },
-  { name: 'role', label: t('staffAttendance.colCategory') || 'Categoria', align: 'left', field: 'role', sortable: true },
-  { name: 'status', label: t('staffAttendance.colStatus') || 'Stato Presenza', align: 'center', field: 'status', sortable: true },
-  { name: 'badge', label: t('staffAttendance.colBadge') || 'Timbratura Badge', align: 'left', field: 'badge_entry_time' },
-  { name: 'notes', label: t('staffAttendance.colNotes') || 'Note / Sciopero', align: 'left', field: 'notes' },
-  { name: 'actions', label: t('staffAttendance.colActions') || 'Azioni', align: 'right' }
-])
+const canActivateStrike = computed(() => {
+  const role = (userRole.value || '').toLowerCase()
+  return ['dsga', 'collaboratore_ds', 'principal', 'vice_principal', 'admin', 'superadmin'].includes(role)
+})
+
+const canManageStrike = computed(() => {
+  const role = (userRole.value || '').toLowerCase()
+  return ['dsga', 'principal', 'vice_principal', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_personale', 'secretary', 'admin', 'superadmin'].includes(role)
+})
+
+const canWriteAttendance = computed(() => {
+  const role = (userRole.value || '').toLowerCase()
+  return ['dsga', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_personale', 'principal', 'vice_principal', 'admin', 'superadmin', 'secretary'].includes(role)
+})
+
+const columns = computed(() => {
+  const list = [
+    { name: 'person', label: t('staffAttendance.colStaff') || 'Personale', align: 'left', field: 'last_name', sortable: true },
+    { name: 'role', label: t('staffAttendance.colCategory') || 'Categoria', align: 'left', field: 'role', sortable: true },
+    { name: 'status', label: t('staffAttendance.colStatus') || 'Stato Presenza', align: 'center', field: 'status', sortable: true },
+    { name: 'badge', label: t('staffAttendance.colBadge') || 'Timbratura Badge', align: 'left', field: 'badge_entry_time' },
+    { name: 'notes', label: t('staffAttendance.colNotes') || 'Note / Sciopero', align: 'left', field: 'notes' }
+  ]
+  if (canWriteAttendance.value) {
+    list.push({ name: 'actions', label: t('staffAttendance.colActions') || 'Azioni', align: 'right' })
+  }
+  return list
+})
 
 const roleFilterOptions = computed(() => [
   { label: t('staffAttendance.allCategories') || 'Tutte le categorie', value: 'all' },
   { label: t('roles.teacher') || 'Docenti', value: 'teacher' },
   { label: t('roles.dsga') || 'DSGA', value: 'dsga' },
   { label: t('roles.assistente_amministrativo') || 'Assistenti Amministrativi', value: 'assistente_amministrativo' },
+  { label: t('roles.assistente_tecnico') || 'Assistenti Tecnici', value: 'assistente_tecnico' },
   { label: t('roles.collaboratore_ds') || 'Collaboratori D.S.', value: 'collaboratore_ds' },
   { label: t('roles.collaboratore_scolastico') || 'Collaboratori Scolastici', value: 'collaboratore_scolastico' },
   { label: t('roles.principal') || 'Dirigente Scolastico', value: 'principal' }
@@ -660,15 +774,21 @@ const statusFilterOptions = computed(() => [
   { label: t('staffAttendance.absentLeave') || 'In Permesso/Malattia', value: 'leave' }
 ])
 
-const statusOptions = computed(() => [
-  { label: t('staffAttendance.statusPresent') || 'Presente', value: 'present' },
-  { label: t('staffAttendance.statusOnStrike') || 'In Sciopero', value: 'on_strike' },
-  { label: t('staffAttendance.statusAbsent') || 'Assente', value: 'absent' },
-  { label: t('staffAttendance.statusLate') || 'In Ritardo', value: 'late' },
-  { label: t('staffAttendance.statusSickLeave') || 'Malattia', value: 'sick_leave' },
-  { label: t('staffAttendance.statusPermit') || 'Permesso Retribuito/Personale', value: 'permit' },
-  { label: t('staffAttendance.statusMission') || 'Missione / Servizio Esterno', value: 'mission' }
-])
+const statusOptions = computed(() => {
+  const all = [
+    { label: t('staffAttendance.statusPresent') || 'Presente', value: 'present' },
+    { label: t('staffAttendance.statusOnStrike') || 'In Sciopero', value: 'on_strike' },
+    { label: t('staffAttendance.statusAbsent') || 'Assente', value: 'absent' },
+    { label: t('staffAttendance.statusLate') || 'In Ritardo', value: 'late' },
+    { label: t('staffAttendance.statusSickLeave') || 'Malattia', value: 'sick_leave' },
+    { label: t('staffAttendance.statusPermit') || 'Permesso Retribuito/Personale', value: 'permit' },
+    { label: t('staffAttendance.statusMission') || 'Missione / Servizio Esterno', value: 'mission' }
+  ]
+  if (!canManageStrike.value) {
+    return all.filter(opt => opt.value !== 'on_strike')
+  }
+  return all
+})
 
 const formattedSelectedDate = computed(() => {
   if (!selectedDate.value) return ''
@@ -830,12 +950,37 @@ function getStatusLabel(status) {
 
 function formatTime(isoStr) {
   if (!isoStr) return ''
+  if (typeof isoStr === 'string' && /^\d{2}:\d{2}(:\d{2})?$/.test(isoStr)) {
+    return isoStr.substring(0, 5)
+  }
   try {
     const d = new Date(isoStr)
+    if (isNaN(d.getTime())) return isoStr
     return d.toLocaleTimeString(locale.value || 'it-IT', { hour: '2-digit', minute: '2-digit' })
   } catch {
     return isoStr
   }
+}
+
+function extractTimeHHMM(val) {
+  if (!val) return ''
+  if (typeof val === 'string' && /^\d{2}:\d{2}(:\d{2})?$/.test(val)) {
+    return val.substring(0, 5)
+  }
+  try {
+    const d = new Date(val)
+    if (isNaN(d.getTime())) return ''
+    const h = String(d.getHours()).padStart(2, '0')
+    const m = String(d.getMinutes()).padStart(2, '0')
+    return `${h}:${m}`
+  } catch {
+    return ''
+  }
+}
+
+function getCurrentTimeHHMM() {
+  const d = new Date()
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
 async function loadData() {
@@ -854,6 +999,9 @@ async function loadData() {
 
     summaryData.value = summary
     staffList.value = listRes?.data || []
+    if (summary) {
+      isStrikeMode.value = Boolean(summary.is_strike_day)
+    }
   } catch (err) {
     console.error('Failed to load staff attendance data', err)
     $q.notify({ type: 'negative', message: t('staffAttendance.saveError') || 'Errore nel caricamento delle presenze' })
@@ -862,18 +1010,50 @@ async function loadData() {
   }
 }
 
+async function toggleStrikeMode() {
+  if (!canActivateStrike.value) return
+  const targetState = !isStrikeMode.value
+  togglingStrike.value = true
+  try {
+    await staffAttendanceService.setStrikeMode({
+      date: selectedDate.value,
+      is_strike_day: targetState
+    })
+    isStrikeMode.value = targetState
+    $q.notify({
+      type: 'positive',
+      icon: targetState ? 'campaign' : 'check_circle',
+      message: targetState
+        ? (t('staffAttendance.strikeModeActivated') || 'Modalità Sciopero attivata per questa data')
+        : (t('staffAttendance.strikeModeDeactivated') || 'Modalità Sciopero disattivata per questa data')
+    })
+    await loadData()
+  } catch (err) {
+    console.error('Error updating strike mode', err)
+    $q.notify({
+      type: 'negative',
+      message: err?.response?.data?.error || t('staffAttendance.strikeModeError') || 'Errore durante la modifica della modalità sciopero'
+    })
+  } finally {
+    togglingStrike.value = false
+  }
+}
+
 function openEditDialog(record) {
+  if (!canWriteAttendance.value) return
   editingRecord.value = record
   editForm.value = {
     status: record.status || 'present',
     notes: record.notes || '',
-    strike_code: record.strike_code || ''
+    strike_code: record.strike_code || '',
+    entry_time: extractTimeHHMM(record.badge_entry_time),
+    exit_time: extractTimeHHMM(record.badge_exit_time)
   }
   showEditDialog.value = true
 }
 
 async function saveAttendance() {
-  if (!editingRecord.value) return
+  if (!canWriteAttendance.value || !editingRecord.value) return
   saving.value = true
   try {
     await staffAttendanceService.recordAttendance({
@@ -882,6 +1062,8 @@ async function saveAttendance() {
       status: editForm.value.status,
       notes: editForm.value.notes,
       strike_code: editForm.value.strike_code,
+      entry_time: editForm.value.entry_time || null,
+      exit_time: editForm.value.exit_time || null,
       is_strike_recorded: editForm.value.status === 'on_strike'
     })
 
@@ -897,24 +1079,34 @@ async function saveAttendance() {
 }
 
 function openBadgeSwipeDialog() {
+  if (!canWriteAttendance.value) return
   badgeForm.value = {
+    user_id: '',
+    date: selectedDate.value,
     badge_code: '',
     swipe_type: 'in',
+    swipe_time: getCurrentTimeHHMM(),
     device_id: 'TERMINAL-INGRESSO-01'
   }
   showBadgeSwipeDialog.value = true
 }
 
 function openBadgeDialogForUser(record) {
+  if (!canWriteAttendance.value) return
+  const code = record.badge_code || `BDG-${(record.role || 'STAFF').substring(0, 3).toUpperCase()}-${(record.user_id || '').substring(0, 4).toUpperCase()}`
   badgeForm.value = {
-    badge_code: `BDG-${record.role.substring(0, 3).toUpperCase()}-${record.user_id.substring(0, 4)}`,
-    swipe_type: record.badge_entry_time ? 'out' : 'in',
+    user_id: record.user_id,
+    date: selectedDate.value,
+    badge_code: code,
+    swipe_type: (record.badge_entry_time && !record.badge_exit_time) ? 'out' : 'in',
+    swipe_time: getCurrentTimeHHMM(),
     device_id: 'TERMINAL-INGRESSO-01'
   }
   showBadgeSwipeDialog.value = true
 }
 
 async function submitBadgeSwipe() {
+  if (!canWriteAttendance.value) return
   if (!badgeForm.value.badge_code) {
     $q.notify({ type: 'warning', message: t('staffAttendance.badgeCodeLabel') || 'Inserisci il codice badge' })
     return
@@ -922,7 +1114,19 @@ async function submitBadgeSwipe() {
 
   savingBadge.value = true
   try {
-    await staffAttendanceService.registerBadgeSwipe(badgeForm.value)
+    const payload = {
+      ...badgeForm.value,
+      date: badgeForm.value.date || selectedDate.value
+    }
+    if (payload.swipe_time && /^\d{2}:\d{2}$/.test(payload.swipe_time)) {
+      const now = new Date()
+      const [h, m] = payload.swipe_time.split(':')
+      const targetDate = new Date(payload.date || selectedDate.value)
+      targetDate.setHours(parseInt(h, 10), parseInt(m, 10), now.getSeconds(), 0)
+      payload.swipe_time = targetDate.toISOString()
+    }
+
+    await staffAttendanceService.registerBadgeSwipe(payload)
     await staffAttendanceService.processBadgeSwipes().catch(() => {})
 
     $q.notify({

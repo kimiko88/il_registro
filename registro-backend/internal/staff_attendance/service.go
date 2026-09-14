@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -147,4 +148,24 @@ func (s *Service) AssignBadge(ctx context.Context, actorRole, schoolID, userID, 
 		Notes:     notes,
 		IsActive:  true,
 	})
+}
+
+// CanActivateStrikeMode verifica se il ruolo può attivare/disattivare la modalità sciopero
+func CanActivateStrikeMode(role string) bool {
+	r := strings.ToLower(role)
+	return r == "dsga" || r == "principal" || r == "vice_principal" || r == "collaboratore_ds" || r == "admin" || r == "superadmin"
+}
+
+// SetStrikeMode imposta o revoca la modalità sciopero per una data
+func (s *Service) SetStrikeMode(ctx context.Context, actorRole, actorID, schoolID string, req SetStrikeModeRequest) error {
+	if !CanActivateStrikeMode(actorRole) {
+		return errors.New("accesso negato: solo la DSGA o la dirigenza possono attivare la modalità sciopero")
+	}
+	if req.Date == "" {
+		return errors.New("date obbligatorio")
+	}
+	if _, err := time.Parse("2006-01-02", req.Date); err != nil {
+		return fmt.Errorf("formato data non valido: %w", err)
+	}
+	return s.repo.SetStrikeMode(ctx, schoolID, actorID, req.Date, req.IsStrikeDay)
 }

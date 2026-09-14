@@ -82,13 +82,22 @@ func (s *Service) CreateNotice(ctx context.Context, actorID, actorRole, schoolID
 		return nil, fmt.Errorf("data/ora di scadenza dichiarazione non valida: %w", err)
 	}
 
+	content := strings.TrimSpace(req.Content)
+	if content == "" {
+		content = strings.TrimSpace(req.Notes)
+	}
+	if content == "" {
+		content = fmt.Sprintf("Avviso di sciopero per il comparto scolastico indetto da %s per il giorno %s.", strings.TrimSpace(req.ProclaimedBy), req.StrikeDate)
+	}
+
 	notice := &StrikeNotice{
 		SchoolID:            schoolID,
 		Title:               strings.TrimSpace(req.Title),
 		ProclaimedBy:        strings.TrimSpace(req.ProclaimedBy),
 		StrikeDate:          req.StrikeDate,
 		DeclarationDeadline: deadline,
-		Content:             strings.TrimSpace(req.Content),
+		Content:             content,
+		Notes:               content,
 		CreatedBy:           actorID,
 		IsPublished:         true,
 	}

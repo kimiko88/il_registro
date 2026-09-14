@@ -27,9 +27,13 @@
                       <q-item-section avatar><q-icon name="school" /></q-item-section>
                       <q-item-section>Solo Docenti</q-item-section>
                   </q-item>
-                  <q-item clickable v-ripple active-class="bg-indigo-50 text-indigo-700 text-weight-bold" :active="filter === 'families'" @click="filter = 'families'" class="q-mx-sm rounded-lg">
+                  <q-item clickable v-ripple active-class="bg-indigo-50 text-indigo-700 text-weight-bold" :active="filter === 'families'" @click="filter === 'families'" class="q-mx-sm rounded-lg">
                        <q-item-section avatar><q-icon name="family_restroom" /></q-item-section>
                        <q-item-section>Solo Famiglie</q-item-section>
+                  </q-item>
+                  <q-item clickable v-ripple active-class="bg-indigo-50 text-indigo-700 text-weight-bold" :active="filter === 'staff'" @click="filter = 'staff'" class="q-mx-sm rounded-lg">
+                       <q-item-section avatar><q-icon name="badge" /></q-item-section>
+                       <q-item-section>Personale ATA</q-item-section>
                   </q-item>
               </q-list>
             </q-card>
@@ -58,6 +62,7 @@
                               <q-chip v-if="props.row.recipients.teachers" size="sm" icon="school" label="Docenti" class="bg-indigo-50 text-indigo-700" />
                               <q-chip v-if="props.row.recipients.parents" size="sm" icon="people" label="Genitori" class="bg-orange-50 text-orange-700" />
                               <q-chip v-if="props.row.recipients.students" size="sm" icon="face" label="Studenti" class="bg-emerald-50 text-emerald-700" />
+                              <q-chip v-if="props.row.recipients.staff" size="sm" icon="badge" label="Personale ATA" class="bg-teal-50 text-teal-700" />
                             </div>
                             <div v-if="props.row.specificClasses.length > 0" class="text-caption text-slate-400 q-mt-xs">
                               Classi: {{ props.row.specificClasses.join(', ') }}
@@ -110,14 +115,28 @@ const showCreator = ref(false)
 const filter = ref('all')
 const search = ref('')
 
-const circulars = computed(() => commStore.communications.map(c => ({
-    id: c.id,
-    title: c.title,
-    date: new Date(c.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }),
-    recipients: c.recipients || { teachers: false, parents: false, students: false },
-    specificClasses: c.specific_classes || [],
-    content: c.content
-})))
+const circulars = computed(() => commStore.communications.map(c => {
+    const rawRecipients = c.recipients || {}
+    const receiverList = Array.isArray(c.receiver_ids) ? c.receiver_ids : []
+    const isTeachers = !!rawRecipients.teachers || receiverList.includes('teachers') || receiverList.includes('docenti')
+    const isParents = !!rawRecipients.parents || receiverList.includes('parents') || receiverList.includes('genitori')
+    const isStudents = !!rawRecipients.students || receiverList.includes('students') || receiverList.includes('studenti')
+    const isStaff = !!rawRecipients.staff || receiverList.includes('staff') || receiverList.includes('ata') || receiverList.includes('dipendenti')
+
+    return {
+        id: c.id,
+        title: c.title || c.subject || 'Comunicazione',
+        date: new Date(c.created_at).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }),
+        recipients: {
+            teachers: isTeachers,
+            parents: isParents,
+            students: isStudents,
+            staff: isStaff
+        },
+        specificClasses: c.specific_classes || [],
+        content: c.content || c.body || ''
+    }
+}))
 
 const columns = [
     { name: 'date', label: 'Data', field: 'date', align: 'left', sortable: true, style: 'width: 120px' },
@@ -142,6 +161,7 @@ const filteredCirculars = computed(() => {
     let res = circulars.value
     if (filter.value === 'teachers') res = res.filter(c => c.recipients.teachers)
     if (filter.value === 'families') res = res.filter(c => c.recipients.parents || c.recipients.students)
+    if (filter.value === 'staff') res = res.filter(c => c.recipients.staff)
     return res
 })
 

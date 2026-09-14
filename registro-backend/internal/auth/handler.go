@@ -273,6 +273,7 @@ func (h *Handler) GetCurrentUser(c *gin.Context) {
 		IsStaff:       user.IsStaff,
 		EmailVerified: user.EmailVerified,
 		MFAEnabled:    user.MFAEnabled,
+		BadgeCode:     user.BadgeCode,
 		Assignments:   user.Assignments,
 	})
 }

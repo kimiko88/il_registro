@@ -2,6 +2,7 @@ package strike
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -107,6 +108,46 @@ func TestStrikeService_CreateNotice(t *testing.T) {
 		assert.NotNil(t, notice)
 		assert.Equal(t, "Sciopero Nazionale", notice.Title)
 		assert.Equal(t, "comm-123", *notice.CommunicationID)
+	})
+
+	t.Run("Create strike notice with only Notes provided", func(t *testing.T) {
+		req := CreateStrikeNoticeRequest{
+			Title:               "Sciopero Regionale",
+			ProclaimedBy:        "COBAS",
+			StrikeDate:          "2026-11-10",
+			DeclarationDeadline: "2026-11-08T12:00:00Z",
+			Notes:               "Note organizzative",
+			PublishToBacheca:    false,
+		}
+
+		repo.On("CreateNotice", ctx, mock.MatchedBy(func(n *StrikeNotice) bool {
+			return n.Title == "Sciopero Regionale" && n.Content == "Note organizzative" && n.Notes == "Note organizzative"
+		})).Return(nil).Once()
+
+		notice, err := svc.CreateNotice(ctx, "user-admin", "admin", "school-1", req)
+		assert.NoError(t, err)
+		assert.NotNil(t, notice)
+		assert.Equal(t, "Note organizzative", notice.Content)
+		assert.Equal(t, "Note organizzative", notice.Notes)
+	})
+
+	t.Run("Create strike notice with empty Content and Notes falls back to default", func(t *testing.T) {
+		req := CreateStrikeNoticeRequest{
+			Title:               "Sciopero Generale",
+			ProclaimedBy:        "SINDACATO",
+			StrikeDate:          "2026-12-01",
+			DeclarationDeadline: "2026-11-28T12:00:00Z",
+			PublishToBacheca:    false,
+		}
+
+		repo.On("CreateNotice", ctx, mock.MatchedBy(func(n *StrikeNotice) bool {
+			return n.Title == "Sciopero Generale" && strings.Contains(n.Content, "Avviso di sciopero")
+		})).Return(nil).Once()
+
+		notice, err := svc.CreateNotice(ctx, "user-admin", "admin", "school-1", req)
+		assert.NoError(t, err)
+		assert.NotNil(t, notice)
+		assert.Contains(t, notice.Content, "SINDACATO")
 	})
 }
 

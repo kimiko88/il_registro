@@ -55,7 +55,9 @@ type MonthlyTimecard struct {
 	UserID        string  `json:"user_id"`
 	FirstName     string  `json:"first_name"`
 	LastName      string  `json:"last_name"`
+	UserName      string  `json:"user_name,omitempty"`
 	Role          string  `json:"role"`
+	BadgeCode     string  `json:"badge_code,omitempty"`
 	Month         string  `json:"month"`          // YYYY-MM
 	ContractHours float64 `json:"contract_hours"` // ore contrattuali mensili (da CCNL: 36h/sett)
 	WorkedHours   float64 `json:"worked_hours"`   // ore effettive da badge

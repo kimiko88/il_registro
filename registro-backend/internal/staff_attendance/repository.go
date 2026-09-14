@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -18,6 +19,7 @@ type Repository interface {
 	BulkUpsert(ctx context.Context, schoolID, recordedBy string, req BulkUpsertRequest) ([]StaffAttendance, error)
 	GetByUserAndDate(ctx context.Context, schoolID, userID, date string) (*StaffAttendance, error)
 	Delete(ctx context.Context, schoolID, id string) error
+	SetStrikeMode(ctx context.Context, schoolID, actorID, date string, isStrikeDay bool) error
 
 	// Badge
 	RegisterBadgeSwipe(ctx context.Context, schoolID string, req BadgeSwipeRequest) (*BadgeSwipe, error)
@@ -99,7 +101,10 @@ func (r *PostgresRepository) GetDailySummary(ctx context.Context, schoolID, date
 	// Ordine predefinito dei ruoli nella dashboard
 	roleOrder := []string{
 		"teacher", "coordinator", "dsga", "assistente_amministrativo",
-		"collaboratore_ds", "collaboratore_scolastico", "secretary", "principal", "vice_principal",
+		"collaboratore_ds", "collaboratore_scolastico", "assistente_tecnico",
+		"assistente_alunni", "assistente_personale", "assistente_contabilita",
+		"assistente_protocollo", "assistente_sportello", "responsabile_servizio",
+		"secretary", "principal", "vice_principal",
 	}
 
 	var totalRole RoleSummary
@@ -134,6 +139,37 @@ func (r *PostgresRepository) GetDailySummary(ctx context.Context, schoolID, date
 	}
 
 	summary.TotalStaff = totalRole
+
+	// Se non ancora rilevato, controlla se la giornata ha un avviso di sciopero attivo o se e segnata come sciopero
+	if !summary.IsStrikeDay {
+		var hasNotice bool
+		_ = r.db.QueryRowContext(ctx, `
+			SELECT EXISTS (
+				SELECT 1 FROM strike_notices
+				WHERE (school_id = NULLIF($1, '')::uuid OR $1 = '')
+				  AND strike_date = $2::date
+				  AND is_published = true
+			)
+		`, schoolID, date).Scan(&hasNotice)
+		if hasNotice {
+			summary.IsStrikeDay = true
+		}
+	}
+	if !summary.IsStrikeDay {
+		var hasStrikeDay bool
+		_ = r.db.QueryRowContext(ctx, `
+			SELECT EXISTS (
+				SELECT 1 FROM staff_attendance
+				WHERE (school_id = NULLIF($1, '')::uuid OR $1 = '')
+				  AND date = $2::date
+				  AND is_strike_day = true
+			)
+		`, schoolID, date).Scan(&hasStrikeDay)
+		if hasStrikeDay {
+			summary.IsStrikeDay = true
+		}
+	}
+
 	return summary, nil
 }
 
@@ -145,9 +181,15 @@ func (r *PostgresRepository) ListByDate(ctx context.Context, schoolID, date stri
 			sa.badge_entry_time, sa.badge_exit_time, sa.badge_device_id, sa.badge_imported_at,
 			sa.is_strike_day, sa.strike_confirmed_by, sa.notes, sa.recorded_by,
 			sa.created_at, sa.updated_at,
-			u.first_name, u.last_name, u.email, u.role
+			u.first_name, u.last_name, u.email, u.role,
+			COALESCE(ub.badge_code, '') AS badge_code
 		FROM staff_attendance sa
 		JOIN users u ON sa.user_id = u.id
+		LEFT JOIN LATERAL (
+			SELECT badge_code FROM user_badges
+			WHERE user_id = u.id AND is_active = true
+			ORDER BY assigned_at DESC LIMIT 1
+		) ub ON true
 		WHERE sa.school_id = $1 AND sa.date = $2::date
 		ORDER BY
 			CASE u.role
@@ -156,11 +198,12 @@ func (r *PostgresRepository) ListByDate(ctx context.Context, schoolID, date stri
 				WHEN 'dsga' THEN 3
 				WHEN 'collaboratore_ds' THEN 4
 				WHEN 'assistente_amministrativo' THEN 5
-				WHEN 'collaboratore_scolastico' THEN 6
-				WHEN 'secretary' THEN 7
-				WHEN 'teacher' THEN 8
-				WHEN 'coordinator' THEN 9
-				ELSE 10
+				WHEN 'assistente_tecnico' THEN 6
+				WHEN 'collaboratore_scolastico' THEN 7
+				WHEN 'secretary' THEN 8
+				WHEN 'teacher' THEN 9
+				WHEN 'coordinator' THEN 10
+				ELSE 11
 			END,
 			u.last_name, u.first_name
 	`
@@ -175,7 +218,7 @@ func (r *PostgresRepository) ListByDate(ctx context.Context, schoolID, date stri
 	for rows.Next() {
 		var sa StaffAttendance
 		var badgeEntry, badgeExit, badgeImported sql.NullTime
-		var badgeDevice, strikeConfBy, recordedBy, notes sql.NullString
+		var badgeDevice, strikeConfBy, recordedBy, notes, badgeCode sql.NullString
 
 		err := rows.Scan(
 			&sa.ID, &sa.SchoolID, &sa.UserID, &sa.Date, &sa.Status,
@@ -183,6 +226,7 @@ func (r *PostgresRepository) ListByDate(ctx context.Context, schoolID, date stri
 			&sa.IsStrikeDay, &strikeConfBy, &notes, &recordedBy,
 			&sa.CreatedAt, &sa.UpdatedAt,
 			&sa.FirstName, &sa.LastName, &sa.Email, &sa.Role,
+			&badgeCode,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("ListByDate scan: %w", err)
@@ -209,6 +253,9 @@ func (r *PostgresRepository) ListByDate(ctx context.Context, schoolID, date stri
 		if recordedBy.Valid {
 			sa.RecordedBy = &recordedBy.String
 		}
+		if badgeCode.Valid {
+			sa.BadgeCode = badgeCode.String
+		}
 
 		sa.RoleDisplay = RoleDisplayNames[sa.Role]
 		results = append(results, sa)
@@ -224,29 +271,84 @@ func (r *PostgresRepository) ListByDate(ctx context.Context, schoolID, date stri
 	return results, nil
 }
 
+func parseAttendanceTime(dateStr, timeStr string) (*time.Time, error) {
+	if timeStr == "" {
+		return nil, nil
+	}
+	if t, err := time.Parse(time.RFC3339, timeStr); err == nil {
+		return &t, nil
+	}
+	parts := strings.Split(timeStr, ":")
+	if len(parts) >= 2 {
+		hour, errH := strconv.Atoi(strings.TrimSpace(parts[0]))
+		min, errM := strconv.Atoi(strings.TrimSpace(parts[1]))
+		sec := 0
+		if len(parts) >= 3 {
+			sec, _ = strconv.Atoi(strings.TrimSpace(parts[2]))
+		}
+		if errH == nil && errM == nil {
+			d, err := time.Parse("2006-01-02", dateStr)
+			if err == nil {
+				t := time.Date(d.Year(), d.Month(), d.Day(), hour, min, sec, 0, time.Local)
+				return &t, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("formato orario non valido: %s", timeStr)
+}
+
 // Upsert inserisce o aggiorna una presenza staff
 func (r *PostgresRepository) Upsert(ctx context.Context, schoolID, recordedBy string, req UpsertStaffAttendanceRequest) (*StaffAttendance, error) {
+	var entryTime, exitTime *time.Time
+	if req.BadgeEntryTime != nil {
+		entryTime = req.BadgeEntryTime
+	} else if req.EntryTime != nil && *req.EntryTime != "" {
+		entryTime, _ = parseAttendanceTime(req.Date, *req.EntryTime)
+	}
+
+	if req.BadgeExitTime != nil {
+		exitTime = req.BadgeExitTime
+	} else if req.ExitTime != nil && *req.ExitTime != "" {
+		exitTime, _ = parseAttendanceTime(req.Date, *req.ExitTime)
+	}
+
 	query := `
-		INSERT INTO staff_attendance (school_id, user_id, date, status, notes, is_strike_day, recorded_by)
-		VALUES ($1, $2, $3::date, $4, $5, $6, $7)
+		INSERT INTO staff_attendance (
+			school_id, user_id, date, status, notes, is_strike_day, recorded_by,
+			badge_entry_time, badge_exit_time
+		)
+		VALUES ($1, $2, $3::date, $4, $5, $6, $7, $8, $9)
 		ON CONFLICT (school_id, user_id, date)
 		DO UPDATE SET
 			status = EXCLUDED.status,
 			notes = EXCLUDED.notes,
 			is_strike_day = EXCLUDED.is_strike_day,
 			recorded_by = EXCLUDED.recorded_by,
+			badge_entry_time = CASE 
+				WHEN EXCLUDED.badge_entry_time IS NOT NULL THEN EXCLUDED.badge_entry_time 
+				ELSE staff_attendance.badge_entry_time 
+			END,
+			badge_exit_time = CASE 
+				WHEN EXCLUDED.badge_exit_time IS NOT NULL THEN EXCLUDED.badge_exit_time 
+				ELSE staff_attendance.badge_exit_time 
+			END,
 			updated_at = NOW()
-		RETURNING id, school_id, user_id, date::text, status, is_strike_day, notes, recorded_by, created_at, updated_at
+		RETURNING id, school_id, user_id, date::text, status, is_strike_day, notes, recorded_by,
+		          badge_entry_time, badge_exit_time, created_at, updated_at
 	`
 
 	var sa StaffAttendance
 	var notes, recBy sql.NullString
+	var bEntry, bExit sql.NullTime
 	err := r.db.QueryRowContext(ctx, query,
 		schoolID, req.UserID, req.Date, string(req.Status),
 		req.Notes, req.IsStrikeDay, recordedBy,
+		entryTime, exitTime,
 	).Scan(
 		&sa.ID, &sa.SchoolID, &sa.UserID, &sa.Date, &sa.Status,
-		&sa.IsStrikeDay, &notes, &recBy, &sa.CreatedAt, &sa.UpdatedAt,
+		&sa.IsStrikeDay, &notes, &recBy,
+		&bEntry, &bExit,
+		&sa.CreatedAt, &sa.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("Upsert: %w", err)
@@ -257,6 +359,12 @@ func (r *PostgresRepository) Upsert(ctx context.Context, schoolID, recordedBy st
 	}
 	if recBy.Valid {
 		sa.RecordedBy = &recBy.String
+	}
+	if bEntry.Valid {
+		sa.BadgeEntryTime = &bEntry.Time
+	}
+	if bExit.Valid {
+		sa.BadgeExitTime = &bExit.Time
 	}
 
 	return &sa, nil
@@ -387,6 +495,14 @@ func (r *PostgresRepository) RegisterBadgeSwipe(ctx context.Context, schoolID st
 	if req.SwipeTime != "" {
 		if t, err := time.Parse(time.RFC3339, req.SwipeTime); err == nil {
 			swipeTime = t
+		} else if t, err := parseAttendanceTime(req.Date, req.SwipeTime); err == nil && t != nil {
+			swipeTime = *t
+		}
+	} else if req.Date != "" {
+		now := time.Now()
+		d, err := time.Parse("2006-01-02", req.Date)
+		if err == nil {
+			swipeTime = time.Date(d.Year(), d.Month(), d.Day(), now.Hour(), now.Minute(), now.Second(), 0, time.Local)
 		}
 	}
 
@@ -397,10 +513,29 @@ func (r *PostgresRepository) RegisterBadgeSwipe(ctx context.Context, schoolID st
 
 	// Cerca l'utente associato al badge
 	var userID sql.NullString
-	_ = r.db.QueryRowContext(ctx,
-		"SELECT user_id FROM user_badges WHERE school_id = $1 AND badge_code = $2 AND is_active = true",
-		schoolID, req.BadgeCode,
-	).Scan(&userID)
+	if req.UserID != "" {
+		userID = sql.NullString{String: req.UserID, Valid: true}
+	} else {
+		_ = r.db.QueryRowContext(ctx,
+			"SELECT user_id FROM user_badges WHERE school_id = $1 AND badge_code = $2 AND is_active = true",
+			schoolID, req.BadgeCode,
+		).Scan(&userID)
+		if !userID.Valid {
+			_ = r.db.QueryRowContext(ctx,
+				"SELECT user_id FROM user_badges WHERE badge_code = $1 AND is_active = true",
+				req.BadgeCode,
+			).Scan(&userID)
+		}
+	}
+
+	// Se l'utente è noto e il badge non è registrato in user_badges, inseriscilo per le letture future
+	if userID.Valid && req.BadgeCode != "" {
+		_, _ = r.db.ExecContext(ctx, `
+			INSERT INTO user_badges (school_id, user_id, badge_code, is_active, assigned_at)
+			VALUES ($1, $2, $3, true, NOW())
+			ON CONFLICT DO NOTHING
+		`, schoolID, userID.String, req.BadgeCode)
+	}
 
 	var rawDataJSON *string
 	if req.RawData != "" {
@@ -504,7 +639,7 @@ func (r *PostgresRepository) ProcessPendingSwipes(ctx context.Context, schoolID 
 				VALUES ($1, $2, $3::date, 'present', $4, 'badge')
 				ON CONFLICT (school_id, user_id, date)
 				DO UPDATE SET
-					badge_exit_time = GREATEST(staff_attendance.badge_exit_time, EXCLUDED.badge_exit_time),
+					badge_exit_time = COALESCE(GREATEST(staff_attendance.badge_exit_time, EXCLUDED.badge_exit_time), EXCLUDED.badge_exit_time),
 					updated_at = NOW()
 			`, schoolID, sw.userID, dateStr, sw.swipeTime)
 		}
@@ -586,4 +721,37 @@ func (r *PostgresRepository) ListBadges(ctx context.Context, schoolID string) ([
 		badges = append(badges, b)
 	}
 	return badges, rows.Err()
+}
+
+// SetStrikeMode imposta o revoca la modalità sciopero per una determinata data
+func (r *PostgresRepository) SetStrikeMode(ctx context.Context, schoolID, actorID, date string, isStrikeDay bool) error {
+	if isStrikeDay {
+		// Aggiorna le presenze esistenti o inserisce una riga per il personale attivo indicando is_strike_day = true
+		upsertQuery := `
+			INSERT INTO staff_attendance (school_id, user_id, date, status, is_strike_day, recorded_by, created_at, updated_at)
+			SELECT $1::uuid, u.id, $2::date, 'absent', true, NULLIF($3, '')::uuid, NOW(), NOW()
+			FROM users u
+			WHERE (u.school_id = NULLIF($1, '')::uuid OR $1 = '')
+			  AND u.is_active = true
+			  AND u.role IN ('teacher', 'coordinator', 'dsga', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_tecnico', 'collaboratore_scolastico', 'collaboratore_mensa', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio', 'secretary')
+			ON CONFLICT (school_id, user_id, date)
+			DO UPDATE SET is_strike_day = true, updated_at = NOW()
+		`
+		_, err := r.db.ExecContext(ctx, upsertQuery, schoolID, date, actorID)
+		if err != nil {
+			return fmt.Errorf("SetStrikeMode upsert error: %w", err)
+		}
+	} else {
+		// Disattiva la modalità sciopero per quella data
+		updateQuery := `
+			UPDATE staff_attendance
+			SET is_strike_day = false, updated_at = NOW()
+			WHERE (school_id = NULLIF($1, '')::uuid OR $1 = '') AND date = $2::date
+		`
+		_, err := r.db.ExecContext(ctx, updateQuery, schoolID, date)
+		if err != nil {
+			return fmt.Errorf("SetStrikeMode deactivate error: %w", err)
+		}
+	}
+	return nil
 }

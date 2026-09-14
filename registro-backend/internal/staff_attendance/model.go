@@ -10,6 +10,13 @@ var ATARoles = []string{
 	"assistente_amministrativo",
 	"collaboratore_ds",
 	"collaboratore_scolastico",
+	"assistente_tecnico",
+	"assistente_alunni",
+	"assistente_personale",
+	"assistente_contabilita",
+	"assistente_protocollo",
+	"assistente_sportello",
+	"responsabile_servizio",
 }
 
 // StaffRolesWithAttendanceWrite contiene i ruoli autorizzati a registrare presenze del personale
@@ -18,7 +25,7 @@ var StaffRolesWithAttendanceWrite = []string{
 	"dsga",
 	"collaboratore_ds",
 	"assistente_amministrativo",
-	"collaboratore_scolastico",
+	"assistente_personale",
 	"principal",
 	"vice_principal",
 	"secretary",
@@ -26,12 +33,12 @@ var StaffRolesWithAttendanceWrite = []string{
 	"superadmin",
 }
 
-// StaffRolesWithAttendanceRead contiene i ruoli che possono visualizzare la dashboard presenze
+// StaffRolesWithAttendanceRead contiene i ruoli che possono visualizzare la dashboard presenze del personale
 var StaffRolesWithAttendanceRead = []string{
 	"dsga",
 	"collaboratore_ds",
 	"assistente_amministrativo",
-	"collaboratore_scolastico",
+	"assistente_personale",
 	"principal",
 	"vice_principal",
 	"secretary",
@@ -113,6 +120,7 @@ type StaffAttendance struct {
 	Email       string `json:"email,omitempty"`
 	Role        string `json:"role,omitempty"`
 	RoleDisplay string `json:"role_display,omitempty"` // nome leggibile del ruolo
+	BadgeCode   string `json:"badge_code,omitempty"`
 }
 
 // BadgeSwipe rappresenta una timbratura grezza dal dispositivo badge
@@ -166,18 +174,30 @@ type DailyStaffSummary struct {
 
 // UpsertStaffAttendanceRequest è la richiesta per registrare/aggiornare una presenza
 type UpsertStaffAttendanceRequest struct {
-	UserID      string           `json:"user_id" binding:"required"`
-	Date        string           `json:"date" binding:"required"` // YYYY-MM-DD
-	Status      AttendanceStatus `json:"status" binding:"required"`
-	Notes       string           `json:"notes"`
-	IsStrikeDay bool             `json:"is_strike_day"`
+	UserID         string           `json:"user_id" binding:"required"`
+	Date           string           `json:"date" binding:"required"` // YYYY-MM-DD
+	Status         AttendanceStatus `json:"status" binding:"required"`
+	Notes          string           `json:"notes"`
+	IsStrikeDay    bool             `json:"is_strike_day"`
+	EntryTime      *string          `json:"entry_time,omitempty"`
+	ExitTime       *string          `json:"exit_time,omitempty"`
+	BadgeEntryTime *time.Time       `json:"badge_entry_time,omitempty"`
+	BadgeExitTime  *time.Time       `json:"badge_exit_time,omitempty"`
+}
+
+// SetStrikeModeRequest permette alla DSGA o dirigenza di attivare/disattivare la modalita sciopero per una data
+type SetStrikeModeRequest struct {
+	Date        string `json:"date" binding:"required"`
+	IsStrikeDay bool   `json:"is_strike_day"`
 }
 
 // BadgeSwipeRequest è la richiesta per registrare una timbratura badge
 type BadgeSwipeRequest struct {
+	UserID    string `json:"user_id,omitempty"`
+	Date      string `json:"date,omitempty"`
 	BadgeCode string `json:"badge_code" binding:"required"`
 	DeviceID  string `json:"device_id" binding:"required"`
-	SwipeTime string `json:"swipe_time"` // ISO8601, se vuoto usa NOW()
+	SwipeTime string `json:"swipe_time"` // ISO8601 o HH:MM, se vuoto usa NOW()
 	SwipeType string `json:"swipe_type"` // in, out, break_out, break_in
 	RawData   string `json:"raw_data"`
 }
@@ -197,6 +217,13 @@ var RoleDisplayNames = map[string]string{
 	"assistente_amministrativo": "Assistente Amministrativo (AA)",
 	"collaboratore_ds":          "Collaboratore DS",
 	"collaboratore_scolastico":  "Collaboratore Scolastico",
+	"assistente_tecnico":        "Assistente Tecnico (AT)",
+	"assistente_alunni":         "Assistente Amministrativo (Area Alunni)",
+	"assistente_personale":      "Assistente Amministrativo (Area Personale)",
+	"assistente_contabilita":    "Assistente Amministrativo (Area Contabilità)",
+	"assistente_protocollo":     "Assistente Amministrativo (Area Protocollo)",
+	"assistente_sportello":      "Assistente Amministrativo (Area Sportello)",
+	"responsabile_servizio":     "Responsabile di Servizio",
 	"secretary":                 "Segreteria",
 	"principal":                 "Dirigente Scolastico",
 	"vice_principal":            "Vice Dirigente",

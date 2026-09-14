@@ -30,6 +30,7 @@ type StrikeNotice struct {
 	StrikeDate          string             `json:"strike_date" db:"strike_date"`
 	DeclarationDeadline time.Time          `json:"declaration_deadline" db:"declaration_deadline"`
 	Content             string             `json:"content" db:"content"`
+	Notes               string             `json:"notes,omitempty"`
 	CreatedBy           string             `json:"created_by" db:"created_by"`
 	CreatedByName       string             `json:"created_by_name,omitempty"`
 	IsPublished         bool               `json:"is_published" db:"is_published"`
@@ -55,7 +56,8 @@ type CreateStrikeNoticeRequest struct {
 	ProclaimedBy        string `json:"proclaimed_by" binding:"required"`
 	StrikeDate          string `json:"strike_date" binding:"required"`
 	DeclarationDeadline string `json:"declaration_deadline" binding:"required"`
-	Content             string `json:"content" binding:"required"`
+	Content             string `json:"content"`
+	Notes               string `json:"notes"`
 	PublishToBacheca    bool   `json:"publish_to_bacheca"`
 }
 

@@ -267,6 +267,10 @@ func (m *mockStaffLifecycleRepo) GetAllMonthlyTimecards(ctx context.Context, sch
 	}, nil
 }
 
+func (m *mockStaffLifecycleRepo) SetStrikeMode(ctx context.Context, schoolID, actorID, date string, isStrikeDay bool) error {
+	return nil
+}
+
 var _ staff_attendance.Repository = (*mockStaffLifecycleRepo)(nil)
 
 // In-memory mock for visitors

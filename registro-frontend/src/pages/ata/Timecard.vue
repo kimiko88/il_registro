@@ -11,6 +11,10 @@
           <q-badge outline color="primary" class="q-px-sm q-py-xs text-weight-bold">
             {{ selectedMonthLabel }}
           </q-badge>
+          <q-badge v-if="badgeCode" color="indigo-8" text-color="white" class="q-px-sm q-py-xs text-weight-bold rounded-borders shadow-xs">
+            <q-icon name="qr_code" size="14px" class="q-mr-xs" />
+            Badge: {{ badgeCode }}
+          </q-badge>
         </div>
         <h1 class="text-h4 text-weight-bolder text-slate-800 q-my-none flex items-center">
           <q-icon name="calendar_month" color="teal-8" class="q-mr-sm" size="36px" />
@@ -288,35 +292,120 @@
       <!-- PANEL 3: RIEPILOGO PERSONALE (DSGA) -->
       <q-tab-panel v-if="isDSGAOrAdmin" name="dsga_overview" class="q-pa-none">
         <q-card class="rounded-2xl shadow-sm border border-slate-200 bg-white">
-          <q-card-section class="border-b border-slate-100 row items-center justify-between">
-            <div class="text-subtitle1 text-weight-bold text-slate-800">
-              {{ t('timecard.overviewTitle', { month: selectedMonth }) }}
+          <q-card-section class="border-b border-slate-100 row items-center justify-between gap-md">
+            <div>
+              <div class="text-subtitle1 text-weight-bold text-slate-800">
+                {{ t('timecard.overviewTitle', { month: selectedMonth }) }}
+              </div>
+              <div class="text-caption text-slate-500">
+                Riepilogo mensile ore lavorate, straordinari e assenze per tutto il personale ATA
+              </div>
             </div>
-            <q-btn
-              outline
-              color="primary"
-              icon="download"
-              :label="t('timecard.exportAllCsv')"
-              no-caps
-              dense
-              rounded
-              class="q-px-md"
-              @click="exportAllCsv"
-            />
+            <div class="row items-center q-gutter-sm">
+              <q-input
+                v-model="filterStaff"
+                dense
+                outlined
+                :placeholder="t('staffAttendance.searchPlaceholder') || 'Cerca personale o badge...'"
+                class="bg-white"
+                style="min-width: 240px"
+                clearable
+              >
+                <template v-slot:prepend>
+                  <q-icon name="search" size="18px" color="grey-6" />
+                </template>
+              </q-input>
+              <q-btn
+                outline
+                color="primary"
+                icon="download"
+                :label="t('timecard.exportAllCsv')"
+                no-caps
+                dense
+                rounded
+                class="q-px-md"
+                @click="exportAllCsv"
+              />
+            </div>
           </q-card-section>
 
           <q-table
             :rows="allTimecards"
             :columns="allTimecardColumns"
+            :filter="filterStaff"
             row-key="user_id"
             :loading="loading"
             class="no-shadow"
             :pagination="{ rowsPerPage: 20 }"
           >
+            <template v-slot:body-cell-user_name="props">
+              <q-td :props="props">
+                <div class="row items-center no-wrap">
+                  <q-avatar size="32px" color="indigo-100" text-color="indigo-9" class="q-mr-sm text-weight-bold text-caption">
+                    {{ (props.row.first_name?.[0] || '') + (props.row.last_name?.[0] || '') }}
+                  </q-avatar>
+                  <div>
+                    <div class="text-weight-bold text-slate-800">
+                      {{ props.row.last_name }} {{ props.row.first_name }}
+                    </div>
+                    <div v-if="props.row.badge_code" class="text-caption text-slate-500 font-mono">
+                      Badge: {{ props.row.badge_code }}
+                    </div>
+                  </div>
+                </div>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-role="props">
+              <q-td :props="props">
+                <q-chip
+                  dense
+                  size="sm"
+                  :color="getRoleBadgeColor(props.row.role)"
+                  text-color="white"
+                  class="text-weight-bold text-caption"
+                >
+                  {{ roleLabel(props.row.role) }}
+                </q-chip>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-contract_hours="props">
+              <q-td :props="props">
+                <span class="text-slate-600">
+                  {{ props.row.contract_hours || 156 }} {{ t('timecard.hoursSuffix') || 'h' }}
+                </span>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-worked_hours="props">
+              <q-td :props="props">
+                <span class="text-weight-medium text-slate-800">
+                  {{ Number(props.row.worked_hours || 0).toFixed(1) }} {{ t('timecard.hoursSuffix') || 'h' }}
+                </span>
+              </q-td>
+            </template>
+
             <template v-slot:body-cell-balance="props">
               <q-td :props="props">
                 <span :class="props.row.overtime_hours >= 0 ? 'text-positive text-weight-bold' : 'text-negative text-weight-bold'">
-                  {{ props.row.overtime_hours >= 0 ? '+' : '' }}{{ Number(props.row.overtime_hours).toFixed(1) }} {{ t('timecard.hoursSuffix') }}
+                  {{ props.row.overtime_hours >= 0 ? '+' : '' }}{{ Number(props.row.overtime_hours).toFixed(1) }} {{ t('timecard.hoursSuffix') || 'h' }}
+                </span>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-leave_days="props">
+              <q-td :props="props">
+                <span :class="props.row.leave_days > 0 ? 'text-teal-8 text-weight-bold' : 'text-slate-500'">
+                  {{ props.row.leave_days || 0 }} {{ t('timecard.daysSuffix') || 'gg' }}
+                </span>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-sick_days="props">
+              <q-td :props="props">
+                <span :class="props.row.sick_days > 0 ? 'text-negative text-weight-bold' : 'text-slate-500'">
+                  {{ props.row.sick_days || 0 }} {{ t('timecard.daysSuffix') || 'gg' }}
                 </span>
               </q-td>
             </template>
@@ -404,7 +493,7 @@ import staffAttendanceService from '@/services/staffAttendanceService'
 import userService from '@/services/userService'
 
 const $q = useQuasar()
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const authStore = useAuthStore()
 const { user, userRole } = storeToRefs(authStore)
 
@@ -430,6 +519,7 @@ const selectedMonthLabel = computed(() => {
 
 // Timecard
 const timecardData = ref({})
+const badgeCode = computed(() => timecardData.value.badge_code || user.value?.badge_code || '')
 const dailyEntries = ref([])
 const overtimeBalance = computed(() => {
   return (timecardData.value.worked_hours || 0) - (timecardData.value.contract_hours || 156)
@@ -478,16 +568,72 @@ const leaveColumns = computed(() => [
 // DSGA Overview
 const allTimecards = ref([])
 const staffOptions = ref([])
+const filterStaff = ref('')
 
 const allTimecardColumns = computed(() => [
-  { name: 'user_name', label: t('timecard.colEmployee'), field: 'user_name', align: 'left', sortable: true },
-  { name: 'role', label: t('timecard.colRole'), field: 'role', align: 'center' },
-  { name: 'contract_hours', label: t('timecard.statContractHours'), field: 'contract_hours', align: 'center' },
-  { name: 'worked_hours', label: t('timecard.statWorkedHours'), field: 'worked_hours', align: 'center' },
-  { name: 'balance', label: t('timecard.colOvertimeBalance'), align: 'center' },
-  { name: 'leave_days', label: t('timecard.colLeaveDays'), field: 'leave_days', align: 'center' },
-  { name: 'sick_days', label: t('timecard.colSickDays'), field: 'sick_days', align: 'center' }
+  {
+    name: 'user_name',
+    label: t('timecard.colEmployee'),
+    field: row => row.user_name || `${row.last_name || ''} ${row.first_name || ''}`.trim(),
+    align: 'left',
+    sortable: true
+  },
+  {
+    name: 'role',
+    label: t('timecard.colRole'),
+    field: 'role',
+    align: 'center',
+    sortable: true
+  },
+  { name: 'contract_hours', label: t('timecard.statContractHours'), field: 'contract_hours', align: 'center', sortable: true },
+  { name: 'worked_hours', label: t('timecard.statWorkedHours'), field: 'worked_hours', align: 'center', sortable: true },
+  { name: 'balance', label: t('timecard.colOvertimeBalance'), field: 'overtime_hours', align: 'center', sortable: true },
+  { name: 'leave_days', label: t('timecard.colLeaveDays'), field: 'leave_days', align: 'center', sortable: true },
+  { name: 'sick_days', label: t('timecard.colSickDays'), field: 'sick_days', align: 'center', sortable: true }
 ])
+
+function roleLabel(role) {
+  if (role && te('roles.' + role)) {
+    return t('roles.' + role)
+  }
+  const map = {
+    superadmin: 'Super Admin',
+    admin: 'Amministratore',
+    principal: 'Dirigente Scolastico',
+    vice_principal: 'Collaboratore Vicario',
+    dsga: 'DSGA (Direttore SGA)',
+    collaboratore_ds: 'Collaboratore D.S.',
+    assistente_amministrativo: 'Assistente Amministrativo',
+    assistente_tecnico: 'Assistente Tecnico',
+    assistente_alunni: 'Assistente Alunni',
+    assistente_personale: 'Assistente Personale',
+    assistente_contabilita: 'Assistente Contabilità',
+    assistente_protocollo: 'Assistente Protocollo',
+    assistente_sportello: 'Assistente Sportello',
+    responsabile_servizio: 'Responsabile Servizio',
+    collaboratore_scolastico: 'Collaboratore Scolastico',
+    secretary: 'Segreteria',
+    teacher: 'Docente'
+  }
+  return map[role] || role
+}
+
+function getRoleBadgeColor(role) {
+  switch (role) {
+    case 'dsga': return 'purple-8'
+    case 'collaboratore_ds': return 'deep-purple-7'
+    case 'assistente_amministrativo': return 'blue-8'
+    case 'assistente_tecnico': return 'teal-8'
+    case 'assistente_alunni': return 'cyan-8'
+    case 'assistente_personale': return 'indigo-7'
+    case 'assistente_contabilita': return 'green-8'
+    case 'assistente_protocollo': return 'amber-9'
+    case 'assistente_sportello': return 'deep-orange-7'
+    case 'collaboratore_scolastico': return 'orange-8'
+    case 'secretary': return 'blue-grey-7'
+    default: return 'primary'
+  }
+}
 
 async function loadCurrentTab() {
   if (activeTab.value === 'cartellino') {
@@ -707,7 +853,11 @@ onMounted(async () => {
       const res = await userService.getAll({ page_size: 200 })
       const raw = res.data?.users || res.data || []
       staffOptions.value = raw
-        .filter(u => ['assistente_amministrativo', 'collaboratore_scolastico', 'collaboratore_ds', 'dsga', 'secretary'].includes(u.role))
+        .filter(u => [
+          'dsga', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_amministrativo',
+          'assistente_tecnico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita',
+          'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio', 'secretary'
+        ].includes(u.role))
         .map(u => ({
           id: u.id,
           name: `${u.last_name || ''} ${u.first_name || ''} (${t('roles.' + u.role) || u.role})`

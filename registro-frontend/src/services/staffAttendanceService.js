@@ -20,6 +20,15 @@ export const staffAttendanceService = {
   },
 
   /**
+   * Attiva o disattiva la modalità sciopero per una data
+   * @param {Object} data - { date: string, is_strike_day: boolean }
+   */
+  async setStrikeMode(data) {
+    const res = await api.post('/staff-attendance/strike-mode', data)
+    return res.data
+  },
+
+  /**
    * Registra o aggiorna la presenza di un singolo membro del personale
    * @param {Object} data - { user_id, date, status, notes, strike_code, is_strike_recorded }
    */

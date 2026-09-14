@@ -94,6 +94,7 @@ func (r *PostgresRepository) GetNoticeByID(ctx context.Context, id, schoolID str
 	if commID != "" {
 		n.CommunicationID = &commID
 	}
+	n.Notes = n.Content
 	n.IsExpired = time.Now().After(n.DeclarationDeadline)
 	return n, nil
 }
@@ -130,6 +131,7 @@ func (r *PostgresRepository) ListNotices(ctx context.Context, schoolID string) (
 		if commID != "" {
 			n.CommunicationID = &commID
 		}
+		n.Notes = n.Content
 		n.IsExpired = now.After(n.DeclarationDeadline)
 		list = append(list, n)
 	}
@@ -209,7 +211,9 @@ func (r *PostgresRepository) GetNoticeSummary(ctx context.Context, noticeID, sch
 		WHERE (u.school_id = NULLIF($2, '')::uuid OR $2 = '')
 		  AND u.role IN (
 		      'teacher', 'coordinator', 'dsga', 'assistente_amministrativo',
-		      'collaboratore_ds', 'collaboratore_scolastico', 'secretary'
+		      'collaboratore_ds', 'collaboratore_scolastico', 'assistente_tecnico',
+		      'assistente_alunni', 'assistente_personale', 'assistente_contabilita',
+		      'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio', 'secretary'
 		  )
 		ORDER BY u.last_name ASC, u.first_name ASC
 	`
@@ -226,6 +230,13 @@ func (r *PostgresRepository) GetNoticeSummary(ctx context.Context, noticeID, sch
 		"assistente_amministrativo": "Assistente Amministrativo",
 		"collaboratore_ds":          "Collaboratore D.S.",
 		"collaboratore_scolastico":  "Collaboratore Scolastico",
+		"assistente_tecnico":        "Assistente Tecnico",
+		"assistente_alunni":         "Assistente Amministrativo (Area Alunni)",
+		"assistente_personale":      "Assistente Amministrativo (Area Personale)",
+		"assistente_contabilita":    "Assistente Amministrativo (Area Contabilità)",
+		"assistente_protocollo":     "Assistente Amministrativo (Area Protocollo)",
+		"assistente_sportello":      "Assistente Amministrativo (Area Sportello)",
+		"responsabile_servizio":     "Responsabile di Servizio",
 		"secretary":                 "Segreteria",
 	}
 
@@ -300,7 +311,9 @@ func (r *PostgresRepository) GetNoticeSummary(ctx context.Context, noticeID, sch
 
 	roleOrder := []string{
 		"teacher", "coordinator", "dsga", "assistente_amministrativo",
-		"collaboratore_ds", "collaboratore_scolastico", "secretary",
+		"collaboratore_ds", "collaboratore_scolastico", "assistente_tecnico",
+		"assistente_alunni", "assistente_personale", "assistente_contabilita",
+		"assistente_protocollo", "assistente_sportello", "responsabile_servizio", "secretary",
 	}
 	var byRole []RoleDeclarationSummary
 	for _, rKey := range roleOrder {

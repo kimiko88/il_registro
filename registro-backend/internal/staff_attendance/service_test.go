@@ -64,6 +64,10 @@ func (m *MockRepo) Delete(ctx context.Context, schoolID, id string) error {
 	return m.deleteErr
 }
 
+func (m *MockRepo) SetStrikeMode(ctx context.Context, schoolID, actorID, date string, isStrikeDay bool) error {
+	return nil
+}
+
 func (m *MockRepo) RegisterBadgeSwipe(ctx context.Context, schoolID string, req staff_attendance.BadgeSwipeRequest) (*staff_attendance.BadgeSwipe, error) {
 	return m.swipeResult, m.swipeErr
 }
@@ -117,16 +121,36 @@ func (m *MockRepo) GetAllMonthlyTimecards(ctx context.Context, schoolID, month s
 }
 
 func TestATARolesAndPermissions(t *testing.T) {
-	roles := []string{"dsga", "assistente_amministrativo", "collaboratore_ds", "collaboratore_scolastico"}
+	roles := []string{
+		"dsga", "assistente_amministrativo", "collaboratore_ds", "collaboratore_scolastico",
+		"assistente_tecnico", "assistente_alunni", "assistente_personale", "assistente_contabilita",
+		"assistente_protocollo", "assistente_sportello", "responsabile_servizio",
+	}
 	for _, r := range roles {
 		if !staff_attendance.IsATARole(r) {
 			t.Errorf("expected %s to be an ATA role", r)
 		}
+	}
+
+	// Supervisory / administrative roles can read and write school-wide staff attendance
+	managerRoles := []string{"dsga", "collaboratore_ds", "assistente_amministrativo", "assistente_personale", "principal", "vice_principal", "admin", "superadmin"}
+	for _, r := range managerRoles {
 		if !staff_attendance.CanReadAttendance(r) {
-			t.Errorf("expected %s to be able to read staff attendance", r)
+			t.Errorf("expected manager role %s to be able to read staff attendance", r)
 		}
 		if !staff_attendance.CanWriteAttendance(r) {
-			t.Errorf("expected %s to be able to write staff attendance", r)
+			t.Errorf("expected manager role %s to be able to write staff attendance", r)
+		}
+	}
+
+	// Non-managerial ATA roles must NOT have write access to other staff's attendance
+	nonManagerRoles := []string{"collaboratore_scolastico", "assistente_tecnico", "assistente_alunni", "assistente_contabilita", "assistente_protocollo", "assistente_sportello", "responsabile_servizio"}
+	for _, r := range nonManagerRoles {
+		if staff_attendance.CanWriteAttendance(r) {
+			t.Errorf("expected non-manager role %s NOT to be able to write staff attendance", r)
+		}
+		if staff_attendance.CanReadAttendance(r) {
+			t.Errorf("expected non-manager role %s NOT to be able to read school-wide staff attendance dashboard", r)
 		}
 	}
 
@@ -160,10 +184,10 @@ func TestService_GetDailySummary_Permissions(t *testing.T) {
 		t.Fatalf("unexpected response: %+v", res)
 	}
 
-	// Authorized role: collaboratore_scolastico
-	res, err = svc.GetDailySummary(ctx, "collaboratore_scolastico", "school-1", "2026-09-08")
-	if err != nil {
-		t.Fatalf("unexpected error for collaboratore_scolastico: %v", err)
+	// Non-manager role: assistente_tecnico (should not view school-wide daily summary)
+	_, err = svc.GetDailySummary(ctx, "assistente_tecnico", "school-1", "2026-09-08")
+	if err == nil {
+		t.Fatal("expected error for assistente_tecnico, got nil")
 	}
 
 	// Unauthorized role: student

@@ -110,6 +110,8 @@ func (m *mockVisitorRepo) UpdateMaintenanceStatus(ctx context.Context, id, schoo
 
 type mockAttendanceRepo struct{ mock.Mock }
 
+var _ staff_attendance.Repository = (*mockAttendanceRepo)(nil)
+
 func (m *mockAttendanceRepo) GetDailySummary(ctx context.Context, schoolID, date string) (*staff_attendance.DailyStaffSummary, error) {
 	args := m.Called(ctx, schoolID, date)
 	if res := args.Get(0); res != nil {
@@ -200,6 +202,9 @@ func (m *mockAttendanceRepo) GetMonthlyTimecard(ctx context.Context, schoolID, u
 func (m *mockAttendanceRepo) GetAllMonthlyTimecards(ctx context.Context, schoolID, month string) ([]staff_attendance.MonthlyTimecard, error) {
 	args := m.Called(ctx, schoolID, month)
 	return args.Get(0).([]staff_attendance.MonthlyTimecard), args.Error(1)
+}
+func (m *mockAttendanceRepo) SetStrikeMode(ctx context.Context, schoolID, actorID, date string, isStrikeDay bool) error {
+	return m.Called(ctx, schoolID, actorID, date, isStrikeDay).Error(0)
 }
 
 type mockDeskRepo struct{ mock.Mock }

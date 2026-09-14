@@ -402,8 +402,8 @@ export function useMenuItems(role, assignments = []) {
                 category: 'Servizi di Sede',
                 icon: 'co_present',
                 children: [
-                    { label: 'Registro Visitatori', icon: 'door_front', path: '/ata/visitor-registry' },
                     { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
+                    { label: 'Registro Visitatori', icon: 'door_front', path: '/ata/visitor-registry' },
                     { label: 'Cartellino & Piano Ferie', icon: 'calendar_month', path: '/ata/timecard' },
                     { label: 'Sportello Personale', icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
                     { label: 'Comunicazioni & Circolari', icon: 'email', path: '/secretary/communications' },

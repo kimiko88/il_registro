@@ -241,6 +241,36 @@ func (h *Handler) AssignBadge(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "badge assegnato con successo"})
 }
 
+// SetStrikeMode imposta o revoca la modalità sciopero per una data
+// POST /api/v1/staff-attendance/strike-mode
+func (h *Handler) SetStrikeMode(c *gin.Context) {
+	actorRole := c.GetString("role")
+	actorID := c.GetString("user_id")
+	schoolID := getSchoolIDFromContext(c)
+
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id obbligatorio"})
+		return
+	}
+
+	var req SetStrikeModeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.SetStrikeMode(c.Request.Context(), actorRole, actorID, schoolID, req); err != nil {
+		status := http.StatusInternalServerError
+		if len(err.Error()) >= 10 && err.Error()[:10] == "accesso ne" {
+			status = http.StatusForbidden
+		}
+		c.JSON(status, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "modalità sciopero aggiornata con successo", "is_strike_day": req.IsStrikeDay})
+}
+
 // RegisterRoutes registra le route del modulo
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	group := rg.Group("/staff-attendance")
@@ -248,6 +278,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		// Dashboard e lista presenze
 		group.GET("/summary", h.GetDailySummary)
 		group.GET("", h.List)
+		group.POST("/strike-mode", h.SetStrikeMode)
 
 		// Registrazione presenze (manuale - per docenti in sciopero e ATA)
 		group.POST("", h.RecordAttendance)

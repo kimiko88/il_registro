@@ -217,9 +217,9 @@
                   <span class="q-mx-sm">•</span>
                   {{ t('strikeManagement.staffDeadline') }} <b>{{ formatDateTime(summary.notice.declaration_deadline) }}</b>
                 </div>
-                <div v-if="summary.notice.notes" class="bg-slate-50 border border-slate-200 rounded-borders q-pa-sm q-mt-sm text-caption text-slate-700">
+                <div v-if="summary.notice.notes || summary.notice.content" class="bg-slate-50 border border-slate-200 rounded-borders q-pa-sm q-mt-sm text-caption text-slate-700">
                   <q-icon name="sticky_note_2" color="primary" class="q-mr-xs" />
-                  <b>{{ t('strikeManagement.serviceNotes') }}</b> {{ summary.notice.notes }}
+                  <b>{{ t('strikeManagement.serviceNotes') }}</b> {{ summary.notice.notes || summary.notice.content }}
                 </div>
               </div>
 
@@ -339,7 +339,7 @@
 
         <!-- Role Breakdown Section -->
         <div class="q-mb-xl">
-          <div class="row items-center justify-between q-mb-md">
+          <div class="row items-center justify-between q-mb-md gap-sm">
             <div>
               <h2 class="text-h6 text-weight-bold text-slate-800 q-my-none flex items-center">
                 <q-icon name="pie_chart" color="primary" class="q-mr-sm" size="22px" />
@@ -349,61 +349,267 @@
                 {{ t('strikeManagement.roleBreakdownSubtitle') }}
               </div>
             </div>
+
+            <!-- View Mode Controls -->
+            <div class="row items-center q-gutter-xs">
+              <q-btn-toggle
+                v-model="viewMode"
+                dense
+                rounded
+                no-caps
+                unelevated
+                toggle-color="primary"
+                toggle-text-color="white"
+                color="grey-2"
+                text-color="slate-700"
+                class="shadow-xs"
+                :options="[
+                  { label: 'Panoramica & Dettaglio', value: 'both', icon: 'dashboard' },
+                  { label: 'Solo Macro-Aree', value: 'macro', icon: 'view_agenda' },
+                  { label: 'Solo Profili', value: 'roles', icon: 'grid_view' }
+                ]"
+              />
+            </div>
           </div>
 
-          <div class="row q-col-gutter-md">
+          <!-- MACRO CATEGORIES (3 Cards: Docenti, Amministrativi & Tecnici, Collaboratori Scolastici) -->
+          <div v-if="(viewMode === 'both' || viewMode === 'macro') && macroCategories.length > 0" class="row q-col-gutter-md q-mb-lg">
             <div
-              v-for="cat in summary.by_role"
-              :key="cat.role"
-              class="col-12 col-sm-6 col-lg"
+              v-for="macro in macroCategories"
+              :key="macro.id"
+              class="col-12 col-md-4"
             >
-              <q-card class="rounded-xl border border-slate-200 shadow-sm full-height bg-white">
-                <q-card-section class="q-pb-xs">
-                  <div class="row items-center justify-between no-wrap q-mb-xs">
-                    <q-chip
-                      dense
-                      :color="getRoleBadgeColor(cat.role)"
-                      text-color="white"
-                      class="text-weight-bolder text-caption"
+              <q-card class="rounded-xl border border-slate-200 shadow-sm full-height bg-white macro-card">
+                <q-card-section class="q-pb-sm">
+                  <!-- Macro Header -->
+                  <div class="row items-center justify-between no-wrap q-mb-sm">
+                    <div class="row items-center no-wrap">
+                      <q-avatar size="38px" :class="macro.iconBg" class="q-mr-sm shadow-xs">
+                        <q-icon :name="macro.icon" size="22px" />
+                      </q-avatar>
+                      <div>
+                        <div class="text-subtitle2 text-weight-bolder text-slate-800 line-height-tight">
+                          {{ macro.name }}
+                        </div>
+                        <div class="text-caption text-slate-400 text-xs">
+                          {{ macro.subtitle }}
+                        </div>
+                      </div>
+                    </div>
+                    <q-badge
+                      color="slate-100"
+                      text-color="slate-700"
+                      class="q-px-sm q-py-xs text-caption text-weight-bold rounded-borders font-mono"
                     >
-                      {{ t('roles.' + cat.role) || cat.role_display }}
-                    </q-chip>
-                    <div class="text-caption text-weight-bold text-slate-400">
-                      {{ cat.total }}
+                      Totale: {{ macro.total }}
+                    </q-badge>
+                  </div>
+
+                  <!-- Rate Highlights -->
+                  <div class="row items-baseline justify-between q-mt-md q-mb-xs">
+                    <div class="text-caption text-slate-500 font-medium">
+                      Adesione Rilevata:
+                    </div>
+                    <div class="text-h6 text-weight-bolder text-positive">
+                      {{ macro.participatesRate }}%
+                      <span class="text-caption text-weight-medium text-slate-400">({{ macro.participates }}/{{ macro.total }})</span>
                     </div>
                   </div>
 
-                  <div class="row items-center justify-between q-mt-sm">
-                    <span class="text-caption text-positive text-weight-bold">
-                      <q-icon name="check_circle" size="14px" /> {{ t('strikeManagement.statParticipates') }}: {{ cat.participates }}
-                    </span>
-                    <span class="text-caption text-negative text-weight-bold">
-                      <q-icon name="cancel" size="14px" /> {{ t('strikeManagement.statNotParticipates') }}: {{ cat.not_participates }}
-                    </span>
+                  <!-- Stacked Breakdown Progress Bar -->
+                  <div class="stacked-progress-bar rounded-borders overflow-hidden bg-slate-100 row no-wrap q-my-sm" style="height: 8px;">
+                    <div v-if="macro.participates > 0" class="bg-positive" :style="{ width: ((macro.participates / macro.total) * 100) + '%' }" :title="`Aderiscono: ${macro.participates}`" />
+                    <div v-if="macro.not_participates > 0" class="bg-negative" :style="{ width: ((macro.not_participates / macro.total) * 100) + '%' }" :title="`Non aderiscono: ${macro.not_participates}`" />
+                    <div v-if="macro.undecided > 0" class="bg-amber-8" :style="{ width: ((macro.undecided / macro.total) * 100) + '%' }" :title="`Indecisi: ${macro.undecided}`" />
+                    <div v-if="macro.unanswered > 0" class="bg-slate-300" :style="{ width: ((macro.unanswered / macro.total) * 100) + '%' }" :title="`In attesa: ${macro.unanswered}`" />
                   </div>
 
-                  <div class="row items-center justify-between q-mt-xs text-caption text-slate-600">
-                    <span><q-icon name="help" size="14px" class="text-amber-8" /> {{ t('strikeManagement.statUndecided') }}: {{ cat.undecided }}</span>
-                    <span><q-icon name="hourglass_empty" size="14px" class="text-grey-6" /> {{ t('strikeManagement.waitingStat', { count: cat.unanswered }) }}</span>
+                  <!-- 4-Stat Grid -->
+                  <div class="row q-col-gutter-xs q-mt-xs">
+                    <div class="col-6">
+                      <div class="p-2 rounded-lg bg-emerald-50/70 border border-emerald-100 text-caption">
+                        <div class="text-emerald-700 text-xs font-semibold flex items-center">
+                          <q-icon name="check_circle" size="13px" class="q-mr-xs text-positive" />
+                          Aderiscono
+                        </div>
+                        <div class="text-weight-bolder text-emerald-900 text-subtitle2">
+                          {{ macro.participates }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="p-2 rounded-lg bg-rose-50/70 border border-rose-100 text-caption">
+                        <div class="text-rose-700 text-xs font-semibold flex items-center">
+                          <q-icon name="cancel" size="13px" class="q-mr-xs text-negative" />
+                          Non Aderiscono
+                        </div>
+                        <div class="text-weight-bolder text-rose-900 text-subtitle2">
+                          {{ macro.not_participates }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="p-2 rounded-lg bg-amber-50/70 border border-amber-100 text-caption">
+                        <div class="text-amber-800 text-xs font-semibold flex items-center">
+                          <q-icon name="help_outline" size="13px" class="q-mr-xs text-amber-8" />
+                          Non Deciso
+                        </div>
+                        <div class="text-weight-bolder text-amber-900 text-subtitle2">
+                          {{ macro.undecided }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 text-caption">
+                        <div class="text-slate-600 text-xs font-semibold flex items-center">
+                          <q-icon name="hourglass_empty" size="13px" class="q-mr-xs text-slate-400" />
+                          In Attesa
+                        </div>
+                        <div class="text-weight-bolder text-slate-700 text-subtitle2">
+                          {{ macro.unanswered }}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-
-                  <!-- Stacked-like visual indicators -->
-                  <q-linear-progress
-                    :value="cat.total > 0 ? (cat.participates / cat.total) : 0"
-                    color="positive"
-                    track-color="slate-100"
-                    rounded
-                    size="6px"
-                    class="q-mt-sm"
-                  />
                 </q-card-section>
               </q-card>
+            </div>
+          </div>
+
+          <!-- DETAILED ROLES SECTION (Filter Pills + Responsive Grid) -->
+          <div v-if="viewMode === 'both' || viewMode === 'roles'">
+            <div class="row items-center justify-between q-mb-sm gap-xs">
+              <div class="text-subtitle2 text-weight-bold text-slate-700 flex items-center">
+                <q-icon name="list_alt" size="18px" class="q-mr-xs text-primary" />
+                Dettaglio per Singolo Profilo Professionale ({{ filteredByRoleCards.length }})
+              </div>
+
+              <!-- Filter pills for role detail -->
+              <div class="row items-center q-gutter-xs">
+                <q-btn
+                  dense
+                  rounded
+                  no-caps
+                  size="sm"
+                  :color="macroRoleFilter === 'all' ? 'primary' : 'grey-2'"
+                  :text-color="macroRoleFilter === 'all' ? 'white' : 'slate-700'"
+                  label="Tutti i Profili"
+                  class="q-px-sm text-weight-medium"
+                  @click="macroRoleFilter = 'all'"
+                />
+                <q-btn
+                  dense
+                  rounded
+                  no-caps
+                  size="sm"
+                  :color="macroRoleFilter === 'teachers' ? 'indigo-7' : 'grey-2'"
+                  :text-color="macroRoleFilter === 'teachers' ? 'white' : 'slate-700'"
+                  label="Docenti"
+                  class="q-px-sm text-weight-medium"
+                  @click="macroRoleFilter = 'teachers'"
+                />
+                <q-btn
+                  dense
+                  rounded
+                  no-caps
+                  size="sm"
+                  :color="macroRoleFilter === 'admin_tech' ? 'teal-7' : 'grey-2'"
+                  :text-color="macroRoleFilter === 'admin_tech' ? 'white' : 'slate-700'"
+                  label="Amministrativi & Tecnici"
+                  class="q-px-sm text-weight-medium"
+                  @click="macroRoleFilter = 'admin_tech'"
+                />
+                <q-btn
+                  dense
+                  rounded
+                  no-caps
+                  size="sm"
+                  :color="macroRoleFilter === 'collaboratori' ? 'amber-9' : 'grey-2'"
+                  :text-color="macroRoleFilter === 'collaboratori' ? 'white' : 'slate-700'"
+                  label="Collaboratori"
+                  class="q-px-sm text-weight-medium"
+                  @click="macroRoleFilter = 'collaboratori'"
+                />
+              </div>
+            </div>
+
+            <!-- Responsive Cards Grid: col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 -->
+            <div class="row q-col-gutter-md">
+              <div
+                v-for="cat in filteredByRoleCards"
+                :key="cat.role"
+                class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-2"
+              >
+                <q-card
+                  class="rounded-xl border border-slate-200 shadow-sm full-height bg-white role-card cursor-pointer"
+                  :class="{ 'border-primary ring-2 ring-primary ring-offset-1 bg-indigo-50/20': filterRole === cat.role }"
+                  @click="selectRoleFilter(cat.role)"
+                >
+                  <q-card-section class="q-pa-sm flex column justify-between full-height">
+                    <div>
+                      <!-- Card Header: Role Chip + Total -->
+                      <div class="row items-center justify-between no-wrap q-mb-xs">
+                        <q-chip
+                          dense
+                          :color="getRoleBadgeColor(cat.role)"
+                          text-color="white"
+                          class="text-weight-bolder text-caption q-ma-none text-truncate"
+                          style="max-width: 170px;"
+                          :title="t('roles.' + cat.role) || cat.role_display"
+                        >
+                          {{ t('roles.' + cat.role) || cat.role_display }}
+                        </q-chip>
+                        <q-badge
+                          color="slate-100"
+                          text-color="slate-700"
+                          class="text-caption text-weight-bold rounded-borders font-mono"
+                        >
+                          {{ cat.total }}
+                        </q-badge>
+                      </div>
+
+                      <!-- Stacked Progress Bar -->
+                      <div class="stacked-progress-bar rounded-borders overflow-hidden bg-slate-100 row no-wrap q-my-xs" style="height: 6px;">
+                        <div v-if="cat.participates > 0" class="bg-positive" :style="{ width: ((cat.participates / cat.total) * 100) + '%' }" :title="`Aderiscono: ${cat.participates}`" />
+                        <div v-if="cat.not_participates > 0" class="bg-negative" :style="{ width: ((cat.not_participates / cat.total) * 100) + '%' }" :title="`Non aderiscono: ${cat.not_participates}`" />
+                        <div v-if="cat.undecided > 0" class="bg-amber-8" :style="{ width: ((cat.undecided / cat.total) * 100) + '%' }" :title="`Indecisi: ${cat.undecided}`" />
+                        <div v-if="cat.unanswered > 0" class="bg-slate-300" :style="{ width: ((cat.unanswered / cat.total) * 100) + '%' }" :title="`In attesa: ${cat.unanswered}`" />
+                      </div>
+                    </div>
+
+                    <!-- Metrics -->
+                    <div class="q-mt-xs">
+                      <div class="row items-center justify-between text-caption q-mb-xs">
+                        <span class="text-positive text-weight-bold flex items-center">
+                          <q-icon name="check_circle" size="12px" class="q-mr-xs" />
+                          {{ cat.participates }}
+                        </span>
+                        <span class="text-negative text-weight-bold flex items-center">
+                          <q-icon name="cancel" size="12px" class="q-mr-xs" />
+                          {{ cat.not_participates }}
+                        </span>
+                      </div>
+
+                      <div class="row items-center justify-between text-caption text-slate-500">
+                        <span class="text-amber-9 text-weight-medium flex items-center text-xs">
+                          <q-icon name="help_outline" size="12px" class="q-mr-xs" />
+                          {{ cat.undecided }}
+                        </span>
+                        <span class="flex items-center text-slate-400 text-xs">
+                          <q-icon name="hourglass_empty" size="12px" class="q-mr-xs" />
+                          {{ cat.unanswered }}
+                        </span>
+                      </div>
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Detailed Nominative Table Section -->
-        <q-card class="rounded-xl border border-slate-200 shadow-sm bg-white overflow-hidden">
+        <q-card id="nominative-table-card" class="rounded-xl border border-slate-200 shadow-sm bg-white overflow-hidden">
           <q-card-section class="q-pb-none">
             <div class="row items-center justify-between q-mb-md gap-sm">
               <div>
@@ -690,6 +896,118 @@ const noticeToDelete = ref(null)
 const filterSearch = ref('')
 const filterRole = ref('all')
 const filterIntention = ref('all')
+const viewMode = ref('both')
+const macroRoleFilter = ref('all')
+
+const macroCategories = computed(() => {
+  if (!summary.value || !summary.value.by_role) return []
+
+  const groups = [
+    {
+      id: 'teachers',
+      name: 'Personale Docente',
+      subtitle: 'Docenti curricolari, sostegno e coordinatori',
+      icon: 'school',
+      iconBg: 'bg-indigo-50 text-indigo-7',
+      chipColor: 'indigo-8',
+      roles: ['teacher', 'coordinator', 'docente'],
+      total: 0,
+      participates: 0,
+      not_participates: 0,
+      undecided: 0,
+      unanswered: 0
+    },
+    {
+      id: 'admin_tech',
+      name: 'Personale Amministrativo & Tecnico',
+      subtitle: 'DSGA, Assistenti Amministrativi, Tecnici e Segreteria',
+      icon: 'admin_panel_settings',
+      iconBg: 'bg-teal-50 text-teal-7',
+      chipColor: 'teal-8',
+      roles: [
+        'dsga',
+        'assistente_amministrativo',
+        'assistente_tecnico',
+        'assistente_contabilita',
+        'assistente_protocollo',
+        'assistente_sportello',
+        'secretary'
+      ],
+      total: 0,
+      participates: 0,
+      not_participates: 0,
+      undecided: 0,
+      unanswered: 0
+    },
+    {
+      id: 'collaboratori',
+      name: 'Collaboratori Scolastici & Ausiliari',
+      subtitle: 'Collaboratori scolastici, mensa e assistenza',
+      icon: 'support',
+      iconBg: 'bg-amber-50 text-amber-8',
+      chipColor: 'amber-9',
+      roles: [
+        'collaboratore_scolastico',
+        'collaboratore_ds',
+        'collaboratore_mensa',
+        'assistente_alunni',
+        'assistente_personale',
+        'responsabile_servizio'
+      ],
+      total: 0,
+      participates: 0,
+      not_participates: 0,
+      undecided: 0,
+      unanswered: 0
+    }
+  ]
+
+  for (const r of summary.value.by_role) {
+    let targetGroup = groups.find(g => g.roles.includes(r.role))
+    if (!targetGroup) {
+      targetGroup = groups[1] // fallback to admin_tech
+    }
+    targetGroup.total += (r.total || 0)
+    targetGroup.participates += (r.participates || 0)
+    targetGroup.not_participates += (r.not_participates || 0)
+    targetGroup.undecided += (r.undecided || 0)
+    targetGroup.unanswered += (r.unanswered || 0)
+  }
+
+  return groups.map(g => ({
+    ...g,
+    participatesRate: g.total > 0 ? Math.round((g.participates / g.total) * 1000) / 10 : 0,
+    notParticipatesRate: g.total > 0 ? Math.round((g.not_participates / g.total) * 1000) / 10 : 0,
+    undecidedRate: g.total > 0 ? Math.round((g.undecided / g.total) * 1000) / 10 : 0,
+    unansweredRate: g.total > 0 ? Math.round((g.unanswered / g.total) * 1000) / 10 : 0
+  }))
+})
+
+const filteredByRoleCards = computed(() => {
+  if (!summary.value || !summary.value.by_role) return []
+  let list = summary.value.by_role
+
+  if (macroRoleFilter.value !== 'all') {
+    const macro = macroCategories.value.find(m => m.id === macroRoleFilter.value)
+    if (macro) {
+      list = list.filter(r => macro.roles.includes(r.role))
+    }
+  }
+
+  return list
+})
+
+const selectRoleFilter = (role) => {
+  if (filterRole.value === role) {
+    filterRole.value = 'all'
+  } else {
+    filterRole.value = role
+    const tableEl = document.getElementById('nominative-table-card')
+    if (tableEl) {
+      tableEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+}
 
 const createForm = ref({
   title: '',
@@ -707,15 +1025,28 @@ const columns = computed(() => [
   { name: 'declared_at', label: t('strikeManagement.colChoiceDate'), align: 'left', field: 'declared_at', sortable: true }
 ])
 
-const roleFilterOptions = computed(() => [
-  { label: t('strikeManagement.allCategories'), value: 'all' },
-  { label: t('roles.teacher'), value: 'teacher' },
-  { label: t('roles.dsga'), value: 'dsga' },
-  { label: t('roles.assistente_amministrativo'), value: 'assistente_amministrativo' },
-  { label: t('roles.collaboratore_ds'), value: 'collaboratore_ds' },
-  { label: t('roles.collaboratore_scolastico'), value: 'collaboratore_scolastico' },
-  { label: t('roles.secretary'), value: 'secretary' }
-])
+const roleFilterOptions = computed(() => {
+  const options = [{ label: t('strikeManagement.allCategories'), value: 'all' }]
+  if (summary.value?.by_role && summary.value.by_role.length > 0) {
+    summary.value.by_role.forEach(r => {
+      options.push({
+        label: `${t('roles.' + r.role) || r.role_display} (${r.total})`,
+        value: r.role
+      })
+    })
+  } else {
+    options.push(
+      { label: t('roles.teacher'), value: 'teacher' },
+      { label: t('roles.coordinator'), value: 'coordinator' },
+      { label: t('roles.dsga'), value: 'dsga' },
+      { label: t('roles.assistente_amministrativo'), value: 'assistente_amministrativo' },
+      { label: t('roles.assistente_tecnico'), value: 'assistente_tecnico' },
+      { label: t('roles.collaboratore_scolastico'), value: 'collaboratore_scolastico' },
+      { label: t('roles.secretary'), value: 'secretary' }
+    )
+  }
+  return options
+})
 
 const intentionFilterOptions = computed(() => [
   { label: t('strikeManagement.allIntentions'), value: 'all' },
@@ -846,7 +1177,8 @@ const submitCreateNotice = async () => {
       proclaimed_by: createForm.value.proclaimed_by,
       strike_date: createForm.value.strike_date,
       declaration_deadline: deadlineIso,
-      notes: createForm.value.notes,
+      content: createForm.value.notes || '',
+      notes: createForm.value.notes || '',
       publish_to_bacheca: createForm.value.publish_to_bacheca
     }
 
@@ -973,20 +1305,40 @@ const getIntentionBadgeColor = (intention) => {
 const getRoleBadgeColor = (role) => {
   switch (role) {
     case 'teacher':
-    case 'coordinator':
+    case 'docente':
       return 'primary'
+    case 'coordinator':
+      return 'indigo-7'
     case 'dsga':
       return 'deep-purple-7'
     case 'assistente_amministrativo':
       return 'teal-7'
+    case 'assistente_tecnico':
+      return 'cyan-8'
     case 'collaboratore_ds':
       return 'blue-8'
     case 'collaboratore_scolastico':
-      return 'cyan-8'
+      return 'amber-9'
+    case 'collaboratore_mensa':
+      return 'orange-8'
+    case 'assistente_alunni':
+      return 'green-8'
+    case 'assistente_personale':
+      return 'emerald-7'
+    case 'assistente_contabilita':
+      return 'teal-9'
+    case 'assistente_protocollo':
+      return 'purple-7'
+    case 'assistente_sportello':
+      return 'light-blue-8'
+    case 'responsabile_servizio':
+      return 'deep-orange-7'
+    case 'secretary':
+      return 'blue-grey-8'
     case 'principal':
       return 'purple-9'
     default:
-      return 'indigo-7'
+      return 'indigo-6'
   }
 }
 
@@ -1039,11 +1391,31 @@ onMounted(() => {
 .kpi-card:hover {
   transform: translateY(-2px);
 }
+.macro-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.macro-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+.role-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.role-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+.line-height-tight {
+  line-height: 1.25;
+}
+.text-xs {
+  font-size: 0.75rem;
+}
 .search-input {
   width: 200px;
 }
 .role-select {
-  width: 190px;
+  width: 220px;
 }
 .intention-select {
   width: 180px;

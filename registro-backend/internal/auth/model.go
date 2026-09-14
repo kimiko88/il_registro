@@ -22,6 +22,7 @@ type User struct {
 	UpdatedAt         time.Time                `json:"updated_at"`
 	LastLogin         *time.Time               `json:"last_login,omitempty"`
 	PasswordChangedAt *time.Time               `json:"password_changed_at,omitempty"`
+	BadgeCode         string                   `json:"badge_code,omitempty"`
 	Assignments       []UserAssignmentResponse `json:"assignments,omitempty"`
 }
 
