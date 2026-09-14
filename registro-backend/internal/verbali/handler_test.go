@@ -1,4 +1,4 @@
-﻿package verbali
+package verbali
 
 import (
 	"bytes"

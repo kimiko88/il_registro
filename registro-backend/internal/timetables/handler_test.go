@@ -1,14 +1,14 @@
-﻿package timetables
+package timetables
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"bytes"
-	"encoding/json"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -17,12 +17,12 @@ import (
 // ─── Mock Service ─────────────────────────────────────────────────────────────
 
 type mockTimetableService struct {
-	classSched   []ClassSchedule
-	teacherSched []ClassSchedule
-	getByClassErr  error
-	getMySchedErr  error
-	getTeacherErr  error
-	updateErr      error
+	classSched       []ClassSchedule
+	teacherSched     []ClassSchedule
+	getByClassErr    error
+	getMySchedErr    error
+	getTeacherErr    error
+	updateErr        error
 	updateTeacherErr error
 }
 
