@@ -167,7 +167,8 @@ const fetchClasses = async () => {
     })
     const assignedClasses = res.data || []
     const coordClasses = assignedClasses.filter(c => c.coordinator_id === currentUserId)
-    classOptions.value = coordClasses.length > 0 ? coordClasses : assignedClasses
+    const isExecutive = ['admin', 'superadmin', 'principal', 'vice_principal'].includes(userRes?.role || userRes?.user_role)
+    classOptions.value = coordClasses.length > 0 ? coordClasses : (isExecutive ? assignedClasses : [])
     if (classOptions.value.length > 0) {
       selectedClassId.value = classOptions.value[0].id
       onClassChange(selectedClassId.value)

@@ -57,11 +57,11 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 }
 
 func isScrutinyOverviewStaff(role string) bool {
-	return role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary"
+	return role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary" || role == "assistente_alunni"
 }
 
 func isScrutinyManagementStaff(role string) bool {
-	return role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary" || role == "teacher"
+	return role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary" || role == "teacher" || role == "coordinator" || role == "coordinatore_classe" || role == "assistente_alunni"
 }
 
 func parseSemester(semStr string) int {
@@ -330,7 +330,7 @@ func (h *Handler) FinalizeClass(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "coordinator" && actorRole != "coordinatore_classe" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: insufficient permissions"})
 		return
 	}

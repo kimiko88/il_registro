@@ -28,7 +28,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 
 func isTextbookAuthorizedRole(role string) bool {
 	switch role {
-	case "teacher", "admin", "superadmin", "secretary", "principal", "vice_principal":
+	case "teacher", "coordinator", "coordinatore_classe", "admin", "superadmin", "secretary", "principal", "vice_principal", "assistente_alunni", "assistente_amministrativo":
 		return true
 	default:
 		return false

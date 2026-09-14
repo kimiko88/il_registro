@@ -29,8 +29,9 @@ func (h *Handler) SetPdfWorkerClient(client *pdfworker.Client) {
 
 func isAllowedVerbaliRole(role string) bool {
 	switch strings.ToLower(role) {
-	case "teacher", "coordinator", "admin", "superadmin", "secretary", "principal", "vice_principal", "docente",
-		"dsga", "collaboratore_ds", "assistente_amministrativo":
+	case "teacher", "coordinator", "coordinatore_classe", "admin", "superadmin", "secretary", "principal", "vice_principal", "docente",
+		"dsga", "collaboratore_ds", "assistente_amministrativo",
+		"assistente_protocollo", "responsabile_gestione_documentale", "responsabile_conservazione", "segretario_consiglio":
 		return true
 	default:
 		return false

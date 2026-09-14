@@ -27,7 +27,7 @@ func NewService(repo Repository, userRepo users.Repository) *Service {
 }
 
 func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID string, req CreateMessageRequest) (*Message, error) {
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "coordinator" && actorRole != "coordinatore_classe" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
 		return nil, errors.New("unauthorized: non hai i permessi per inviare comunicazioni")
 	}
 	if req.Subject == "" || req.Body == "" {

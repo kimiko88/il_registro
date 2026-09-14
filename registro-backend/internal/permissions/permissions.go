@@ -200,7 +200,7 @@ var RoleDefinitions = map[string][]Permission{
 		ScrutinyRead, ScrutinyValidate,
 		VerbaliRead, VerbaliValidate,
 		InclusionRead,
-		PCTORead,
+		PCTORead, PCTOCreate, PCTOUpdate, PCTODelete,
 		AccountingRead,
 		ProtocolRead,
 	},
@@ -215,6 +215,7 @@ var RoleDefinitions = map[string][]Permission{
 		SchedulingRead,
 		CommunicationsRead, CommunicationsCreate, CommunicationsUpdate,
 		VerbaliRead, VerbaliUpdate,
+		PCTORead, PCTOCreate, PCTOUpdate, PCTODelete,
 	},
 	"collaboratore_ds": {
 		UserRead, UserAudit,

@@ -290,7 +290,7 @@ func TestRoleSecurityRBACMatrix(t *testing.T) {
 
 	t.Run("5. Scrutiny Overview Access RBAC Matrix", func(t *testing.T) {
 		allowed := map[string]bool{
-			"superadmin": true, "admin": true, "secretary": true, "principal": true,
+			"superadmin": true, "admin": true, "secretary": true, "principal": true, "vice_principal": true, "assistente_alunni": true,
 		}
 
 		for _, role := range allRoles {

@@ -188,7 +188,7 @@ func (h *Handler) GetStudentSummaryForTeacher(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "secretary" {
+	if actorRole != "teacher" && actorRole != "coordinator" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -250,7 +250,7 @@ func handleJustificationError(c *gin.Context, err error) {
 func (h *Handler) ApproveJustification(c *gin.Context) {
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
-	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin") {
+	if actorID == "" || (actorRole != "teacher" && actorRole != "coordinator" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -267,7 +267,7 @@ func (h *Handler) RejectJustification(c *gin.Context) {
 	id := c.Param("id")
 	actorID := c.GetString("user_id")
 	actorRole := c.GetString("role")
-	if actorID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin") {
+	if actorID == "" || (actorRole != "teacher" && actorRole != "coordinator" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -285,7 +285,7 @@ func (h *Handler) GetAnalytics(c *gin.Context) {
 		return
 	}
 	role := c.GetString("role")
-	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "teacher" {
+	if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" && role != "teacher" && role != "coordinator" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -359,7 +359,7 @@ func (h *Handler) GetClassAttendance(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" {
+	if actorRole != "teacher" && actorRole != "coordinator" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -433,7 +433,7 @@ func (h *Handler) GetPendingJustifications(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+	if actorRole != "teacher" && actorRole != "coordinator" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -461,7 +461,7 @@ func (h *Handler) ProcessJustification(c *gin.Context) {
 	}
 	teacherID := c.GetString("user_id")
 	actorRole := c.GetString("role")
-	if teacherID == "" || (actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin") {
+	if teacherID == "" || (actorRole != "teacher" && actorRole != "coordinator" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -508,7 +508,7 @@ func (h *Handler) ExportAttendance(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+	if actorRole != "teacher" && actorRole != "coordinator" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -740,7 +740,7 @@ func (h *Handler) DeleteClassAttendanceHour(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if actorRole != "teacher" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+	if actorRole != "teacher" && actorRole != "coordinator" && actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

@@ -25,7 +25,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 func canAccessSidi(role string) bool {
 	switch role {
-	case "secretary", "admin", "superadmin", "principal", "vice_principal", "dsga", "assistente_amministrativo":
+	case "secretary", "admin", "superadmin", "principal", "vice_principal", "dsga", "assistente_amministrativo", "assistente_alunni":
 		return true
 	default:
 		return false

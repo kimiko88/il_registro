@@ -30,7 +30,7 @@ func (h *Handler) GetProviders(c *gin.Context) {
 }
 
 func isStaff(role string) bool {
-	return role == "teacher" || role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary"
+	return role == "teacher" || role == "coordinator" || role == "coordinatore_classe" || role == "admin" || role == "superadmin" || role == "principal" || role == "vice_principal" || role == "secretary" || role == "assistente_tecnico" || role == "animatore_digitale"
 }
 
 func (h *Handler) ConnectGoogle(c *gin.Context) {

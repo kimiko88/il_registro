@@ -372,9 +372,9 @@ func (s *service) DeleteClassAttendanceHour(ctx context.Context, actorID, actorR
 		}
 	}
 	switch actorRole {
-	case "admin", "superadmin", "secretary", "principal", "vice_principal":
+	case "admin", "superadmin", "secretary", "principal", "vice_principal", "collaboratore_ds":
 		// authorised unconditionally within their school
-	case "teacher":
+	case "teacher", "coordinator", "coordinatore_classe":
 		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
 		if err != nil {
 			return fmt.Errorf("errore verifica docente per classe: %w", err)
@@ -396,12 +396,12 @@ func (s *service) GetClassAttendance(ctx context.Context, actorID, actorRole, sc
 	if actorRole == "" {
 		return nil, fmt.Errorf("unauthorized: missing actorRole")
 	}
-	if actorRole == "teacher" {
+	if actorRole == "teacher" || actorRole == "coordinator" || actorRole == "coordinatore_classe" {
 		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
 		if err != nil || !isAssigned {
 			return nil, fmt.Errorf("forbidden: docente non assegnato alla classe")
 		}
-	} else if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+	} else if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
 		return nil, fmt.Errorf("forbidden: ruolo non autorizzato alla lettura delle presenze di classe")
 	}
 

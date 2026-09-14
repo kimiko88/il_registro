@@ -89,11 +89,11 @@ func (s *Service) UpdateRubric(ctx context.Context, actorID, actorRole, actorSch
 	if err != nil {
 		return nil, err
 	}
-	if rub.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" {
+	if rub.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
 		return nil, ErrUnauthorized
 	}
 	// Bug 138: admin can only edit rubrics within their own school
-	if actorRole == "admin" && actorSchoolID != "" && rub.SchoolID != actorSchoolID {
+	if (actorRole == "admin" || actorRole == "principal" || actorRole == "vice_principal") && actorSchoolID != "" && rub.SchoolID != actorSchoolID {
 		return nil, ErrUnauthorized
 	}
 
@@ -114,11 +114,11 @@ func (s *Service) DeleteRubric(ctx context.Context, actorID, actorRole, actorSch
 	if err != nil {
 		return err
 	}
-	if rub.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" {
+	if rub.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
 		return ErrUnauthorized
 	}
 	// Bug 138: admin can only delete rubrics within their own school
-	if actorRole == "admin" && actorSchoolID != "" && rub.SchoolID != actorSchoolID {
+	if (actorRole == "admin" || actorRole == "principal" || actorRole == "vice_principal") && actorSchoolID != "" && rub.SchoolID != actorSchoolID {
 		return ErrUnauthorized
 	}
 	return s.repo.DeleteRubric(ctx, id)
