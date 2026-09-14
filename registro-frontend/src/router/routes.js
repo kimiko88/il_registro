@@ -73,7 +73,7 @@ export default [
                 path: 'admin/audit-logs',
                 component: () => import('@/pages/admin/AuditLog.vue'),
                 // admin included so the dashboard menu item works correctly
-                meta: { title: 'Registro Eventi & Audit', titleKey: 'routeTitles.auditLogs', roles: ['superadmin', 'admin', 'system_auditor'] }
+                meta: { title: 'Registro Eventi & Audit', titleKey: 'routeTitles.auditLogs', roles: ['superadmin', 'admin', 'system_auditor', 'dpo'] }
             },
             { path: 'admin/audit-log', redirect: '/admin/audit-logs' },
             {

@@ -659,7 +659,16 @@ export default {
     "insufficientData": "Введите не менее двух оценок для отображения динамики",
     "presenceRate": "Процент Посещаемости",
     "gradeDistribution": "Распределение Оценок",
-    "totalGradesEvaluated": "оценок"
+    "totalGradesEvaluated": "оценок",
+    "vicePrincipalPanel": "Панель Учителя & Заместителя Директора",
+    "vicePrincipalBadge": "Заместитель Директора — Административный Персонал",
+    "vicePrincipalActions": "Дирекция & Заместитель — Исполнительные Функции",
+    "manageSubstitutions": "Замены",
+    "schoolTimetable": "Расписание",
+    "staffAttendance": "Посещаемость Персонала",
+    "strikeTracking": "Отслеживание Забастовок",
+    "meetingsMinutes": "Протоколы Заседаний",
+    "manageGroups": "Группы"
   },
   "udaPage": {
     "subjectLabel": "Предмет *",

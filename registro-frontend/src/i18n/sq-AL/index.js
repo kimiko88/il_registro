@@ -659,7 +659,16 @@ export default {
     "insufficientData": "Vendosni të paktën dy nota për të shfaqur trendin",
     "presenceRate": "Përqindja e Pjesëmarrjes",
     "gradeDistribution": "Shpërndarja e Notave",
-    "totalGradesEvaluated": "vlerësime"
+    "totalGradesEvaluated": "vlerësime",
+    "vicePrincipalPanel": "Paneli i Mësuesit & Drejtorit Zëvendës",
+    "vicePrincipalBadge": "Drejtor Zëvendës — Stafi Drejtues",
+    "vicePrincipalActions": "Drejtoria & Zëvendësi — Funksione Ekzekutive",
+    "manageSubstitutions": "Zëvendësimet",
+    "schoolTimetable": "Orari",
+    "staffAttendance": "Prania e Personelit",
+    "strikeTracking": "Ndjekja e Grevave",
+    "meetingsMinutes": "Procesverbalet",
+    "manageGroups": "Grupet"
   },
   "udaPage": {
     "subjectLabel": "Lënda *",

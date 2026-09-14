@@ -659,7 +659,16 @@ export default {
     "insufficientData": "Introduzca al menos dos notas para mostrar la tendencia",
     "presenceRate": "Tasa de Asistencia",
     "gradeDistribution": "Distribución de Calificaciones",
-    "totalGradesEvaluated": "evaluaciones"
+    "totalGradesEvaluated": "evaluaciones",
+    "vicePrincipalPanel": "Panel Docente & Subdirector",
+    "vicePrincipalBadge": "Subdirector — Personal Directivo",
+    "vicePrincipalActions": "Dirección & Vicedirección — Funciones Ejecutivas",
+    "manageSubstitutions": "Sustituciones",
+    "schoolTimetable": "Horario",
+    "staffAttendance": "Asistencia del Personal",
+    "strikeTracking": "Seguimiento de Huelgas",
+    "meetingsMinutes": "Actas de Reuniones",
+    "manageGroups": "Grupos"
   },
   "udaPage": {
     "subjectLabel": "Materia *",

@@ -659,7 +659,16 @@ export default {
     "insufficientData": "Geben Sie mindestens zwei Noten ein, um den Trend anzuzeigen",
     "presenceRate": "Anwesenheitsquote",
     "gradeDistribution": "Notenverteilung",
-    "totalGradesEvaluated": "Bewertungen"
+    "totalGradesEvaluated": "Bewertungen",
+    "vicePrincipalPanel": "Lehrer- & Vize-Direktorbereich",
+    "vicePrincipalBadge": "Stellvertretender Direktor — Schulleitungsstab",
+    "vicePrincipalActions": "Schulleitung & Vertretung — Führungsaufgaben",
+    "manageSubstitutions": "Vertretungen",
+    "schoolTimetable": "Stundenplan",
+    "staffAttendance": "Lehreranwesenheit",
+    "strikeTracking": "Streikerfassung",
+    "meetingsMinutes": "Sitzungsprotokolle",
+    "manageGroups": "Gruppen"
   },
   "udaPage": {
     "subjectLabel": "Fach *",

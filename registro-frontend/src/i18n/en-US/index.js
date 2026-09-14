@@ -659,7 +659,16 @@ export default {
     "homework": "Homework",
     "documents": "Document Dossier & Acts",
     "schoolManagement": "School Management",
-    "student": "Student"
+    "student": "Student",
+    "vicePrincipalPanel": "Teacher & Deputy Head Panel",
+    "vicePrincipalBadge": "Deputy Headteacher — Principal Staff",
+    "vicePrincipalActions": "Headship & Deputy — Executive Functions",
+    "manageSubstitutions": "Substitutions",
+    "schoolTimetable": "Timetable",
+    "staffAttendance": "Staff Attendance",
+    "strikeTracking": "Strike Tracking",
+    "meetingsMinutes": "Meeting Minutes",
+    "manageGroups": "Groups"
   },
   "udaPage": {
     "subjectLabel": "Subject *",

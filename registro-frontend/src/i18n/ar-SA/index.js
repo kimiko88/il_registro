@@ -659,7 +659,16 @@ export default {
     "insufficientData": "أدخل درجتين على الأقل لعرض الاتجاه",
     "presenceRate": "نسبة الحضور",
     "gradeDistribution": "توزيع الدرجات",
-    "totalGradesEvaluated": "تقييمات"
+    "totalGradesEvaluated": "تقييمات",
+    "vicePrincipalPanel": "لوحة المعلم ونائب المدير",
+    "vicePrincipalBadge": "نائب المدير — طاقم الإدارة",
+    "vicePrincipalActions": "الإدارة والنيابة — الوظائف التنفيذية",
+    "manageSubstitutions": "الاستبدالات",
+    "schoolTimetable": "الجدول الدراسي",
+    "staffAttendance": "حضور الموظفين",
+    "strikeTracking": "تتبع الإضرابات",
+    "meetingsMinutes": "محاضر الاجتماعات",
+    "manageGroups": "المجموعات"
   },
   "udaPage": {
     "subjectLabel": "المادة *",

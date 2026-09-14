@@ -659,7 +659,16 @@ export default {
     "insufficientData": "Введіть щонайменше дві оцінки для відображення динаміки",
     "presenceRate": "Відсоток Відвідуваності",
     "gradeDistribution": "Розподіл Оцінок",
-    "totalGradesEvaluated": "оцінок"
+    "totalGradesEvaluated": "оцінок",
+    "vicePrincipalPanel": "Панель Вчителя & Заступника Директора",
+    "vicePrincipalBadge": "Заступник Директора — Адміністративний Персонал",
+    "vicePrincipalActions": "Дирекція & Заступник — Виконавчі Функції",
+    "manageSubstitutions": "Заміни",
+    "schoolTimetable": "Розклад",
+    "staffAttendance": "Відвідуваність Персоналу",
+    "strikeTracking": "Відстеження Страйків",
+    "meetingsMinutes": "Протоколи Засідань",
+    "manageGroups": "Групи"
   },
   "udaPage": {
     "subjectLabel": "Предмет *",

@@ -659,7 +659,16 @@ export default {
     "insufficientData": "录入至少两项成绩即可显示走势",
     "presenceRate": "出勤率",
     "gradeDistribution": "成绩分布",
-    "totalGradesEvaluated": "项评分"
+    "totalGradesEvaluated": "项评分",
+    "vicePrincipalPanel": "教师与副校长面板",
+    "vicePrincipalBadge": "副校长 — 行政管理人员",
+    "vicePrincipalActions": "校长与副校长 — 行政职能",
+    "manageSubstitutions": "代课管理",
+    "schoolTimetable": "课程表",
+    "staffAttendance": "教职工出勤",
+    "strikeTracking": "罢工记录",
+    "meetingsMinutes": "会议记录",
+    "manageGroups": "分组管理"
   },
   "udaPage": {
     "subjectLabel": "科目 *",

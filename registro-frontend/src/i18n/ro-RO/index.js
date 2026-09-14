@@ -659,7 +659,16 @@ export default {
     "insufficientData": "Introduceți cel puțin două note pentru a afișa tendința",
     "presenceRate": "Rată de Prezență",
     "gradeDistribution": "Distribuția Notelor",
-    "totalGradesEvaluated": "evaluări"
+    "totalGradesEvaluated": "evaluări",
+    "vicePrincipalPanel": "Panoul Profesorului & Directorului Adjunct",
+    "vicePrincipalBadge": "Director Adjunct — Personal de Conducere",
+    "vicePrincipalActions": "Conducere & Adjunct — Funcții Executive",
+    "manageSubstitutions": "Supliniri",
+    "schoolTimetable": "Orar",
+    "staffAttendance": "Prezența Personalului",
+    "strikeTracking": "Urmărire Greve",
+    "meetingsMinutes": "Procese-verbale",
+    "manageGroups": "Grupuri"
   },
   "udaPage": {
     "subjectLabel": "Materie *",

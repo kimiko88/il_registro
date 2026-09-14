@@ -659,7 +659,16 @@ export default {
     "insufficientData": "Saisissez au moins deux notes pour afficher la tendance",
     "presenceRate": "Taux de Présence",
     "gradeDistribution": "Distribution des Notes",
-    "totalGradesEvaluated": "évaluations"
+    "totalGradesEvaluated": "évaluations",
+    "vicePrincipalPanel": "Panneau Enseignant & Directeur Adjoint",
+    "vicePrincipalBadge": "Directeur Adjoint — Personnel de Direction",
+    "vicePrincipalActions": "Direction & Adjoint — Fonctions Exécutives",
+    "manageSubstitutions": "Remplacements",
+    "schoolTimetable": "Emploi du Temps",
+    "staffAttendance": "Présence du Personnel",
+    "strikeTracking": "Suivi des Grèves",
+    "meetingsMinutes": "Procès-verbaux",
+    "manageGroups": "Groupes"
   },
   "udaPage": {
     "subjectLabel": "Matière *",

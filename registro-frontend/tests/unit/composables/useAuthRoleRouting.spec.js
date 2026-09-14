@@ -25,9 +25,9 @@ describe('useAuth Role Redirection & Routing Suite', () => {
   })
 
   const testCases = [
-    { role: 'superadmin', expectedRoute: '/admin' },
-    { role: 'admin', expectedRoute: '/admin' },
-    { role: 'system_auditor', expectedRoute: '/admin' },
+    { role: 'superadmin', expectedRoute: '/admin/dashboard' },
+    { role: 'admin', expectedRoute: '/admin/dashboard' },
+    { role: 'system_auditor', expectedRoute: '/admin/dashboard' },
     { role: 'secretary', expectedRoute: '/secretary' },
     { role: 'principal', expectedRoute: '/secretary' },
     { role: 'vice_principal', expectedRoute: '/teacher' },
