@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/lib/pq"
@@ -75,10 +76,14 @@ func (r *repository) Create(a *Attendance) error {
 }
 
 func (r *repository) BatchCreate(atts []*Attendance) error {
+	return r.BatchCreateWithContext(context.Background(), atts)
+}
+
+func (r *repository) BatchCreateWithContext(ctx context.Context, atts []*Attendance) error {
 	if len(atts) == 0 {
 		return nil
 	}
-	// Batch processing in chunks of 100 to avoid lock escalation
+	// Batch processing in chunks of 100 with single atomic multi-row INSERT per chunk
 	chunkSize := 100
 	for i := 0; i < len(atts); i += chunkSize {
 		end := i + chunkSize
@@ -87,16 +92,35 @@ func (r *repository) BatchCreate(atts []*Attendance) error {
 		}
 		chunk := atts[i:end]
 
-		tx, err := r.db.BeginTx(context.Background(), nil)
+		tx, err := r.db.BeginTx(ctx, nil)
 		if err != nil {
 			return err
 		}
 
-		stmt, err := tx.Prepare(`
+		var b strings.Builder
+		b.WriteString(`
 			INSERT INTO attendance (
 				school_id, student_id, class_id, date, hour, subject_id, status, 
 				justified, justified_by, justified_at, notes, entry_time, exit_time, created_at, updated_at
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
+			) VALUES `)
+
+		args := make([]interface{}, 0, len(chunk)*13)
+		for idx, a := range chunk {
+			if idx > 0 {
+				b.WriteString(", ")
+			}
+			offset := idx * 13
+			fmt.Fprintf(&b, "($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, NOW(), NOW())",
+				offset+1, offset+2, offset+3, offset+4, offset+5, offset+6, offset+7,
+				offset+8, offset+9, offset+10, offset+11, offset+12, offset+13,
+			)
+			args = append(args,
+				a.SchoolID, a.StudentID, a.ClassID, a.Date, a.Hour, a.SubjectID, a.Status,
+				a.Justified, a.JustifiedBy, a.JustifiedAt, a.Notes, a.EntryTime, a.ExitTime,
+			)
+		}
+
+		b.WriteString(`
 			ON CONFLICT (student_id, class_id, date, hour, school_id) DO UPDATE SET
 				status = EXCLUDED.status,
 				subject_id = COALESCE(EXCLUDED.subject_id, attendance.subject_id),
@@ -104,25 +128,37 @@ func (r *repository) BatchCreate(atts []*Attendance) error {
 				exit_time = EXCLUDED.exit_time,
 				notes = EXCLUDED.notes,
 				updated_at = NOW()
-			RETURNING id
-		`)
+			RETURNING id`)
+
+		rows, err := tx.QueryContext(ctx, b.String(), args...)
 		if err != nil {
 			_ = tx.Rollback()
-			return err
+			return fmt.Errorf("batch insert error: %w", err)
 		}
 
-		for _, a := range chunk {
-			err := stmt.QueryRow(
-				a.SchoolID, a.StudentID, a.ClassID, a.Date, a.Hour, a.SubjectID, a.Status,
-				a.Justified, a.JustifiedBy, a.JustifiedAt, a.Notes, a.EntryTime, a.ExitTime,
-			).Scan(&a.ID)
-			if err != nil {
-				_ = stmt.Close()
+		var ids []string
+		for rows.Next() {
+			var id string
+			if err := rows.Scan(&id); err != nil {
+				_ = rows.Close()
 				_ = tx.Rollback()
-				return fmt.Errorf("batch insert error: %w", err)
+				return fmt.Errorf("batch scan error: %w", err)
+			}
+			ids = append(ids, id)
+		}
+		_ = rows.Close()
+
+		if err := rows.Err(); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("batch rows error: %w", err)
+		}
+
+		for j, id := range ids {
+			if j < len(chunk) {
+				chunk[j].ID = id
 			}
 		}
-		_ = stmt.Close()
+
 		if err := tx.Commit(); err != nil {
 			return err
 		}

@@ -38,6 +38,22 @@ export default defineConfig({
               id.endsWith('/src/i18n/index.js') || id.endsWith('\\src\\i18n\\index.js')) {
             return 'app-i18n'
           }
+          if (id.includes('/src/pages/admin/') || id.includes('\\src\\pages\\admin\\')) {
+            return 'chunk-admin'
+          }
+          if (id.includes('/src/pages/secretary/') || id.includes('\\src\\pages\\secretary\\') ||
+              id.includes('/src/pages/ata/') || id.includes('\\src\\pages\\ata\\')) {
+            return 'chunk-secretary-ata'
+          }
+          if (id.includes('/src/pages/teacher/') || id.includes('\\src\\pages\\teacher\\')) {
+            return 'chunk-teacher'
+          }
+          if (id.includes('/src/pages/student/') || id.includes('\\src\\pages\\student\\')) {
+            return 'chunk-student'
+          }
+          if (id.includes('/src/pages/parent/') || id.includes('\\src\\pages\\parent\\')) {
+            return 'chunk-parent'
+          }
         }
       }
     }

@@ -59,6 +59,42 @@
         </div>
         <q-btn flat round dense icon="close" size="xs" color="white" :aria-label="t('common.close') || 'Chiudi avviso online'" @click="showBackOnline = false" />
       </div>
+
+      <div
+        v-else-if="isOnline && outboxStore.hasPending"
+        class="offline-banner bg-warning text-dark q-px-md q-py-xs row items-center justify-between shadow-2"
+        role="status"
+      >
+        <div class="row items-center q-gutter-x-sm">
+          <q-icon :name="outboxStore.isSyncing ? 'sync' : 'cloud_upload'" size="20px" :class="{ 'rotate-spinner': outboxStore.isSyncing }" />
+          <span class="text-weight-medium text-body2">
+            {{ outboxStore.isSyncing
+              ? (t('offlineBanner.syncingInProgress') || 'Sincronizzazione modifiche in corso...')
+              : (t('offlineBanner.pendingSyncOnline', { count: outboxStore.pendingCount }) || `${outboxStore.pendingCount} modifiche salvate in locale pronte per la sincronizzazione.`)
+            }}
+          </span>
+        </div>
+        <div class="row items-center q-gutter-x-sm">
+          <q-btn
+            v-if="!outboxStore.isSyncing"
+            flat
+            dense
+            color="dark"
+            icon="sync"
+            label="Sincronizza ora"
+            class="text-weight-bold"
+            @click="triggerManualSync"
+          />
+          <q-badge
+            color="dark"
+            text-color="warning"
+            class="text-weight-bold cursor-pointer"
+            @click="showQueueDialog = true"
+          >
+            {{ outboxStore.pendingCount }} IN CODA
+          </q-badge>
+        </div>
+      </div>
     </transition>
 
     <OutboxQueueDialog v-model="showQueueDialog" />
@@ -95,6 +131,20 @@ watch(isOnline, async (online) => {
     }, 5000)
   }
 })
+
+async function triggerManualSync() {
+  if (outboxStore.isSyncing) return
+  const res = await outboxStore.syncQueue()
+  if (res && res.synced > 0) {
+    syncedCount.value = res.synced
+    showBackOnline.value = true
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => {
+      showBackOnline.value = false
+      syncedCount.value = 0
+    }, 4000)
+  }
+}
 </script>
 
 <style scoped>
@@ -105,5 +155,18 @@ watch(isOnline, async (online) => {
   width: 100%;
   z-index: 10000;
   min-height: 38px;
+}
+
+.rotate-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

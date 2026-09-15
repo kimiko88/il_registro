@@ -273,8 +273,16 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		atts = append(atts, att)
 	}
 
-	if err := s.repo.BatchCreate(atts); err != nil {
-		return err
+	if cr, ok := s.repo.(interface {
+		BatchCreateWithContext(context.Context, []*Attendance) error
+	}); ok {
+		if err := cr.BatchCreateWithContext(ctx, atts); err != nil {
+			return err
+		}
+	} else {
+		if err := s.repo.BatchCreate(atts); err != nil {
+			return err
+		}
 	}
 
 	if s.broadcaster != nil {

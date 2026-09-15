@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -125,4 +126,55 @@ func TestMemoryCache_Concurrency(t *testing.T) {
 	}
 
 	wg.Wait()
+}
+
+func TestSingleFlightCache_Deduplication(t *testing.T) {
+	mc := NewMemoryCache()
+	defer func() { _ = mc.Close() }()
+
+	sfc := NewSingleFlightCache(mc)
+	defer func() { _ = sfc.Close() }()
+
+	ctx := context.Background()
+	key := "morning_rush:timetable:class_1A"
+
+	var loadCount int32
+	var wg sync.WaitGroup
+	results := make([]string, 30)
+
+	// Launch 30 concurrent requests for the same key
+	for i := 0; i < 30; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			val, err := sfc.GetOrLoad(ctx, key, 1*time.Minute, func(c context.Context) (string, error) {
+				// Artificial small latency to ensure concurrent requests overlap
+				atomic.AddInt32(&loadCount, 1)
+				return `{"class":"1A","hours":["08:00","09:00"]}`, nil
+			})
+			if err != nil {
+				t.Errorf("worker %d failed: %v", idx, err)
+			}
+			results[idx] = val
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Verify that loadFn executed only 1 time across all 30 concurrent requests
+	if loadCount != 1 {
+		t.Fatalf("expected loadFn to execute exactly 1 time, but ran %d times", loadCount)
+	}
+
+	for idx, res := range results {
+		if res != `{"class":"1A","hours":["08:00","09:00"]}` {
+			t.Fatalf("worker %d received invalid result: %s", idx, res)
+		}
+	}
+
+	// Verify it's now in cache for immediate retrieval
+	cached, err := sfc.Get(ctx, key)
+	if err != nil || cached != `{"class":"1A","hours":["08:00","09:00"]}` {
+		t.Fatalf("expected value to be stored in cache: %v, val: %s", err, cached)
+	}
 }

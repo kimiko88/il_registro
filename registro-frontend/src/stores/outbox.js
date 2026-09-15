@@ -135,12 +135,26 @@ export const useOutboxStore = defineStore('outbox', () => {
         }
     }
 
+    function sortQueue() {
+        const priorityWeight = { HIGH: 1, NORMAL: 2, LOW: 3 }
+        queue.value.sort((a, b) => {
+            const pA = priorityWeight[a.priority] || 2
+            const pB = priorityWeight[b.priority] || 2
+            if (pA !== pB) return pA - pB
+            return a.timestamp - b.timestamp
+        })
+    }
+
     /**
      * Add a new operation to the outbox synchronously and persist.
+     * Prioritizes critical classroom operations (attendance, lessons, grades).
      * @returns {string} The generated idempotency ID for the item.
      */
-    function enqueue({ url, method = 'post', data = null, params = null, title = '' }) {
+    function enqueue({ url, method = 'post', data = null, params = null, title = '', priority = 'NORMAL' }) {
         const id = `outbox_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`
+        const isCritical = /attendance|lesson|grade/i.test(url)
+        const finalPriority = (priority === 'HIGH' || isCritical) ? 'HIGH' : priority
+
         const item = {
             id,
             url,
@@ -148,10 +162,12 @@ export const useOutboxStore = defineStore('outbox', () => {
             data,
             params,
             title: title || `${method.toUpperCase()} ${url}`,
+            priority: finalPriority,
             timestamp: Date.now(),
             attempts: 0
         }
         queue.value.push(item)
+        sortQueue()
         persistQueue(queue.value)
         idbSafePut(item)
         return id
