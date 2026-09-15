@@ -796,4 +796,3 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - **195/195 file di test passati** (**1294/1294 unit test passati**) su Vitest v5.
     - **69/69 file di test E2E passati** (**163/163 test E2E passati**) su Vitest v5 (`npm run test:e2e`).
     - **Build di produzione (`npm run build`) completata con successo in 3.10s**.
-
