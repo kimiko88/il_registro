@@ -82,6 +82,7 @@ import (
 	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
+	"registro-backend/pkg/queue"
 	"registro-backend/pkg/upload"
 	"registro-backend/pkg/version"
 	"registro-backend/pkg/wsticket"
@@ -153,7 +154,16 @@ func main() {
 	// Repository FEQ — firma qualificata con valore legale (CAD art. 21 / eIDAS)
 	feqRepo := signatures.NewFEQRepository(database)
 
-	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
+	revocationStore := jwt.NewRevocationStore(redisURL)
+	defer func() { _ = revocationStore.Close() }()
+
+	loginLimiter := auth.NewLoginRateLimiter(redisURL)
+
+	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo, revocationStore)
+
+	taskQueue := queue.NewQueue(redisURL)
+	taskQueue.Start()
+	defer taskQueue.Stop()
 
 	// 6. Setup Services
 	mailerCfg := mailer.MailConfig{
@@ -170,6 +180,8 @@ func main() {
 	schoolCalendarSvc := schoolcalendar.NewService(schoolCalendarRepo)
 
 	authSvc := auth.NewService(authRepo, tokenManager, mfaService, mailerSvc)
+	authSvc.SetRevocationStore(revocationStore)
+	authSvc.SetLoginRateLimiter(loginLimiter)
 	usersSvc := users.NewService(usersRepo)
 	classesSvc := classes.NewService(classesRepo)
 	gradesSvc := grades.NewService(gradesRepo, usersRepo, database, wsHub)
@@ -272,6 +284,10 @@ func main() {
 	r.Use(middleware.TimeoutMiddleware(30 * time.Second))
 	// Compress JSON/text responses (60-80% size reduction). Excluded: /metrics (Prometheus plain text).
 	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPaths([]string{"/metrics"})))
+	// 2MB request body size limit to prevent memory exhaustion DoS (skips multipart uploads)
+	r.Use(middleware.RequestBodyLimitMiddleware(2 * 1024 * 1024))
+	// HTTP conditional caching (ETag / 304 Not Modified)
+	r.Use(middleware.ETagMiddleware())
 
 	middleware.InitCircuitBreaker()
 

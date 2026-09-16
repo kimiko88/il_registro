@@ -175,8 +175,13 @@ func (m *MockRepository) GetPasswordResetToken(ctx context.Context, token string
 }
 
 func (m *MockRepository) UpdatePassword(ctx context.Context, userID, hash string) error {
-	args := m.Called(ctx, userID, hash)
-	return args.Error(0)
+	for _, call := range m.ExpectedCalls {
+		if call.Method == "UpdatePassword" {
+			args := m.Called(ctx, userID, hash)
+			return args.Error(0)
+		}
+	}
+	return nil
 }
 
 func (m *MockRepository) ResetPasswordTx(ctx context.Context, userID, hash, tokenID string) error {

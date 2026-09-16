@@ -28,6 +28,8 @@ type Service struct {
 	tokenManager    *jwt.TokenManager
 	mfaService      *MFAService
 	emailSender     EmailSender
+	revocationStore jwt.RevocationStore
+	loginLimiter    LoginRateLimiter
 	bcryptCost      int
 	dummyBcryptHash string
 }
@@ -52,6 +54,28 @@ func NewService(repo Repository, tokenManager *jwt.TokenManager, mfaService *MFA
 // SetEmailSender sets the EmailSender for password reset emails
 func (s *Service) SetEmailSender(sender EmailSender) {
 	s.emailSender = sender
+}
+
+// SetRevocationStore configures the JTI token revocation store.
+func (s *Service) SetRevocationStore(rs jwt.RevocationStore) {
+	s.revocationStore = rs
+}
+
+// SetLoginRateLimiter configures the distributed Redis login rate limiter.
+func (s *Service) SetLoginRateLimiter(limiter LoginRateLimiter) {
+	s.loginLimiter = limiter
+}
+
+// RevokeAccessToken extracts the JTI and invalidates the token in the revocation store.
+func (s *Service) RevokeAccessToken(ctx context.Context, tokenString string) error {
+	if s.revocationStore == nil || tokenString == "" {
+		return nil
+	}
+	jti, remaining, err := s.tokenManager.ExtractJTI(tokenString)
+	if err != nil {
+		return nil
+	}
+	return s.revocationStore.Revoke(ctx, jti, remaining)
 }
 
 func normalizeEmail(email string) string {
@@ -113,24 +137,30 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	req.Email = normalizeEmail(req.Email)
 
 	// --- Rate limiting ---
-	// 1. Per (email, IP): max 5 attempts in 15 minutes — blocks single-IP bursts.
-	// 2. Per email only: max 20 attempts in 1 hour — blocks distributed IP-rotation attacks.
-	since15m := time.Now().Add(-15 * time.Minute)
-	attemptsPerIP, err := s.repo.GetRecentLoginAttempts(ctx, req.Email, ipAddress, since15m)
-	if err != nil {
-		return nil, err
-	}
-	if attemptsPerIP >= 5 {
-		return nil, ErrTooManyAttempts
-	}
+	// 1. Try distributed Redis rate limiter first (zero database load)
+	if s.loginLimiter != nil {
+		if err := s.loginLimiter.Check(ctx, req.Email, ipAddress); err != nil {
+			return nil, err
+		}
+	} else {
+		// 2. Fallback to transactional PostgreSQL rate limiting
+		since15m := time.Now().Add(-15 * time.Minute)
+		attemptsPerIP, err := s.repo.GetRecentLoginAttempts(ctx, req.Email, ipAddress, since15m)
+		if err != nil {
+			return nil, err
+		}
+		if attemptsPerIP >= 5 {
+			return nil, ErrTooManyAttempts
+		}
 
-	since1h := time.Now().Add(-1 * time.Hour)
-	attemptsPerEmail, err := s.repo.GetRecentLoginAttemptsByEmail(ctx, req.Email, since1h)
-	if err != nil {
-		return nil, err
-	}
-	if attemptsPerEmail >= 20 {
-		return nil, ErrTooManyAttempts
+		since1h := time.Now().Add(-1 * time.Hour)
+		attemptsPerEmail, err := s.repo.GetRecentLoginAttemptsByEmail(ctx, req.Email, since1h)
+		if err != nil {
+			return nil, err
+		}
+		if attemptsPerEmail >= 20 {
+			return nil, ErrTooManyAttempts
+		}
 	}
 
 	// Get user
@@ -143,10 +173,22 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	}
 
 	// Verify password BEFORE active check to maintain constant response timing
-	bcryptErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
+	// Resolves bcrypt 72-byte truncation via HMAC-SHA256 pre-hashing with backward compatibility
+	prehashedPassword := crypto.PrehashPassword(req.Password)
+	bcryptErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), prehashedPassword)
 	if bcryptErr != nil {
-		s.recordFailedAttempt(ctx, req.Email, ipAddress)
-		return nil, ErrInvalidCredentials
+		// Fallback check against legacy raw password (for existing user accounts)
+		legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
+		if legacyErr != nil {
+			s.recordFailedAttempt(ctx, req.Email, ipAddress)
+			return nil, ErrInvalidCredentials
+		}
+		// Transparent auto-migration: re-hash with pre-hashed format and update in DB
+		go func(uid string, passBytes []byte, cost int) {
+			if newHash, err := bcrypt.GenerateFromPassword(passBytes, cost); err == nil {
+				_ = s.repo.UpdatePassword(context.Background(), uid, string(newHash))
+			}
+		}(user.ID, prehashedPassword, s.bcryptCost)
 	}
 
 	if !user.IsActive {
@@ -584,9 +626,12 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 		return ErrUserInactive
 	}
 
-	// Verify current password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)); err != nil {
-		return ErrInvalidCredentials
+	// Verify current password (supports prehashed or legacy raw)
+	preCurrent := crypto.PrehashPassword(currentPassword)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), preCurrent); err != nil {
+		if legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)); legacyErr != nil {
+			return ErrInvalidCredentials
+		}
 	}
 
 	// Validate new password policy
@@ -600,14 +645,16 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 	if err != nil {
 		return fmt.Errorf("failed to fetch password history: %w", err)
 	}
+	preNew := crypto.PrehashPassword(newPassword)
 	for _, oldHash := range history {
-		if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
+		if bcrypt.CompareHashAndPassword([]byte(oldHash), preNew) == nil ||
+			bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
 			return ErrPasswordReused
 		}
 	}
 
-	// Hash new password
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), s.bcryptCost)
+	// Hash new password using pre-hashed format
+	passwordHash, err := bcrypt.GenerateFromPassword(preNew, s.bcryptCost)
 	if err != nil {
 		return err
 	}
@@ -628,6 +675,10 @@ func (s *Service) RecordFailedAttempt(ctx context.Context, email, ipAddress stri
 
 func (s *Service) recordFailedAttempt(ctx context.Context, email, ipAddress string) {
 	email = normalizeEmail(email)
+	if s.loginLimiter != nil {
+		s.loginLimiter.RecordFailure(ctx, email, ipAddress)
+	}
+
 	attempt := &LoginAttempt{
 		Email:       email,
 		IPAddress:   ipAddress,
@@ -640,6 +691,11 @@ func (s *Service) recordFailedAttempt(ctx context.Context, email, ipAddress stri
 }
 
 func (s *Service) recordSuccessfulAttempt(ctx context.Context, email, ipAddress string) {
+	email = normalizeEmail(email)
+	if s.loginLimiter != nil {
+		s.loginLimiter.RecordSuccess(ctx, email, ipAddress)
+	}
+
 	attempt := &LoginAttempt{
 		Email:       email,
 		IPAddress:   ipAddress,

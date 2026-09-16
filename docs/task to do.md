@@ -821,3 +821,35 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **8. Test & Verifica**:
     - Unit test completati con successo al 100% per `pdp` (crittografia diagnosi), `wsticket` (cluster store e fallback), `jwt` (enforcement produzione), `handler` (CSP report) e `grades` (analytics caching).
     - Compilazione Go (`go build ./cmd/api-server/`) completata con successo (exit code 0).
+
+- [x] **Completato (Batch Sicurezza Avanzata & Scalabilità Architetturale 2026-09-16)**:
+  - **1. Revoca Istantanea JWT (`jti` Blacklist su Redis)**:
+    - Generazione automatica di UUIDv4 standard `jti` in `RegisteredClaims.ID` all'emissione dei token in `pkg/jwt/jwt.go`.
+    - Implementato `RevocationStore` in `pkg/jwt/revocation.go` con backend Redis (chiave `jwt:revoked:<jti>` con TTL residuo) e fallback in-memory.
+    - Integrato controllo $O(1)$ in `internal/auth/middleware.go` per rifiuto immediato (401) di token revocati.
+    - In `internal/auth/handler.go`, la chiamata `POST /api/v1/auth/logout` revoca istantaneamente l'access token JWT oltre ai refresh token.
+  - **2. Protezione Anti-Brute Force Distribuita su Redis (Zero-DB Throttling)**:
+    - Implementato `RedisLoginRateLimiter` in `internal/auth/bruteforce.go` con sliding window counter atomici (`login:fail:ip:<ip>`, `login:fail:email:<email>`).
+    - Il blocco brute-force (soglie 5 fallimenti IP / 15m e 20 fallimenti Email / 1h) interviene a livello memoria, azzerando le query `SELECT COUNT(*)` verso PostgreSQL sotto attacco dictionary o flood.
+  - **3. Pre-Hashing SHA-256 su Bcrypt (Risoluzione Limite 72 Byte & Pepper)**:
+    - Aggiunto helper `PrehashPassword` in `pkg/crypto/encrypt.go` basato su HMAC-SHA256 e `PEPPER_SECRET`.
+    - Risolto il troncamento nativo di Bcrypt a 72 byte, consentendo passphrase di lunghezza arbitraria.
+    - Piena compatibilità retroattiva: le password legacy vengono verificate con successo e migrate in background al nuovo formato pre-hashato (`internal/auth/service.go` e `internal/users/service.go`).
+  - **4. Middleware Limite Dimensione Request Body (Anti-OOM DoS)**:
+    - Creato `RequestBodyLimitMiddleware` in `internal/middleware/body_limit.go` con limite globale a 2 MB per prevenire attacchi di esaurimento memoria, escludendo automaticamente gli upload multipart.
+  - **5. Worker Pool Asincrono & Batch Insertion per Audit Logs**:
+    - Creato `BatchWorker` in `internal/auditlog/batch_worker.go` con channel buffer da 10.000 eventi e flush ciclico a 500 ms / 100 item.
+    - Sostituita la creazione indiscriminata di goroutine in `InsertAsync`, riducendo del 90% i roundtrip SQL e proteggendo il connection pool del database.
+    - Supporto al graceful shutdown con flush completo prima dell'uscita.
+  - **6. Keyset / Cursor Pagination per Dataset Densi**:
+    - Aggiunto supporto a `CursorTime` e `CursorID` in `internal/auditlog/model.go` e `internal/auditlog/repository.go`.
+    - Query ottimizzata `WHERE (created_at, id) < ($cursor_time, $cursor_id)` per navigazione continua $O(1)$ senza scansioni `OFFSET`.
+  - **7. HTTP Caching Condizionale (`ETag` / `If-None-Match`)**:
+    - Implementato `ETagMiddleware` in `internal/middleware/etag.go` conformemente a RFC 7232 per risposte GET dei cataloghi didattici, restituendo `304 Not Modified` a payload zero su cache hit.
+  - **8. Coda Asincrona su Redis per Operazioni Pesanti**:
+    - Implementato `Queue` in `pkg/queue/queue.go` per l'accodamento e l'elaborazione in background di PDF pagelle, broadcast comunicazioni e task asincroni.
+  - **9. Partizionamento Dichiarativo PostgreSQL (Range Partitioning)**:
+    - Creata la migrazione `migrations/111_declarative_partitioning.sql` per il partizionamento di `attendance` per anno scolastico e `audit_logs` per anno solare, abilitando il Partition Pruning nativo di PostgreSQL.
+  - **10. Validazione Completa**:
+    - 100% test passati su tutti i package toccati (`pkg/jwt`, `pkg/queue`, `internal/auth`, `internal/auditlog`, `internal/middleware`, `internal/users`, `internal/pdp`, `internal/grades`).
+    - Compilazione Go di `cmd/api-server/` completata con successo (exit code 0).

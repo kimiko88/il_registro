@@ -24,11 +24,12 @@ type activeCacheEntry struct {
 }
 
 type Middleware struct {
-	tokenManager *jwt.TokenManager
-	userRepo     users.Repository
-	activeCache  map[string]activeCacheEntry
-	cacheTTL     time.Duration
-	cacheMu      sync.RWMutex
+	tokenManager    *jwt.TokenManager
+	userRepo        users.Repository
+	revocationStore jwt.RevocationStore
+	activeCache     map[string]activeCacheEntry
+	cacheTTL        time.Duration
+	cacheMu         sync.RWMutex
 }
 
 const maxActiveCacheSize = 10000
@@ -37,16 +38,26 @@ const maxActiveCacheSize = 10000
 // userRepo must not be nil — it is required to verify that accounts are still
 // active on every request. Passing nil will panic at startup to prevent silent
 // security bypasses where disabled accounts could keep making requests.
-func NewMiddleware(tokenManager *jwt.TokenManager, userRepo users.Repository) *Middleware {
+func NewMiddleware(tokenManager *jwt.TokenManager, userRepo users.Repository, revocationStore ...jwt.RevocationStore) *Middleware {
 	if userRepo == nil {
 		panic("auth.NewMiddleware: userRepo must not be nil — required for active-account checks")
 	}
-	return &Middleware{
-		tokenManager: tokenManager,
-		userRepo:     userRepo,
-		activeCache:  make(map[string]activeCacheEntry),
-		cacheTTL:     getActiveCacheTTL(),
+	var rs jwt.RevocationStore
+	if len(revocationStore) > 0 {
+		rs = revocationStore[0]
 	}
+	return &Middleware{
+		tokenManager:    tokenManager,
+		userRepo:        userRepo,
+		revocationStore: rs,
+		activeCache:     make(map[string]activeCacheEntry),
+		cacheTTL:        getActiveCacheTTL(),
+	}
+}
+
+// SetRevocationStore updates the revocation store for blacklisting checks.
+func (m *Middleware) SetRevocationStore(rs jwt.RevocationStore) {
+	m.revocationStore = rs
 }
 
 // Authenticate validates JWT token and sets user context.
@@ -79,6 +90,16 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 
+		// Instant distributed revocation check (JTI Blacklist)
+		if m.revocationStore != nil && claims.ID != "" {
+			if revoked, err := m.revocationStore.IsRevoked(c.Request.Context(), claims.ID); err == nil && revoked {
+				logger.Log.Warnf("Revoked token rejected: jti=%s user=%s", claims.ID, claims.UserID)
+				c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "token has been revoked"})
+				c.Abort()
+				return
+			}
+		}
+
 		isActive, err := m.isAccountActive(c.Request.Context(), claims.UserID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
@@ -97,6 +118,8 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		c.Set("role", claims.Role)
 		c.Set("school_id", claims.SchoolID)
 		c.Set("is_staff", IsStaffRole(claims.Role))
+		c.Set("token", token)
+		c.Set("jti", claims.ID)
 
 		c.Set("locale", parseAcceptLanguage(c.GetHeader("Accept-Language")))
 

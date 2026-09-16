@@ -60,6 +60,10 @@ func (m *mockRepo) List(ctx context.Context, p FilterParams) ([]AuditEvent, int,
 	return filtered[start:end], total, nil
 }
 
+func (m *mockRepo) Close() error {
+	return nil
+}
+
 // Verify mockRepo satisfies Repository interface at compile time.
 var _ Repository = (*mockRepo)(nil)
 
