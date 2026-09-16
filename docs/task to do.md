@@ -796,3 +796,28 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - **195/195 file di test passati** (**1294/1294 unit test passati**) su Vitest v5.
     - **69/69 file di test E2E passati** (**163/163 test E2E passati**) su Vitest v5 (`npm run test:e2e`).
     - **Build di produzione (`npm run build`) completata con successo in 3.10s**.
+
+- [x] **Completato (Batch Hardening Sicurezza & Ottimizzazione Performance 2026-09-16)**:
+  - **1. Upgrade Driver Database (`jackc/pgx/v5`)**:
+    - Sostituito il driver deprecato `github.com/lib/pq` con `github.com/jackc/pgx/v5/stdlib` in `internal/db/postgres.go`.
+    - Driver string impostata a `"pgx"`, con supporto automatico al protocollo binario esteso PostgreSQL, prepared statements caching e allocazione ridotta sul GC di Go.
+  - **2. Gestione Picco Mattutino Presenze & Immutabilità Audit**:
+    - Creata e applicata la migrazione `110_attendance_performance_and_audit_immutability.sql`.
+    - Creato indice composito ottimizzato `idx_attendance_daily_fast ON attendance (class_id, date, hour)` per velocizzare le query dell'appello mattutino.
+    - Introdotte regole rigide PostgreSQL `no_update_audit_chain` e `no_delete_audit_chain` sulla tabella `certified_audit_chain` per garantire l'immutabilità crittografica e conformità AGID/GDPR.
+  - **3. Caching Distribuito & Singleflight Protection**:
+    - Integrato Redis cache con Singleflight coalescing in `internal/grades/analytics.go` (`GetClassAnalysis`, `GetSubjectAnalysis`, `GetSchoolStatistics`) con TTL a 15 minuti, proteggendo il DB da carichi analitici massivi e thundering herd.
+  - **4. Rate Limiting Distribuito & WebSocket Single-Use Ticket Store**:
+    - Inizializzato il rate limiter distribuito su Redis all'avvio in `cmd/api-server/main.go` (`middleware.InitRateLimiter(cfg.RedisURL())`).
+    - Aggiornato `pkg/wsticket/store.go` per utilizzare Redis in cluster con script atomico Lua (`GET` + `DEL`) per consumo rigorosamente monouso del ticket WebSocket, con fallback in-memory trasparente per sviluppo locale.
+  - **5. Crittografia a Livello di Campo (GDPR Art. 9 - Dati Sanitari PDP)**:
+    - Implementata la crittografia AES-256-GCM in `internal/pdp/repository.go` per il campo `pdp_plans.diagnosis`, con IV casuale a 12 byte per record, codifica Base64 e backward-compatibility per record storici in chiaro.
+  - **6. Monitoraggio CSP & Hardening Chiavi RSA / Docker**:
+    - Aggiunto endpoint pubblico per la ricezione delle violazioni CSP (`/api/v1/public/csp-report`) in `internal/handler/csp.go` e aggiornato l'header in `internal/middleware/security.go`.
+    - Imposto il blocco all'avvio in `pkg/jwt/keys.go` se in ambiente di produzione (`APP_ENV=production`) mancano chiavi RSA private esplicitamente configurate.
+    - Creato `.dockerignore` per impedire l'inclusione accidentale di certificati `.pem`, file `.env` e credenziali nelle immagini Docker.
+  - **7. Virtual Scrolling Frontend**:
+    - Aggiunto `virtual-scroll` e `:virtual-scroll-item-size="48"` a `<q-table>` in `registro-frontend/src/pages/admin/AuditLog.vue` per mantenere 60 FPS con dataset densi di log.
+  - **8. Test & Verifica**:
+    - Unit test completati con successo al 100% per `pdp` (crittografia diagnosi), `wsticket` (cluster store e fallback), `jwt` (enforcement produzione), `handler` (CSP report) e `grades` (analytics caching).
+    - Compilazione Go (`go build ./cmd/api-server/`) completata con successo (exit code 0).

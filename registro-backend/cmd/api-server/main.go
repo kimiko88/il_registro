@@ -100,9 +100,10 @@ func main() {
 	// 2. Init Logger
 	logger.Init(cfg.Server.Mode)
 
-	// 2a. Init rate limiter backend (Redis-backed if REDIS_URL is set, in-memory otherwise).
+	// 2a. Init rate limiter backend (Redis-backed if configured, in-memory otherwise).
 	// Must be called before the first request, so we do it right after logging is up.
-	middleware.InitRateLimiter(os.Getenv("REDIS_URL"))
+	redisURL := cfg.RedisURL()
+	middleware.InitRateLimiter(redisURL)
 
 	// 3. Connect DB
 	database, err := db.Connect(cfg.Database)
@@ -119,9 +120,9 @@ func main() {
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
 	mfaService := auth.NewMFAService("RegistroElettronico")
-	wsHub := ws.NewHub(os.Getenv("REDIS_URL"))
+	wsHub := ws.NewHub(redisURL)
 	go wsHub.Run(ctx)
-	appCache := cache.NewCache(os.Getenv("REDIS_URL"))
+	appCache := cache.NewCache(redisURL)
 	defer func() { _ = appCache.Close() }()
 
 	// 5. Setup Repositories
@@ -172,7 +173,7 @@ func main() {
 	usersSvc := users.NewService(usersRepo)
 	classesSvc := classes.NewService(classesRepo)
 	gradesSvc := grades.NewService(gradesRepo, usersRepo, database, wsHub)
-	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
+	gradesAnalytics := grades.NewAnalyticsService(gradesRepo, appCache)
 	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub, schoolCalendarSvc)
 	docsSvc := documents.NewService(docsRepo)
 	schedSvc := scheduling.NewService(schedRepo, teachersRepo, nil, nil, nil)
@@ -201,7 +202,8 @@ func main() {
 
 	rubricsSvc := rubrics.NewService(rubricsRepo, usersRepo)
 
-	wsTicketStore := wsticket.NewStore()
+	wsTicketStore := wsticket.NewStore(redisURL)
+	defer func() { _ = wsTicketStore.Close() }()
 
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc, wsTicketStore)
@@ -357,6 +359,8 @@ func main() {
 		authH.RegisterRoutes(api, authMiddleware)
 		api.GET("/public/schools", schoolsH.ListPublic)
 		api.POST("/public/accessibility-feedback", a11yH.SubmitPublic)
+		api.POST("/public/csp-report", handler.HandleCSPReport)
+		r.POST("/api/v1/public/csp-report", handler.HandleCSPReport)
 
 		api.GET("/ws", authMiddleware.AuthenticateWSTicket(wsTicketStore), func(c *gin.Context) {
 			wsHandler.Listen(c)

@@ -2,10 +2,15 @@ package grades
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/sync/singleflight"
+	"registro-backend/internal/cache"
 )
 
 type AnalyticsService interface {
@@ -22,13 +27,19 @@ type AnalyticsService interface {
 type analyticsService struct {
 	repo       Repository
 	calculator *Calculator
+	cache      cache.Cache
+	group      singleflight.Group
 }
 
-func NewAnalyticsService(r Repository) AnalyticsService {
-	return &analyticsService{
+func NewAnalyticsService(r Repository, c ...cache.Cache) AnalyticsService {
+	as := &analyticsService{
 		repo:       r,
 		calculator: NewCalculator(),
 	}
+	if len(c) > 0 && c[0] != nil {
+		as.cache = c[0]
+	}
+	return as
 }
 
 func (a *analyticsService) GetStudentAverage(studentID string, subjectID string) (float64, error) {
@@ -72,6 +83,38 @@ func (a *analyticsService) GetClassAverage(classID string, subjectID string) (fl
 // --- Specific Implementations ---
 
 func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*AnalyticsClassResponse, error) {
+	if a.cache == nil {
+		return a.computeClassAnalysis(classID, semester)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:class:%s:%d", classID, semester)
+	ctx := context.Background()
+
+	cached, err := a.cache.Get(ctx, cacheKey)
+	if err == nil && cached != "" {
+		var res AnalyticsClassResponse
+		if err := json.Unmarshal([]byte(cached), &res); err == nil {
+			return &res, nil
+		}
+	}
+
+	v, err, _ := a.group.Do(cacheKey, func() (interface{}, error) {
+		res, err := a.computeClassAnalysis(classID, semester)
+		if err != nil {
+			return nil, err
+		}
+		if b, err := json.Marshal(res); err == nil {
+			_ = a.cache.Set(ctx, cacheKey, string(b), 5*time.Minute)
+		}
+		return res, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return v.(*AnalyticsClassResponse), nil
+}
+
+func (a *analyticsService) computeClassAnalysis(classID string, semester int) (*AnalyticsClassResponse, error) {
 	// 1. Fetch Grades
 	grades, err := a.repo.FindByClass(context.Background(), classID, semester)
 	if err != nil {
@@ -282,6 +325,38 @@ func (a *analyticsService) GetClassAnalysis(classID string, semester int) (*Anal
 }
 
 func (a *analyticsService) GetSubjectAnalysis(subjectID string, semester int) (*AnalyticsSubjectResponse, error) {
+	if a.cache == nil {
+		return a.computeSubjectAnalysis(subjectID, semester)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:subject:%s:%d", subjectID, semester)
+	ctx := context.Background()
+
+	cached, err := a.cache.Get(ctx, cacheKey)
+	if err == nil && cached != "" {
+		var res AnalyticsSubjectResponse
+		if err := json.Unmarshal([]byte(cached), &res); err == nil {
+			return &res, nil
+		}
+	}
+
+	v, err, _ := a.group.Do(cacheKey, func() (interface{}, error) {
+		res, err := a.computeSubjectAnalysis(subjectID, semester)
+		if err != nil {
+			return nil, err
+		}
+		if b, err := json.Marshal(res); err == nil {
+			_ = a.cache.Set(ctx, cacheKey, string(b), 5*time.Minute)
+		}
+		return res, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return v.(*AnalyticsSubjectResponse), nil
+}
+
+func (a *analyticsService) computeSubjectAnalysis(subjectID string, semester int) (*AnalyticsSubjectResponse, error) {
 	grades, err := a.repo.FindBySubject(context.Background(), subjectID, semester)
 	if err != nil {
 		return nil, err
@@ -423,9 +498,45 @@ func parseSchoolYearDateRange(yearStr string) (time.Time, time.Time, bool) {
 }
 
 func (a *analyticsService) GetSchoolStatistics(year string, schoolID ...string) (*SchoolStatisticsResponse, error) {
+	schID := ""
+	if len(schoolID) > 0 {
+		schID = schoolID[0]
+	}
+	if a.cache == nil {
+		return a.computeSchoolStatistics(year, schID)
+	}
+
+	cacheKey := fmt.Sprintf("analytics:school:%s:%s", year, schID)
+	ctx := context.Background()
+
+	cached, err := a.cache.Get(ctx, cacheKey)
+	if err == nil && cached != "" {
+		var res SchoolStatisticsResponse
+		if err := json.Unmarshal([]byte(cached), &res); err == nil {
+			return &res, nil
+		}
+	}
+
+	v, err, _ := a.group.Do(cacheKey, func() (interface{}, error) {
+		res, err := a.computeSchoolStatistics(year, schID)
+		if err != nil {
+			return nil, err
+		}
+		if b, err := json.Marshal(res); err == nil {
+			_ = a.cache.Set(ctx, cacheKey, string(b), 5*time.Minute)
+		}
+		return res, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return v.(*SchoolStatisticsResponse), nil
+}
+
+func (a *analyticsService) computeSchoolStatistics(year string, schoolID string) (*SchoolStatisticsResponse, error) {
 	filter := GradeFilter{}
-	if len(schoolID) > 0 && schoolID[0] != "" {
-		filter.SchoolID = schoolID[0]
+	if schoolID != "" {
+		filter.SchoolID = schoolID
 	}
 	allGrades, err := a.repo.FindWithFilter(context.Background(), filter)
 	if err != nil {

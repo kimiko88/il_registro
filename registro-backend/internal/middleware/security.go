@@ -121,7 +121,8 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 					"frame-src 'none'; "+
 					"base-uri 'self'; "+
 					"form-action 'self'; "+
-					"frame-ancestors 'none';%s",
+					"frame-ancestors 'none'; "+
+					"report-uri /api/v1/public/csp-report;%s",
 				nonce, nonce, connectSrcStr, upgradeInsecure,
 			)
 			c.Writer.Header().Set("Content-Security-Policy", csp)

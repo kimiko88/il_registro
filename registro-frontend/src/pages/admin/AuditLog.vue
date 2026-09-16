@@ -97,6 +97,8 @@
         :columns="columns"
         row-key="id"
         :loading="loading"
+        virtual-scroll
+        :virtual-scroll-item-size="48"
         @request="onRequest"
       >
         <template v-slot:no-data>
