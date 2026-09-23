@@ -509,4 +509,3 @@ func TestService_AddGrade_ReligionValidations(t *testing.T) {
 		assert.Equal(t, 10.0, resp.GradeValue)
 	})
 }
-

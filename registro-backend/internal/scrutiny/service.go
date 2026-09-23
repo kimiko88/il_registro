@@ -784,7 +784,6 @@ func mapGradeToReligionJudgment(val float64) string {
 	}
 }
 
-
 func (s *Service) SaveDeferredScrutiny(ctx context.Context, actorID, actorRole string, req *SaveDeferredScrutinyRequest) error {
 	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" {
 		return errors.New("forbidden: non hai i permessi per gestire lo scrutinio differito")

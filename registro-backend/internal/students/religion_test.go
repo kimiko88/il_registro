@@ -328,4 +328,3 @@ func TestReligionRepository_ListChoices(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
-

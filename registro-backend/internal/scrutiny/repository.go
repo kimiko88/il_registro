@@ -386,4 +386,3 @@ func (r *postgresRepository) GetClassReligionChoices(ctx context.Context, classI
 	}
 	return res, nil
 }
-

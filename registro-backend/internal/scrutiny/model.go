@@ -87,7 +87,7 @@ type AttendanceSummary struct {
 type SubjectAverages struct {
 	Average          float64 `json:"average"`
 	GradeCount       int     `json:"grade_count"`
-	Proposed         float64 `json:"proposed"` // Rounded average
+	Proposed         float64 `json:"proposed"`                    // Rounded average
 	ProposedJudgment string  `json:"proposed_judgment,omitempty"` // Per materie a solo giudizio (IRC)
 }
 
