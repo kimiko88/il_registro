@@ -312,3 +312,71 @@ func TestRoomsService(t *testing.T) {
 		}
 	}
 }
+
+func TestRoomsService_ValidationErrors(t *testing.T) {
+	repo := newMockRoomsRepo()
+	svc := NewService(repo)
+	ctx := context.Background()
+
+	schoolID := "school-1"
+	teacherID := "teacher-1"
+
+	// 1. Invalid Hour Index (< 1)
+	_, _, err := svc.CreateBooking(ctx, schoolID, teacherID, CreateBookingRequest{
+		RoomID:      "room-1",
+		BookingDate: "2026-10-05",
+		HourIndex:   0,
+	})
+	if err == nil {
+		t.Errorf("expected error for hour index 0, got nil")
+	}
+
+	// 2. Invalid Date format
+	_, _, err = svc.CreateBooking(ctx, schoolID, teacherID, CreateBookingRequest{
+		RoomID:      "room-1",
+		BookingDate: "not-a-date",
+		HourIndex:   1,
+	})
+	if err == nil {
+		t.Errorf("expected error for invalid date, got nil")
+	}
+
+	// 3. Recurring booking without recurring_until
+	_, _, err = svc.CreateBooking(ctx, schoolID, teacherID, CreateBookingRequest{
+		RoomID:      "room-1",
+		BookingDate: "2026-10-05",
+		HourIndex:   1,
+		IsRecurring: true,
+	})
+	if err == nil {
+		t.Errorf("expected error for recurring booking missing recurring_until, got nil")
+	}
+
+	// 4. Cancel booking unauthorized
+	// First create a room and booking by teacher-1
+	r, err := repo.CreateRoom(ctx, &BookableRoom{
+		SchoolID: schoolID,
+		Name:     "Aula 10",
+		RoomType: RoomTypeClassroom,
+		Capacity: 20,
+		IsActive: true,
+	})
+	if err != nil {
+		t.Fatalf("failed to create room: %v", err)
+	}
+
+	b, _, err := svc.CreateBooking(ctx, schoolID, teacherID, CreateBookingRequest{
+		RoomID:      r.ID,
+		BookingDate: "2026-10-12",
+		HourIndex:   3,
+	})
+	if err != nil {
+		t.Fatalf("failed to create booking: %v", err)
+	}
+
+	// Another teacher tries to cancel it without secretary/admin role
+	err = svc.CancelBooking(ctx, "teacher-2", "teacher", schoolID, b.ID, false)
+	if err == nil {
+		t.Errorf("expected error when teacher-2 attempts to cancel teacher-1 booking, got nil")
+	}
+}

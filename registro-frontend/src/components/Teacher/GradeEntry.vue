@@ -308,12 +308,9 @@ const studentsWithGrades = computed(() => {
                     }
                 });
             }
-            let avg = '-';
-            if (isReligionSubject.value) {
-                avg = count > 0 ? (lastJudgment || `${count} valutaz.`) : '-';
-            } else {
-                avg = count > 0 ? (sum / count).toFixed(1) : '-';
-            }
+            const avg = isReligionSubject.value
+                ? (count > 0 ? (lastJudgment || `${count} valutaz.`) : '-')
+                : (count > 0 ? (sum / count).toFixed(1) : '-');
             return {
                 ...s,
                 average: avg
@@ -351,8 +348,6 @@ const isDirty = (id) => {
     if (!entryData.value[id] || !initialSnapshot.value[id]) return false;
     return JSON.stringify(entryData.value[id]) !== JSON.stringify(initialSnapshot.value[id]);
 };
-
-const gradeOptions = ITALIAN_GRADE_OPTIONS;
 
 const getBadgeColor = (val) => {
     const numeric = typeof val === 'string' ? gradeToNumeric(val) : val;

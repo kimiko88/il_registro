@@ -11,14 +11,14 @@ import (
 )
 
 var (
-	ErrUnauthorized     = errors.New("unauthorized")
-	ErrForbidden        = errors.New("forbidden: insufficient permissions")
-	ErrNotFound         = errors.New("not found")
-	ErrSlotConflict     = errors.New("slot already booked for this room")
-	ErrInvalidDate      = errors.New("invalid date format (expected YYYY-MM-DD)")
-	ErrPastBookingDate  = errors.New("cannot book a room in the past")
-	ErrRoomInactive     = errors.New("room is currently inactive")
-	ErrNoBookingNeeded  = errors.New("this room does not require booking")
+	ErrUnauthorized    = errors.New("unauthorized")
+	ErrForbidden       = errors.New("forbidden: insufficient permissions")
+	ErrNotFound        = errors.New("not found")
+	ErrSlotConflict    = errors.New("slot already booked for this room")
+	ErrInvalidDate     = errors.New("invalid date format (expected YYYY-MM-DD)")
+	ErrPastBookingDate = errors.New("cannot book a room in the past")
+	ErrRoomInactive    = errors.New("room is currently inactive")
+	ErrNoBookingNeeded = errors.New("this room does not require booking")
 )
 
 type Service interface {

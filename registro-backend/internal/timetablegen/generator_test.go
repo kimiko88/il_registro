@@ -199,3 +199,100 @@ func TestGenerator_NoDoubleBooking(t *testing.T) {
 		seenSlots[key] = s.ClassName
 	}
 }
+
+func TestGenerator_UnavailableSlotsRespected(t *testing.T) {
+	gen := NewGenerator(DefaultConfig())
+	ctx := context.Background()
+
+	assignments := []AssignmentData{
+		{
+			ClassID:      "class-1",
+			ClassName:    "1A",
+			SubjectID:    "sub-1",
+			SubjectName:  "Storia",
+			TeacherID:    "teacher-unavail",
+			HoursPerWeek: 3,
+		},
+	}
+
+	// Teacher is explicitly unavailable on Friday hours 1 to 5
+	var preferences []TeacherPreference
+	for h := 1; h <= 5; h++ {
+		preferences = append(preferences, TeacherPreference{
+			TeacherID:      "teacher-unavail",
+			DayOfWeek:      5,
+			HourIndex:      h,
+			PreferenceType: PrefUnavailable,
+		})
+	}
+
+	result, err := gen.Generate(ctx, assignments, nil, nil, preferences, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result.AssignedSlots != 3 {
+		t.Fatalf("expected 3 assigned slots, got %d", result.AssignedSlots)
+	}
+
+	for _, s := range result.Slots {
+		if s.DayOfWeek == 5 {
+			t.Errorf("teacher was assigned to Friday hour %d despite being unavailable", s.HourIndex)
+		}
+	}
+}
+
+func TestGenerator_ClassNoDoubleBooking(t *testing.T) {
+	gen := NewGenerator(DefaultConfig())
+	ctx := context.Background()
+
+	assignments := []AssignmentData{
+		{
+			ClassID:      "class-shared",
+			ClassName:    "3A",
+			SubjectID:    "sub-ita",
+			SubjectName:  "Italiano",
+			TeacherID:    "teacher-1",
+			HoursPerWeek: 5,
+		},
+		{
+			ClassID:      "class-shared",
+			ClassName:    "3A",
+			SubjectID:    "sub-mat",
+			SubjectName:  "Matematica",
+			TeacherID:    "teacher-2",
+			HoursPerWeek: 4,
+		},
+		{
+			ClassID:      "class-shared",
+			ClassName:    "3A",
+			SubjectID:    "sub-ing",
+			SubjectName:  "Inglese",
+			TeacherID:    "teacher-3",
+			HoursPerWeek: 3,
+		},
+	}
+
+	result, err := gen.Generate(ctx, assignments, nil, nil, nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result.AssignedSlots != 12 {
+		t.Fatalf("expected 12 assigned slots, got %d", result.AssignedSlots)
+	}
+
+	// Verify no two subjects in class 3A are in the same slot
+	type slotKey struct {
+		Day  int
+		Hour int
+	}
+	classSlots := make(map[slotKey]string)
+	for _, s := range result.Slots {
+		key := slotKey{Day: s.DayOfWeek, Hour: s.HourIndex}
+		if existingSub, exists := classSlots[key]; exists {
+			t.Fatalf("class double-booking: %s and %s in slot day %d hour %d", existingSub, s.SubjectName, key.Day, key.Hour)
+		}
+		classSlots[key] = s.SubjectName
+	}
+}

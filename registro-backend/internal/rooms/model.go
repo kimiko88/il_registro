@@ -63,28 +63,28 @@ type BookableRoom struct {
 
 // RoomBooking represents a reservation of a bookable room
 type RoomBooking struct {
-	ID                string     `json:"id" db:"id"`
-	SchoolID          string     `json:"school_id" db:"school_id"`
-	RoomID            string     `json:"room_id" db:"room_id"`
-	RoomName          string     `json:"room_name,omitempty" db:"room_name"`
-	BuildingID        *string    `json:"building_id,omitempty" db:"building_id"`
-	BuildingName      string     `json:"building_name,omitempty" db:"building_name"`
-	TeacherID         string     `json:"teacher_id" db:"teacher_id"`
-	TeacherName       string     `json:"teacher_name,omitempty" db:"teacher_name"`
-	ClassID           *string    `json:"class_id,omitempty" db:"class_id"`
-	ClassName         string     `json:"class_name,omitempty" db:"class_name"`
-	SubjectID         *string    `json:"subject_id,omitempty" db:"subject_id"`
-	SubjectName       string     `json:"subject_name,omitempty" db:"subject_name"`
-	BookingDate       string     `json:"booking_date" db:"booking_date"` // YYYY-MM-DD
-	HourIndex         int        `json:"hour_index" db:"hour_index"`
-	Status            string     `json:"status" db:"status"`
-	Notes             *string    `json:"notes,omitempty" db:"notes"`
-	IsRecurring       bool       `json:"is_recurring" db:"is_recurring"`
-	RecurrencePattern *string    `json:"recurrence_pattern,omitempty" db:"recurrence_pattern"`
-	RecurringUntil    *string    `json:"recurring_until,omitempty" db:"recurring_until"`
-	ParentBookingID   *string    `json:"parent_booking_id,omitempty" db:"parent_booking_id"`
-	CreatedAt         time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt         time.Time  `json:"updated_at" db:"updated_at"`
+	ID                string    `json:"id" db:"id"`
+	SchoolID          string    `json:"school_id" db:"school_id"`
+	RoomID            string    `json:"room_id" db:"room_id"`
+	RoomName          string    `json:"room_name,omitempty" db:"room_name"`
+	BuildingID        *string   `json:"building_id,omitempty" db:"building_id"`
+	BuildingName      string    `json:"building_name,omitempty" db:"building_name"`
+	TeacherID         string    `json:"teacher_id" db:"teacher_id"`
+	TeacherName       string    `json:"teacher_name,omitempty" db:"teacher_name"`
+	ClassID           *string   `json:"class_id,omitempty" db:"class_id"`
+	ClassName         string    `json:"class_name,omitempty" db:"class_name"`
+	SubjectID         *string   `json:"subject_id,omitempty" db:"subject_id"`
+	SubjectName       string    `json:"subject_name,omitempty" db:"subject_name"`
+	BookingDate       string    `json:"booking_date" db:"booking_date"` // YYYY-MM-DD
+	HourIndex         int       `json:"hour_index" db:"hour_index"`
+	Status            string    `json:"status" db:"status"`
+	Notes             *string   `json:"notes,omitempty" db:"notes"`
+	IsRecurring       bool      `json:"is_recurring" db:"is_recurring"`
+	RecurrencePattern *string   `json:"recurrence_pattern,omitempty" db:"recurrence_pattern"`
+	RecurringUntil    *string   `json:"recurring_until,omitempty" db:"recurring_until"`
+	ParentBookingID   *string   `json:"parent_booking_id,omitempty" db:"parent_booking_id"`
+	CreatedAt         time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at" db:"updated_at"`
 }
 
 // Request and Response DTOs

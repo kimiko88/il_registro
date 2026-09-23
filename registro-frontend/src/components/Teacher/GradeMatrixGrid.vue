@@ -57,7 +57,7 @@
               </td>
               <td class="q-pa-sm">
                 <!-- Se studente esonerato da religione -->
-                <div v-if="isReligionSubject && (student.religion_choice === 'non_avvalente' || student.religion_choice === 'attivita_alternativa')" class="row items-center q-gutter-xs">
+                <div v-if="isReligionSubject && isStudentExempt(student)" class="row items-center q-gutter-xs">
                   <q-badge
                     :color="student.religion_choice === 'attivita_alternativa' ? 'purple-7' : 'orange-8'"
                     text-color="white"
@@ -261,8 +261,7 @@ async function saveAllGrades() {
   if (isReligionSubject.value) {
     const gradesToSave = students.value.filter(s =>
       s.religion_judgment &&
-      s.religion_choice !== 'non_avvalente' &&
-      s.religion_choice !== 'attivita_alternativa'
+      !isStudentExempt(s)
     )
     if (gradesToSave.length === 0) {
       $q.notify({ type: 'warning', message: 'Inserisci almeno un giudizio in griglia per studenti avvalenti' })
