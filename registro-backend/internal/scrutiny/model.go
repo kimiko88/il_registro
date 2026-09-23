@@ -63,13 +63,16 @@ type ScrutinyMatrix struct {
 }
 
 type SubjectInfo struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID             string `json:"id"`
+	Name           string `json:"name"`
+	IsReligion     bool   `json:"is_religion"`
+	IsJudgmentOnly bool   `json:"is_judgment_only"`
 }
 
 type StudentScrutinyRow struct {
 	StudentID       string                     `json:"student_id"`
 	StudentName     string                     `json:"student_name"`
+	ReligionChoice  string                     `json:"religion_choice,omitempty"`
 	SubjectData     map[string]SubjectAverages `json:"subject_data"` // SubjectID -> Data
 	Record          *ScrutinyRecord            `json:"record,omitempty"`
 	AttendanceStats AttendanceSummary          `json:"attendance_stats"`
@@ -82,9 +85,10 @@ type AttendanceSummary struct {
 }
 
 type SubjectAverages struct {
-	Average    float64 `json:"average"`
-	GradeCount int     `json:"grade_count"`
-	Proposed   float64 `json:"proposed"` // Rounded average
+	Average          float64 `json:"average"`
+	GradeCount       int     `json:"grade_count"`
+	Proposed         float64 `json:"proposed"` // Rounded average
+	ProposedJudgment string  `json:"proposed_judgment,omitempty"` // Per materie a solo giudizio (IRC)
 }
 
 type SaveScrutinyRequest struct {

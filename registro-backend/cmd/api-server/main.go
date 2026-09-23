@@ -498,6 +498,9 @@ func main() {
 			studentsFascicoloH := students.NewFascicoloHandler(database)
 			studentsFascicoloH.RegisterRoutes(protected)
 
+			studentsReligionH := students.NewReligionHandler(database)
+			studentsReligionH.RegisterRoutes(protected)
+
 			subsRepo := substitutions.NewRepository(database)
 			subsSvc := substitutions.NewService(subsRepo)
 			subsH := substitutions.NewHandler(subsSvc)

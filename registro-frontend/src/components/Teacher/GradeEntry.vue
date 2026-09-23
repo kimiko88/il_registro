@@ -20,9 +20,9 @@
        <template v-slot:header="props">
           <q-tr :props="props">
             <q-th key="name" :props="props">{{ t('classRegister.tableHeaderStudent') || 'Studente' }}</q-th>
-            <q-th key="current_grade" :props="props">{{ t('classRegister.tableHeaderGrade') || 'Nuovo Voto' }} ({{ date }})</q-th>
+            <q-th key="current_grade" :props="props">{{ isReligionSubject ? 'Nuovo Giudizio IRC' : (t('classRegister.tableHeaderGrade') || 'Nuovo Voto') }} ({{ date }})</q-th>
             <q-th key="history" :props="props">{{ t('common.history') || 'Storico' }}</q-th>
-            <q-th key="average" :props="props">{{ t('gradesPage.average') || 'Media' }}</q-th>
+            <q-th key="average" :props="props">{{ isReligionSubject ? 'Ultimo Giudizio' : (t('gradesPage.average') || 'Media') }}</q-th>
             <q-th key="actions" :props="props">{{ t('common.actions') || 'Azioni' }}</q-th>
           </q-tr>
        </template>
@@ -34,14 +34,25 @@
                  <div class="text-caption text-grey">{{ t('classRegister.absent') || 'Assenze' }}: {{ props.row.absences || 0 }}</div>
               </q-td>
 
-              <q-td key="current_grade" :props="props" style="width: 250px">
-                 <div v-if="entryData[props.row.student_id]" class="row items-center no-wrap q-gutter-sm">
+              <q-td key="current_grade" :props="props" style="width: 280px">
+                 <div v-if="isReligionSubject && isStudentExemptFromReligion(props.row)" class="row items-center q-gutter-xs">
+                     <q-badge
+                        :color="props.row.religion_choice === 'attivita_alternativa' ? 'purple-7' : 'orange-8'"
+                        text-color="white"
+                        class="text-weight-bold q-py-xs q-px-sm rounded-md"
+                     >
+                        <q-icon :name="props.row.religion_choice === 'attivita_alternativa' ? 'swap_horiz' : 'block'" size="14px" class="q-mr-xs" />
+                        {{ props.row.religion_choice === 'attivita_alternativa' ? 'Attività Alternativa' : 'Non Avvalente IRC' }}
+                     </q-badge>
+                     <q-tooltip>Questo studente non si avvale dell'IRC e non può ricevere valutazioni di religione</q-tooltip>
+                 </div>
+                 <div v-else-if="entryData[props.row.student_id]" class="row items-center no-wrap q-gutter-sm">
                      <q-select
                         v-model="entryData[props.row.student_id].value"
-                       :options="gradeOptions"
+                       :options="currentGradeOptions"
                        dense outlined
                        placeholder="-"
-                       style="width: 100px"
+                       :style="{ width: isReligionSubject ? '160px' : '100px' }"
                        @keydown.tab="focusNext(props.rowIndex)"
                        :bg-color="getGradeColor(entryData[props.row.student_id].value)"
                     />
@@ -60,7 +71,26 @@
              </q-td>
 
              <q-td key="history" :props="props">
-                <div class="q-py-xs">
+                <!-- Se materia IRC, mostra tutti i giudizi ricevuti -->
+                <div v-if="isReligionSubject" class="q-py-xs">
+                   <div class="row items-center q-gutter-xs">
+                      <q-badge
+                         v-for="g in (props.row.grades || [])"
+                         :key="g.id"
+                         :color="getBadgeColor(g.description || g.grade_value)"
+                         class="cursor-pointer text-weight-bold"
+                         @click="editGradeDialog(g, props.row)"
+                      >
+                         {{ g.description || formatGrade(g.grade_value) }}
+                         <q-tooltip anchor="top middle" self="bottom middle">
+                            {{ formatDate(g.date) }} - {{ g.description || formatGrade(g.grade_value) }}
+                         </q-tooltip>
+                      </q-badge>
+                      <span v-if="!props.row.grades || props.row.grades.length === 0" class="text-caption text-grey-4">-</span>
+                   </div>
+                </div>
+                <!-- Altrimenti mostra la suddivisione standard Scritto / Orale / Pratico -->
+                <div v-else class="q-py-xs">
                    <!-- Scritto -->
                    <div class="row items-center q-mb-xs" style="min-height: 24px">
                       <span class="text-caption text-grey-7 text-weight-bold q-mr-sm" style="min-width: 50px">{{ t('gradesPage.written') || 'Scritto' }}:</span>
@@ -154,14 +184,14 @@
     <q-dialog v-model="showEditGradeDialog">
       <q-card style="min-width: 350px">
         <q-card-section class="bg-primary text-white">
-          <div class="text-h6 text-weight-bold">Modifica Voto - {{ selectedStudentName }}</div>
+          <div class="text-h6 text-weight-bold">{{ isReligionSubject ? 'Modifica Giudizio' : 'Modifica Voto' }} - {{ selectedStudentName }}</div>
         </q-card-section>
         
         <q-card-section class="q-pa-md q-gutter-md">
           <q-select
             v-model="editGradeForm.value"
-            :options="gradeOptions"
-            label="Voto"
+            :options="currentGradeOptions"
+            :label="isReligionSubject ? 'Giudizio IRC' : 'Voto'"
             outlined
             dense
             :bg-color="getGradeColor(editGradeForm.value)"
@@ -174,6 +204,7 @@
             dense
           />
           <q-select
+            v-if="!isReligionSubject"
             v-model="editGradeForm.evaluationType"
             :options="['Scritto', 'Orale', 'Pratico']"
             label="Tipo Valutazione"
@@ -206,13 +237,21 @@ import { useGradesStore } from '@/stores/grades';
 import { useAuthStore } from '@/stores/auth';
 import { useQuasar } from 'quasar';
 import { gradeService } from '@/services/gradeService';
-import { ITALIAN_GRADE_OPTIONS, gradeToNumeric, formatGrade, getGradeColor } from '@/utils/gradeUtils';
+import {
+  ITALIAN_GRADE_OPTIONS,
+  RELIGION_JUDGMENT_OPTIONS,
+  RELIGION_JUDGMENT_MAP,
+  gradeToNumeric,
+  formatGrade,
+  getGradeColor
+} from '@/utils/gradeUtils';
 
 const { t } = useI18n();
 
 const props = defineProps({
   classId: String,
   subject: String,
+  isReligion: { type: Boolean, default: false },
   date: String,
   type: String,
   readOnly: { type: Boolean, default: false }
@@ -228,21 +267,53 @@ const isOnline = ref(navigator.onLine);
 const entryData = ref({});
 const initialSnapshot = ref({});
 
+const isReligionSubject = computed(() => {
+    if (gradesStore.grades?.is_religion_subject) return true;
+    const currentSub = (gradesStore.subjects || []).find(s =>
+        String(s.id) === String(props.subject) ||
+        String(s.subject_id) === String(props.subject)
+    );
+    if (currentSub?.is_religion) return true;
+    if (currentSub?.subject_name && currentSub.subject_name.toLowerCase().includes('religione')) return true;
+    return false;
+});
+
+const currentGradeOptions = computed(() => {
+    if (isReligionSubject.value) {
+        return RELIGION_JUDGMENT_OPTIONS;
+    }
+    return ITALIAN_GRADE_OPTIONS;
+});
+
+const isStudentExemptFromReligion = (row) => {
+    if (!isReligionSubject.value) return false;
+    return row.religion_choice === 'non_avvalente' || row.religion_choice === 'attivita_alternativa';
+};
+
 const studentsWithGrades = computed(() => {
     if (props.readOnly) return [];
     if (gradesStore.grades && gradesStore.grades.students) {
         return gradesStore.grades.students.map(s => {
             let sum = 0;
             let count = 0;
+            let lastJudgment = '';
             if (s.grades) {
                 s.grades.forEach(g => {
-                    if (typeof g.grade_value === 'number' && g.grade_value > 0) {
+                    if (isReligionSubject.value) {
+                        if (g.description) lastJudgment = g.description;
+                        count++;
+                    } else if (typeof g.grade_value === 'number' && g.grade_value > 0) {
                         sum += g.grade_value;
                         count++;
                     }
                 });
             }
-            const avg = count > 0 ? (sum / count).toFixed(1) : '-';
+            let avg = '-';
+            if (isReligionSubject.value) {
+                avg = count > 0 ? (lastJudgment || `${count} valutaz.`) : '-';
+            } else {
+                avg = count > 0 ? (sum / count).toFixed(1) : '-';
+            }
             return {
                 ...s,
                 average: avg
@@ -303,21 +374,32 @@ const saveLine = async (id) => {
 
     try {
         let payloadType = "numeric";
-        if (typeof data.value === 'string' && isNaN(Number(data.value))) {
+        let gradeVal = gradeToNumeric(data.value);
+        let desc = data.notes || '';
+
+        if (isReligionSubject.value) {
             payloadType = "judgment";
+            gradeVal = RELIGION_JUDGMENT_MAP[data.value] ?? (gradeToNumeric(data.value) || 6);
+            desc = data.value + (data.notes ? ' - ' + data.notes : '');
+        } else if (typeof data.value === 'string' && isNaN(Number(data.value))) {
+            payloadType = "judgment";
+            desc = data.value + (data.notes ? ' - ' + data.notes : '');
         }
+
         let mappedType = null;
-        if (props.type === "Scritto") mappedType = "Written";
-        if (props.type === "Orale") mappedType = "Oral";
-        if (props.type === "Pratico") mappedType = "Practical";
+        if (!isReligionSubject.value) {
+            if (props.type === "Scritto") mappedType = "Written";
+            if (props.type === "Orale") mappedType = "Oral";
+            if (props.type === "Pratico") mappedType = "Practical";
+        }
 
         await gradeService.saveGrade({
             student_id: id,
             subject_id: props.subject,
-            grade_value: gradeToNumeric(data.value),
+            grade_value: gradeVal,
             grade_type: payloadType,
             semester: 1,
-            description: data.notes,
+            description: desc,
             date: props.date,
             is_published: true,
             grade_category: "formative",
@@ -428,19 +510,29 @@ const editGradeDialog = (grade, student) => {
 
 const saveIndividualGradeEdit = async () => {
     if (props.readOnly) return;
-    const valNumeric = gradeToNumeric(editGradeForm.value.value);
+    let valNumeric = gradeToNumeric(editGradeForm.value.value);
     const typeMap = { 'Scritto': 'Written', 'Orale': 'Oral', 'Pratico': 'Practical' };
-    const evalType = typeMap[editGradeForm.value.evaluationType] || editGradeForm.value.evaluationType;
-    const desc = editGradeForm.value.notes;
+    let evalType = typeMap[editGradeForm.value.evaluationType] || editGradeForm.value.evaluationType;
+    let desc = editGradeForm.value.notes;
+    let gradeType = undefined;
+
+    if (isReligionSubject.value) {
+        valNumeric = RELIGION_JUDGMENT_MAP[editGradeForm.value.value] ?? (gradeToNumeric(editGradeForm.value.value) || 6);
+        desc = editGradeForm.value.value + (editGradeForm.value.notes && editGradeForm.value.notes !== editGradeForm.value.value ? ' - ' + editGradeForm.value.notes : '');
+        gradeType = 'judgment';
+        evalType = undefined;
+    }
+
     try {
         await gradesStore.updateGrade(editGradeForm.value.id, {
             grade_value: valNumeric,
             description: desc,
             date: editGradeForm.value.date || undefined,
             evaluation_type: evalType,
+            grade_type: gradeType,
             reason: 'Modifica voto singola'
         });
-        $q.notify({ type: 'positive', message: t('common.success') });
+        $q.notify({ type: 'positive', message: isReligionSubject.value ? 'Giudizio aggiornato' : t('common.success') });
         showEditGradeDialog.value = false;
         emit('refresh');
     } catch (err) {

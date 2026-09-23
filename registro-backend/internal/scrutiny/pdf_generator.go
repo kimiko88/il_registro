@@ -60,7 +60,23 @@ func GeneratePagellaPDF(matrix *ScrutinyMatrix, studentID string) ([]byte, error
 		avgStr := "N/D"
 		finalGradeStr := "N/D"
 
-		if exists && subData.GradeCount > 0 {
+		if sub.IsReligion || sub.IsJudgmentOnly {
+			if targetStudent.ReligionChoice == "non_avvalente" {
+				avgStr = "-"
+				finalGradeStr = "Non Avvalente"
+			} else if targetStudent.ReligionChoice == "attivita_alternativa" {
+				avgStr = "-"
+				finalGradeStr = "Att. Alternativa"
+			} else if exists && subData.GradeCount > 0 {
+				if subData.ProposedJudgment != "" {
+					avgStr = subData.ProposedJudgment
+				} else {
+					avgStr = mapGradeToReligionJudgment(subData.Average)
+				}
+				finalGradeStr = avgStr
+			}
+			// Note: IRC does not count towards arithmetic GPA
+		} else if exists && subData.GradeCount > 0 {
 			avgStr = fmt.Sprintf("%.2f", subData.Average)
 			finalGradeStr = fmt.Sprintf("%.0f", subData.Proposed)
 			totalGrade += subData.Proposed

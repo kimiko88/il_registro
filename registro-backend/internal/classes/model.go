@@ -29,12 +29,14 @@ type CreateClassRequest struct {
 type ClassSubject struct {
 	ID            string  `json:"id" db:"id"`
 	ClassID       string  `json:"class_id" db:"class_id"`
-	SubjectID     string  `json:"subject_id" db:"subject_id"`
-	SubjectName   string  `json:"subject_name,omitempty"`     // Joined
-	TeacherID     *string `json:"teacher_id" db:"teacher_id"` // Nullable
-	TeacherName   string  `json:"teacher_name,omitempty"`     // Joined
-	TeacherUserID string  `json:"teacher_user_id,omitempty"`  // Joined user ID
-	HoursPerWeek  float64 `json:"hours_per_week" db:"hours_per_week"`
+	SubjectID      string  `json:"subject_id" db:"subject_id"`
+	SubjectName    string  `json:"subject_name,omitempty"`     // Joined
+	IsReligion     bool    `json:"is_religion"`               // Joined
+	IsJudgmentOnly bool    `json:"is_judgment_only"`          // Joined
+	TeacherID      *string `json:"teacher_id" db:"teacher_id"` // Nullable
+	TeacherName    string  `json:"teacher_name,omitempty"`     // Joined
+	TeacherUserID  string  `json:"teacher_user_id,omitempty"`  // Joined user ID
+	HoursPerWeek   float64 `json:"hours_per_week" db:"hours_per_week"`
 }
 
 type AssignSubjectRequest struct {

@@ -353,3 +353,37 @@ func (r *postgresRepository) SaveDeferredScrutiny(ctx context.Context, req *Save
 
 	return tx.Commit()
 }
+
+// ReligionChoiceProvider allows retrieving student religion choices for a class.
+type ReligionChoiceProvider interface {
+	GetClassReligionChoices(ctx context.Context, classID string) (map[string]string, error)
+}
+
+func (r *postgresRepository) GetClassReligionChoices(ctx context.Context, classID string) (map[string]string, error) {
+	query := `
+		SELECT s.id::text, COALESCE(s.user_id::text, ''), src.choice::text
+		FROM student_religion_choices src
+		JOIN students s ON (s.id::text = src.student_id::text OR s.user_id::text = src.student_id::text)
+		WHERE s.class_id::text = $1
+	`
+	rows, err := r.db.QueryContext(ctx, query, classID)
+	if err != nil {
+		return map[string]string{}, nil
+	}
+	defer rows.Close()
+
+	res := make(map[string]string)
+	for rows.Next() {
+		var sID, uID, choice string
+		if err := rows.Scan(&sID, &uID, &choice); err == nil {
+			if sID != "" {
+				res[sID] = choice
+			}
+			if uID != "" {
+				res[uID] = choice
+			}
+		}
+	}
+	return res, nil
+}
+

@@ -338,11 +338,21 @@ const testForm = ref({
 });
 
 const matrixStudentsList = computed(() => {
-    return (gradesStore.grades?.students || []).map(s => ({
-        id: s.student_id,
-        first_name: s.first_name,
-        last_name: s.last_name
-    }));
+    return (gradesStore.grades?.students || []).map(s => {
+        let first = s.first_name || '';
+        let last = s.last_name || '';
+        if (!first && !last && s.full_name) {
+            const parts = s.full_name.split(' ');
+            first = parts.slice(1).join(' ');
+            last = parts[0];
+        }
+        return {
+            id: s.student_id,
+            first_name: first,
+            last_name: last,
+            religion_choice: s.religion_choice
+        };
+    });
 });
 
 const overlappingTestsCount = computed(() => {

@@ -39,7 +39,7 @@
             >
               <th class="q-pa-sm" style="width: 40px">#</th>
               <th class="q-pa-sm">{{ t('competenciesPage.student') || 'Alunno' }}</th>
-              <th class="q-pa-sm" style="width: 150px">{{ t('classRegister.tableHeaderGrade') || 'Voto (1-10)' }}</th>
+              <th class="q-pa-sm" :style="{ width: isReligionSubject ? '180px' : '150px' }">{{ isReligionSubject ? 'Giudizio IRC' : (t('classRegister.tableHeaderGrade') || 'Voto (1-10)') }}</th>
               <th class="q-pa-sm" style="width: 220px">{{ t('gradesPage.besDsaMeasures') || 'Misure BES / DSA' }}</th>
               <th class="q-pa-sm">{{ t('classRegister.tableHeaderGradeNotes') || 'Note / Descrizione' }}</th>
             </tr>
@@ -56,7 +56,37 @@
                 {{ student.last_name }} {{ student.first_name }}
               </td>
               <td class="q-pa-sm">
+                <!-- Se studente esonerato da religione -->
+                <div v-if="isReligionSubject && (student.religion_choice === 'non_avvalente' || student.religion_choice === 'attivita_alternativa')" class="row items-center q-gutter-xs">
+                  <q-badge
+                    :color="student.religion_choice === 'attivita_alternativa' ? 'purple-7' : 'orange-8'"
+                    text-color="white"
+                    class="text-weight-bold q-py-xs q-px-sm rounded-md"
+                  >
+                    <q-icon :name="student.religion_choice === 'attivita_alternativa' ? 'swap_horiz' : 'block'" size="14px" class="q-mr-xs" />
+                    {{ student.religion_choice === 'attivita_alternativa' ? 'Attività Alternativa' : 'Non Avvalente' }}
+                  </q-badge>
+                  <q-tooltip>Questo studente non si avvale dell'IRC e non può ricevere valutazioni</q-tooltip>
+                </div>
+                <!-- Se materia religione: select con i 6 giudizi -->
+                <q-select
+                  v-else-if="isReligionSubject"
+                  v-model="student.religion_judgment"
+                  :options="RELIGION_JUDGMENT_OPTIONS"
+                  dense
+                  outlined
+                  placeholder="Seleziona..."
+                  class="text-weight-bold"
+                  :bg-color="getGradeColor(student.religion_judgment)"
+                  hide-bottom-space
+                  :ref="el => inputRefs[idx] = el"
+                  @keydown.enter.prevent="focusNext(idx)"
+                  @keydown.down.prevent="focusNext(idx)"
+                  @keydown.up.prevent="focusPrev(idx)"
+                />
+                <!-- Altrimenti: input numerico standard -->
                 <q-input
+                  v-else
                   v-model.number="student.grade_value"
                   type="number"
                   step="0.25"
@@ -113,11 +143,13 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import api from '@/services/api'
 import { useOfflineSync } from '@/composables/useOfflineSync'
+import { useGradesStore } from '@/stores/grades'
+import { RELIGION_JUDGMENT_OPTIONS, RELIGION_JUDGMENT_MAP, getGradeColor } from '@/utils/gradeUtils'
 import CompensativeMeasuresSelector from './CompensativeMeasuresSelector.vue'
 
 const { t } = useI18n()
@@ -133,6 +165,10 @@ const props = defineProps({
   classId: {
     type: String,
     required: true
+  },
+  isReligion: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -151,12 +187,32 @@ function isGradeInvalid(val) {
   return isNaN(num) || num < 1 || num > 10
 }
 
+const gradesStore = useGradesStore()
+
+const isReligionSubject = computed(() => {
+  if (props.isReligion) return true
+  if (gradesStore.grades?.is_religion_subject) return true
+  const currentSub = (gradesStore.subjects || []).find(s =>
+    String(s.id) === String(props.subjectId) ||
+    String(s.subject_id) === String(props.subjectId)
+  )
+  if (currentSub?.is_religion) return true
+  if (currentSub?.subject_name && currentSub.subject_name.toLowerCase().includes('religione')) return true
+  return false
+})
+
+function isStudentExempt(student) {
+  return student?.religion_choice === 'non_avvalente' || student?.religion_choice === 'attivita_alternativa'
+}
+
 watch(() => props.studentsList, (val) => {
   students.value = (val || []).map(s => ({
     id: s.id,
     first_name: s.first_name,
     last_name: s.last_name,
+    religion_choice: s.religion_choice,
     grade_value: null,
+    religion_judgment: null,
     compensative_measures: [],
     notes: ''
   }))
@@ -202,6 +258,48 @@ function focusPrevNote(idx) {
 }
 
 async function saveAllGrades() {
+  if (isReligionSubject.value) {
+    const gradesToSave = students.value.filter(s =>
+      s.religion_judgment &&
+      s.religion_choice !== 'non_avvalente' &&
+      s.religion_choice !== 'attivita_alternativa'
+    )
+    if (gradesToSave.length === 0) {
+      $q.notify({ type: 'warning', message: 'Inserisci almeno un giudizio in griglia per studenti avvalenti' })
+      return
+    }
+
+    saving.value = true
+    try {
+      const payload = {
+        subject_id: props.subjectId,
+        class_id: props.classId,
+        semester: 1,
+        date: new Date().toISOString().split('T')[0],
+        grades: gradesToSave.map(s => ({
+          student_id: s.id,
+          grade_value: RELIGION_JUDGMENT_MAP[s.religion_judgment] ?? 6,
+          grade_type: 'judgment',
+          description: s.religion_judgment + (s.notes ? ' - ' + s.notes : ''),
+          compensative_measures: s.compensative_measures
+        }))
+      }
+      const res = await executeWithOfflineQueue(
+        { url: '/grades/bulk', method: 'post', data: payload },
+        { title: 'Salvataggio giudizi IRC' }
+      )
+      if (!res?.offline && !res?.enqueued) {
+        $q.notify({ type: 'positive', message: 'Giudizi IRC salvati con successo' })
+      }
+      emit('saved')
+    } catch {
+      $q.notify({ type: 'negative', message: t('common.error') })
+    } finally {
+      saving.value = false
+    }
+    return
+  }
+
   const gradesToSave = students.value.filter(s => s.grade_value !== null && s.grade_value !== '' && !isNaN(s.grade_value))
   if (gradesToSave.length === 0) {
     $q.notify({ type: 'warning', message: t('gradesPage.insertAtLeastOneGrade') || 'Inserisci almeno un voto in griglia' })

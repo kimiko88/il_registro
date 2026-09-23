@@ -213,4 +213,73 @@ describe('GradeMatrixGrid.vue', () => {
     wrapper.vm.handleNoteArrowLeft(0, { target: { selectionStart: 0 } });
     expect(mockGradeFocus).toHaveBeenCalled();
   });
+
+  it('detects religion subject and identifies exempt students', () => {
+    const studentsWithReligion = [
+      { id: 'std-1', first_name: 'Mario', last_name: 'Rossi', religion_choice: 'avvalente' },
+      { id: 'std-2', first_name: 'Luigi', last_name: 'Verdi', religion_choice: 'non_avvalente' },
+      { id: 'std-3', first_name: 'Anna', last_name: 'Neri', religion_choice: 'attivita_alternativa' }
+    ];
+
+    const wrapper = mount(GradeMatrixGrid, {
+      props: {
+        studentsList: studentsWithReligion,
+        subjectId: 'sub-rel',
+        isReligion: true,
+        classId: 'cls-1'
+      },
+      global: {
+        stubs: {
+          ...commonStubs,
+          'q-select': true
+        }
+      }
+    });
+
+    expect(wrapper.vm.isReligionSubject).toBe(true);
+
+    // std-1 is avvalente -> not exempt
+    expect(wrapper.vm.isStudentExempt(studentsWithReligion[0])).toBe(false);
+
+    // std-2 is non_avvalente -> exempt
+    expect(wrapper.vm.isStudentExempt(studentsWithReligion[1])).toBe(true);
+
+    // std-3 is attivita_alternativa -> exempt
+    expect(wrapper.vm.isStudentExempt(studentsWithReligion[2])).toBe(true);
+  });
+
+  it('saves batch grades for religion subject with grade_type: judgment', async () => {
+    const studentsWithReligion = [
+      { id: 'std-1', first_name: 'Mario', last_name: 'Rossi', religion_choice: 'avvalente' }
+    ];
+
+    const wrapper = mount(GradeMatrixGrid, {
+      props: {
+        studentsList: studentsWithReligion,
+        subjectId: 'sub-rel',
+        isReligion: true,
+        classId: 'cls-1'
+      },
+      global: {
+        stubs: {
+          ...commonStubs,
+          'q-select': true
+        }
+      }
+    });
+
+    wrapper.vm.students[0].religion_judgment = 'Ottimo';
+    await wrapper.vm.saveAllGrades();
+
+    expect(api.post).toHaveBeenCalledWith('/grades/bulk', expect.objectContaining({
+      grades: expect.arrayContaining([
+        expect.objectContaining({
+          student_id: 'std-1',
+          grade_value: 10,
+          grade_type: 'judgment',
+          description: expect.stringContaining('Ottimo')
+        })
+      ])
+    }));
+  });
 });
