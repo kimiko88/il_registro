@@ -159,6 +159,8 @@ I composabili in `src/composables/` incapsulano la logica reattiva, l'interazion
 7. **Widget Limite Assenze 25% (`AbsenceLimitWidget.vue`)**: Verifica automatica della frequenza minima del 75% per la validità dell'anno scolastico (art. 14 comma 7 DPR 122/2009) con barra visiva, marker sul 25% e calcolo predittivo delle ore residue consentite.
 8. **Spotlight Globale (`GlobalSearchDialog.vue`)**: Ricerca unificata `Ctrl+K` con navigazione da tastiera, debounce e indicizzazione istantanea di studenti, classi, materie e comandi rapidi.
 9. **Isolamento Errori (`ErrorBoundary.vue`)**: Componente di cattura errori reattivo con card fallback accessibile WCAG e ripristino dello stato applicativo senza perdita di sessione.
+10. **Aule Prenotabili Multi-Plesso (`Rooms.vue` & `RoomBooking.vue`)**: Interfaccia segreteria per anagrafica plessi, tipologia e capienza laboratori, e portale docente per prenotazioni spot o ricorrenti con controllo disponibilità e prevenzione sovrapposizioni.
+11. **Generatore Orario & Desiderata (`TimetableConstraints.vue`, `SchedulePreferences.vue`, `Timetable.vue`)**: Modulo per il Vicario/Segreteria con configurazione vincoli istituto, form desiderata docente e console di generazione orario CSP con polling asincrono e pubblicazione atomica.
 
 ---
 
@@ -178,15 +180,18 @@ Il registro implementa un sistema coerente di tema scuro (`.body--dark`) gestito
 
 ---
 
-## 🧪 Unit Testing dei Componenti, Composabili & Servizi
+## 🧪 Unit & E2E Testing dei Componenti, Composabili & Servizi
 
 La suite di test frontend è sviluppata con **Vitest** e **Vue Test Utils**:
 
-- **Comando di esecuzione**: `npm run test:unit`
-- **Metriche**: **190 test suite**, **1228 unit test passati al 100%** (0 errori, 0 fallimenti).
+- **Comando di esecuzione**: `npm run test:unit` oppure `npx vitest run`
+- **Metriche**: **277 test suite**, **1548 unit/E2E test passati al 100%** (0 errori, 0 fallimenti).
 - **Linter**: `npm run lint` (**0 errori, 0 warning** su tutto il codice sorgente).
 - **Copertura**:
   - `tests/unit/components/`: Test dedicati per componenti Admin, Common, Parent, Secretary, Student e Teacher.
+  - `tests/unit/pages/`: Test completi sulle nuove pagine di gestione aule (`Rooms.spec.js`), prenotazione aule (`RoomBooking.spec.js`), desiderata orario (`SchedulePreferences.spec.js`) e vincoli orario (`TimetableConstraints.spec.js`).
+  - `tests/unit/services/`: Test isolati per tutti i client HTTP inclusi `roomsService.spec.js` e `timetableGenService.spec.js`.
+  - `tests/e2e/`: Workflow completi end-to-end con mock realistici: `rooms-booking-workflow.spec.js` e `timetable-generation-workflow.spec.js`.
   - `tests/unit/composables/`: Test dedicati per tutti i composabili (`useSpeechSynthesis`, `useGlobalKeyboardShortcuts`, `useDraftAutosave`, `usePermissions`, `useIdempotency`, `useOutboxStore`, ecc.).
   - `tests/unit/accessibility/`: Suite completa per compliance WCAG 2.2, AgID, TTS, Reading Ruler e invio segnalazioni.
   - `tests/unit/security/`: Test di anti-regressione RBAC, XSS DOMPurify sanitization, CSV injection prevention, route guards e token security.

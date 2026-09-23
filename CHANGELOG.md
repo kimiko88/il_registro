@@ -3,6 +3,34 @@
 Tutte le modifiche rilevanti a questo progetto sono documentate in questo file.
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/).
 
+## [1.2.0-beta] — 2026-09-23
+
+### Aggiunto & Migliorato
+
+- **Backend (`registro-backend`)**:
+  - **Gestione Aule Prenotabili Multi-Plesso (`internal/rooms`)**:
+    - Gestione completa plessi scolastici (`school_buildings`), aule speciali e laboratori con capienza, dotazioni e flag di prenotabilità (`bookable_rooms`).
+    - Modulo prenotazioni (`room_bookings`) con supporto a prenotazioni spot o ricorrenti settimanali per classe, giorno e ora di lezione.
+    - Controllo transazionale anti-sovrapposizione e policy RLS Supabase rigorose (migrazioni 116, 117, 118, 119).
+  - **Generatore Automatico Orario Scolastico CSP (`internal/timetablegen`)**:
+    - Risolutore Constraint Satisfaction Problem in Go per il calcolo dell'orario completo in < 30 secondi.
+    - Risoluzione vincoli duri (nessuna sovrapposizione docente/classe/aula, vincolo plesso aula-classe, requisiti laboratori e palestre).
+    - Risoluzione vincoli morbidi con prioritizzazione algoritmica dei desiderata docenti (giorno libero, fasce orarie) pesata in base all'anzianità di servizio (`hiring_date`).
+    - Esecuzione job asincrono in background (`POST /timetable/generate`), polling di stato (`GET /timetable/generate/:jobID`) e pubblicazione atomica in `class_schedules` (`POST /timetable/generate/:jobID/publish`).
+  - **Suite di Test Backend**: Test unitari dedicati per `rooms` e `timetablegen` e test di integrazione completi (`TestIntegration_RoomsAndBookingsLifecycle`, `TestIntegration_TimetableGenerationLifecycle`).
+
+- **Frontend (`registro-frontend`)**:
+  - **Pagine & Servizi Gestione Aule (`Rooms.vue`, `RoomBooking.vue`, `roomsService.js`)**:
+    - Cruscotto segreteria per anagrafica plessi, tipologia aule, capienze e impostazione aule prenotabili.
+    - Interfaccia docente per la prenotazione aule/laboratori per classe, ora e data, con supporto a ricorrenze settimanali e rilevamento conflitti in tempo reale.
+  - **Console Orario, Vincoli & Desiderata (`TimetableConstraints.vue`, `SchedulePreferences.vue`, `Timetable.vue`, `timetableGenService.js`)**:
+    - Configurazione vincoli di istituto e plesso (giorni, ore/giorno, max ore buche, pesatura anzianità).
+    - Compilazione self-service desiderata docenti (giorno libero, fasce orarie preferite/evitate).
+    - Console di generazione orario per Dirigenza e Vicario con monitoraggio asincrono, fitness score, anteprima orario proposto e pubblicazione con 1 click.
+  - **Qualità del Codice & Test Suite**:
+    - Risolti tutti i warning ed errori ESLint (`0 problems`).
+    - Suite espansa a **277 file di test e 1548 test passati al 100%** con l'aggiunta di test unitari di pagina/servizio e test di flusso end-to-end (`rooms-booking-workflow.spec.js` e `timetable-generation-workflow.spec.js`).
+
 ## [1.1.0-beta] — 2026-09-13
 
 ### Aggiunto & Migliorato

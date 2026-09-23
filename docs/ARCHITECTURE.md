@@ -174,6 +174,8 @@ Middleware Go:
 | **Idempotency-Key Injection**     | Frontend, `useIdempotency.js`  | Prevenzione duplicazioni su richieste mutative critiche con header HTTP `Idempotency-Key` automatico |
 | **Strict Role Validation & Domain Guard** | Backend, `internal/users` | Validazione server-side dei 25 ruoli istituzionali supportati con respinta `HTTP 400 Bad Request` |
 | **Hierarchical Role Resolver & Adaptive Tour/Help** | Frontend, `Common/` (Tour & Help) | Mappatura coerente dei ruoli su profili canonici con Onboarding Tour e Help Center dedicati per ruolo |
+| **Multi-Building Bookable Room Engine** | Backend, `internal/rooms` | Gestione aule e laboratori multi-plesso con controllo atomico sovrapposizioni e ricorrenze settimanali |
+| **CSP Timetable Solver & Seniority Priority** | Backend, `internal/timetablegen` | Generatore orario vincolato (CSP) con allocazione aule/plessi e soddisfazione desiderata ponderata sull'anzianità di servizio (`hiring_date`) |
 
 ---
 
