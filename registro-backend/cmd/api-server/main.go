@@ -53,6 +53,7 @@ import (
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/recovery"
 	"registro-backend/internal/reports"
+	"registro-backend/internal/rooms"
 	"registro-backend/internal/rubrics"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schoolcalendar"
@@ -73,6 +74,7 @@ import (
 	"registro-backend/internal/teachers"
 	"registro-backend/internal/tenants"
 	"registro-backend/internal/textbooks"
+	"registro-backend/internal/timetablegen"
 	"registro-backend/internal/timetables"
 	"registro-backend/internal/trips"
 	"registro-backend/internal/uda"
@@ -242,6 +244,14 @@ func main() {
 	tripsH := trips.NewHandler(tripsSvc)
 	rubricsH := rubrics.NewHandler(rubricsSvc)
 	schoolCalendarH := schoolcalendar.NewHandler(schoolCalendarSvc)
+
+	roomsRepo := rooms.NewRepository(database)
+	roomsSvc := rooms.NewService(roomsRepo)
+	roomsH := rooms.NewHandler(roomsSvc)
+
+	timetableGenRepo := timetablegen.NewRepository(database)
+	timetableGenSvc := timetablegen.NewService(timetableGenRepo, nil)
+	timetableGenH := timetablegen.NewHandler(timetableGenSvc)
 
 	a11yRepo := accessibility.NewRepository(database)
 	a11ySvc := accessibility.NewService(a11yRepo)
@@ -432,6 +442,8 @@ func main() {
 			docsH.RegisterRoutes(uploadLimited)
 			schedH.RegisterRoutes(protected)
 			timetablesH.RegisterRoutes(protected)
+			roomsH.RegisterRoutes(protected)
+			timetableGenH.RegisterRoutes(protected)
 			agendaH.RegisterRoutes(protected)
 			colloquiH.RegisterRoutes(protected)
 			verbaliH.RegisterRoutes(protected)

@@ -64,7 +64,7 @@ func (r *PostgresRepository) GetClassSchoolID(ctx context.Context, classID strin
 func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID string) ([]ClassSchedule, error) {
 	query := `
 		SELECT cs.id, cs.class_id, COALESCE(c.name || c.section, c.name, ''), cs.day_of_week, cs.hour_index, cs.subject_id, s.name, 
-		       cs.teacher_id, COALESCE(u.last_name, tu.last_name, ''), COALESCE(u.first_name, tu.first_name, ''), COALESCE(cs.room, ''), cs.created_at, cs.updated_at
+		       cs.teacher_id, COALESCE(u.last_name, tu.last_name, ''), COALESCE(u.first_name, tu.first_name, ''), COALESCE(cs.room, ''), cs.room_id::text, cs.created_at, cs.updated_at
 		FROM class_schedules cs
 		JOIN subjects s ON cs.subject_id = s.id
 		JOIN classes c ON cs.class_id = c.id
@@ -83,16 +83,20 @@ func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID stri
 	var results []ClassSchedule
 	for rows.Next() {
 		var cs ClassSchedule
-		var tLast, tFirst sql.NullString
+		var tLast, tFirst, rID sql.NullString
 		err := rows.Scan(
 			&cs.ID, &cs.ClassID, &cs.ClassName, &cs.DayOfWeek, &cs.HourIndex, &cs.SubjectID, &cs.SubjectName,
-			&cs.TeacherID, &tLast, &tFirst, &cs.Room, &cs.CreatedAt, &cs.UpdatedAt,
+			&cs.TeacherID, &tLast, &tFirst, &cs.Room, &rID, &cs.CreatedAt, &cs.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
 		if tLast.Valid && tFirst.Valid {
 			cs.TeacherName = strings.TrimSpace(tLast.String + " " + tFirst.String)
+		}
+		if rID.Valid {
+			val := rID.String
+			cs.RoomID = &val
 		}
 		results = append(results, cs)
 	}
@@ -108,7 +112,7 @@ func (r *PostgresRepository) GetTeacherSchedule(ctx context.Context, userID stri
 func (r *PostgresRepository) GetByClass(ctx context.Context, classID string) ([]ClassSchedule, error) {
 	query := `
 		SELECT cs.id, cs.class_id, cs.day_of_week, cs.hour_index, cs.subject_id, s.name, 
-		       cs.teacher_id, COALESCE(u.last_name, tu.last_name, ''), COALESCE(u.first_name, tu.first_name, ''), COALESCE(cs.room, ''), cs.created_at, cs.updated_at
+		       cs.teacher_id, COALESCE(u.last_name, tu.last_name, ''), COALESCE(u.first_name, tu.first_name, ''), COALESCE(cs.room, ''), cs.room_id::text, cs.created_at, cs.updated_at
 		FROM class_schedules cs
 		JOIN subjects s ON cs.subject_id = s.id
 		LEFT JOIN users u ON cs.teacher_id = u.id
@@ -126,16 +130,20 @@ func (r *PostgresRepository) GetByClass(ctx context.Context, classID string) ([]
 	var results []ClassSchedule
 	for rows.Next() {
 		var cs ClassSchedule
-		var tLast, tFirst sql.NullString
+		var tLast, tFirst, rID sql.NullString
 		err := rows.Scan(
 			&cs.ID, &cs.ClassID, &cs.DayOfWeek, &cs.HourIndex, &cs.SubjectID, &cs.SubjectName,
-			&cs.TeacherID, &tLast, &tFirst, &cs.Room, &cs.CreatedAt, &cs.UpdatedAt,
+			&cs.TeacherID, &tLast, &tFirst, &cs.Room, &rID, &cs.CreatedAt, &cs.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
 		if tLast.Valid && tFirst.Valid {
 			cs.TeacherName = strings.TrimSpace(tLast.String + " " + tFirst.String)
+		}
+		if rID.Valid {
+			val := rID.String
+			cs.RoomID = &val
 		}
 		results = append(results, cs)
 	}
@@ -196,14 +204,14 @@ func (r *PostgresRepository) Update(ctx context.Context, classID string, entries
 		for _, e := range entries {
 			id := uuid.New().String()
 			normTeacherID := r.normalizeTeacherID(ctx, e.TeacherID)
-			values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d)",
-				argIdx, argIdx+1, argIdx+2, argIdx+3, argIdx+4, argIdx+5, argIdx+6))
-			args = append(args, id, classID, e.DayOfWeek, e.HourIndex, e.SubjectID, normTeacherID, e.Room)
-			argIdx += 7
+			values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+				argIdx, argIdx+1, argIdx+2, argIdx+3, argIdx+4, argIdx+5, argIdx+6, argIdx+7))
+			args = append(args, id, classID, e.DayOfWeek, e.HourIndex, e.SubjectID, normTeacherID, e.Room, e.RoomID)
+			argIdx += 8
 		}
 
 		query := fmt.Sprintf(`
-			INSERT INTO class_schedules (id, class_id, day_of_week, hour_index, subject_id, teacher_id, room)
+			INSERT INTO class_schedules (id, class_id, day_of_week, hour_index, subject_id, teacher_id, room, room_id)
 			VALUES %s
 		`, strings.Join(values, ","))
 

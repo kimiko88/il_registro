@@ -51,6 +51,17 @@
         />
 
         <q-btn
+          v-if="canGenerate"
+          label="Genera Orario Automatico"
+          icon="auto_awesome"
+          color="deep-purple-7"
+          unelevated
+          no-caps
+          class="rounded-xl q-px-md font-bold shadow-xs text-white"
+          @click="openGenerateDialog"
+        />
+
+        <q-btn
           v-if="viewMode === 'class' && selectedClass"
           :label="t('timetablePage.subjects') || 'Cattedre / Materie'"
           icon="menu_book"
@@ -328,6 +339,99 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <!-- Modal: Generazione Automatica Orario -->
+    <q-dialog v-model="showGenerateDialog" persistent>
+      <q-card style="min-width: 550px; max-width: 700px;" class="rounded-2xl q-pa-sm">
+        <q-card-section class="row items-center justify-between">
+          <div class="text-h6 text-weight-bold row items-center gap-2">
+            <q-icon name="auto_awesome" color="deep-purple-7" />
+            Generazione Automatica Orario Scolastico
+          </div>
+          <q-btn icon="close" flat round dense v-close-popup :disable="generating" />
+        </q-card-section>
+
+        <q-card-section class="q-pt-none q-gutter-md">
+          <div class="text-body2 text-grey-7">
+            L'algoritmo calcola l'orario completo di tutti i docenti e classi, garantendo:
+            <ul class="q-my-xs q-pl-md">
+              <li><strong>Priorità per Anzianità</strong>: i docenti con maggiore anzianità hanno priorità nei propri desiderata.</li>
+              <li><strong>Aule Speciali & Plessi</strong>: assegna automaticamente laboratori e palestre nel plesso corretto.</li>
+              <li><strong>Assenza di Conflitti</strong>: nessun docente o classe sovrapposti nella stessa ora.</li>
+            </ul>
+          </div>
+
+          <div class="row items-center justify-between bg-slate-50 border border-slate-200 rounded-xl q-pa-sm">
+            <span class="text-caption text-grey-7">Vuoi verificare o modificare i requisiti aule o vincoli?</span>
+            <q-btn flat icon="tune" label="Configura Vincoli" to="/secretary/timetable-constraints" no-caps color="primary" dense size="sm" />
+          </div>
+
+          <!-- Generation In Progress -->
+          <div v-if="generating" class="q-pa-md text-center">
+            <q-linear-progress indeterminate color="deep-purple-7" class="rounded-xl q-mb-md" />
+            <div class="text-weight-bold text-deep-purple-8">Calcolo combinatorio orario in corso...</div>
+            <div class="text-caption text-grey-6">Tempo stimato: meno di 10-20 secondi</div>
+          </div>
+
+          <!-- Generation Result -->
+          <div v-else-if="generationResult" class="q-gutter-sm">
+            <div class="row q-col-gutter-sm">
+              <div class="col-4 text-center p-3 rounded-xl bg-purple-50 border border-purple-200">
+                <div class="text-caption text-purple-9 font-bold">Copertura Orario</div>
+                <div class="text-h5 text-weight-bolder text-purple-9">{{ generationResult.coverage_pct?.toFixed(1) }}%</div>
+              </div>
+              <div class="col-4 text-center p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                <div class="text-caption text-emerald-9 font-bold">Ore Assegnate</div>
+                <div class="text-h5 text-weight-bolder text-emerald-9">{{ generationResult.assigned_slots }} / {{ generationResult.total_slots }}</div>
+              </div>
+              <div class="col-4 text-center p-3 rounded-xl bg-blue-50 border border-blue-200">
+                <div class="text-caption text-blue-9 font-bold">Tempo Calcolo</div>
+                <div class="text-h5 text-weight-bolder text-blue-9">{{ generationResult.duration_ms }} ms</div>
+              </div>
+            </div>
+
+            <div v-if="generationResult.unassigned && generationResult.unassigned.length > 0" class="q-mt-sm">
+              <div class="text-caption text-negative font-bold q-mb-xs">Ore non assegnabili (conflitti non risolvibili):</div>
+              <div class="max-h-36 overflow-y-auto border border-rose-200 rounded-lg p-2 text-xs bg-rose-50 text-rose-900">
+                <div v-for="(u, idx) in generationResult.unassigned" :key="idx" class="q-mb-xs">
+                  • <strong>{{ u.class_name }}</strong> - {{ u.subject_name }} ({{ u.teacher_name }}): {{ u.reason }}
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="text-positive text-weight-bold text-center q-my-sm row items-center justify-center gap-1">
+              <q-icon name="check_circle" size="20px" /> 100% delle ore assegnate senza conflitti!
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-px-md q-pb-md">
+          <q-btn flat label="Chiudi" no-caps v-close-popup :disable="generating" />
+          <q-btn
+            v-if="!generationResult"
+            unelevated
+            color="deep-purple-7"
+            label="Avvia Calcolo Orario"
+            icon="play_arrow"
+            no-caps
+            class="rounded-xl q-px-lg font-bold"
+            :loading="generating"
+            @click="runGeneration"
+          />
+          <q-btn
+            v-else
+            unelevated
+            color="positive"
+            label="Pubblica Orario nel Registro"
+            icon="publish"
+            no-caps
+            class="rounded-xl q-px-lg font-bold"
+            :loading="publishing"
+            @click="publishGeneratedSchedule"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -338,9 +442,24 @@ import { useQuasar } from 'quasar'
 import adminService from '@/services/adminService'
 import ScheduleGrid from '@/components/Secretary/ScheduleGrid.vue'
 import TeacherScheduleGrid from '@/components/Secretary/TeacherScheduleGrid.vue'
+import { useAuthStore } from '@/stores/auth'
+import timetableGenService from '@/services/timetableGenService'
 
 const $q = useQuasar()
 const { t } = useI18n()
+const authStore = useAuthStore()
+
+const canGenerate = computed(() => {
+  const role = authStore.userRole
+  return ['principal', 'vice_principal', 'collaboratore_ds', 'admin', 'superadmin', 'secretary'].includes(role)
+})
+
+const showGenerateDialog = ref(false)
+const generating = ref(false)
+const publishing = ref(false)
+const generationJobId = ref(null)
+const generationResult = ref(null)
+let pollTimer = null
 
 const loading = ref(false)
 const saving = ref(false)
@@ -597,6 +716,76 @@ const removeAssignment = async (assignmentId) => {
   } catch (e) {
     $q.notify({ type: 'negative', message: 'Errore durante la rimozione della cattedra' })
   }
+}
+
+const openGenerateDialog = () => {
+  generationResult.value = null
+  generationJobId.value = null
+  showGenerateDialog.value = true
+}
+
+const runGeneration = async () => {
+  generating.value = true
+  generationResult.value = null
+  try {
+    const res = await timetableGenService.startGeneration({ time_limit_seconds: 20 })
+    generationJobId.value = res.data?.job_id
+    pollJobStatus(generationJobId.value)
+  } catch (err) {
+    generating.value = false
+    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore nell\'avvio della generazione' })
+  }
+}
+
+const pollJobStatus = (jobId) => {
+  if (pollTimer) clearInterval(pollTimer)
+  pollTimer = setInterval(async () => {
+    try {
+      const res = await timetableGenService.getJobStatus(jobId)
+      const job = res.data
+      if (job.status === 'completed') {
+        clearInterval(pollTimer)
+        generating.value = false
+        const summary = typeof job.result_summary === 'string' ? JSON.parse(job.result_summary) : job.result_summary
+        generationResult.value = summary
+        $q.notify({ type: 'positive', message: 'Calcolo orario completato con successo!' })
+      } else if (job.status === 'failed') {
+        clearInterval(pollTimer)
+        generating.value = false
+        $q.notify({ type: 'negative', message: job.error_message || 'Generazione orario non riuscita' })
+      }
+    } catch (err) {
+      clearInterval(pollTimer)
+      generating.value = false
+      $q.notify({ type: 'negative', message: 'Errore durante la verifica dello stato del job' })
+    }
+  }, 1500)
+}
+
+const publishGeneratedSchedule = async () => {
+  if (!generationJobId.value) return
+  $q.dialog({
+    title: 'Conferma Pubblicazione',
+    message: 'Sei sicuro di voler pubblicare il nuovo orario generato? Sovrascriverà l\'orario corrente delle classi.',
+    cancel: true,
+    persistent: true
+  }).onOk(async () => {
+    publishing.value = true
+    try {
+      await timetableGenService.publishSchedule(generationJobId.value)
+      $q.notify({ type: 'positive', message: 'Orario scolastico pubblicato con successo nel registro!' })
+      showGenerateDialog.value = false
+      if (viewMode.value === 'class' && selectedClass.value) {
+        fetchClassSchedule()
+      } else if (viewMode.value === 'teacher' && selectedTeacher.value) {
+        fetchTeacherSchedule()
+      }
+    } catch (err) {
+      $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore durante la pubblicazione' })
+    } finally {
+      publishing.value = false
+    }
+  })
 }
 </script>
 
