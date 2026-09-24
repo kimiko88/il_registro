@@ -910,3 +910,22 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - Frontend build: `npm run build` (`vite build`) completato con successo (5.07s).
     - Backend formatting: `gofmt -l .` superato con 0 differenze di formattazione.
 
+- [x] **Completato (Risoluzione Bug Rendering Font OpenDyslexic & Sovrapposizione Icone Ligature - Settembre 2026)**:
+  - **1. Causa Radice Identificata**:
+    - L'attivazione del font OpenDyslexic (`body.dsa-font-active`) utilizzava il selettore universale `body.dsa-font-active *` con `letter-spacing: 0.05em !important` e `word-spacing: 0.12em !important`.
+    - Secondo le specifiche CSS OpenType, qualsiasi valore di `letter-spacing` diverso da `normal` / `0` disabilita automaticamente la formazione delle legature opzionali e standard (`liga`) nei browser moderni (Chromium, Firefox, Safari).
+    - In Quasar, le icone Material Icons sono renderizzate tramite legature testuali (`<i class="q-icon notranslate material-icons">grade</i>`, `dashboard`, `fact_check`, `schedule`, `notifications_none`, ecc.).
+    - Quando le legature venivano disabilitate o quando il font OpenDyslexic ereditava sui contenitori, i nomi letterali delle icone (es. parole di 9-19 caratteri) venivano renderizzati come testo in font OpenDyslexic all'interno di container da 24px, traboccando orizzontalmente e sovrapponendosi in modo disastroso a bottoni, card, watermarks, sidebar e menu dell'intera applicazione (come visibile nello screenshot dell'utente).
+  - **2. Interventi e Hardening Architetturale**:
+    - `registro-frontend/index.html`: Integrato il link diretto al CDN ufficiale Google Fonts per Material Icons (`<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">`), consentito da CSP e con preconnect per download istantaneo.
+    - `registro-frontend/src/App.vue`:
+      - Rimosso il selettore universale distruttivo `body.dsa-font-active *`.
+      - Applicata la tipografia OpenDyslexic a livello di `body.dsa-font-active` e a specifici elementi di contenuto testuale (`p`, `span:not(...)`, `h1-h6`, `label`, `input`, `textarea`, `q-btn__content > span`, `.q-item__label`, `.q-table td/th`), senza intaccare i contenitori flex né le icone.
+      - Isolamento e protezione assoluta per tutte le icone (`.material-icons`, `.material-symbols-*`, `.q-icon`, `i.q-icon`, `[class*="q-icon"]`, `.notranslate`): forzati `font-family: 'Material Icons' !important`, `font-feature-settings: 'liga' 1 !important`, `font-variant-ligatures: common-ligatures normal !important`, `letter-spacing: normal !important`, `word-spacing: normal !important`, `line-height: 1 !important`, `text-transform: none !important`, `white-space: nowrap !important` sia in modalità DSA sia con i font Lexend, Fredoka e Roboto.
+    - `registro-frontend/src/pages/teacher/Index.vue`: Aggiunti `overflow: hidden; pointer-events: none; user-select: none;` a `.card-bg-icon` per proteggere i watermark decorativi da qualsiasi traboccamento.
+  - **3. Validazione e Qualità**:
+    - Unit test frontend: **213/213 passed (1.435 test)** con `npm run test:unit`.
+    - E2E test frontend: **77/77 passed (191 test)** con `npm run test:e2e`.
+    - Backend test: unit ed integration passati al 100%.
+    - Linter & Build: `npm run lint` (0 errori), `npm run build` (successo in 3.07s).
+

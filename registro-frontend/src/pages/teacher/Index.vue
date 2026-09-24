@@ -352,6 +352,9 @@ onMounted(async () => {
   bottom: -20px;
   font-size: 120px;
   opacity: 0.15;
+  user-select: none;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 .bg-indigo-600 { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); }
