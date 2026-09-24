@@ -5,16 +5,16 @@
       <div>
         <h1 class="text-h4 text-weight-bold q-my-none row items-center gap-2" :class="$q.dark.isActive ? 'text-white' : 'text-slate-800'">
           <q-icon name="edit_calendar" color="primary" size="36px" />
-          Prenotazione Aule e Laboratori
+          {{ t('roomBooking.title') }}
         </h1>
         <p class="text-subtitle1 q-mt-xs q-mb-none" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-500'">
-          Prenota laboratori di informatica, lingue, scienze o la palestra per la tua classe (spot o ricorrente).
+          {{ t('roomBooking.subtitle') }}
         </p>
       </div>
 
       <div>
         <q-btn
-          label="Nuova Prenotazione"
+          :label="t('roomBooking.newBookingBtn')"
           icon="add"
           color="primary"
           unelevated
@@ -30,9 +30,9 @@
       <q-card-section class="row items-center justify-between">
         <div class="text-h6 text-weight-bold row items-center gap-2">
           <q-icon name="bookmark" color="secondary" />
-          Le Tue Prenotazioni
+          {{ t('roomBooking.myBookingsTitle') }}
         </div>
-        <q-btn flat dense icon="refresh" label="Ricarica" color="primary" no-caps @click="fetchMyBookings" />
+        <q-btn flat dense icon="refresh" :label="t('roomBooking.refresh')" color="primary" no-caps @click="fetchMyBookings" />
       </q-card-section>
 
       <q-separator :class="$q.dark.isActive ? 'border-grey-8' : 'border-slate-100'" />
@@ -43,9 +43,9 @@
 
       <div v-else-if="myBookings.length === 0" class="text-center q-pa-xl">
         <q-icon name="event_busy" size="56px" color="grey-5" />
-        <div class="text-h6 text-grey-6 q-mt-sm">Nessuna prenotazione attiva</div>
-        <p class="text-grey-5">Non hai ancora prenotato alcuna aula o laboratorio.</p>
-        <q-btn color="primary" unelevated no-caps label="Prenota Ora" icon="add" class="rounded-xl q-mt-sm" @click="showBookingModal = true" />
+        <div class="text-h6 text-grey-6 q-mt-sm">{{ t('roomBooking.noBookingsTitle') }}</div>
+        <p class="text-grey-5">{{ t('roomBooking.noBookingsDesc') }}</p>
+        <q-btn color="primary" unelevated no-caps :label="t('roomBooking.bookNowBtn')" icon="add" class="rounded-xl q-mt-sm" @click="showBookingModal = true" />
       </div>
 
       <q-table
@@ -59,7 +59,7 @@
         <template v-slot:body-cell-hour_index="props">
           <q-td :props="props" align="center">
             <q-badge color="blue-7" class="q-px-sm q-py-xs font-bold">
-              {{ props.row.hour_index }}ª ora
+              {{ t('roomsManagement.hourSlot', { hour: props.row.hour_index }) }}
             </q-badge>
           </q-td>
         </template>
@@ -67,10 +67,10 @@
         <template v-slot:body-cell-status="props">
           <q-td :props="props">
             <q-badge :color="props.row.status === 'confirmed' ? 'positive' : 'grey-6'">
-              {{ props.row.status === 'confirmed' ? 'Confermata' : 'Cancellata' }}
+              {{ props.row.status === 'confirmed' ? (t('common.confirmed') || 'Confermata') : (t('common.cancelled') || 'Cancellata') }}
             </q-badge>
             <q-badge v-if="props.row.is_recurring" color="purple-6" class="q-ml-xs">
-              Ricorrente ({{ props.row.recurrence_pattern === 'weekly' ? 'Settimanale' : 'Bisettimanale' }})
+              {{ t('common.recurring') || 'Ricorrente' }} ({{ props.row.recurrence_pattern === 'weekly' ? t('roomBooking.recurrenceWeekly') : t('roomBooking.recurrenceBiweekly') }})
             </q-badge>
           </q-td>
         </template>
@@ -84,7 +84,7 @@
               dense
               color="negative"
               icon="cancel"
-              title="Cancella prenotazione"
+              :title="t('roomBooking.cancelBookingTitle')"
               @click="confirmCancel(props.row)"
             />
           </q-td>
@@ -98,7 +98,7 @@
         <q-card-section>
           <div class="text-h6 text-weight-bold row items-center gap-2">
             <q-icon name="meeting_room" color="primary" />
-            Prenota un'Aula o Laboratorio
+            {{ t('roomBooking.modalTitle') }}
           </div>
         </q-card-section>
 
@@ -116,7 +116,7 @@
                 outlined
                 dense
                 clearable
-                label="Filtra per Plesso"
+                :label="t('roomBooking.filterBuilding')"
                 @update:model-value="onBuildingChange"
               />
             </div>
@@ -130,14 +130,14 @@
                 map-options
                 outlined
                 dense
-                label="Seleziona Aula / Lab *"
-                :rules="[val => !!val || 'Seleziona un\'aula']"
+                :label="t('roomBooking.selectRoomPlaceholder')"
+                :rules="[val => !!val || t('roomBooking.selectRoomRequired')]"
               >
                 <template v-slot:option="scope">
                   <q-item v-bind="scope.itemProps">
                     <q-item-section>
                       <q-item-label>{{ scope.opt.name }}</q-item-label>
-                      <q-item-label caption>{{ scope.opt.building_name }} • {{ scope.opt.capacity }} posti</q-item-label>
+                      <q-item-label caption>{{ scope.opt.building_name }} • {{ t('roomsManagement.capacity', { count: scope.opt.capacity }) }}</q-item-label>
                     </q-item-section>
                   </q-item>
                 </template>
@@ -158,7 +158,7 @@
                 outlined
                 dense
                 clearable
-                label="Classe (opzionale)"
+                :label="t('roomBooking.classLabel')"
               />
             </div>
             <div class="col-12 col-sm-6">
@@ -172,7 +172,7 @@
                 outlined
                 dense
                 clearable
-                label="Materia (opzionale)"
+                :label="t('roomBooking.subjectLabel')"
               />
             </div>
           </div>
@@ -185,8 +185,8 @@
                 type="date"
                 outlined
                 dense
-                label="Data Prenotazione *"
-                :rules="[val => !!val || 'Data obbligatoria']"
+                :label="t('roomBooking.dateLabel')"
+                :rules="[val => !!val || t('roomBooking.dateRequired')]"
               />
             </div>
             <div class="col-12 col-sm-5">
@@ -197,8 +197,8 @@
                 map-options
                 outlined
                 dense
-                label="Ora di lezione *"
-                :rules="[val => !!val || 'Ora obbligatoria']"
+                :label="t('roomBooking.hourLabel')"
+                :rules="[val => !!val || t('roomBooking.hourRequired')]"
               />
             </div>
           </div>
@@ -206,7 +206,7 @@
           <!-- Recurring Booking Options -->
           <q-card flat bordered class="rounded-xl q-pa-sm bg-slate-50 border-slate-200">
             <div class="row items-center justify-between">
-              <span class="text-weight-bold text-subtitle2">Prenotazione Ricorrente</span>
+              <span class="text-weight-bold text-subtitle2">{{ t('roomBooking.recurringBooking') }}</span>
               <q-toggle v-model="bookingForm.is_recurring" color="purple-6" />
             </div>
 
@@ -214,14 +214,14 @@
               <q-select
                 v-model="bookingForm.recurrence_pattern"
                 :options="[
-                  { label: 'Ogni settimana (Settimanale)', value: 'weekly' },
-                  { label: 'Ogni 2 settimane (Bisettimanale)', value: 'biweekly' }
+                  { label: t('roomBooking.recurrenceWeekly'), value: 'weekly' },
+                  { label: t('roomBooking.recurrenceBiweekly'), value: 'biweekly' }
                 ]"
                 emit-value
                 map-options
                 outlined
                 dense
-                label="Frequenza Ricorrenza"
+                :label="t('roomBooking.recurrenceFrequency')"
               />
 
               <q-input
@@ -229,21 +229,21 @@
                 type="date"
                 outlined
                 dense
-                label="Fino alla data *"
-                :rules="[val => !!val || 'Data di fine obbligatoria']"
+                :label="t('roomBooking.untilDate')"
+                :rules="[val => !!val || t('roomBooking.endDateRequired')]"
               />
             </div>
           </q-card>
 
-          <q-input v-model="bookingForm.notes" type="textarea" rows="2" label="Note o motivazione (opzionale)" outlined dense />
+          <q-input v-model="bookingForm.notes" type="textarea" rows="2" :label="t('roomBooking.notesOptional')" outlined dense />
         </q-card-section>
 
         <q-card-actions align="right" class="q-px-md q-pb-md">
-          <q-btn flat label="Annulla" no-caps v-close-popup />
+          <q-btn flat :label="t('common.cancel')" no-caps v-close-popup />
           <q-btn
             unelevated
             color="primary"
-            label="Conferma Prenotazione"
+            :label="t('roomBooking.confirmBookingBtn')"
             no-caps
             class="rounded-xl q-px-md font-bold"
             :loading="submittingBooking"
@@ -258,10 +258,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
 import roomsService from '@/services/roomsService';
 import api from '@/services/api';
 
 const $q = useQuasar();
+const { t } = useI18n();
 
 const myBookings = ref([]);
 const loadingMyBookings = ref(false);
@@ -290,20 +292,20 @@ const bookingForm = ref({
   recurring_until: oneMonthLaterStr
 });
 
-const hourOptions = Array.from({ length: 8 }, (_, i) => ({
-  label: `${i + 1}ª ora`,
+const hourOptions = computed(() => Array.from({ length: 8 }, (_, i) => ({
+  label: t('roomsManagement.hourSlot', { hour: i + 1 }),
   value: i + 1
-}));
+})));
 
-const bookingColumns = [
-  { name: 'booking_date', label: 'Data', field: 'booking_date', sortable: true, align: 'left' },
-  { name: 'hour_index', label: 'Ora', field: 'hour_index', align: 'center' },
-  { name: 'room_name', label: 'Aula / Laboratorio', field: 'room_name', sortable: true, align: 'left' },
-  { name: 'building_name', label: 'Plesso', field: 'building_name', align: 'left' },
-  { name: 'class_name', label: 'Classe', field: 'class_name', align: 'left' },
-  { name: 'status', label: 'Stato', field: 'status', align: 'center' },
-  { name: 'actions', label: 'Azioni', field: 'id', align: 'right' }
-];
+const bookingColumns = computed(() => [
+  { name: 'booking_date', label: t('roomBooking.colDate'), field: 'booking_date', sortable: true, align: 'left' },
+  { name: 'hour_index', label: t('roomBooking.colHour'), field: 'hour_index', align: 'center', format: v => t('roomsManagement.hourSlot', { hour: v }) },
+  { name: 'room_name', label: t('roomBooking.colRoom'), field: 'room_name', sortable: true, align: 'left' },
+  { name: 'building', label: t('roomBooking.colBuilding'), field: 'building_name', align: 'left' },
+  { name: 'class_name', label: t('common.class') || 'Classe', field: 'class_name', align: 'left' },
+  { name: 'status', label: t('roomBooking.colStatus'), field: 'status', align: 'center' },
+  { name: 'actions', label: t('roomBooking.colActions'), field: 'id', align: 'right' }
+]);
 
 const filteredRooms = computed(() => {
   if (!filterBuilding.value) return rooms.value;
@@ -316,7 +318,7 @@ async function fetchMyBookings() {
     const res = await roomsService.getBookings();
     myBookings.value = res.data || [];
   } catch {
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento delle prenotazioni' });
+    $q.notify({ type: 'negative', message: t('roomBooking.notifyFetchError') });
   } finally {
     loadingMyBookings.value = false;
   }
@@ -346,7 +348,7 @@ function onBuildingChange() {
 
 async function submitBooking() {
   if (!bookingForm.value.room_id || !bookingForm.value.booking_date || !bookingForm.value.hour_index) {
-    $q.notify({ type: 'warning', message: 'Compila tutti i campi obbligatori' });
+    $q.notify({ type: 'warning', message: t('roomBooking.notifyFillRequired') });
     return;
   }
 
@@ -367,7 +369,7 @@ async function submitBooking() {
     const res = await roomsService.createBooking(payload);
     $q.notify({
       type: 'positive',
-      message: res.data?.message || 'Prenotazione effettuata con successo!'
+      message: res.data?.message || t('roomBooking.notifyBookingCreated')
     });
     showBookingModal.value = false;
     fetchMyBookings();
@@ -381,16 +383,16 @@ async function submitBooking() {
 
 function confirmCancel(booking) {
   $q.dialog({
-    title: 'Cancella Prenotazione',
+    title: t('roomBooking.cancelBookingTitle'),
     message: booking.is_recurring
-      ? 'Questa prenotazione è ricorrente. Desideri cancellare solo questa data o tutta la serie?'
-      : `Sei sicuro di voler cancellare la prenotazione per il ${booking.booking_date}?`,
+      ? t('roomBooking.recurringCancelPrompt')
+      : t('roomBooking.cancelConfirmPrompt', { date: booking.booking_date }),
     options: booking.is_recurring ? {
       type: 'radio',
       model: 'single',
       items: [
-        { label: 'Solo questa prenotazione', value: 'single' },
-        { label: 'Tutta la serie ricorrente', value: 'series' }
+        { label: t('roomBooking.singleOnly'), value: 'single' },
+        { label: t('roomBooking.wholeSeries'), value: 'series' }
       ]
     } : undefined,
     cancel: true,
@@ -399,10 +401,10 @@ function confirmCancel(booking) {
     const cancelSeries = choice === 'series';
     try {
       await roomsService.cancelBooking(booking.id, cancelSeries);
-      $q.notify({ type: 'positive', message: 'Prenotazione cancellata' });
+      $q.notify({ type: 'positive', message: t('roomBooking.notifyBookingCancelled') });
       fetchMyBookings();
     } catch {
-      $q.notify({ type: 'negative', message: 'Errore nella cancellazione' });
+      $q.notify({ type: 'negative', message: t('roomBooking.notifyCancelError') });
     }
   });
 }

@@ -64,9 +64,9 @@
                     class="text-weight-bold q-py-xs q-px-sm rounded-md"
                   >
                     <q-icon :name="student.religion_choice === 'attivita_alternativa' ? 'swap_horiz' : 'block'" size="14px" class="q-mr-xs" />
-                    {{ student.religion_choice === 'attivita_alternativa' ? 'Attività Alternativa' : 'Non Avvalente' }}
+                    {{ student.religion_choice === 'attivita_alternativa' ? (t('religion.alternativeActivity') || 'Attività Alternativa') : (t('religion.nonParticipating') || 'Non Avvalente') }}
                   </q-badge>
-                  <q-tooltip>Questo studente non si avvale dell'IRC e non può ricevere valutazioni</q-tooltip>
+                  <q-tooltip>{{ t('religion.ircExemptTooltip') || "Questo studente non si avvale dell'IRC e non può ricevere valutazioni" }}</q-tooltip>
                 </div>
                 <!-- Se materia religione: select con i 6 giudizi -->
                 <q-select
@@ -75,7 +75,7 @@
                   :options="RELIGION_JUDGMENT_OPTIONS"
                   dense
                   outlined
-                  placeholder="Seleziona..."
+                  :placeholder="t('common.select') || 'Seleziona...'"
                   class="text-weight-bold"
                   :bg-color="getGradeColor(student.religion_judgment)"
                   hide-bottom-space

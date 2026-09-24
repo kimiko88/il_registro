@@ -403,7 +403,7 @@
               dense
               type="textarea"
               rows="2"
-              placeholder="es. Comunicazione telefonica ore 07:45 per malessere improvviso"
+              :placeholder="t('emergencySubstitutions.notesPlaceholder')"
             />
           </div>
         </q-card-section>
@@ -467,18 +467,18 @@
 
     <!-- Print Table Template (Hidden on screen, shown in @media print) -->
     <div id="print-prospetto" class="print-only">
-      <h2 class="text-center">PROSPETTO GIORNALIERO SOSTITUZIONI DOCENTI</h2>
-      <p class="text-center">Data: {{ selectedDate }}</p>
+      <h2 class="text-center">{{ t('emergencySubstitutions.printTitle') }}</h2>
+      <p class="text-center">{{ t('emergencySubstitutions.printDate') }}: {{ selectedDate }}</p>
       <table class="print-table">
         <thead>
           <tr>
-            <th>Ora</th>
-            <th>Docente Assente</th>
-            <th>Classe</th>
-            <th>Materia</th>
-            <th>Docente Sostituto</th>
-            <th>Stato</th>
-            <th>Firma</th>
+            <th>{{ t('emergencySubstitutions.printHour') }}</th>
+            <th>{{ t('emergencySubstitutions.printAbsentTeacher') }}</th>
+            <th>{{ t('emergencySubstitutions.printClass') }}</th>
+            <th>{{ t('emergencySubstitutions.printSubject') }}</th>
+            <th>{{ t('emergencySubstitutions.printSubstitute') }}</th>
+            <th>{{ t('emergencySubstitutions.printStatus') }}</th>
+            <th>{{ t('emergencySubstitutions.printSignature') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -487,7 +487,7 @@
             <td>{{ s.absent_teacher_name }}</td>
             <td>{{ s.class_name }}</td>
             <td>{{ s.subject_name }}</td>
-            <td>{{ s.substitute_teacher_name || 'IN ATTESA' }}</td>
+            <td>{{ s.substitute_teacher_name || t('emergencySubstitutions.printWaiting') }}</td>
             <td>{{ getStatusLabel(s.status) }}</td>
             <td>________________</td>
           </tr>
@@ -626,7 +626,7 @@ async function quickAssign(rec) {
     })
     $q.notify({
       type: 'positive',
-      message: `${rec.teacher_name} assegnato con successo!`
+      message: `${rec.teacher_name} ${t('emergencySubstitutions.teacherAssignedSuccess')}`
     })
     await fetchData()
     if (selectedSub.value) {
@@ -635,7 +635,7 @@ async function quickAssign(rec) {
   } catch (err) {
     $q.notify({
       type: 'negative',
-      message: err.response?.data?.error || 'Errore durante l\'assegnazione'
+      message: err.response?.data?.error || t('emergencySubstitutions.assignError')
     })
   } finally {
     assigningId.value = null
@@ -647,13 +647,13 @@ async function confirmSub(sub) {
     await substitutionService.signRegister(sub.id, 'Confermato da Collaboratore DS')
     $q.notify({
       type: 'positive',
-      message: 'Sostituzione confermata in aula!'
+      message: t('emergencySubstitutions.confirmInClassSuccess')
     })
     await fetchData()
   } catch (err) {
     $q.notify({
       type: 'negative',
-      message: err.response?.data?.error || 'Errore conferma'
+      message: err.response?.data?.error || t('emergencySubstitutions.assignError')
     })
   }
 }
@@ -670,7 +670,7 @@ function openAddAbsenceDialog() {
 
 async function submitAbsence() {
   if (!absenceForm.value.absent_teacher_id) {
-    $q.notify({ type: 'warning', message: 'Seleziona il docente assente' })
+    $q.notify({ type: 'warning', message: t('emergencySubstitutions.selectAbsentTeacherPrompt') })
     return
   }
   savingAbsence.value = true
@@ -683,13 +683,13 @@ async function submitAbsence() {
       class_id: absenceForm.value.class_id,
       notes: absenceForm.value.notes
     })
-    $q.notify({ type: 'positive', message: 'Assenza registrata con successo!' })
+    $q.notify({ type: 'positive', message: t('emergencySubstitutions.absenceRegisteredSuccess') })
     absenceDialog.value = false
     await fetchData()
   } catch (err) {
     $q.notify({
       type: 'negative',
-      message: err.response?.data?.error || 'Errore registrazione assenza'
+      message: err.response?.data?.error || t('emergencySubstitutions.assignError')
     })
   } finally {
     savingAbsence.value = false
@@ -709,7 +709,7 @@ async function submitManualAssign() {
       substitute_teacher_id: manualSubstituteId.value,
       notes: 'Assegnazione manuale Collaboratore DS'
     })
-    $q.notify({ type: 'positive', message: 'Docente assegnato con successo!' })
+    $q.notify({ type: 'positive', message: t('emergencySubstitutions.teacherAssignedSuccess') })
     manualAssignDialog.value = false
     await fetchData()
     if (selectedSub.value) {
@@ -718,7 +718,7 @@ async function submitManualAssign() {
   } catch (err) {
     $q.notify({
       type: 'negative',
-      message: err.response?.data?.error || 'Errore assegnazione'
+      message: err.response?.data?.error || t('emergencySubstitutions.assignError')
     })
   } finally {
     assigningId.value = null

@@ -5,16 +5,16 @@
       <div>
         <h1 class="text-h4 text-weight-bold q-my-none row items-center gap-2" :class="$q.dark.isActive ? 'text-white' : 'text-slate-800'">
           <q-icon name="thumb_up_alt" color="primary" size="36px" />
-          Desiderata Orario Scolastico
+          {{ t('schedulePreferences.title') }}
         </h1>
         <p class="text-subtitle1 q-mt-xs q-mb-none" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-500'">
-          Indica le tue preferenze e disponibilità per la generazione dell'orario scolastico settimanale.
+          {{ t('schedulePreferences.subtitle') }}
         </p>
       </div>
 
       <div class="row items-center gap-2">
         <q-btn
-          label="Salva Preferenze"
+          :label="t('schedulePreferences.saveBtn')"
           icon="save"
           color="primary"
           unelevated
@@ -31,10 +31,9 @@
       <template v-slot:avatar>
         <q-icon name="stars" color="indigo-7" size="32px" />
       </template>
-      <div class="text-subtitle2 font-bold">Criterio di Priorità e Anzianità di Servizio</div>
+      <div class="text-subtitle2 font-bold">{{ t('schedulePreferences.seniorityTitle') }}</div>
       <div class="text-body2 text-indigo-900">
-        L'algoritmo automatico di generazione dell'orario valuta le preferenze espresse in base all'anzianità di servizio (data di assunzione a tempo indeterminato).
-        I docenti più anziani hanno priorità nell'assegnazione degli slot preferiti e nella tutela dei giorni o delle ore di non disponibilità.
+        {{ t('schedulePreferences.seniorityDesc') }}
       </div>
     </q-banner>
 
@@ -42,23 +41,23 @@
     <q-card flat bordered class="rounded-2xl q-pa-md q-mb-lg shadow-sm" :class="$q.dark.isActive ? 'bg-dark border-grey-8' : 'bg-white'">
       <div class="row items-center justify-between gap-4">
         <div class="row items-center gap-4 text-sm font-medium">
-          <span class="text-grey-6">Legenda:</span>
+          <span class="text-grey-6">{{ t('schedulePreferences.legend') }}</span>
           <div class="row items-center gap-1">
             <span class="inline-block w-4 h-4 rounded-full bg-emerald-500"></span>
-            <span>🟢 Preferito (+ priorità)</span>
+            <span>🟢 {{ t('schedulePreferences.preferred') }}</span>
           </div>
           <div class="row items-center gap-1">
             <span class="inline-block w-4 h-4 rounded-full bg-slate-300"></span>
-            <span>⚪ Neutro (indifferente)</span>
+            <span>⚪ {{ t('schedulePreferences.neutral') }}</span>
           </div>
           <div class="row items-center gap-1">
             <span class="inline-block w-4 h-4 rounded-full bg-rose-500"></span>
-            <span>🔴 Non Disponibile (da evitare)</span>
+            <span>🔴 {{ t('schedulePreferences.unavailable') }}</span>
           </div>
         </div>
 
         <div class="text-caption text-grey-6">
-          * Clicca su una cella per cambiare stato
+          {{ t('schedulePreferences.clickToChange') }}
         </div>
       </div>
     </q-card>
@@ -73,7 +72,7 @@
         <table class="w-full border-collapse">
           <thead>
             <tr class="bg-slate-100 text-slate-700">
-              <th class="p-3 border border-slate-200 text-left w-24">Ora</th>
+              <th class="p-3 border border-slate-200 text-left w-24">{{ t('schedulePreferences.hourCol') }}</th>
               <th
                 v-for="d in days"
                 :key="d.index"
@@ -86,7 +85,7 @@
           <tbody>
             <tr v-for="h in 8" :key="h">
               <td class="p-3 border border-slate-200 font-bold text-center bg-slate-50 text-slate-800">
-                {{ h }}ª ora
+                {{ t('schedulePreferences.hourSlot', { hour: h }) }}
               </td>
               <td
                 v-for="d in days"
@@ -110,22 +109,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import timetableGenService from '@/services/timetableGenService';
 
 const $q = useQuasar();
+const { t } = useI18n();
 
 const loading = ref(false);
 const saving = ref(false);
 
-const days = [
-  { index: 1, label: 'Lunedì' },
-  { index: 2, label: 'Martedì' },
-  { index: 3, label: 'Mercoledì' },
-  { index: 4, label: 'Giovedì' },
-  { index: 5, label: 'Venerdì' }
-];
+const days = computed(() => [
+  { index: 1, label: t('schedulePreferences.days.monday') },
+  { index: 2, label: t('schedulePreferences.days.tuesday') },
+  { index: 3, label: t('schedulePreferences.days.wednesday') },
+  { index: 4, label: t('schedulePreferences.days.thursday') },
+  { index: 5, label: t('schedulePreferences.days.friday') }
+]);
 
 // Grid state: grid[dayIndex][hourIndex] = 'preferred' | 'neutral' | 'unavailable'
 const grid = ref({});
@@ -153,7 +154,7 @@ async function fetchPreferences() {
       }
     }
   } catch {
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento delle preferenze' });
+    $q.notify({ type: 'negative', message: t('schedulePreferences.notifyFetchError') });
   } finally {
     loading.value = false;
   }
@@ -186,9 +187,9 @@ function getCellTextClass(day, hour) {
 
 function getCellLabel(day, hour) {
   const state = grid.value[day]?.[hour] || 'neutral';
-  if (state === 'preferred') return 'Preferito';
-  if (state === 'unavailable') return 'Non Disp.';
-  return 'Neutro';
+  if (state === 'preferred') return t('schedulePreferences.cellPreferred');
+  if (state === 'unavailable') return t('schedulePreferences.cellUnavailable');
+  return t('schedulePreferences.cellNeutral');
 }
 
 async function savePreferences() {
@@ -214,12 +215,12 @@ async function savePreferences() {
 
     $q.notify({
       type: 'positive',
-      message: 'Desiderata e preferenze orario salvate con successo!'
+      message: t('schedulePreferences.notifySaveSuccess')
     });
   } catch (err) {
     $q.notify({
       type: 'negative',
-      message: err.response?.data?.error || 'Errore nel salvataggio dei desiderata'
+      message: err.response?.data?.error || t('schedulePreferences.notifySaveError')
     });
   } finally {
     saving.value = false;

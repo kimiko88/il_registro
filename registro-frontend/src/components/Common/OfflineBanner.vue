@@ -81,7 +81,7 @@
             dense
             color="dark"
             icon="sync"
-            label="Sincronizza ora"
+            :label="t('offlineBanner.syncNow') || 'Sincronizza ora'"
             class="text-weight-bold"
             @click="triggerManualSync"
           />
@@ -91,7 +91,7 @@
             class="text-weight-bold cursor-pointer"
             @click="showQueueDialog = true"
           >
-            {{ outboxStore.pendingCount }} IN CODA
+            {{ outboxStore.pendingCount }} {{ t('offlineBanner.inQueue') || 'IN CODA' }}
           </q-badge>
         </div>
       </div>

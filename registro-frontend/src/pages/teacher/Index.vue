@@ -122,7 +122,7 @@
               <q-icon name="account_balance" class="q-mr-sm" size="20px" />
               {{ t('roleDashboards.vicePrincipalActions') || 'Presidenza & Vicariato — Funzioni Esecutive' }}
             </div>
-            <q-chip size="sm" color="amber-5" text-color="dark" class="text-weight-bold">Staff Dirigenza</q-chip>
+            <q-chip size="sm" color="amber-5" text-color="dark" class="text-weight-bold">{{ t('roleDashboards.leadershipStaff') || 'Staff Dirigenza' }}</q-chip>
           </q-card-section>
           <q-card-section class="q-pa-md bg-indigo-50">
             <div class="row q-col-gutter-sm">

@@ -8,15 +8,15 @@
     <q-card style="min-width: 380px; max-width: 480px;" class="rounded-xl">
       <q-card-section class="bg-amber-8 text-white row items-center">
         <q-icon name="security" size="28px" class="q-mr-sm" />
-        <div class="text-h6 text-weight-bold">{{ t('common.confirm') || 'Conferma Ricarica Pagina' }}</div>
+        <div class="text-h6 text-weight-bold">{{ t('common.reloadConfirmTitle') || 'Conferma Ricarica Pagina' }}</div>
       </q-card-section>
 
       <q-card-section class="q-pa-lg text-body1 text-slate-800">
         <p class="q-mb-sm text-weight-medium">
-          {{ t('settingsPage.security') || 'Sei sicuro di voler ricaricare la pagina?' }}
+          {{ t('common.reloadConfirmMessage') || 'Sei sicuro di voler ricaricare la pagina?' }}
         </p>
         <p class="text-caption text-grey-8 q-mb-none">
-          {{ t('settingsPage.subtitle') || 'Per ragioni di sicurezza i dati non salvati andranno persi.' }}
+          {{ t('common.reloadConfirmSubtitle') || 'Per ragioni di sicurezza i dati non salvati andranno persi.' }}
         </p>
       </q-card-section>
 
@@ -24,7 +24,7 @@
         <q-btn flat :label="t('common.cancel') || 'Annulla'" color="grey-8" v-close-popup no-caps />
         <q-btn 
           color="amber-9" 
-          :label="t('common.confirm') || 'Conferma e Ricarica'" 
+          :label="t('common.reloadConfirmBtn') || 'Conferma e Ricarica'" 
           icon="refresh" 
           no-caps 
           unelevated 

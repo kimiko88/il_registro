@@ -5,16 +5,16 @@
       <div>
         <h1 class="text-h4 text-weight-bold q-my-none row items-center gap-2" :class="$q.dark.isActive ? 'text-white' : 'text-slate-800'">
           <q-icon name="tune" color="primary" size="36px" />
-          Vincoli e Requisiti Orario Scolastico
+          {{ t('timetableConstraints.title') }}
         </h1>
         <p class="text-subtitle1 q-mt-xs q-mb-none" :class="$q.dark.isActive ? 'text-grey-4' : 'text-slate-500'">
-          Configura i requisiti delle aule speciali per materia e i vincoli didattici per la generazione dell'orario.
+          {{ t('timetableConstraints.subtitle') }}
         </p>
       </div>
 
       <div class="row items-center gap-2">
         <q-btn
-          label="Nuovo Requisito Aula"
+          :label="t('timetableConstraints.newConstraintBtn')"
           icon="add"
           color="primary"
           unelevated
@@ -31,13 +31,13 @@
         <div>
           <div class="text-h6 text-weight-bold row items-center gap-2">
             <q-icon name="meeting_room" color="indigo-7" />
-            Assegnazione Aule Speciali / Laboratori per Materia
+            {{ t('timetableConstraints.sectionTitle') }}
           </div>
           <div class="text-caption text-grey-6">
-            L'algoritmo posizionerà le ore di queste materie nelle aule speciali del plesso corrispondente.
+            {{ t('timetableConstraints.sectionSubtitle') }}
           </div>
         </div>
-        <q-btn flat dense icon="refresh" color="primary" no-caps label="Aggiorna" @click="fetchRoomReqs" />
+        <q-btn flat dense icon="refresh" color="primary" no-caps :label="t('timetableConstraints.refresh')" @click="fetchRoomReqs" />
       </q-card-section>
 
       <q-separator :class="$q.dark.isActive ? 'border-grey-8' : 'border-slate-100'" />
@@ -48,9 +48,9 @@
 
       <div v-else-if="roomReqs.length === 0" class="text-center q-pa-xl">
         <q-icon name="science" size="48px" color="grey-5" />
-        <div class="text-h6 text-grey-6 q-mt-sm">Nessun requisito aula configurato</div>
-        <p class="text-grey-5">Aggiungi quali materie richiedono laboratori o aule speciali (es. Informatica → Lab Informatica).</p>
-        <q-btn color="primary" unelevated no-caps label="Aggiungi Requisito" icon="add" class="rounded-xl q-mt-sm" @click="openRoomReqModal" />
+        <div class="text-h6 text-grey-6 q-mt-sm">{{ t('timetableConstraints.noConstraintsTitle') }}</div>
+        <p class="text-grey-5">{{ t('timetableConstraints.noConstraintsDesc') }}</p>
+        <q-btn color="primary" unelevated no-caps :label="t('timetableConstraints.addConstraintBtn')" icon="add" class="rounded-xl q-mt-sm" @click="openRoomReqModal" />
       </div>
 
       <q-table
@@ -72,7 +72,7 @@
         <template v-slot:body-cell-is_mandatory="props">
           <q-td :props="props" align="center">
             <q-badge :color="props.row.is_mandatory ? 'negative' : 'warning'">
-              {{ props.row.is_mandatory ? 'Obbligatorio' : 'Preferenziale' }}
+              {{ props.row.is_mandatory ? t('timetableConstraints.mandatoryBadge') : t('timetableConstraints.preferentialBadge') }}
             </q-badge>
           </q-td>
         </template>
@@ -89,7 +89,7 @@
     <q-dialog v-model="showReqModal" persistent>
       <q-card style="min-width: 440px;" class="rounded-2xl q-pa-sm">
         <q-card-section>
-          <div class="text-h6 text-weight-bold">Collega Materia ad Aula Speciale</div>
+          <div class="text-h6 text-weight-bold">{{ t('timetableConstraints.modalTitle') }}</div>
         </q-card-section>
 
         <q-card-section class="q-pt-none q-gutter-md">
@@ -102,8 +102,8 @@
             map-options
             outlined
             dense
-            label="Seleziona Materia *"
-            :rules="[val => !!val || 'Materia obbligatoria']"
+            :label="t('timetableConstraints.selectSubject')"
+            :rules="[val => !!val || t('timetableConstraints.subjectRequired')]"
           />
 
           <q-select
@@ -115,19 +115,19 @@
             map-options
             outlined
             dense
-            label="Tipologia Aula Richiesta *"
-            :rules="[val => !!val || 'Tipologia obbligatoria']"
+            :label="t('timetableConstraints.selectRoomType')"
+            :rules="[val => !!val || t('timetableConstraints.roomTypeRequired')]"
           />
 
           <q-toggle
             v-model="reqForm.is_mandatory"
-            label="Obbligatorio (se non disponibile l'ora non viene piazzata)"
+            :label="t('timetableConstraints.mandatoryDesc')"
           />
         </q-card-section>
 
         <q-card-actions align="right" class="q-px-md q-pb-md">
-          <q-btn flat label="Annulla" no-caps v-close-popup />
-          <q-btn unelevated color="primary" label="Salva Requisito" no-caps class="rounded-xl q-px-md font-bold" @click="saveReq" />
+          <q-btn flat :label="t('common.cancel')" no-caps v-close-popup />
+          <q-btn unelevated color="primary" :label="t('timetableConstraints.saveBtn')" no-caps class="rounded-xl q-px-md font-bold" @click="saveReq" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -135,12 +135,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
 import timetableGenService from '@/services/timetableGenService';
 import api from '@/services/api';
 
 const $q = useQuasar();
+const { t } = useI18n();
 
 const roomReqs = ref([]);
 const subjects = ref([]);
@@ -153,27 +155,27 @@ const reqForm = ref({
   is_mandatory: true
 });
 
-const roomTypeOptions = [
-  { label: 'Laboratorio di Informatica', value: 'lab_informatica' },
-  { label: 'Laboratorio di Scienze', value: 'lab_scienze' },
-  { label: 'Laboratorio di Lingue', value: 'lab_lingue' },
-  { label: 'Laboratorio di Chimica', value: 'lab_chimica' },
-  { label: 'Laboratorio di Fisica', value: 'lab_fisica' },
-  { label: 'Laboratorio di Arte', value: 'lab_arte' },
-  { label: 'Palestra', value: 'palestra' },
-  { label: 'Aula Magna', value: 'aula_magna' },
-  { label: 'Biblioteca', value: 'biblioteca' }
-];
+const roomTypeOptions = computed(() => [
+  { label: t('roomsManagement.types.lab_info') || 'Laboratorio di Informatica', value: 'lab_informatica' },
+  { label: t('roomsManagement.types.lab_science') || 'Laboratorio di Scienze', value: 'lab_scienze' },
+  { label: t('roomsManagement.types.lab_lang') || 'Laboratorio di Lingue', value: 'lab_lingue' },
+  { label: t('roomsManagement.types.lab_chemistry') || 'Laboratorio di Chimica', value: 'lab_chimica' },
+  { label: t('roomsManagement.types.lab_physics') || 'Laboratorio di Fisica', value: 'lab_fisica' },
+  { label: t('roomsManagement.types.art') || 'Laboratorio di Arte', value: 'lab_arte' },
+  { label: t('roomsManagement.types.gym') || 'Palestra', value: 'palestra' },
+  { label: t('roomsManagement.types.auditorium') || 'Aula Magna', value: 'aula_magna' },
+  { label: t('roomsManagement.types.library') || 'Biblioteca', value: 'biblioteca' }
+]);
 
-const roomReqColumns = [
-  { name: 'subject_name', label: 'Materia', field: 'subject_name', sortable: true, align: 'left' },
-  { name: 'required_room_type', label: 'Tipologia Aula Richiesta', field: 'required_room_type', align: 'left' },
-  { name: 'is_mandatory', label: 'Vincolo', field: 'is_mandatory', align: 'center' },
-  { name: 'actions', label: 'Azioni', field: 'id', align: 'right' }
-];
+const roomReqColumns = computed(() => [
+  { name: 'subject_name', label: t('timetableConstraints.colSubject'), field: 'subject_name', sortable: true, align: 'left' },
+  { name: 'required_room_type', label: t('timetableConstraints.colRoomType'), field: 'required_room_type', align: 'left' },
+  { name: 'is_mandatory', label: t('timetableConstraints.colConstraint'), field: 'is_mandatory', align: 'center' },
+  { name: 'actions', label: t('timetableConstraints.colActions'), field: 'id', align: 'right' }
+]);
 
 function getRoomTypeLabel(val) {
-  const f = roomTypeOptions.find(o => o.value === val);
+  const f = roomTypeOptions.value.find(o => o.value === val);
   return f ? f.label : val;
 }
 
@@ -183,7 +185,7 @@ async function fetchRoomReqs() {
     const res = await timetableGenService.getRoomRequirements();
     roomReqs.value = res.data || [];
   } catch {
-    $q.notify({ type: 'negative', message: 'Errore nel caricamento dei requisiti aule' });
+    $q.notify({ type: 'negative', message: t('timetableConstraints.notifyFetchError') });
   } finally {
     loadingReqs.value = false;
   }
@@ -211,27 +213,27 @@ async function saveReq() {
   if (!reqForm.value.subject_id || !reqForm.value.required_room_type) return;
   try {
     await timetableGenService.saveRoomRequirement(reqForm.value);
-    $q.notify({ type: 'positive', message: 'Requisito aula salvato con successo' });
+    $q.notify({ type: 'positive', message: t('timetableConstraints.notifySaved') });
     showReqModal.value = false;
     fetchRoomReqs();
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore nel salvataggio' });
+    $q.notify({ type: 'negative', message: err.response?.data?.error || t('timetableConstraints.notifySaveError') });
   }
 }
 
 function confirmDeleteReq(row) {
   $q.dialog({
-    title: 'Rimuovi Requisito',
-    message: `Rimuovere il requisito aula per la materia "${row.subject_name}"?`,
+    title: t('timetableConstraints.removeTitle'),
+    message: t('timetableConstraints.removeMsg', { subject: row.subject_name }),
     cancel: true,
     persistent: true
   }).onOk(async () => {
     try {
       await timetableGenService.deleteRoomRequirement(row.id);
-      $q.notify({ type: 'positive', message: 'Requisito rimosso' });
+      $q.notify({ type: 'positive', message: t('timetableConstraints.notifyRemoved') });
       fetchRoomReqs();
     } catch {
-      $q.notify({ type: 'negative', message: 'Errore nella cancellazione' });
+      $q.notify({ type: 'negative', message: t('timetableConstraints.notifyDeleteError') });
     }
   });
 }
