@@ -37,9 +37,11 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 
 ### Stato Verification:
 
-- **Frontend Test**: 195 test file passati (1294 test) su Vitest v5
-- **Frontend Build**: `npm run build` eseguito con successo
-- **Backend Test**: `go test ./...` tutti i package passati (unit e integrazione)
+- **Frontend Unit Test**: 210 test file passati (1.406 test passati) su Vitest v5 (`npm run test:unit`)
+- **Frontend E2E Test**: 74 test file passati (183 test passati) su Vitest v5 (`npm run test:e2e`)
+- **Frontend Build & Lint**: `npm run build` ed `npm run lint` eseguiti con successo (0 errori)
+- **Backend Test**: `go test ./...` tutti i package passati (unit e integrazione): 80 file di test di integrazione (`tests/integration`), 15 suite unitarie (`tests/unit`) e test package interni (`pkg/logger`, `internal/auditlog`, `internal/pdp`, `internal/middleware`, `pkg/jwt`)
+- **Backend Formattazione**: `gofmt -l .` verificato con successo al 100%
 
 - [x] Aggiungi nei campi dei libri di testo la materia scolastica
 
@@ -853,3 +855,33 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **10. Validazione Completa**:
     - 100% test passati su tutti i package toccati (`pkg/jwt`, `pkg/queue`, `internal/auth`, `internal/auditlog`, `internal/middleware`, `internal/users`, `internal/pdp`, `internal/grades`).
     - Compilazione Go di `cmd/api-server/` completata con successo (exit code 0).
+
+- [x] **Completato (Incremento Massivo Test Suite Backend e Frontend: Unit, Integration & E2E - Settembre 2026)**:
+  - **1. Backend Unit Tests**:
+    - `pkg/logger/logger_test.go`: Creata suite di test per il package logger (livelli di log `ParseLevel`, fallback a `InfoLevel`, formattazione JSON conforme e gestione output).
+    - `internal/auditlog/batch_worker_test.go`: Implementata suite con `sqlmock` per il worker asincrono audit log: flush su raggiungimento della batch size (100 item), flush su timer periodico (ticker 500ms), fallback a singolo inserimento su errore batch, svuotamento del buffer e graceful shutdown su `Stop()`.
+    - `internal/middleware/etag_test.go`: Test unitari per il caching HTTP RFC 7232: generazione hash MD5 `W/"..."`, matching `If-None-Match`, bypass per richieste non-GET, gestione wildcard `*` ed esclusione delle risposte non-200.
+    - `internal/pdp/encryption_test.go`: Test per la crittografia AES-256-GCM esadecimale: roundtrip encrypt/decrypt, rilevamento manomissione ciphertext (bit-flip) con autenticazione GCM, gestione stringa vuota e compatibilità retroattiva per record storici in chiaro.
+    - `tests/unit/security_hardening_unit_test.go`: Nuova suite unitaria per la sicurezza avanzata: ciclo di vita store di revoca JTI (`RevocationStore`), decadimento con TTL, pre-hashing SHA-256 con pepper per eliminare il limite nativo di 72 byte di Bcrypt.
+    - Tutte le 15 suite unitarie in `registro-backend/tests/unit` passate con successo al 100%.
+  - **2. Backend Integration Tests**:
+    - `tests/integration/personnel_desk_workflow_integration_test.go`: Test del flusso autorizzativo a 4 stadi dello sportello del personale (`submitted` -> `aa_review` -> `dsga_review` -> `ds_review` -> `approved`), verifiche RBAC di non interferenza per docenti/studenti e gestione rigetti.
+    - `tests/integration/strike_management_workflow_integration_test.go`: Ciclo di vita degli avvisi sciopero ARAN, rilevazione preventiva con dichiarazioni volontarie del personale (`participates`, `not_participates`, `undecided`), calcolo percentuali di adesione e rimozione avvisi.
+    - `tests/integration/visitors_registry_integration_test.go`: Registro portineria e accoglienza: check-in visitatori con badge fisico, uscite anticipate studenti con identificazione del delegato/genitore, rientro studente, riconsegna badge e avanzamento ticket manutenzione.
+    - `tests/integration/auth_security_hardening_integration_test.go`: Test di integrazione per la sicurezza avanzata: revoca istantanea JWT via JTI blacklist su logout (401 immediato), rifiuto payload JSON sovradimensionati (HTTP 413) con bypass per upload multipart e verifica password pre-hashate.
+    - **80/80 file di test di integrazione** superati al 100% (`go test ./tests/integration/...`).
+  - **3. Frontend Unit Tests (Vitest v5 & Happy-DOM)**:
+    - `tests/unit/components/Common/ActiveStrikeNoticeBanner.spec.js`: Test del banner bacheca del personale con visualizzazione filtrata per ruoli abilitati, invio dichiarazione di sciopero e stato scaduto.
+    - `tests/unit/components/Common/InactivityDialog.spec.js`: Test del dialogo modale di inattività sessione: countdown a 60 secondi, calcolo percentuale progress circolare, rinnovo sessione utente e logout automatico a timer scaduto.
+    - `tests/unit/ata/strikeManagement.spec.js`: Test dei metodi del servizio `strikeService`, filtri temporali (avvisi attivi vs archiviati) e calcolo statistiche di adesione.
+    - `tests/unit/ata/visitorRegistry.spec.js`: Test delle chiamate API `visitorService`, ingressi/uscite visitatori, gestione uscite anticipate e calcolo del tempo di permanenza (overstay).
+    - Suite unitaria portata a **210 file di test superati (1.406 test passati al 100%)** con `npm run test:unit`.
+  - **4. Frontend End-to-End Tests (Vitest v5 & Happy-DOM)**:
+    - `tests/e2e/strike-management-workflow.spec.js`: Workflow E2E per `StrikeManagement.vue`: caricamento tabella avvisi, pubblicazione nuovo avviso ARAN con data limite, metriche statistiche aggregate ed eliminazione.
+    - `tests/e2e/visitor-registry-workflow.spec.js`: Workflow E2E per `VisitorRegistry.vue`: registrazione visitatore e assegnazione badge, check-out con restituzione badge, rilascio studente per uscita anticipata con delegato e presa in carico segnalazione guasto.
+    - `tests/e2e/personnel-desk-workflow.spec.js`: Workflow E2E per `PersonnelDesk.vue`: sottomissione istanza personale ATA, istruttoria Assistente Amministrativo, visto contabile DSGA e decreto finale Dirigente Scolastico.
+    - Suite E2E portata a **74 file di test superati (183 test passati al 100%)** con `npm run test:e2e`.
+  - **5. Qualità del Codice & Linter**:
+    - Frontend linter: `npm run lint` (`eslint src`) completato con successo (0 errori, 0 warning).
+    - Frontend build: `npm run build` completato con successo.
+    - Backend formatting: `gofmt -l .` completato con successo su tutto il repository Go.
