@@ -37,10 +37,10 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 
 ### Stato Verification:
 
-- **Frontend Unit Test**: 210 test file passati (1.406 test passati) su Vitest v5 (`npm run test:unit`)
-- **Frontend E2E Test**: 74 test file passati (183 test passati) su Vitest v5 (`npm run test:e2e`)
+- **Frontend Unit Test**: 213 test file passati (1.435 test passati) su Vitest v5 (`npm run test:unit`)
+- **Frontend E2E Test**: 77 test file passati (191 test passati) su Vitest v5 (`npm run test:e2e`)
 - **Frontend Build & Lint**: `npm run build` ed `npm run lint` eseguiti con successo (0 errori)
-- **Backend Test**: `go test ./...` tutti i package passati (unit e integrazione): 80 file di test di integrazione (`tests/integration`), 15 suite unitarie (`tests/unit`) e test package interni (`pkg/logger`, `internal/auditlog`, `internal/pdp`, `internal/middleware`, `pkg/jwt`)
+- **Backend Test**: `go test ./...` tutti i package passati (unit e integrazione): 82 file di test di integrazione (`tests/integration`), 16 suite unitarie (`tests/unit`) e test package interni (`pkg/queue`, `pkg/logger`, `internal/auditlog`, `internal/pdp`, `internal/middleware`, `pkg/jwt`)
 - **Backend Formattazione**: `gofmt -l .` verificato con successo al 100%
 
 - [x] Aggiungi nei campi dei libri di testo la materia scolastica
@@ -885,3 +885,28 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - Frontend linter: `npm run lint` (`eslint src`) completato con successo (0 errori, 0 warning).
     - Frontend build: `npm run build` completato con successo.
     - Backend formatting: `gofmt -l .` completato con successo su tutto il repository Go.
+
+- [x] **Completato (Secondo Incremento Massivo Test Suite Backend e Frontend: Unit, Integration & E2E - Settembre 2026)**:
+  - **1. Backend Unit Tests**:
+    - `pkg/queue/queue_test.go`: Estesa la suite di test della coda asincrona: test payload raw bytes (`[]byte`), gestione task non registrati senza blocchi o panic, gestione errore buffer pieno (`queue is full` a 1000 task), e fallback trasparente da URL Redis non valido a `MemoryQueue`.
+    - `tests/unit/emergency_substitutions_unit_test.go`: Nuova suite unitaria per le sostituzioni docenti d'emergenza: algoritmo di raccomandazione con punteggi pesati (stessa classe +25, stessa materia +15, carico settimanale +10), ordinamento decrescente, enforcement RBAC (reiezione ruoli studenti/genitori) e firma elettronica del registro con hash SHA-256 (`FEQ-SUB-...`).
+    - Tutte le 16 suite unitarie in `registro-backend/tests/unit` passate al 100%.
+  - **2. Backend Integration Tests**:
+    - `tests/integration/emergency_substitutions_workflow_integration_test.go`: Workflow completo gestione emergenze cattedre: creazione segnalazione assenza da parte della presidenza/vicepresidenza, consultazione candidati raccomandati con scoring, assegnazione supplente da segreteria, controllo `today-summary`, consultazione `my-today` e firma digitale del registro di classe da parte del supplente assegnato.
+    - `tests/integration/timecard_and_leaves_workflow_integration_test.go`: Workflow completo cartellino orario e istanze ferie/permessi ATA: consultazione cartellino mensile (ore lavorate, straordinari, congedi), sottomissione richiesta ferie (`POST /staff-attendance/leaves`), divieto consultazione per utenti non autorizzati, approvazione formale del DSGA (`PATCH .../approve`), divieto cancellazione per istanze approvate ed export globale CSV con BOM UTF-8.
+    - **82/82 file di test di integrazione** superati al 100% (`go test ./tests/integration/...`).
+  - **3. Frontend Unit Tests (Vitest v5 & Happy-DOM)**:
+    - `tests/unit/components/Common/SkeletonLoaders.spec.js`: Suite per `SkeletonTable.vue` e `SkeletonCard.vue` (righe e colonne dinamiche, stili shimmer, skeleton lines e footer).
+    - `tests/unit/components/Common/SessionReauthDialog.spec.js`: Suite per `SessionReauthDialog.vue` (visualizzazione email protetta, inserimento password e re-autenticazione in-page con preservazione dello stato, logout con redirect a `/login`).
+    - `tests/unit/services/ataAndSpecialistServices.spec.js`: Test completi delle chiamate API per 4 servizi chiave: `substitutionService`, `personnelDeskService`, `pdpService` e `staffAttendanceService` (endpoint, parametri, payload e mapping).
+    - Suite unitaria portata a **213 file di test superati (1.435 test passati al 100%)** con `npm run test:unit`.
+  - **4. Frontend End-to-End Tests (Vitest v5 & Happy-DOM)**:
+    - `tests/e2e/emergency-substitutions-workflow.spec.js`: Workflow E2E per `EmergencySubstitutions.vue` (pillole KPI presenze/assenze, caricamento sostituzioni in attesa, visualizzazione candidati raccomandati con badge di punteggio, assegnazione rapida).
+    - `tests/e2e/timecard-leave-workflow.spec.js`: Workflow E2E per `Timecard.vue` (cartellino timbrature badge, saldo ore straordinario, modale richiesta ferie, sottomissione istanza e approvazione DSGA).
+    - `tests/e2e/pdp-plans-workflow.spec.js`: Workflow E2E per `PdpPlans.vue` (elenco piani PDP/PEI per classe, misure compensative/dispensative, modale di compilazione e condivisione con la famiglia).
+    - Suite E2E portata a **77 file di test superati (191 test passati al 100%)** con `npm run test:e2e`.
+  - **5. Qualità del Codice, Build & Linter**:
+    - Frontend linter: `npm run lint` (`eslint src`) superato con 0 errori.
+    - Frontend build: `npm run build` (`vite build`) completato con successo (5.07s).
+    - Backend formatting: `gofmt -l .` superato con 0 differenze di formattazione.
+
