@@ -386,7 +386,7 @@ func main() {
 		api.GET("/public/schools", schoolsH.ListPublic)
 		api.POST("/public/accessibility-feedback", a11yH.SubmitPublic)
 		api.POST("/public/csp-report", handler.HandleCSPReport)
-		r.POST("/api/v1/public/csp-report", handler.HandleCSPReport)
+		r.POST("/public/csp-report", handler.HandleCSPReport)
 
 		api.GET("/ws", authMiddleware.AuthenticateWSTicket(wsTicketStore), func(c *gin.Context) {
 			wsHandler.Listen(c)

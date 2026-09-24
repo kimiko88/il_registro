@@ -16,8 +16,8 @@ export const timetableGenService = {
   getPreferences(params) {
     return api.get('/timetable/preferences', { params });
   },
-  savePreferences(data) {
-    return api.post('/timetable/preferences', data);
+  savePreferences(data, params) {
+    return params ? api.post('/timetable/preferences', data, { params }) : api.post('/timetable/preferences', data);
   },
 
   // Room Requirements per Subject

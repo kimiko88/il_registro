@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -362,14 +363,15 @@ func (r *PostgresRepository) LoadAssignments(ctx context.Context, schoolID strin
 	query := `
 		SELECT cs.class_id, COALESCE(c.name || ' ' || COALESCE(c.section, ''), c.name, ''), c.building_id,
 		       cs.subject_id, s.name,
-		       t.id, t.user_id, COALESCE(u.last_name || ' ' || u.first_name, ''),
+		       COALESCE(t.id, 'unassigned-' || cs.id), COALESCE(t.user_id, 'unassigned-' || cs.id),
+		       COALESCE(NULLIF(TRIM(COALESCE(u.last_name, '') || ' ' || COALESCE(u.first_name, '')), ''), 'Docente da Nominare'),
 		       t.hiring_date,
 		       CEIL(cs.hours_per_week)::int
 		FROM class_subjects cs
 		JOIN classes c ON cs.class_id = c.id
 		JOIN subjects s ON cs.subject_id = s.id
-		JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
-		JOIN users u ON t.user_id = u.id
+		LEFT JOIN teachers t ON cs.teacher_id = t.id OR cs.teacher_id = t.user_id
+		LEFT JOIN users u ON t.user_id = u.id
 		WHERE c.school_id = $1
 		  AND ($2::uuid IS NULL OR c.academic_year_id = $2::uuid)
 		  AND cs.hours_per_week > 0
@@ -399,6 +401,51 @@ func (r *PostgresRepository) LoadAssignments(ctx context.Context, schoolID strin
 		}
 		list = append(list, a)
 	}
+
+	// 2. Load explicit unassigned hours ("spezzoni orari") from timetable_constraints
+	cQuery := `
+		SELECT tc.id, tc.target_id, COALESCE(c.name || ' ' || COALESCE(c.section, ''), c.name, ''), c.building_id, tc.parameters
+		FROM timetable_constraints tc
+		JOIN classes c ON tc.target_id = c.id
+		WHERE tc.school_id = $1
+		  AND tc.constraint_type = 'unassigned_hours'
+		  AND tc.is_active = true
+	`
+	cRows, cErr := r.db.QueryContext(ctx, cQuery, schoolID)
+	if cErr == nil {
+		defer cRows.Close()
+		for cRows.Next() {
+			var cID, targetID, className string
+			var bldID *string
+			var rawParams []byte
+			if scanErr := cRows.Scan(&cID, &targetID, &className, &bldID, &rawParams); scanErr == nil {
+				var p struct {
+					SubjectID       string `json:"subject_id"`
+					SubjectName     string `json:"subject_name"`
+					HoursPerWeek    int    `json:"hours_per_week"`
+					PlaceholderName string `json:"placeholder_name"`
+				}
+				if json.Unmarshal(rawParams, &p) == nil && p.HoursPerWeek > 0 {
+					placeholder := p.PlaceholderName
+					if placeholder == "" {
+						placeholder = fmt.Sprintf("Docente da Nominare (%s)", p.SubjectName)
+					}
+					list = append(list, AssignmentData{
+						ClassID:       targetID,
+						ClassName:     className,
+						BuildingID:    bldID,
+						SubjectID:     p.SubjectID,
+						SubjectName:   p.SubjectName,
+						TeacherID:     "spezzone-" + cID,
+						TeacherUserID: "spezzone-" + cID,
+						TeacherName:   placeholder,
+						HoursPerWeek:  p.HoursPerWeek,
+					})
+				}
+			}
+		}
+	}
+
 	return list, rows.Err()
 }
 
@@ -478,8 +525,12 @@ func (r *PostgresRepository) PublishGeneratedSchedule(ctx context.Context, schoo
 		if teacherID == nil {
 			teacherID = s.TeacherID
 		}
+		var insertTeacherID *string
+		if teacherID != nil && !strings.HasPrefix(*teacherID, "unassigned-") && !strings.HasPrefix(*teacherID, "spezzone-") {
+			insertTeacherID = teacherID
+		}
 		_, err := insertStmt.ExecContext(ctx,
-			id, s.ClassID, s.DayOfWeek, s.HourIndex, s.SubjectID, teacherID, s.RoomName, s.RoomID,
+			id, s.ClassID, s.DayOfWeek, s.HourIndex, s.SubjectID, insertTeacherID, s.RoomName, s.RoomID,
 		)
 		if err != nil {
 			return fmt.Errorf("failed to insert schedule slot (class %s day %d hour %d): %w", s.ClassID, s.DayOfWeek, s.HourIndex, err)

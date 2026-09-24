@@ -9,6 +9,8 @@ import { getSavedLocale, getQuasarLang, applyLocale } from './utils/locale'
 
 // Import Quasar css
 import '@quasar/extras/material-icons/material-icons.css'
+import '@quasar/extras/material-icons-outlined/material-icons-outlined.css'
+import '@quasar/extras/material-symbols-outlined/material-symbols-outlined.css'
 import 'quasar/src/css/index.sass'
 
 // Global styles

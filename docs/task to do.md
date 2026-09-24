@@ -929,3 +929,4 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - Backend test: unit ed integration passati al 100%.
     - Linter & Build: `npm run lint` (0 errori), `npm run build` (successo in 3.07s).
 
+Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le preferenze dei vari docenti e impostare eventuali spezzoni orari non ancora assegnati ai docenti, che possono esserci in ogni classe
