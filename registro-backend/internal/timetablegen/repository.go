@@ -35,6 +35,7 @@ type Repository interface {
 	LoadAssignments(ctx context.Context, schoolID string, academicYearID *string) ([]AssignmentData, error)
 	LoadRooms(ctx context.Context, schoolID string) ([]RoomData, error)
 	LoadRoomRequirements(ctx context.Context, schoolID string) (map[string]SubjectRoomRequirement, error)
+	LoadAssociatedGroups(ctx context.Context, schoolID string) ([]AssociatedGroup, error)
 
 	// Publish
 	PublishGeneratedSchedule(ctx context.Context, schoolID string, slots []GeneratedSlot) error
@@ -149,7 +150,8 @@ func (r *PostgresRepository) LoadAllPreferences(ctx context.Context, schoolID st
 
 func (r *PostgresRepository) ListRoomRequirements(ctx context.Context, schoolID string) ([]SubjectRoomRequirement, error) {
 	query := `
-		SELECT srr.id, srr.school_id, srr.subject_id, COALESCE(s.name, ''), srr.required_room_type, srr.is_mandatory, srr.created_at
+		SELECT srr.id, srr.school_id, srr.subject_id, COALESCE(s.name, ''), srr.required_room_type,
+		       COALESCE(srr.lab_hours, 1), srr.is_mandatory, srr.created_at
 		FROM subject_room_requirements srr
 		JOIN subjects s ON srr.subject_id = s.id
 		WHERE srr.school_id = $1
@@ -166,7 +168,7 @@ func (r *PostgresRepository) ListRoomRequirements(ctx context.Context, schoolID 
 		var req SubjectRoomRequirement
 		if err := rows.Scan(
 			&req.ID, &req.SchoolID, &req.SubjectID, &req.SubjectName,
-			&req.RequiredRoomType, &req.IsMandatory, &req.CreatedAt,
+			&req.RequiredRoomType, &req.LabHours, &req.IsMandatory, &req.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -177,11 +179,15 @@ func (r *PostgresRepository) ListRoomRequirements(ctx context.Context, schoolID 
 
 func (r *PostgresRepository) SaveRoomRequirement(ctx context.Context, schoolID string, req SaveRoomRequirementRequest) (*SubjectRoomRequirement, error) {
 	id := uuid.New().String()
+	labHours := req.LabHours
+	if labHours <= 0 {
+		labHours = 1
+	}
 	query := `
-		INSERT INTO subject_room_requirements (id, school_id, subject_id, required_room_type, is_mandatory, created_at)
-		VALUES ($1, $2, $3, $4, $5, NOW())
+		INSERT INTO subject_room_requirements (id, school_id, subject_id, required_room_type, lab_hours, is_mandatory, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW())
 		ON CONFLICT (school_id, subject_id)
-		DO UPDATE SET required_room_type = EXCLUDED.required_room_type, is_mandatory = EXCLUDED.is_mandatory
+		DO UPDATE SET required_room_type = EXCLUDED.required_room_type, lab_hours = EXCLUDED.lab_hours, is_mandatory = EXCLUDED.is_mandatory
 		RETURNING id, created_at
 	`
 	res := &SubjectRoomRequirement{
@@ -189,9 +195,10 @@ func (r *PostgresRepository) SaveRoomRequirement(ctx context.Context, schoolID s
 		SchoolID:         schoolID,
 		SubjectID:        req.SubjectID,
 		RequiredRoomType: req.RequiredRoomType,
+		LabHours:         labHours,
 		IsMandatory:      req.IsMandatory,
 	}
-	err := r.db.QueryRowContext(ctx, query, id, schoolID, req.SubjectID, req.RequiredRoomType, req.IsMandatory).
+	err := r.db.QueryRowContext(ctx, query, id, schoolID, req.SubjectID, req.RequiredRoomType, labHours, req.IsMandatory).
 		Scan(&res.ID, &res.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -364,7 +371,7 @@ func (r *PostgresRepository) LoadAssignments(ctx context.Context, schoolID strin
 		SELECT cs.class_id, COALESCE(c.name || ' ' || COALESCE(c.section, ''), c.name, ''), c.building_id,
 		       cs.subject_id, s.name,
 		       COALESCE(t.id, 'unassigned-' || cs.id), COALESCE(t.user_id, 'unassigned-' || cs.id),
-		       COALESCE(NULLIF(TRIM(COALESCE(u.last_name, '') || ' ' || COALESCE(u.first_name, '')), ''), 'Docente da Nominare'),
+		       COALESCE(NULLIF(TRIM(COALESCE(u.last_name, '') || ' ' || COALESCE(u.first_name, '')), ''), 'Docente da Nominare (Cattedra non assegnata)'),
 		       t.hiring_date,
 		       CEIL(cs.hours_per_week)::int
 		FROM class_subjects cs
@@ -446,6 +453,22 @@ func (r *PostgresRepository) LoadAssignments(ctx context.Context, schoolID strin
 		}
 	}
 
+	// 3. Link associated groups to assignments
+	groups, _ := r.LoadAssociatedGroups(ctx, schoolID)
+	for _, g := range groups {
+		classSet := make(map[string]bool)
+		for _, cid := range g.ClassIDs {
+			classSet[cid] = true
+		}
+		for i := range list {
+			if classSet[list[i].ClassID] && list[i].SubjectID == g.SubjectID && (list[i].TeacherID == g.TeacherID || list[i].TeacherUserID == g.TeacherID) {
+				groupID := g.ID
+				list[i].AssociatedGroupID = &groupID
+				list[i].IsAssociatedGroup = true
+			}
+		}
+	}
+
 	return list, rows.Err()
 }
 
@@ -482,6 +505,94 @@ func (r *PostgresRepository) LoadRoomRequirements(ctx context.Context, schoolID 
 		res[req.SubjectID] = req
 	}
 	return res, nil
+}
+
+func (r *PostgresRepository) LoadAssociatedGroups(ctx context.Context, schoolID string) ([]AssociatedGroup, error) {
+	var list []AssociatedGroup
+
+	// 1. Load from timetable_constraints with constraint_type = 'associated_group'
+	queryConstraints := `
+		SELECT tc.id, tc.parameters
+		FROM timetable_constraints tc
+		WHERE tc.school_id = $1
+		  AND tc.constraint_type = 'associated_group'
+		  AND tc.is_active = true
+	`
+	rows, err := r.db.QueryContext(ctx, queryConstraints, schoolID)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var id string
+			var raw []byte
+			if err := rows.Scan(&id, &raw); err == nil {
+				var ag AssociatedGroup
+				if err := json.Unmarshal(raw, &ag); err == nil {
+					ag.ID = id
+					ag.SchoolID = schoolID
+					if ag.HoursPerWeek <= 0 {
+						ag.HoursPerWeek = 2
+					}
+					list = append(list, ag)
+				}
+			}
+		}
+	}
+
+	// 2. Load from groups table where students belong to multiple classes
+	queryGroups := `
+		SELECT g.id, g.name, g.subject_id, COALESCE(s.name, ''),
+		       COALESCE(g.teacher_id::text, ''),
+		       COALESCE(u.last_name || ' ' || u.first_name, ''),
+		       COALESCE(STRING_AGG(DISTINCT cs.class_id::text, ','), '') AS class_ids_str
+		FROM groups g
+		LEFT JOIN subjects s ON g.subject_id = s.id
+		LEFT JOIN users u ON g.teacher_id = u.id
+		JOIN group_students gs ON gs.group_id = g.id
+		JOIN class_students cs ON (cs.student_id = gs.student_id OR cs.student_id IN (SELECT id FROM students WHERE user_id = gs.student_id))
+		WHERE g.school_id = $1 AND g.teacher_id IS NOT NULL AND g.subject_id IS NOT NULL
+		GROUP BY g.id, g.name, g.subject_id, s.name, g.teacher_id, u.last_name, u.first_name
+		HAVING COUNT(DISTINCT cs.class_id) > 1
+	`
+	gRows, gErr := r.db.QueryContext(ctx, queryGroups, schoolID)
+	if gErr == nil {
+		defer gRows.Close()
+		for gRows.Next() {
+			var gID, gName, gSubID, gSubName, gTeacherID, gTeacherName, classIDsStr string
+			if err := gRows.Scan(&gID, &gName, &gSubID, &gSubName, &gTeacherID, &gTeacherName, &classIDsStr); err == nil {
+				var classIDs []string
+				for _, cid := range strings.Split(classIDsStr, ",") {
+					cid = strings.TrimSpace(cid)
+					if cid != "" {
+						classIDs = append(classIDs, cid)
+					}
+				}
+				if len(classIDs) > 1 {
+					exists := false
+					for _, item := range list {
+						if item.SubjectID == gSubID && item.TeacherID == gTeacherID {
+							exists = true
+							break
+						}
+					}
+					if !exists {
+						list = append(list, AssociatedGroup{
+							ID:           gID,
+							SchoolID:     schoolID,
+							Name:         gName,
+							SubjectID:    gSubID,
+							SubjectName:  gSubName,
+							TeacherID:    gTeacherID,
+							TeacherName:  gTeacherName,
+							ClassIDs:     classIDs,
+							HoursPerWeek: 3,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	return list, nil
 }
 
 // ----------------- Publish Schedule -----------------

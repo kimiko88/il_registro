@@ -291,6 +291,12 @@
                 dense
                 class="rounded-xl"
               >
+                <template #body-cell-teacher_name="props">
+                  <q-td :props="props">
+                    <span v-if="props.row.teacher_name">{{ props.row.teacher_name }}</span>
+                    <q-badge v-else color="amber-9" outline label="Cattedra da Nominare" class="text-weight-bold" />
+                  </q-td>
+                </template>
                 <template #body-cell-actions="props">
                   <q-td :props="props" auto-width>
                     <q-btn flat round dense color="negative" icon="delete" size="sm" @click="removeAssignment(props.row.id)" />
@@ -316,12 +322,14 @@
                   />
                   <q-select
                     v-model="assignForm.teacher_id"
-                    :options="teacherOptions"
-                    label="Docente"
+                    :options="assignTeacherOptions"
+                    label="Docente (opzionale)"
                     outlined
                     dense
+                    clearable
                     emit-value
                     map-options
+                    hint="Lascia vuoto per cattedra non assegnata / docente da nominare"
                   />
                   <q-input
                     v-model.number="assignForm.hours_per_week"
@@ -355,9 +363,10 @@
           <div class="text-body2 text-grey-7">
             L'algoritmo calcola l'orario completo di tutti i docenti e classi, garantendo:
             <ul class="q-my-xs q-pl-md">
-              <li><strong>Priorità per Anzianità</strong>: i docenti con maggiore anzianità hanno priorità nei propri desiderata.</li>
-              <li><strong>Aule Speciali & Plessi</strong>: assegna automaticamente laboratori e palestre nel plesso corretto.</li>
-              <li><strong>Assenza di Conflitti</strong>: nessun docente o classe sovrapposti nella stessa ora.</li>
+              <li><strong>Vincoli Laboratori & Ore</strong>: assegna le aule speciali solo per il numero di ore settimanali di laboratorio configurato, liberandole per le altre classi nelle ore rimanenti.</li>
+              <li><strong>Cattedre Vacanti & Spezzoni</strong>: supporta e calendarizza le materie con cattedre non assegnate a docenti attualmente assunti (docenti da nominare).</li>
+              <li><strong>Copertura Completa Materie</strong>: ogni classe riceve esattamente il monte ore settimanale previsto per ciascuna materia.</li>
+              <li><strong>Assenza di Conflitti & Gruppi Linguistici/Associati</strong>: nessun docente può essere in più classi contemporaneamente, salvo nel caso di un gruppo linguistico o articolato per la medesima materia. (I desiderata personali dei docenti non costituiscono vincolo per il calcolo).</li>
             </ul>
           </div>
 
@@ -507,6 +516,14 @@ const currentClassInfo = computed(() => {
 const teacherTotalHours = computed(() => {
   return teacherScheduleEntries.value.length
 })
+
+const assignTeacherOptions = computed(() => [
+  { value: null, label: '— Cattedra non assegnata (Docente da nominare) —' },
+  ...teacherOptions.value.map(t => ({
+    value: t.id,
+    label: t.label
+  }))
+])
 
 onMounted(async () => {
   loading.value = true
@@ -698,7 +715,11 @@ const openSubjectsDialog = () => {
 const addAssignment = async () => {
   if (!assignForm.subject_id || !selectedClass.value) return
   try {
-    await adminService.assignSubjectToClass(selectedClass.value, assignForm)
+    await adminService.assignSubjectToClass(selectedClass.value, {
+      subject_id: assignForm.subject_id,
+      teacher_id: assignForm.teacher_id || null,
+      hours_per_week: assignForm.hours_per_week || 1
+    })
     $q.notify({ type: 'positive', message: 'Cattedra assegnata correttamente!' })
     await fetchClassAssignments()
     assignForm.subject_id = null

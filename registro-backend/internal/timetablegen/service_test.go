@@ -63,6 +63,7 @@ func (m *mockTimetableRepo) SaveRoomRequirement(ctx context.Context, schoolID st
 		SchoolID:         schoolID,
 		SubjectID:        req.SubjectID,
 		RequiredRoomType: req.RequiredRoomType,
+		LabHours:         req.LabHours,
 		IsMandatory:      req.IsMandatory,
 		CreatedAt:        time.Now(),
 	}
@@ -152,6 +153,10 @@ func (m *mockTimetableRepo) LoadRooms(ctx context.Context, schoolID string) ([]R
 
 func (m *mockTimetableRepo) LoadRoomRequirements(ctx context.Context, schoolID string) (map[string]SubjectRoomRequirement, error) {
 	return make(map[string]SubjectRoomRequirement), nil
+}
+
+func (m *mockTimetableRepo) LoadAssociatedGroups(ctx context.Context, schoolID string) ([]AssociatedGroup, error) {
+	return nil, nil
 }
 
 func (m *mockTimetableRepo) PublishGeneratedSchedule(ctx context.Context, schoolID string, slots []GeneratedSlot) error {

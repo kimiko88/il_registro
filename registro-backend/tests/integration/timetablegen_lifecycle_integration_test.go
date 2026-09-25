@@ -23,8 +23,9 @@ type mockIntegrationTimetableRepo struct {
 	constraints []timetablegen.TimetableConstraint
 	jobs        map[string]*timetablegen.TimetableJob
 	published   []timetablegen.GeneratedSlot
-	assignments []timetablegen.AssignmentData
-	rooms       []timetablegen.RoomData
+	assignments      []timetablegen.AssignmentData
+	rooms            []timetablegen.RoomData
+	associatedGroups []timetablegen.AssociatedGroup
 }
 
 func newMockIntegrationTimetableRepo() *mockIntegrationTimetableRepo {
@@ -68,12 +69,17 @@ func (m *mockIntegrationTimetableRepo) ListRoomRequirements(ctx context.Context,
 }
 
 func (m *mockIntegrationTimetableRepo) SaveRoomRequirement(ctx context.Context, schoolID string, req timetablegen.SaveRoomRequirementRequest) (*timetablegen.SubjectRoomRequirement, error) {
+	labHours := req.LabHours
+	if labHours <= 0 {
+		labHours = 1
+	}
 	r := &timetablegen.SubjectRoomRequirement{
 		ID:               uuid.New().String(),
 		SchoolID:         schoolID,
 		SubjectID:        req.SubjectID,
 		RequiredRoomType: req.RequiredRoomType,
 		IsMandatory:      req.IsMandatory,
+		LabHours:         labHours,
 	}
 	m.reqs = append(m.reqs, *r)
 	return r, nil
@@ -174,6 +180,10 @@ func (m *mockIntegrationTimetableRepo) LoadRoomRequirements(ctx context.Context,
 		res[r.SubjectID] = r
 	}
 	return res, nil
+}
+
+func (m *mockIntegrationTimetableRepo) LoadAssociatedGroups(ctx context.Context, schoolID string) ([]timetablegen.AssociatedGroup, error) {
+	return m.associatedGroups, nil
 }
 
 func (m *mockIntegrationTimetableRepo) PublishGeneratedSchedule(ctx context.Context, schoolID string, slots []timetablegen.GeneratedSlot) error {
@@ -284,6 +294,7 @@ func TestIntegration_TimetableGenerationLifecycle(t *testing.T) {
 		SubjectID:        "sub-info",
 		RequiredRoomType: "lab_informatica",
 		IsMandatory:      true,
+		LabHours:         2,
 	}
 	body, _ = json.Marshal(reqRoomReq)
 	req = httptest.NewRequest(http.MethodPost, "/timetable/room-requirements", bytes.NewBuffer(body))

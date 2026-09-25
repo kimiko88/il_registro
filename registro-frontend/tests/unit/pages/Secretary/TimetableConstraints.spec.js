@@ -26,7 +26,8 @@ vi.mock('quasar', async (importOriginal) => {
     ...actual,
     useQuasar: () => ({
       dark: { isActive: false },
-      notify: vi.fn()
+      notify: vi.fn(),
+      lang: { current: 'it' }
     })
   }
 })
@@ -64,6 +65,7 @@ describe('Secretary TimetableConstraints.vue — Timetable Constraints & Room Re
       global: {
         stubs: {
           'q-page': { template: '<div class="q-page"><slot /></div>' },
+          'q-banner': { template: '<div class="q-banner"><slot name="avatar" /><slot /></div>' },
           'q-card': { template: '<div class="q-card"><slot /></div>' },
           'q-card-section': { template: '<div class="q-card-section"><slot /></div>' },
           'q-card-actions': { template: '<div class="q-card-actions"><slot /></div>' },
@@ -75,6 +77,8 @@ describe('Secretary TimetableConstraints.vue — Timetable Constraints & Room Re
           'q-input': { template: '<div class="q-input"><slot /></div>' },
           'q-toggle': { template: '<div class="q-toggle"><slot /></div>' },
           'q-table': { template: '<div class="q-table"><slot /></div>' },
+          'q-tabs': { template: '<div class="q-tabs"><slot /></div>' },
+          'q-tab': { template: '<div class="q-tab"><slot /></div>' },
           'q-dialog': { template: '<div><slot /></div>' },
           'q-separator': true,
           'q-spinner-dots': true

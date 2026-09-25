@@ -56,7 +56,7 @@
               <div v-if="getCell(day, hour)" class="cell-content p-2 rounded-lg bg-white border border-blue-300 shadow-2xs row items-center justify-between">
                 <div>
                   <div class="text-caption font-bold text-blue-900 leading-tight">{{ getCell(day, hour).subject_name }}</div>
-                  <div class="text-[10px] text-slate-600 truncate mt-0.5">{{ getCell(day, hour).teacher_name || 'Docente N/D' }}</div>
+                  <div class="text-[10px] text-slate-600 truncate mt-0.5">{{ getCell(day, hour).teacher_name || 'Cattedra da Nominare' }}</div>
                   <div v-if="getCell(day, hour).room" class="text-[10px] text-slate-500 font-semibold mt-0.5">Aula: {{ getCell(day, hour).room }}</div>
                 </div>
                 <q-btn
@@ -178,7 +178,7 @@ watch(() => props.initialSchedule, (val) => {
 
 const assignmentOptions = computed(() => {
   return props.assignments.map(a => ({
-    label: `${a.subject_name} (${a.teacher_name || 'Docente N/D'})`,
+    label: `${a.subject_name} (${a.teacher_name || 'Cattedra da Nominare'})`,
     value: a.id,
     subject_id: a.subject_id,
     subject_name: a.subject_name,

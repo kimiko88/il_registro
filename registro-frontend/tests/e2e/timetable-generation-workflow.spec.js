@@ -50,6 +50,7 @@ vi.mock('quasar', async (importOriginal) => {
       dark: { isActive: false },
       loading: { show: vi.fn(), hide: vi.fn() },
       notify: vi.fn(),
+      lang: { current: 'it' },
       dialog: vi.fn().mockReturnValue({
         onOk: vi.fn(cb => { if (cb) cb(); return { onCancel: vi.fn(), onDismiss: vi.fn() } })
       })
@@ -144,6 +145,7 @@ describe('E2E Workflow: Teacher Desiderata, Lab Requirements & Automatic Timetab
         plugins: [piniaSecretary],
         stubs: {
           'q-page': { template: '<div><slot /></div>' },
+          'q-banner': { template: '<div><slot /></div>' },
           'q-card': { template: '<div><slot /></div>' },
           'q-card-section': { template: '<div><slot /></div>' },
           'q-card-actions': { template: '<div><slot /></div>' },
@@ -155,6 +157,8 @@ describe('E2E Workflow: Teacher Desiderata, Lab Requirements & Automatic Timetab
           'q-input': { template: '<div><slot /></div>' },
           'q-toggle': { template: '<div><slot /></div>' },
           'q-table': { template: '<div><slot /></div>' },
+          'q-tabs': { template: '<div><slot /></div>' },
+          'q-tab': { template: '<div><slot /></div>' },
           'q-dialog': { template: '<div><slot /></div>' },
           'q-separator': true,
           'q-spinner-dots': true

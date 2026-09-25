@@ -42,6 +42,7 @@ type SubjectRoomRequirement struct {
 	SubjectID        string    `json:"subject_id" db:"subject_id"`
 	SubjectName      string    `json:"subject_name,omitempty" db:"subject_name"`
 	RequiredRoomType string    `json:"required_room_type" db:"required_room_type"`
+	LabHours         int       `json:"lab_hours" db:"lab_hours"`
 	IsMandatory      bool      `json:"is_mandatory" db:"is_mandatory"`
 	CreatedAt        time.Time `json:"created_at" db:"created_at"`
 }
@@ -92,7 +93,21 @@ type PreferenceEntry struct {
 type SaveRoomRequirementRequest struct {
 	SubjectID        string `json:"subject_id" binding:"required"`
 	RequiredRoomType string `json:"required_room_type" binding:"required"`
+	LabHours         int    `json:"lab_hours"`
 	IsMandatory      bool   `json:"is_mandatory"`
+}
+
+type AssociatedGroup struct {
+	ID           string   `json:"id"`
+	SchoolID     string   `json:"school_id"`
+	Name         string   `json:"name"`
+	SubjectID    string   `json:"subject_id"`
+	SubjectName  string   `json:"subject_name,omitempty"`
+	TeacherID    string   `json:"teacher_id"`
+	TeacherName  string   `json:"teacher_name,omitempty"`
+	ClassIDs     []string `json:"class_ids"`
+	ClassNames   []string `json:"class_names,omitempty"`
+	HoursPerWeek int      `json:"hours_per_week"`
 }
 
 type SaveConstraintRequest struct {
@@ -170,16 +185,18 @@ type TimetableGenerationResult struct {
 
 // Input data loaded for generation
 type AssignmentData struct {
-	ClassID       string
-	ClassName     string
-	BuildingID    *string
-	SubjectID     string
-	SubjectName   string
-	TeacherID     string
-	TeacherUserID string
-	TeacherName   string
-	HiringDate    *time.Time
-	HoursPerWeek  int
+	ClassID           string
+	ClassName         string
+	BuildingID        *string
+	SubjectID         string
+	SubjectName       string
+	TeacherID         string
+	TeacherUserID     string
+	TeacherName       string
+	HiringDate        *time.Time
+	HoursPerWeek      int
+	AssociatedGroupID *string
+	IsAssociatedGroup bool
 }
 
 type RoomData struct {

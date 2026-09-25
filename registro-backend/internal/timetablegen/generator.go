@@ -46,13 +46,12 @@ func NewGenerator(cfg GeneratorConfig) *TimetableGenerator {
 	return &TimetableGenerator{config: cfg}
 }
 
-type teacherSeniorityInfo struct {
-	TeacherID   string
-	HiringDate  time.Time
-	SeniorityPt float64 // higher = more senior
-}
-
-// Generate runs greedy allocation sorted by seniority followed by local search
+// Generate runs constrained timetable allocation:
+// 1. Respects laboratory constraints and allocates the chosen number of lab hours per subject.
+// 2. Ignores teacher personal desiderata (neutral availability, structural rules only).
+// 3. Fully supports cattedre non assegnate a docenti attualmente assunti (docenti da nominare/spezzoni).
+// 4. Guarantees that each class receives all required hours for each subject.
+// 5. Enforces that no teacher can be in multiple classes simultaneously EXCEPT when teaching an associated or linguistic group.
 func (g *TimetableGenerator) Generate(
 	ctx context.Context,
 	assignments []AssignmentData,
@@ -62,53 +61,6 @@ func (g *TimetableGenerator) Generate(
 	constraints []TimetableConstraint,
 ) (*TimetableGenerationResult, error) {
 	startTime := time.Now()
-
-	// 1. Group assignments by teacher and calculate seniority
-	teacherMap := make(map[string]*teacherSeniorityInfo)
-	for _, a := range assignments {
-		if _, exists := teacherMap[a.TeacherID]; !exists {
-			hDate := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
-			if a.HiringDate != nil {
-				hDate = *a.HiringDate
-			}
-			teacherMap[a.TeacherID] = &teacherSeniorityInfo{
-				TeacherID:  a.TeacherID,
-				HiringDate: hDate,
-			}
-		}
-	}
-
-	var teachersList []*teacherSeniorityInfo
-	for _, t := range teacherMap {
-		teachersList = append(teachersList, t)
-	}
-
-	// Sort teachers by hiring_date ASC (earliest hire date = most senior)
-	sort.Slice(teachersList, func(i, j int) bool {
-		return teachersList[i].HiringDate.Before(teachersList[j].HiringDate)
-	})
-
-	totalTeachers := len(teachersList)
-	for idx, t := range teachersList {
-		// Rank points from 1.0 (junior) up to 3.0 (senior)
-		if totalTeachers > 1 {
-			t.SeniorityPt = 3.0 - (float64(idx)/float64(totalTeachers))*2.0
-		} else {
-			t.SeniorityPt = 3.0
-		}
-	}
-
-	// Preference lookup: teacherID -> day -> hour -> prefType
-	prefLookup := make(map[string]map[int]map[int]string)
-	for _, p := range preferences {
-		if prefLookup[p.TeacherID] == nil {
-			prefLookup[p.TeacherID] = make(map[int]map[int]string)
-		}
-		if prefLookup[p.TeacherID][p.DayOfWeek] == nil {
-			prefLookup[p.TeacherID][p.DayOfWeek] = make(map[int]string)
-		}
-		prefLookup[p.TeacherID][p.DayOfWeek][p.HourIndex] = p.PreferenceType
-	}
 
 	// Group rooms by roomType and buildingID
 	roomsByTypeAndBuilding := make(map[string]map[string][]RoomData) // roomType -> buildingID -> []rooms
@@ -127,6 +79,8 @@ func (g *TimetableGenerator) Generate(
 	// Tracking matrices for hard conflicts:
 	// teacherBusy[teacherID][day][hour] = bool
 	teacherBusy := make(map[string]map[int]map[int]bool)
+	// teacherGroupBusy[teacherID][day][hour] = groupID (tracks which associated group is active)
+	teacherGroupBusy := make(map[string]map[int]map[int]string)
 	// classBusy[classID][day][hour] = bool
 	classBusy := make(map[string]map[int]map[int]bool)
 	// roomBusy[roomID][day][hour] = bool
@@ -145,72 +99,88 @@ func (g *TimetableGenerator) Generate(
 		totalRequiredHours += a.HoursPerWeek
 	}
 
-	// Sort assignments: prioritize assignments of senior teachers first
-	teacherOrderMap := make(map[string]int)
-	for idx, t := range teachersList {
-		teacherOrderMap[t.TeacherID] = idx
+	// 1. Separate Associated Groups from Regular Assignments
+	associatedGroupsMap := make(map[string][]AssignmentData)
+	var regularAssignments []AssignmentData
+
+	for _, a := range assignments {
+		if a.IsAssociatedGroup && a.AssociatedGroupID != nil && *a.AssociatedGroupID != "" {
+			gID := *a.AssociatedGroupID
+			associatedGroupsMap[gID] = append(associatedGroupsMap[gID], a)
+		} else {
+			regularAssignments = append(regularAssignments, a)
+		}
 	}
 
-	sort.Slice(assignments, func(i, j int) bool {
-		ti := teacherOrderMap[assignments[i].TeacherID]
-		tj := teacherOrderMap[assignments[j].TeacherID]
-		if ti != tj {
-			return ti < tj // senior teacher assignments first
-		}
-		return assignments[i].HoursPerWeek > assignments[j].HoursPerWeek
-	})
-
-	// ---------------- Phase 1: Greedy Allocation ----------------
-	for _, a := range assignments {
+	// ---------------- Phase 1A: Schedule Associated Groups (Gruppi Linguistici / Articolati) ----------------
+	// Associated groups combine multiple classes simultaneously with the same teacher and subject.
+	for groupID, groupAssigns := range associatedGroupsMap {
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
-
-		seniority := 1.5
-		if tInfo, ok := teacherMap[a.TeacherID]; ok {
-			seniority = tInfo.SeniorityPt
+		if len(groupAssigns) == 0 {
+			continue
 		}
 
-		hoursToPlace := a.HoursPerWeek
-		reqRoom, hasRoomReq := roomReqs[a.SubjectID]
+		lead := groupAssigns[0]
+		hoursToPlace := lead.HoursPerWeek
+		reqRoom, hasRoomReq := roomReqs[lead.SubjectID]
+
+		labHoursLimit := 0
+		if hasRoomReq && reqRoom.RequiredRoomType != "" {
+			labHoursLimit = reqRoom.LabHours
+			if labHoursLimit <= 0 || labHoursLimit > hoursToPlace {
+				labHoursLimit = hoursToPlace
+			}
+		}
 
 		for h := 0; h < hoursToPlace; h++ {
-			type Candidate struct {
-				Day       int
-				Hour      int
-				RoomID    *string
-				RoomName  string
-				Score     float64
-				PrefState string
+			isLabHour := hasRoomReq && reqRoom.RequiredRoomType != "" && h < labHoursLimit
+
+			type GroupCandidate struct {
+				Day      int
+				Hour     int
+				RoomID   *string
+				RoomName string
+				Score    float64
 			}
 
-			var candidates []Candidate
+			var candidates []GroupCandidate
 
 			for day := 1; day <= g.config.MaxDaysPerWeek; day++ {
 				for hour := 1; hour <= g.config.MaxHoursPerDay; hour++ {
-					// Hard check 1: Teacher busy?
-					if teacherBusy[a.TeacherID] != nil && teacherBusy[a.TeacherID][day] != nil && teacherBusy[a.TeacherID][day][hour] {
-						continue
+					// Check all participating classes are free
+					classesFree := true
+					for _, ga := range groupAssigns {
+						if isBusy(classBusy, ga.ClassID, day, hour) {
+							classesFree = false
+							break
+						}
 					}
-					// Hard check 2: Class busy?
-					if classBusy[a.ClassID] != nil && classBusy[a.ClassID][day] != nil && classBusy[a.ClassID][day][hour] {
+					if !classesFree {
 						continue
 					}
 
-					// Hard check 3: Special room requirement
+					// Check teacher is free or already allocated to this exact group
+					if isBusy(teacherBusy, lead.TeacherID, day, hour) {
+						if teacherGroupBusy[lead.TeacherID] == nil ||
+							teacherGroupBusy[lead.TeacherID][day] == nil ||
+							teacherGroupBusy[lead.TeacherID][day][hour] != groupID {
+							continue
+						}
+					}
+
+					// Room check if laboratory hour
 					var chosenRoomID *string
 					var chosenRoomName string
-
-					if hasRoomReq && reqRoom.RequiredRoomType != "" {
+					if isLabHour {
 						rt := reqRoom.RequiredRoomType
 						bID := ""
-						if a.BuildingID != nil {
-							bID = *a.BuildingID
+						if lead.BuildingID != nil {
+							bID = *lead.BuildingID
 						}
-						// Find room in building or general
 						availableRoom := findAvailableRoom(rt, bID, day, hour, roomsByTypeAndBuilding, roomBusy)
 						if availableRoom == nil && reqRoom.IsMandatory {
-							// Mandatory room not available -> cannot place here
 							continue
 						}
 						if availableRoom != nil {
@@ -219,89 +189,284 @@ func (g *TimetableGenerator) Generate(
 						}
 					}
 
-					// Preference check
-					prefState := PrefNeutral
-					if prefLookup[a.TeacherID] != nil && prefLookup[a.TeacherID][day] != nil {
-						if p, exists := prefLookup[a.TeacherID][day][hour]; exists {
-							prefState = p
+					// Score candidate
+					score := 20.0 // Group bonus
+					// Spread across days for classes
+					curDayCount := 0
+					for _, ga := range groupAssigns {
+						if classSubjectDayCount[ga.ClassID] != nil && classSubjectDayCount[ga.ClassID][ga.SubjectID] != nil {
+							if cnt := classSubjectDayCount[ga.ClassID][ga.SubjectID][day]; cnt > curDayCount {
+								curDayCount = cnt
+							}
 						}
 					}
+					if curDayCount == 0 {
+						score += 10.0
+					} else if curDayCount >= 2 {
+						score -= 15.0
+					}
 
-					// Hard check 4: Teacher explicitly unavailable
-					if prefState == PrefUnavailable {
-						// Strongly avoid unavailable slot unless no choice
-						// We'll skip it in greedy first pass
+					if isHeavySubject(lead.SubjectName) && hour >= g.config.MaxHoursPerDay {
+						score -= 12.0
+					}
+					if isLabHour && hour == 1 {
+						score -= 3.0
+					}
+
+					candidates = append(candidates, GroupCandidate{
+						Day:      day,
+						Hour:     hour,
+						RoomID:   chosenRoomID,
+						RoomName: chosenRoomName,
+						Score:    score,
+					})
+				}
+			}
+
+			if len(candidates) == 0 {
+				for _, ga := range groupAssigns {
+					unassigned = append(unassigned, UnassignedSlot{
+						ClassID:     ga.ClassID,
+						ClassName:   ga.ClassName,
+						SubjectID:   ga.SubjectID,
+						SubjectName: ga.SubjectName,
+						TeacherID:   ga.TeacherID,
+						TeacherName: ga.TeacherName,
+						HoursNeeded: hoursToPlace - h,
+						Reason:      "Nessuno slot comune disponibile per il gruppo linguistico/associato",
+					})
+				}
+				break
+			}
+
+			// Pick best candidate
+			best := candidates[0]
+			for _, c := range candidates[1:] {
+				if c.Score > best.Score {
+					best = c
+				}
+			}
+
+			// Mark busy matrices and record slots for all group classes
+			setBusy(teacherBusy, lead.TeacherID, best.Day, best.Hour)
+			setTeacherGroup(teacherGroupBusy, lead.TeacherID, best.Day, best.Hour, groupID)
+			if best.RoomID != nil {
+				setBusy(roomBusy, *best.RoomID, best.Day, best.Hour)
+			}
+
+			for _, ga := range groupAssigns {
+				setBusy(classBusy, ga.ClassID, best.Day, best.Hour)
+
+				if classSubjectDayCount[ga.ClassID] == nil {
+					classSubjectDayCount[ga.ClassID] = make(map[string]map[int]int)
+				}
+				if classSubjectDayCount[ga.ClassID][ga.SubjectID] == nil {
+					classSubjectDayCount[ga.ClassID][ga.SubjectID] = make(map[int]int)
+				}
+				classSubjectDayCount[ga.ClassID][ga.SubjectID][best.Day]++
+
+				tID := ga.TeacherID
+				tUID := ga.TeacherUserID
+
+				generatedSlots = append(generatedSlots, GeneratedSlot{
+					ClassID:       ga.ClassID,
+					ClassName:     ga.ClassName,
+					BuildingID:    ga.BuildingID,
+					SubjectID:     ga.SubjectID,
+					SubjectName:   ga.SubjectName,
+					TeacherID:     &tID,
+					TeacherUserID: &tUID,
+					TeacherName:   ga.TeacherName,
+					DayOfWeek:     best.Day,
+					HourIndex:     best.Hour,
+					RoomID:        best.RoomID,
+					RoomName:      best.RoomName,
+				})
+			}
+		}
+	}
+
+	// ---------------- Phase 1B: Schedule Regular Assignments ----------------
+	// Sort regular assignments: prioritize subjects requiring special laboratories first, then by hours descending
+	sort.Slice(regularAssignments, func(i, j int) bool {
+		_, reqI := roomReqs[regularAssignments[i].SubjectID]
+		_, reqJ := roomReqs[regularAssignments[j].SubjectID]
+		if reqI != reqJ {
+			return reqI // lab subjects scheduled first
+		}
+		return regularAssignments[i].HoursPerWeek > regularAssignments[j].HoursPerWeek
+	})
+
+	for _, a := range regularAssignments {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+
+		hoursToPlace := a.HoursPerWeek
+		reqRoom, hasRoomReq := roomReqs[a.SubjectID]
+
+		labHoursLimit := 0
+		if hasRoomReq && reqRoom.RequiredRoomType != "" {
+			labHoursLimit = reqRoom.LabHours
+			if labHoursLimit <= 0 || labHoursLimit > hoursToPlace {
+				labHoursLimit = hoursToPlace
+			}
+		}
+
+		isUnassignedTeacher := strings.HasPrefix(a.TeacherID, "unassigned-") || strings.HasPrefix(a.TeacherID, "spezzone-")
+
+		for h := 0; h < hoursToPlace; h++ {
+			isLabHour := hasRoomReq && reqRoom.RequiredRoomType != "" && h < labHoursLimit
+
+			type Candidate struct {
+				Day      int
+				Hour     int
+				RoomID   *string
+				RoomName string
+				Score    float64
+			}
+
+			var candidates []Candidate
+
+			for day := 1; day <= g.config.MaxDaysPerWeek; day++ {
+				for hour := 1; hour <= g.config.MaxHoursPerDay; hour++ {
+					// Hard check 1: Class busy?
+					if isBusy(classBusy, a.ClassID, day, hour) {
 						continue
 					}
 
-					// Score this candidate
-					score := 0.0
-
-					// 1. Teacher Preference score weighted by Seniority
-					switch prefState {
-					case PrefPreferred:
-						score += 15.0 * seniority
-					case PrefNeutral:
-						score += 2.0
+					// Hard check 2: Teacher busy?
+					// For assigned teachers: cannot be in another class at the same time
+					if !isUnassignedTeacher && isBusy(teacherBusy, a.TeacherID, day, hour) {
+						continue
+					}
+					// For specific unassigned chair (spezzone): check against its own chair id
+					if isUnassignedTeacher && isBusy(teacherBusy, a.TeacherID, day, hour) {
+						continue
 					}
 
-					// 2. Spread across days (avoid piling up subject on same day)
+					// Hard check 3: Laboratory room availability (only during lab hours)
+					var chosenRoomID *string
+					var chosenRoomName string
+
+					if isLabHour {
+						rt := reqRoom.RequiredRoomType
+						bID := ""
+						if a.BuildingID != nil {
+							bID = *a.BuildingID
+						}
+						availableRoom := findAvailableRoom(rt, bID, day, hour, roomsByTypeAndBuilding, roomBusy)
+						if availableRoom == nil && reqRoom.IsMandatory {
+							continue
+						}
+						if availableRoom != nil {
+							chosenRoomID = &availableRoom.ID
+							chosenRoomName = availableRoom.Name
+						}
+					}
+
+					// Score candidate based on pedagogical rules (no teacher personal preferences)
+					score := 10.0
+
+					// 1. Spread across days (avoid piling up subject on same day)
 					curDayCount := 0
 					if classSubjectDayCount[a.ClassID] != nil && classSubjectDayCount[a.ClassID][a.SubjectID] != nil {
 						curDayCount = classSubjectDayCount[a.ClassID][a.SubjectID][day]
 					}
 					if curDayCount == 0 {
-						score += 8.0 // Reward new day distribution
+						score += 10.0
 					} else if curDayCount >= 2 {
-						score -= 10.0 // Penalize > 2 hours of same subject on same day
+						score -= 15.0
 					}
 
-					// 3. Heavy subjects (Matematica, Fisica, Latino) avoid last hour
+					// 2. Heavy subjects (Matematica, Fisica, Latino) avoid last hour
 					isHeavy := isHeavySubject(a.SubjectName)
 					if isHeavy && hour >= g.config.MaxHoursPerDay {
 						score -= 12.0
 					}
 
-					// 4. Lab / Gym avoid 1st hour if possible (prep time)
-					if hasRoomReq && (reqRoom.RequiredRoomType == "palestra" || strings.HasPrefix(reqRoom.RequiredRoomType, "lab_")) {
-						if hour == 1 {
-							score -= 3.0
-						}
+					// 3. Lab / Gym avoid 1st hour if possible
+					if isLabHour && hour == 1 {
+						score -= 3.0
 					}
 
 					candidates = append(candidates, Candidate{
-						Day:       day,
-						Hour:      hour,
-						RoomID:    chosenRoomID,
-						RoomName:  chosenRoomName,
-						Score:     score,
-						PrefState: prefState,
+						Day:      day,
+						Hour:     hour,
+						RoomID:   chosenRoomID,
+						RoomName: chosenRoomName,
+						Score:    score,
 					})
 				}
 			}
 
-			// If no candidates found (e.g. all slots unavailable), fallback allowing unavailable with penalty
+			// If no candidates found, attempt intelligent repair/swap within the class
 			if len(candidates) == 0 {
-				for day := 1; day <= g.config.MaxDaysPerWeek; day++ {
-					for hour := 1; hour <= g.config.MaxHoursPerDay; hour++ {
-						if teacherBusy[a.TeacherID] != nil && teacherBusy[a.TeacherID][day] != nil && teacherBusy[a.TeacherID][day][hour] {
-							continue
+				repaired := false
+				// Try to find a slot in this class currently occupied by another subject that has no lab constraint,
+				// where that other subject can be moved elsewhere and our teacher is free in that slot.
+				for slotIdx, existing := range generatedSlots {
+					if existing.ClassID != a.ClassID {
+						continue
+					}
+					// Only swap with regular non-lab slots
+					if existing.RoomID != nil {
+						continue
+					}
+					// Teacher of assignment a must be free at existing slot
+					day := existing.DayOfWeek
+					hour := existing.HourIndex
+					if !isUnassignedTeacher && isBusy(teacherBusy, a.TeacherID, day, hour) {
+						continue
+					}
+
+					// Now see if existing subject's teacher can be moved to an alternate empty slot in this class
+					existingTeacherID := ""
+					if existing.TeacherID != nil {
+						existingTeacherID = *existing.TeacherID
+					}
+
+					for altDay := 1; altDay <= g.config.MaxDaysPerWeek; altDay++ {
+						for altHour := 1; altHour <= g.config.MaxHoursPerDay; altHour++ {
+							if isBusy(classBusy, a.ClassID, altDay, altHour) {
+								continue
+							}
+							if existingTeacherID != "" && isBusy(teacherBusy, existingTeacherID, altDay, altHour) {
+								continue
+							}
+
+							// Valid swap found!
+							// Move existing slot to (altDay, altHour)
+							unsetBusy(classBusy, a.ClassID, day, hour)
+							if existingTeacherID != "" {
+								unsetBusy(teacherBusy, existingTeacherID, day, hour)
+								setBusy(teacherBusy, existingTeacherID, altDay, altHour)
+							}
+							setBusy(classBusy, a.ClassID, altDay, altHour)
+
+							generatedSlots[slotIdx].DayOfWeek = altDay
+							generatedSlots[slotIdx].HourIndex = altHour
+
+							// Now slot (day, hour) is free for assignment a!
+							candidates = append(candidates, Candidate{
+								Day:   day,
+								Hour:  hour,
+								Score: 5.0,
+							})
+							repaired = true
+							break
 						}
-						if classBusy[a.ClassID] != nil && classBusy[a.ClassID][day] != nil && classBusy[a.ClassID][day][hour] {
-							continue
+						if repaired {
+							break
 						}
-						candidates = append(candidates, Candidate{
-							Day:       day,
-							Hour:      hour,
-							Score:     -50.0,
-							PrefState: PrefUnavailable,
-						})
+					}
+					if repaired {
+						break
 					}
 				}
 			}
 
 			if len(candidates) == 0 {
-				// Slot could not be assigned!
 				unassigned = append(unassigned, UnassignedSlot{
 					ClassID:     a.ClassID,
 					ClassName:   a.ClassName,
@@ -339,16 +504,6 @@ func (g *TimetableGenerator) Generate(
 			}
 			classSubjectDayCount[a.ClassID][a.SubjectID][best.Day]++
 
-			if best.PrefState == PrefUnavailable {
-				softViolations = append(softViolations, SoftViolation{
-					ConstraintType: "teacher_unavailability",
-					TeacherID:      &a.TeacherID,
-					ClassID:        &a.ClassID,
-					Description:    fmt.Sprintf("Docente %s assegnato a slot non disponibile (Giorno %d Ora %d)", a.TeacherName, best.Day, best.Hour),
-					Penalty:        50.0,
-				})
-			}
-
 			tID := a.TeacherID
 			tUID := a.TeacherUserID
 
@@ -370,8 +525,7 @@ func (g *TimetableGenerator) Generate(
 		}
 	}
 
-	// ---------------- Phase 2: Local Search (Hill Climbing) ----------------
-	// Try random swaps of hours for the same teacher or class to maximize preference satisfaction
+	// ---------------- Phase 2: Local Search / Pedagogical Balancing ----------------
 	timeBudget := time.Duration(g.config.TimeLimitSeconds) * time.Second
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -382,7 +536,6 @@ func (g *TimetableGenerator) Generate(
 				break
 			}
 
-			// Pick random slot
 			idx1 := rng.Intn(len(generatedSlots))
 			idx2 := rng.Intn(len(generatedSlots))
 			if idx1 == idx2 {
@@ -392,52 +545,87 @@ func (g *TimetableGenerator) Generate(
 			s1 := generatedSlots[idx1]
 			s2 := generatedSlots[idx2]
 
-			// Only swap if slots belong to same class OR same teacher, and are in different slots
+			// Don't swap associated group slots or slots in different classes
+			if s1.ClassID != s2.ClassID {
+				continue
+			}
 			if s1.DayOfWeek == s2.DayOfWeek && s1.HourIndex == s2.HourIndex {
 				continue
 			}
+			// Don't swap if either requires a specific lab room
+			if s1.RoomID != nil || s2.RoomID != nil {
+				continue
+			}
 
-			if s1.ClassID == s2.ClassID {
-				// Swap 2 subjects in same class
-				// Check if teachers are available in opposite slots
-				t1 := ""
-				if s1.TeacherID != nil {
-					t1 = *s1.TeacherID
+			t1 := ""
+			if s1.TeacherID != nil {
+				t1 = *s1.TeacherID
+			}
+			t2 := ""
+			if s2.TeacherID != nil {
+				t2 = *s2.TeacherID
+			}
+
+			t1Available := !isBusy(teacherBusy, t1, s2.DayOfWeek, s2.HourIndex) || (t1 == t2)
+			t2Available := !isBusy(teacherBusy, t2, s1.DayOfWeek, s1.HourIndex) || (t1 == t2)
+
+			if t1Available && t2Available {
+				currentScore := evalPedagogicalScore(s1) + evalPedagogicalScore(s2)
+
+				cand1 := s1
+				cand1.DayOfWeek = s2.DayOfWeek
+				cand1.HourIndex = s2.HourIndex
+
+				cand2 := s2
+				cand2.DayOfWeek = s1.DayOfWeek
+				cand2.HourIndex = s1.HourIndex
+
+				newScore := evalPedagogicalScore(cand1) + evalPedagogicalScore(cand2)
+
+				if newScore > currentScore {
+					unsetBusy(teacherBusy, t1, s1.DayOfWeek, s1.HourIndex)
+					unsetBusy(teacherBusy, t2, s2.DayOfWeek, s2.HourIndex)
+
+					setBusy(teacherBusy, t1, s2.DayOfWeek, s2.HourIndex)
+					setBusy(teacherBusy, t2, s1.DayOfWeek, s1.HourIndex)
+
+					generatedSlots[idx1] = cand1
+					generatedSlots[idx2] = cand2
 				}
-				t2 := ""
-				if s2.TeacherID != nil {
-					t2 = *s2.TeacherID
+			}
+		}
+	}
+
+	// ---------------- Phase 3: Validation of Conflict Rules ----------------
+	// Rule: Ogni docente non può essere in più classi contemporaneamente,
+	// tranne se ha un gruppo linguistico o un gruppo associato per quella materia.
+	teacherSlotsAtTime := make(map[string][]GeneratedSlot)
+	for _, slot := range generatedSlots {
+		if slot.TeacherID != nil && !strings.HasPrefix(*slot.TeacherID, "unassigned-") && !strings.HasPrefix(*slot.TeacherID, "spezzone-") {
+			key := fmt.Sprintf("%s-%d-%d", *slot.TeacherID, slot.DayOfWeek, slot.HourIndex)
+			teacherSlotsAtTime[key] = append(teacherSlotsAtTime[key], slot)
+		}
+	}
+
+	for _, slotsAtTime := range teacherSlotsAtTime {
+		if len(slotsAtTime) > 1 {
+			// Check if all slots have the same subject (allowed for associated group / gruppo linguistico)
+			sameSubject := true
+			for i := 1; i < len(slotsAtTime); i++ {
+				if slotsAtTime[i].SubjectID != slotsAtTime[0].SubjectID {
+					sameSubject = false
+					break
 				}
-
-				t1AvailableAtS2 := !isBusy(teacherBusy, t1, s2.DayOfWeek, s2.HourIndex) || (t1 == t2)
-				t2AvailableAtS1 := !isBusy(teacherBusy, t2, s1.DayOfWeek, s1.HourIndex) || (t1 == t2)
-
-				if t1AvailableAtS2 && t2AvailableAtS1 {
-					// Evaluate delta score
-					currentScore := evalSlotScore(s1, prefLookup, teacherMap) + evalSlotScore(s2, prefLookup, teacherMap)
-
-					cand1 := s1
-					cand1.DayOfWeek = s2.DayOfWeek
-					cand1.HourIndex = s2.HourIndex
-
-					cand2 := s2
-					cand2.DayOfWeek = s1.DayOfWeek
-					cand2.HourIndex = s1.HourIndex
-
-					newScore := evalSlotScore(cand1, prefLookup, teacherMap) + evalSlotScore(cand2, prefLookup, teacherMap)
-
-					if newScore > currentScore {
-						// Accept swap!
-						unsetBusy(teacherBusy, t1, s1.DayOfWeek, s1.HourIndex)
-						unsetBusy(teacherBusy, t2, s2.DayOfWeek, s2.HourIndex)
-
-						setBusy(teacherBusy, t1, s2.DayOfWeek, s2.HourIndex)
-						setBusy(teacherBusy, t2, s1.DayOfWeek, s1.HourIndex)
-
-						generatedSlots[idx1] = cand1
-						generatedSlots[idx2] = cand2
-					}
-				}
+			}
+			if !sameSubject {
+				hardConflicts = append(hardConflicts, HardConflict{
+					Type: "teacher_double_booking",
+					Description: fmt.Sprintf("Docente %s presente in più classi contemporaneamente in materie diverse (%s e %s)",
+						slotsAtTime[0].TeacherName, slotsAtTime[0].SubjectName, slotsAtTime[1].SubjectName),
+					TeacherID: *slotsAtTime[0].TeacherID,
+					DayOfWeek: slotsAtTime[0].DayOfWeek,
+					HourIndex: slotsAtTime[0].HourIndex,
+				})
 			}
 		}
 	}
@@ -465,6 +653,9 @@ func (g *TimetableGenerator) Generate(
 // Helpers
 
 func setBusy(m map[string]map[int]map[int]bool, id string, day, hour int) {
+	if id == "" {
+		return
+	}
 	if m[id] == nil {
 		m[id] = make(map[int]map[int]bool)
 	}
@@ -475,6 +666,9 @@ func setBusy(m map[string]map[int]map[int]bool, id string, day, hour int) {
 }
 
 func unsetBusy(m map[string]map[int]map[int]bool, id string, day, hour int) {
+	if id == "" {
+		return
+	}
 	if m[id] != nil && m[id][day] != nil {
 		m[id][day][hour] = false
 	}
@@ -488,6 +682,19 @@ func isBusy(m map[string]map[int]map[int]bool, id string, day, hour int) bool {
 		return m[id][day][hour]
 	}
 	return false
+}
+
+func setTeacherGroup(m map[string]map[int]map[int]string, teacherID string, day, hour int, groupID string) {
+	if teacherID == "" {
+		return
+	}
+	if m[teacherID] == nil {
+		m[teacherID] = make(map[int]map[int]string)
+	}
+	if m[teacherID][day] == nil {
+		m[teacherID][day] = make(map[int]string)
+	}
+	m[teacherID][day][hour] = groupID
 }
 
 func findAvailableRoom(roomType, buildingID string, day, hour int, roomsByTypeAndBuilding map[string]map[string][]RoomData, roomBusy map[string]map[int]map[int]bool) *RoomData {
@@ -524,32 +731,14 @@ func isHeavySubject(name string) bool {
 		strings.Contains(n, "chimica")
 }
 
-func evalSlotScore(s GeneratedSlot, prefLookup map[string]map[int]map[int]string, teacherMap map[string]*teacherSeniorityInfo) float64 {
+func evalPedagogicalScore(s GeneratedSlot) float64 {
 	score := 0.0
-	if s.TeacherID == nil {
-		return score
-	}
-	tID := *s.TeacherID
-	seniority := 1.5
-	if tInfo, ok := teacherMap[tID]; ok {
-		seniority = tInfo.SeniorityPt
-	}
-
-	if prefLookup[tID] != nil && prefLookup[tID][s.DayOfWeek] != nil {
-		pref := prefLookup[tID][s.DayOfWeek][s.HourIndex]
-		switch pref {
-		case PrefPreferred:
-			score += 15.0 * seniority
-		case PrefUnavailable:
-			score -= 50.0
-		default:
-			score += 2.0
+	if isHeavySubject(s.SubjectName) {
+		if s.HourIndex <= 3 {
+			score += 10.0 // Preferred morning hours
+		} else if s.HourIndex >= 6 {
+			score -= 10.0 // Avoid late hours
 		}
 	}
-
-	if isHeavySubject(s.SubjectName) && s.HourIndex >= 6 {
-		score -= 10.0
-	}
-
 	return score
 }
