@@ -125,6 +125,31 @@ func (m *mockIntegrationTimetableRepo) DeleteConstraint(ctx context.Context, id 
 	return nil
 }
 
+func (m *mockIntegrationTimetableRepo) GetDesiderataWindow(ctx context.Context, schoolID string) (bool, error) {
+	for _, c := range m.constraints {
+		if c.SchoolID == schoolID && c.ConstraintType == "teacher_desiderata_window" {
+			return c.IsActive, nil
+		}
+	}
+	return false, nil
+}
+
+func (m *mockIntegrationTimetableRepo) SetDesiderataWindow(ctx context.Context, schoolID string, isOpen bool) error {
+	for i, c := range m.constraints {
+		if c.SchoolID == schoolID && c.ConstraintType == "teacher_desiderata_window" {
+			m.constraints[i].IsActive = isOpen
+			return nil
+		}
+	}
+	m.constraints = append(m.constraints, timetablegen.TimetableConstraint{
+		ID:             uuid.New().String(),
+		SchoolID:       schoolID,
+		ConstraintType: "teacher_desiderata_window",
+		IsActive:       isOpen,
+	})
+	return nil
+}
+
 func (m *mockIntegrationTimetableRepo) CreateJob(ctx context.Context, job *timetablegen.TimetableJob) (*timetablegen.TimetableJob, error) {
 	if job.ID == "" {
 		job.ID = uuid.New().String()
@@ -261,7 +286,7 @@ func TestIntegration_TimetableGenerationLifecycle(t *testing.T) {
 		},
 	}
 
-	// 1. Teacher Senior sets Monday 1st and 2nd hour as Preferred
+	// 0. Teacher Senior tries to save preferences before window is open -> 403 Forbidden
 	routerTeacherSenior := setupTimetableIntegrationRouter(repo, "teacher", teacherSeniorID, schoolID)
 	savePrefReq := timetablegen.SavePreferencesRequest{
 		Preferences: []timetablegen.PreferenceEntry{
@@ -274,7 +299,23 @@ func TestIntegration_TimetableGenerationLifecycle(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	routerTeacherSenior.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusForbidden, w.Code)
 
+	// 0b. Vice-Principal opens the desiderata window -> 200 OK
+	routerVPInitial := setupTimetableIntegrationRouter(repo, "vice_principal", vicePrincipalID, schoolID)
+	openWinReq := timetablegen.SetDesiderataWindowRequest{IsOpen: true}
+	winBody, _ := json.Marshal(openWinReq)
+	winReq := httptest.NewRequest(http.MethodPost, "/timetable/preferences/window", bytes.NewBuffer(winBody))
+	winReq.Header.Set("Content-Type", "application/json")
+	wWin := httptest.NewRecorder()
+	routerVPInitial.ServeHTTP(wWin, winReq)
+	assert.Equal(t, http.StatusOK, wWin.Code)
+
+	// 1. Teacher Senior sets Monday 1st and 2nd hour as Preferred with window open -> 200 OK
+	w = httptest.NewRecorder()
+	req = httptest.NewRequest(http.MethodPost, "/timetable/preferences", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	routerTeacherSenior.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// 2. Teacher Junior tries to trigger Timetable Generation -> 403 Forbidden

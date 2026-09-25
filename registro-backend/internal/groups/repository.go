@@ -3,8 +3,9 @@ package groups
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Repository interface {
@@ -34,7 +35,7 @@ func (r *repository) Create(ctx context.Context, g *Group) error {
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 	if g.ID == "" {
-		g.ID = fmt.Sprintf("group-%d", time.Now().UnixNano())
+		g.ID = uuid.New().String()
 	}
 	now := time.Now()
 	g.CreatedAt = now

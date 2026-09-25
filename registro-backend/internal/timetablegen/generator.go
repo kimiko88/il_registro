@@ -20,8 +20,8 @@ func DefaultConfig() GeneratorConfig {
 	return GeneratorConfig{
 		MaxDaysPerWeek:   5, // Mon-Fri
 		MaxHoursPerDay:   6, // 1 to 6
-		MaxIterations:    2000,
-		TimeLimitSeconds: 20,
+		MaxIterations:    10000,
+		TimeLimitSeconds: 60,
 	}
 }
 
@@ -38,10 +38,10 @@ func NewGenerator(cfg GeneratorConfig) *TimetableGenerator {
 		cfg.MaxHoursPerDay = 6
 	}
 	if cfg.MaxIterations <= 0 {
-		cfg.MaxIterations = 2000
+		cfg.MaxIterations = 10000
 	}
 	if cfg.TimeLimitSeconds <= 0 {
-		cfg.TimeLimitSeconds = 20
+		cfg.TimeLimitSeconds = 60
 	}
 	return &TimetableGenerator{config: cfg}
 }
@@ -87,6 +87,26 @@ func (g *TimetableGenerator) Generate(
 	roomBusy := make(map[string]map[int]map[int]bool)
 	// classSubjectDayCount[classID][subjectID][day] = count
 	classSubjectDayCount := make(map[string]map[string]map[int]int)
+
+	// Index teacher preferences and day-off requests
+	teacherPrefMap := make(map[string]map[int]map[int]string)
+	teacherDayOffMap := make(map[string]map[int]int)
+	for _, p := range preferences {
+		tID := p.TeacherID
+		if teacherPrefMap[tID] == nil {
+			teacherPrefMap[tID] = make(map[int]map[int]string)
+		}
+		if teacherPrefMap[tID][p.DayOfWeek] == nil {
+			teacherPrefMap[tID][p.DayOfWeek] = make(map[int]string)
+		}
+		teacherPrefMap[tID][p.DayOfWeek][p.HourIndex] = p.PreferenceType
+		if p.PreferenceType == PrefUnavailable {
+			if teacherDayOffMap[tID] == nil {
+				teacherDayOffMap[tID] = make(map[int]int)
+			}
+			teacherDayOffMap[tID][p.DayOfWeek]++
+		}
+	}
 
 	var generatedSlots []GeneratedSlot
 	var unassigned []UnassignedSlot
@@ -211,6 +231,17 @@ func (g *TimetableGenerator) Generate(
 					}
 					if isLabHour && hour == 1 {
 						score -= 3.0
+					}
+
+					// Teacher preference score
+					pref := getTeacherPref(teacherPrefMap, lead.TeacherID, lead.TeacherUserID, day, hour)
+					if pref == PrefPreferred {
+						score += 15.0
+					} else if pref == PrefUnavailable {
+						score -= 35.0
+					}
+					if getTeacherDayOffHours(teacherDayOffMap, lead.TeacherID, lead.TeacherUserID, day) >= 4 {
+						score -= 40.0
 					}
 
 					candidates = append(candidates, GroupCandidate{
@@ -390,6 +421,17 @@ func (g *TimetableGenerator) Generate(
 						score -= 3.0
 					}
 
+					// 4. Teacher preference score (Desiderata)
+					pref := getTeacherPref(teacherPrefMap, a.TeacherID, a.TeacherUserID, day, hour)
+					if pref == PrefPreferred {
+						score += 15.0
+					} else if pref == PrefUnavailable {
+						score -= 35.0
+					}
+					if getTeacherDayOffHours(teacherDayOffMap, a.TeacherID, a.TeacherUserID, day) >= 4 {
+						score -= 40.0
+					}
+
 					candidates = append(candidates, Candidate{
 						Day:      day,
 						Hour:     hour,
@@ -525,15 +567,20 @@ func (g *TimetableGenerator) Generate(
 		}
 	}
 
-	// ---------------- Phase 2: Local Search / Pedagogical Balancing ----------------
+	// ---------------- Phase 2: Local Search / Pedagogical & Preference Balancing ----------------
 	timeBudget := time.Duration(g.config.TimeLimitSeconds) * time.Second
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	if len(generatedSlots) > 1 {
 		iterations := g.config.MaxIterations
+		if g.config.TimeLimitSeconds >= 60 {
+			iterations = g.config.TimeLimitSeconds * 2000
+		}
 		for iter := 0; iter < iterations; iter++ {
-			if time.Since(startTime) > timeBudget || ctx.Err() != nil {
-				break
+			if iter%50 == 0 {
+				if time.Since(startTime) > timeBudget || ctx.Err() != nil {
+					break
+				}
 			}
 
 			idx1 := rng.Intn(len(generatedSlots))
@@ -570,7 +617,7 @@ func (g *TimetableGenerator) Generate(
 			t2Available := !isBusy(teacherBusy, t2, s1.DayOfWeek, s1.HourIndex) || (t1 == t2)
 
 			if t1Available && t2Available {
-				currentScore := evalPedagogicalScore(s1) + evalPedagogicalScore(s2)
+				currentScore := evalTotalSlotScore(s1, teacherPrefMap, teacherDayOffMap) + evalTotalSlotScore(s2, teacherPrefMap, teacherDayOffMap)
 
 				cand1 := s1
 				cand1.DayOfWeek = s2.DayOfWeek
@@ -580,7 +627,7 @@ func (g *TimetableGenerator) Generate(
 				cand2.DayOfWeek = s1.DayOfWeek
 				cand2.HourIndex = s1.HourIndex
 
-				newScore := evalPedagogicalScore(cand1) + evalPedagogicalScore(cand2)
+				newScore := evalTotalSlotScore(cand1, teacherPrefMap, teacherDayOffMap) + evalTotalSlotScore(cand2, teacherPrefMap, teacherDayOffMap)
 
 				if newScore > currentScore {
 					unsetBusy(teacherBusy, t1, s1.DayOfWeek, s1.HourIndex)
@@ -627,6 +674,27 @@ func (g *TimetableGenerator) Generate(
 					HourIndex: slotsAtTime[0].HourIndex,
 				})
 			}
+		}
+	}
+
+	// Record any soft violations for teacher preferences
+	for _, s := range generatedSlots {
+		if s.TeacherID == nil {
+			continue
+		}
+		tUID := ""
+		if s.TeacherUserID != nil {
+			tUID = *s.TeacherUserID
+		}
+		p := getTeacherPref(teacherPrefMap, *s.TeacherID, tUID, s.DayOfWeek, s.HourIndex)
+		if p == PrefUnavailable {
+			softViolations = append(softViolations, SoftViolation{
+				ConstraintType: "teacher_unavailable",
+				TeacherID:      s.TeacherID,
+				ClassID:        &s.ClassID,
+				Description:    fmt.Sprintf("Docente %s assegnato in orario non desiderato (%s %dª ora per %s)", s.TeacherName, dayName(s.DayOfWeek), s.HourIndex, s.ClassName),
+				Penalty:        35.0,
+			})
 		}
 	}
 
@@ -741,4 +809,71 @@ func evalPedagogicalScore(s GeneratedSlot) float64 {
 		}
 	}
 	return score
+}
+
+func getTeacherPref(prefMap map[string]map[int]map[int]string, tID, tUID string, day, hour int) string {
+	if tID != "" && prefMap[tID] != nil && prefMap[tID][day] != nil {
+		if p, ok := prefMap[tID][day][hour]; ok && p != "" {
+			return p
+		}
+	}
+	if tUID != "" && prefMap[tUID] != nil && prefMap[tUID][day] != nil {
+		if p, ok := prefMap[tUID][day][hour]; ok && p != "" {
+			return p
+		}
+	}
+	return PrefNeutral
+}
+
+func getTeacherDayOffHours(dayOffMap map[string]map[int]int, tID, tUID string, day int) int {
+	if tID != "" && dayOffMap[tID] != nil {
+		if cnt, ok := dayOffMap[tID][day]; ok {
+			return cnt
+		}
+	}
+	if tUID != "" && dayOffMap[tUID] != nil {
+		if cnt, ok := dayOffMap[tUID][day]; ok {
+			return cnt
+		}
+	}
+	return 0
+}
+
+func evalTotalSlotScore(s GeneratedSlot, prefMap map[string]map[int]map[int]string, dayOffMap map[string]map[int]int) float64 {
+	score := evalPedagogicalScore(s)
+	if s.TeacherID != nil {
+		tUID := ""
+		if s.TeacherUserID != nil {
+			tUID = *s.TeacherUserID
+		}
+		p := getTeacherPref(prefMap, *s.TeacherID, tUID, s.DayOfWeek, s.HourIndex)
+		if p == PrefPreferred {
+			score += 15.0
+		} else if p == PrefUnavailable {
+			score -= 35.0
+		}
+		if getTeacherDayOffHours(dayOffMap, *s.TeacherID, tUID, s.DayOfWeek) >= 4 {
+			score -= 40.0
+		}
+	}
+	return score
+}
+
+func dayName(d int) string {
+	switch d {
+	case 1:
+		return "Lunedì"
+	case 2:
+		return "Martedì"
+	case 3:
+		return "Mercoledì"
+	case 4:
+		return "Giovedì"
+	case 5:
+		return "Venerdì"
+	case 6:
+		return "Sabato"
+	default:
+		return fmt.Sprintf("Giorno %d", d)
+	}
 }

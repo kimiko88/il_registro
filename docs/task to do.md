@@ -930,3 +930,35 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - Linter & Build: `npm run lint` (0 errori), `npm run build` (successo in 3.07s).
 
 Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le preferenze dei vari docenti e impostare eventuali spezzoni orari non ancora assegnati ai docenti, che possono esserci in ogni classe
+- **Implementazione completata (Gruppi Linguistici, Desiderata Docenti con Finestra Temporale, Modifiche/Aggiustamenti Orario & Algoritmo Scalabile 5-10 min)**:
+  - **1. Risoluzione errore SchoolID e potenziamento Gruppi Linguistici / Articolati (`Groups.vue`)**:
+    - `registro-backend/internal/groups/model.go`: Rimosso il tag `binding:"required"` da `CreateGroupRequest.SchoolID`. Il backend estrae ora `school_id` direttamente dal token JWT/contesto Gin quando non inviato dal client.
+    - `registro-backend/internal/groups/handler.go`: Aggiunto fallback `if req.SchoolID == "" { req.SchoolID = c.GetString("school_id") }`.
+    - `registro-backend/internal/groups/repository.go`: Risolto crash di tipo UUID Postgres generando identificatori con `uuid.New().String()`.
+    - `registro-frontend/src/pages/secretary/Groups.vue`:
+      - Integrata selezione delle classi coinvolte (`class_ids`), del docente assegnato (`teacher_id`) e della materia (`subject_id`) nella creazione e modifica del gruppo.
+      - Aggiunta selezione degli studenti filtrata sulle classi scelte con selezione cumulativa.
+      - Aggiunti chip visivi per docente e materia nelle schede del gruppo e supporto alla modifica (`openEditModal`).
+  - **2. Desiderata Docenti nei Vincoli con Finestra Temporale Controllata**:
+    - `registro-backend/internal/timetablegen`:
+      - Nuovi endpoint `GET /timetable/preferences/window` e `POST /timetable/preferences/window` per apertura/chiusura finestra compilazione desiderata.
+      - Controllo permessi ruoli autorizzati (`principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`, `secretary`) per abilitare la finestra e modificare i desiderata di qualunque docente.
+      - Blocco con errore 403 Forbidden per i docenti se tentano di salvare a finestra chiusa.
+      - Integrazione nell'algoritmo di calcolo orario (`generator.go`): bonus +15 per slot preferiti, penalità -35 per slot non disponibili, penalità -40 per giorno libero richiesto, e calcolo violazioni soft nel sommario.
+    - `registro-frontend/src/pages/secretary/TimetableConstraints.vue`:
+      - Aggiunta scheda **"Desiderata Docenti"** con toggle per aprire/chiudere la finestra temporale di inserimento per i docenti.
+      - Selettore docente, sommario statistiche slot (preferiti, neutri, non disponibili), selettore giorno libero e matrice oraria interattiva modificabile e salvabile direttamente dal vicario / responsabile orario.
+    - `registro-frontend/src/pages/teacher/SchedulePreferences.vue`:
+      - Rilevamento dello stato della finestra all'apertura: se chiusa, mostra banner di avviso giallo e disabilita la modifica/salvataggio in sola lettura.
+  - **3. Anteprima, Modifiche/Aggiustamenti Manuali e Generazione Scalabile (fino a 5-10 min)**:
+    - `registro-backend/internal/timetablegen`:
+      - Endpoint `POST /timetable/generate/:jobID/adjust` con metodo `AdjustJobSlots`: valida e applica modifiche/scambi manuali di slot verificando collisioni su docenti, classi e aule.
+      - Timeout di calcolo scalabile fino a 10 minuti (`timeLimit <= 600`) con scalatura dinamica delle iterazioni di local search (`MaxIterations`).
+    - `registro-frontend/src/pages/secretary/Timetable.vue`:
+      - Selettore durata algoritmo orario (20s, 1m, 2m, 5m, 10m).
+      - Timer di avanzamento durante l'elaborazione.
+      - Finestra modale **"Anteprima & Modifica Orario"** prima della pubblicazione: vista per classe o docente, spostamento e scambio slot interattivo su matrice oraria, avviso in tempo reale di collisioni, ripristino dell'orario generato originale, salvataggio aggiustamenti e pubblicazione.
+  - **4. Verifica e Collaudo**:
+    - Backend: unit test `internal/groups` e `internal/timetablegen` passati al 100%; integration test `tests/integration/...` passati con successo.
+    - Frontend: suite completa di 213 file e 1.435 test unitari passata; E2E workflow test passato; ESLint con 0 errori.
+

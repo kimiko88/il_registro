@@ -25,6 +25,8 @@ type Repository interface {
 	ListConstraints(ctx context.Context, schoolID string) ([]TimetableConstraint, error)
 	SaveConstraint(ctx context.Context, schoolID string, req SaveConstraintRequest) (*TimetableConstraint, error)
 	DeleteConstraint(ctx context.Context, id string) error
+	GetDesiderataWindow(ctx context.Context, schoolID string) (bool, error)
+	SetDesiderataWindow(ctx context.Context, schoolID string, isOpen bool) error
 
 	// Jobs
 	CreateJob(ctx context.Context, job *TimetableJob) (*TimetableJob, error)
@@ -289,6 +291,55 @@ func (r *PostgresRepository) DeleteConstraint(ctx context.Context, id string) er
 	query := `DELETE FROM timetable_constraints WHERE id = $1`
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
+}
+
+func (r *PostgresRepository) GetDesiderataWindow(ctx context.Context, schoolID string) (bool, error) {
+	query := `
+		SELECT is_active
+		FROM timetable_constraints
+		WHERE school_id = $1 AND constraint_type = 'teacher_desiderata_window'
+		LIMIT 1
+	`
+	var active bool
+	err := r.db.QueryRowContext(ctx, query, schoolID).Scan(&active)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return active, nil
+}
+
+func (r *PostgresRepository) SetDesiderataWindow(ctx context.Context, schoolID string, isOpen bool) error {
+	updateQuery := `
+		UPDATE timetable_constraints
+		SET is_active = $1
+		WHERE school_id = $2 AND constraint_type = 'teacher_desiderata_window'
+	`
+	res, err := r.db.ExecContext(ctx, updateQuery, isOpen, schoolID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		id := uuid.New().String()
+		insertQuery := `
+			INSERT INTO timetable_constraints (
+				id, school_id, constraint_type, parameters, is_hard, priority, is_active, created_at
+			) VALUES (
+				$1, $2, 'teacher_desiderata_window', '{}', false, 1, $3, NOW()
+			)
+		`
+		_, err = r.db.ExecContext(ctx, insertQuery, id, schoolID, isOpen)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ----------------- Jobs -----------------

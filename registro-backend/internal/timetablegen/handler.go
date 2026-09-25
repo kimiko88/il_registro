@@ -20,11 +20,14 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		// Generation Job
 		timetableGroup.POST("/generate", h.requireTimetableManagerRole, h.StartGeneration)
 		timetableGroup.GET("/generate/:jobID", h.GetJobStatus)
+		timetableGroup.POST("/generate/:jobID/adjust", h.requireTimetableManagerRole, h.AdjustSchedule)
 		timetableGroup.POST("/generate/:jobID/publish", h.requireTimetableManagerRole, h.PublishSchedule)
 
 		// Preferences (Desiderata)
 		timetableGroup.GET("/preferences", h.GetPreferences)
 		timetableGroup.POST("/preferences", h.SavePreferences)
+		timetableGroup.GET("/preferences/window", h.GetDesiderataWindow)
+		timetableGroup.POST("/preferences/window", h.requireTimetableManagerRole, h.SetDesiderataWindow)
 
 		// Room Requirements
 		timetableGroup.GET("/room-requirements", h.ListRoomRequirements)
@@ -38,15 +41,23 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
-// requireTimetableManagerRole restricts to principal, vice_principal, collaboratore_ds, admin, superadmin
+// requireTimetableManagerRole restricts to principal, vice_principal, collaboratore_ds, admin, superadmin, secretary
 func (h *Handler) requireTimetableManagerRole(c *gin.Context) {
 	role := c.GetString("role")
-	switch role {
-	case "principal", "vice_principal", "collaboratore_ds", "admin", "superadmin":
+	if h.isManagerRole(role) {
 		c.Next()
+		return
+	}
+	c.JSON(http.StatusForbidden, gin.H{"error": "accesso negato: operazione riservata alla dirigenza, vicario o collaboratori"})
+	c.Abort()
+}
+
+func (h *Handler) isManagerRole(role string) bool {
+	switch role {
+	case "principal", "vice_principal", "collaboratore_ds", "admin", "superadmin", "secretary":
+		return true
 	default:
-		c.JSON(http.StatusForbidden, gin.H{"error": "accesso negato: operazione riservata alla dirigenza, vicario o collaboratori"})
-		c.Abort()
+		return false
 	}
 }
 
@@ -111,7 +122,7 @@ func (h *Handler) GetPreferences(c *gin.Context) {
 
 	targetTeacherID := userID
 	if qID := c.Query("teacher_id"); qID != "" {
-		if role == "principal" || role == "vice_principal" || role == "collaboratore_ds" || role == "admin" || role == "superadmin" || role == "secretary" {
+		if h.isManagerRole(role) {
 			targetTeacherID = qID
 		}
 	}
@@ -135,9 +146,23 @@ func (h *Handler) SavePreferences(c *gin.Context) {
 	role := c.GetString("role")
 
 	targetTeacherID := userID
+	isManager := h.isManagerRole(role)
 	if qID := c.Query("teacher_id"); qID != "" {
-		if role == "principal" || role == "vice_principal" || role == "collaboratore_ds" || role == "admin" || role == "superadmin" {
+		if isManager {
 			targetTeacherID = qID
+		}
+	}
+
+	// If not manager, verify if desiderata window is open
+	if !isManager {
+		isOpen, err := h.service.IsDesiderataWindowOpen(c.Request.Context(), schoolID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "impossibile verificare lo stato della finestra inserimento desiderata"})
+			return
+		}
+		if !isOpen {
+			c.JSON(http.StatusForbidden, gin.H{"error": "La finestra per l'inserimento dei desiderata è attualmente chiusa. Rivolgersi al docente vicario o al responsabile orario."})
+			return
 		}
 	}
 
@@ -153,6 +178,55 @@ func (h *Handler) SavePreferences(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "preferenze desiderata orario salvate con successo"})
+}
+
+func (h *Handler) GetDesiderataWindow(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	isOpen, err := h.service.IsDesiderataWindowOpen(c.Request.Context(), schoolID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, DesiderataWindowResponse{IsOpen: isOpen})
+}
+
+func (h *Handler) SetDesiderataWindow(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	var req SetDesiderataWindowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.SetDesiderataWindowOpen(c.Request.Context(), schoolID, req.IsOpen); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "stato finestra desiderata aggiornato con successo",
+		"is_open": req.IsOpen,
+	})
+}
+
+func (h *Handler) AdjustSchedule(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	userID := c.GetString("user_id")
+	jobID := c.Param("jobID")
+
+	var req AdjustTimetableRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := h.service.AdjustJobSlots(c.Request.Context(), schoolID, userID, jobID, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 // ----------------- Room Requirements Handlers -----------------

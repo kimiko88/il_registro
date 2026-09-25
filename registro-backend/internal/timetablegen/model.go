@@ -126,6 +126,18 @@ type GenerateTimetableRequest struct {
 	TimeLimitSeconds int     `json:"time_limit_seconds"`
 }
 
+type AdjustTimetableRequest struct {
+	Slots []GeneratedSlot `json:"slots" binding:"required"`
+}
+
+type DesiderataWindowResponse struct {
+	IsOpen bool `json:"is_open"`
+}
+
+type SetDesiderataWindowRequest struct {
+	IsOpen bool `json:"is_open"`
+}
+
 // Generation structures
 type GeneratedSlot struct {
 	ClassID       string  `json:"class_id"`

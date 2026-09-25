@@ -27,7 +27,7 @@ type GroupStudentInfo struct {
 }
 
 type CreateGroupRequest struct {
-	SchoolID     string   `json:"school_id" binding:"required"`
+	SchoolID     string   `json:"school_id"`
 	Name         string   `json:"name" binding:"required"`
 	SubjectID    *string  `json:"subject_id"`
 	TeacherID    *string  `json:"teacher_id"`

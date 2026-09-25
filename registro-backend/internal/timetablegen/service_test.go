@@ -10,11 +10,12 @@ import (
 )
 
 type mockTimetableRepo struct {
-	preferences []TeacherPreference
-	reqs        []SubjectRoomRequirement
-	constraints []TimetableConstraint
-	jobs        map[string]*TimetableJob
-	published   []GeneratedSlot
+	preferences          []TeacherPreference
+	reqs                 []SubjectRoomRequirement
+	constraints          []TimetableConstraint
+	jobs                 map[string]*TimetableJob
+	published            []GeneratedSlot
+	desiderataWindowOpen bool
 }
 
 func newMockTimetableRepo() *mockTimetableRepo {
@@ -97,6 +98,15 @@ func (m *mockTimetableRepo) SaveConstraint(ctx context.Context, schoolID string,
 }
 
 func (m *mockTimetableRepo) DeleteConstraint(ctx context.Context, id string) error {
+	return nil
+}
+
+func (m *mockTimetableRepo) GetDesiderataWindow(ctx context.Context, schoolID string) (bool, error) {
+	return m.desiderataWindowOpen, nil
+}
+
+func (m *mockTimetableRepo) SetDesiderataWindow(ctx context.Context, schoolID string, isOpen bool) error {
+	m.desiderataWindowOpen = isOpen
 	return nil
 }
 
@@ -230,5 +240,85 @@ func TestTimetableService(t *testing.T) {
 	}
 	if res.AssignedSlots != 2 {
 		t.Errorf("expected 2 assigned slots in summary, got %d", res.AssignedSlots)
+	}
+
+	// 4. Test Desiderata Window Toggle
+	isOpen, err := svc.IsDesiderataWindowOpen(ctx, schoolID)
+	if err != nil {
+		t.Fatalf("unexpected error checking window: %v", err)
+	}
+	if isOpen {
+		t.Errorf("expected window to be closed initially")
+	}
+
+	if err := svc.SetDesiderataWindowOpen(ctx, schoolID, true); err != nil {
+		t.Fatalf("unexpected error setting window open: %v", err)
+	}
+
+	isOpen, err = svc.IsDesiderataWindowOpen(ctx, schoolID)
+	if err != nil || !isOpen {
+		t.Fatalf("expected window to be open now, got %v (err: %v)", isOpen, err)
+	}
+
+	// 5. Test AdjustJobSlots
+	// A: Adjust with non-overlapping valid slots
+	adjustedSlots := []GeneratedSlot{
+		{
+			ClassID:     "class-1",
+			ClassName:   "1A",
+			SubjectID:   "subj-1",
+			SubjectName: "Matematica",
+			TeacherID:   &teacherID,
+			TeacherName: "Prof. Rossi",
+			DayOfWeek:   1,
+			HourIndex:   1,
+		},
+		{
+			ClassID:     "class-1",
+			ClassName:   "1A",
+			SubjectID:   "subj-1",
+			SubjectName: "Matematica",
+			TeacherID:   &teacherID,
+			TeacherName: "Prof. Rossi",
+			DayOfWeek:   1,
+			HourIndex:   2,
+		},
+	}
+	adjRes, err := svc.AdjustJobSlots(ctx, schoolID, "user-admin", jobID, AdjustTimetableRequest{Slots: adjustedSlots})
+	if err != nil {
+		t.Fatalf("unexpected error adjusting slots: %v", err)
+	}
+	if len(adjRes.HardConflicts) != 0 {
+		t.Errorf("expected 0 hard conflicts, got %d", len(adjRes.HardConflicts))
+	}
+	if adjRes.AssignedSlots != 2 {
+		t.Errorf("expected 2 assigned slots, got %d", adjRes.AssignedSlots)
+	}
+
+	// B: Adjust with overlapping slots (collision on same class & time)
+	collidingSlots := []GeneratedSlot{
+		{
+			ClassID:     "class-1",
+			ClassName:   "1A",
+			SubjectID:   "subj-1",
+			SubjectName: "Matematica",
+			DayOfWeek:   2,
+			HourIndex:   1,
+		},
+		{
+			ClassID:     "class-1",
+			ClassName:   "1A",
+			SubjectID:   "subj-2",
+			SubjectName: "Fisica",
+			DayOfWeek:   2,
+			HourIndex:   1,
+		},
+	}
+	conflictRes, err := svc.AdjustJobSlots(ctx, schoolID, "user-admin", jobID, AdjustTimetableRequest{Slots: collidingSlots})
+	if err != nil {
+		t.Fatalf("unexpected error adjusting colliding slots: %v", err)
+	}
+	if len(conflictRes.HardConflicts) == 0 {
+		t.Errorf("expected collision to be flagged in HardConflicts")
 	}
 }

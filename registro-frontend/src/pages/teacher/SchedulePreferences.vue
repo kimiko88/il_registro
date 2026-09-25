@@ -21,10 +21,22 @@
           no-caps
           class="rounded-xl q-px-lg font-bold shadow-sm"
           :loading="saving"
+          :disable="!isWindowOpen"
           @click="savePreferences"
         />
       </div>
     </div>
+
+    <!-- Closed Window Notice -->
+    <q-banner v-if="!isWindowOpen" rounded class="bg-amber-50 border border-amber-300 text-amber-950 q-mb-lg rounded-2xl shadow-xs">
+      <template v-slot:avatar>
+        <q-icon name="lock" color="amber-8" size="32px" />
+      </template>
+      <div class="text-subtitle2 font-bold">Finestra Inserimento Desiderata Chiusa</div>
+      <div class="text-body2 text-amber-900">
+        L'inserimento e la modifica autonoma dei desiderata orario da parte dei docenti sono attualmente chiuse. Le preferenze visualizzate sono in sola lettura fino alla riapertura da parte del docente vicario o del responsabile orario.
+      </div>
+    </q-banner>
 
     <!-- Seniority & Priority Alert Banner -->
     <q-banner rounded class="bg-indigo-50 border border-indigo-200 text-indigo-950 q-mb-lg rounded-2xl shadow-xs">
@@ -119,6 +131,7 @@ const { t } = useI18n();
 
 const loading = ref(false);
 const saving = ref(false);
+const isWindowOpen = ref(true);
 
 const days = computed(() => [
   { index: 1, label: t('schedulePreferences.days.monday') },
@@ -145,6 +158,17 @@ function initGrid() {
 async function fetchPreferences() {
   loading.value = true;
   try {
+    if (typeof timetableGenService.getDesiderataWindow === 'function') {
+      try {
+        const wRes = await timetableGenService.getDesiderataWindow();
+        if (wRes && wRes.data && typeof wRes.data.is_open === 'boolean') {
+          isWindowOpen.value = wRes.data.is_open;
+        }
+      } catch {
+        // window check failure fallback
+      }
+    }
+
     const res = await timetableGenService.getPreferences();
     const prefs = res.data || [];
     initGrid();
@@ -161,6 +185,13 @@ async function fetchPreferences() {
 }
 
 function cyclePreference(day, hour) {
+  if (!isWindowOpen.value) {
+    $q.notify({
+      type: 'warning',
+      message: 'La finestra per l\'inserimento dei desiderata è attualmente chiusa.'
+    });
+    return;
+  }
   const current = grid.value[day]?.[hour] || 'neutral';
   let next = 'neutral';
   if (current === 'neutral') next = 'preferred';

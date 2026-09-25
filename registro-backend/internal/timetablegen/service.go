@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,6 +24,8 @@ type Service interface {
 	// Preferences
 	SaveTeacherPreferences(ctx context.Context, schoolID, teacherID string, req SavePreferencesRequest) error
 	GetTeacherPreferences(ctx context.Context, schoolID, teacherID string, academicYearID *string) ([]TeacherPreference, error)
+	IsDesiderataWindowOpen(ctx context.Context, schoolID string) (bool, error)
+	SetDesiderataWindowOpen(ctx context.Context, schoolID string, isOpen bool) error
 
 	// Room Requirements
 	ListRoomRequirements(ctx context.Context, schoolID string) ([]SubjectRoomRequirement, error)
@@ -38,6 +41,7 @@ type Service interface {
 	StartGeneration(ctx context.Context, schoolID, userID string, req GenerateTimetableRequest) (string, error)
 	GetJobStatus(ctx context.Context, schoolID, jobID string) (*TimetableJob, error)
 	PublishSchedule(ctx context.Context, schoolID, userID, jobID string) error
+	AdjustJobSlots(ctx context.Context, schoolID, userID, jobID string, req AdjustTimetableRequest) (*TimetableGenerationResult, error)
 }
 
 type service struct {
@@ -69,6 +73,14 @@ func (s *service) SaveTeacherPreferences(ctx context.Context, schoolID, teacherI
 
 func (s *service) GetTeacherPreferences(ctx context.Context, schoolID, teacherID string, academicYearID *string) ([]TeacherPreference, error) {
 	return s.repo.GetTeacherPreferences(ctx, schoolID, teacherID, academicYearID)
+}
+
+func (s *service) IsDesiderataWindowOpen(ctx context.Context, schoolID string) (bool, error) {
+	return s.repo.GetDesiderataWindow(ctx, schoolID)
+}
+
+func (s *service) SetDesiderataWindowOpen(ctx context.Context, schoolID string, isOpen bool) error {
+	return s.repo.SetDesiderataWindow(ctx, schoolID, isOpen)
 }
 
 // ----------------- Room Requirements -----------------
@@ -120,10 +132,10 @@ func (s *service) StartGeneration(ctx context.Context, schoolID, userID string, 
 		return "", fmt.Errorf("failed to create generation job: %w", err)
 	}
 
-	// Launch async goroutine with 30-second context
-	go func(jID, sID string, aYearID *string, timeLimit int) {
-		timeout := 25 * time.Second
-		if timeLimit > 0 && timeLimit <= 30 {
+	// Launch async goroutine with configurable timeout (up to 10 minutes)
+	go func(jID, sID string, aYearID *string, timeLimit int, maxIter int) {
+		timeout := 60 * time.Second
+		if timeLimit > 0 && timeLimit <= 600 {
 			timeout = time.Duration(timeLimit) * time.Second
 		}
 		bgCtx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -173,8 +185,20 @@ func (s *service) StartGeneration(ctx context.Context, schoolID, userID string, 
 			constraints = []TimetableConstraint{}
 		}
 
-		// 2. Run Algorithm
-		res, err := s.generator.Generate(bgCtx, assignments, rooms, roomReqs, preferences, constraints)
+		// 2. Run Algorithm with configured limits
+		gen := s.generator
+		if timeLimit > 0 || maxIter > 0 {
+			cfg := s.generator.config
+			if timeLimit > 0 {
+				cfg.TimeLimitSeconds = timeLimit
+			}
+			if maxIter > 0 {
+				cfg.MaxIterations = maxIter
+			}
+			gen = NewGenerator(cfg)
+		}
+
+		res, err := gen.Generate(bgCtx, assignments, rooms, roomReqs, preferences, constraints)
 		if err != nil {
 			s.failJob(bgCtx, jID, fmt.Sprintf("Generazione fallita: %v", err))
 			return
@@ -191,7 +215,7 @@ func (s *service) StartGeneration(ctx context.Context, schoolID, userID string, 
 			CompletedAt:   &completedAt,
 		}
 		_ = s.repo.UpdateJob(context.Background(), completedJob)
-	}(createdJob.ID, schoolID, req.AcademicYearID, req.TimeLimitSeconds)
+	}(createdJob.ID, schoolID, req.AcademicYearID, req.TimeLimitSeconds, req.MaxIterations)
 
 	return createdJob.ID, nil
 }
@@ -240,4 +264,108 @@ func (s *service) PublishSchedule(ctx context.Context, schoolID, userID, jobID s
 	}
 
 	return s.repo.PublishGeneratedSchedule(ctx, schoolID, result.Slots)
+}
+
+func (s *service) AdjustJobSlots(ctx context.Context, schoolID, userID, jobID string, req AdjustTimetableRequest) (*TimetableGenerationResult, error) {
+	job, err := s.repo.GetJob(ctx, jobID)
+	if err != nil {
+		return nil, ErrJobNotFound
+	}
+	if job.SchoolID != schoolID {
+		return nil, ErrForbidden
+	}
+	if job.Status != JobStatusCompleted {
+		return nil, errors.New("cannot adjust an uncompleted timetable generation job")
+	}
+
+	var result TimetableGenerationResult
+	if len(job.ResultSummary) > 0 {
+		_ = json.Unmarshal(job.ResultSummary, &result)
+	}
+
+	type slotKey struct {
+		day  int
+		hour int
+	}
+	classSlots := make(map[string]map[slotKey]string)
+	teacherSlots := make(map[string]map[slotKey]string)
+	roomSlots := make(map[string]map[slotKey]string)
+
+	var hardConflicts []HardConflict
+
+	for _, slot := range req.Slots {
+		sk := slotKey{day: slot.DayOfWeek, hour: slot.HourIndex}
+
+		// Class overlap check
+		if slot.ClassID != "" {
+			if _, ok := classSlots[slot.ClassID]; !ok {
+				classSlots[slot.ClassID] = make(map[slotKey]string)
+			}
+			if prevSubj, exists := classSlots[slot.ClassID][sk]; exists {
+				hardConflicts = append(hardConflicts, HardConflict{
+					Type:        "class_overlap",
+					Description: fmt.Sprintf("Sovrapposizione nella classe %s: sia %s che %s assegnate al giorno %d, ora %d", slot.ClassName, prevSubj, slot.SubjectName, slot.DayOfWeek, slot.HourIndex),
+					ClassID:     slot.ClassID,
+				})
+			} else {
+				classSlots[slot.ClassID][sk] = slot.SubjectName
+			}
+		}
+
+		// Teacher overlap check
+		if slot.TeacherID != nil && *slot.TeacherID != "" && !strings.HasPrefix(*slot.TeacherID, "unassigned-") && !strings.HasPrefix(*slot.TeacherID, "spezzone-") {
+			tID := *slot.TeacherID
+			if _, ok := teacherSlots[tID]; !ok {
+				teacherSlots[tID] = make(map[slotKey]string)
+			}
+			if prevSubj, exists := teacherSlots[tID][sk]; exists {
+				if prevSubj != slot.SubjectName {
+					hardConflicts = append(hardConflicts, HardConflict{
+						Type:        "teacher_overlap",
+						Description: fmt.Sprintf("Docente %s sovrapposto: assegnato contemporaneamente a %s e %s al giorno %d, ora %d", slot.TeacherName, prevSubj, slot.SubjectName, slot.DayOfWeek, slot.HourIndex),
+						TeacherID:   tID,
+						DayOfWeek:   slot.DayOfWeek,
+						HourIndex:   slot.HourIndex,
+					})
+				}
+			} else {
+				teacherSlots[tID][sk] = slot.SubjectName
+			}
+		}
+
+		// Room overlap check
+		if slot.RoomID != nil && *slot.RoomID != "" {
+			rID := *slot.RoomID
+			if _, ok := roomSlots[rID]; !ok {
+				roomSlots[rID] = make(map[slotKey]string)
+			}
+			if prevClass, exists := roomSlots[rID][sk]; exists {
+				hardConflicts = append(hardConflicts, HardConflict{
+					Type:        "room_overlap",
+					Description: fmt.Sprintf("Aula %s occupata contemporaneamente da %s e %s al giorno %d, ora %d", slot.RoomName, prevClass, slot.ClassName, slot.DayOfWeek, slot.HourIndex),
+				})
+			} else {
+				roomSlots[rID][sk] = slot.ClassName
+			}
+		}
+	}
+
+	result.Slots = req.Slots
+	result.AssignedSlots = len(req.Slots)
+	result.HardConflicts = hardConflicts
+	if result.TotalSlots > 0 {
+		result.CoveragePct = float64(result.AssignedSlots) / float64(result.TotalSlots) * 100.0
+	}
+
+	resBytes, err := json.Marshal(result)
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize adjusted timetable: %w", err)
+	}
+
+	job.ResultSummary = resBytes
+	if err := s.repo.UpdateJob(ctx, job); err != nil {
+		return nil, fmt.Errorf("failed to update adjusted timetable job: %w", err)
+	}
+
+	return &result, nil
 }

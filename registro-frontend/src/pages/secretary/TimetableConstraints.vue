@@ -47,12 +47,13 @@
     </div>
 
     <!-- Policy Banner: Lab Constraints Only, Desiderata Excluded -->
+    <!-- Policy Banner: Lab Constraints & Desiderata -->
     <q-banner rounded class="bg-indigo-50 border border-indigo-200 text-indigo-950 q-mb-lg rounded-xl shadow-xs">
       <template v-slot:avatar>
         <q-icon name="info" color="indigo-7" size="28px" />
       </template>
       <div class="text-body2 font-medium">
-        <strong>Regole di Generazione Orario:</strong> I desiderata personali dei docenti sono esclusi dall'algoritmo. Vengono applicati solo i vincoli di laboratorio con il relativo numero di ore scelte, la copertura completa delle ore per ogni materia della classe, le cattedre non ancora assegnate e la compresenza in più classi per gruppi linguistici / articolati.
+        <strong>Regole di Generazione Orario & Desiderata:</strong> I vincoli di laboratorio con relative ore, la copertura cattedre e le compresenze per gruppi articolati sono vincoli prioritari. I desiderata personali dei docenti possono essere inseriti autonomamente dai docenti quando la finestra è aperta, oppure visualizzati e modificati direttamente in questa schermata.
       </div>
     </q-banner>
 
@@ -69,6 +70,7 @@
       <q-tab name="rooms" icon="meeting_room" :label="t('timetableConstraints.tabRooms')" class="q-py-md text-weight-bold" />
       <q-tab name="groups" icon="groups" :label="t('timetableConstraints.tabGroups')" class="q-py-md text-weight-bold" />
       <q-tab name="spezzoni" icon="hourglass_empty" :label="t('timetableConstraints.tabSpezzoni')" class="q-py-md text-weight-bold" />
+      <q-tab name="desiderata" icon="event_available" label="Desiderata Docenti" class="q-py-md text-weight-bold" />
     </q-tabs>
 
     <!-- TAB 1: Subject Room Requirements (Aule e Laboratori con scelta ore) -->
@@ -312,6 +314,167 @@
             </q-td>
           </template>
         </q-table>
+      </q-card>
+    </div>
+
+    <!-- TAB 4: Desiderata & Preferenze Docenti -->
+    <div v-show="currentTab === 'desiderata'">
+      <!-- Card: Finestra Temporale Inserimento Desiderata per i Docenti -->
+      <q-card flat bordered class="rounded-2xl shadow-sm q-mb-lg" :class="$q.dark.isActive ? 'bg-dark border-grey-8' : 'bg-white'">
+        <q-card-section class="row items-center justify-between gap-4">
+          <div class="row items-center gap-3">
+            <q-avatar size="44px" :color="isDesiderataWindowOpen ? 'green-1' : 'amber-1'" :text-color="isDesiderataWindowOpen ? 'positive' : 'amber-9'" icon="schedule" />
+            <div>
+              <div class="text-subtitle1 text-weight-bold">
+                Finestra Inserimento Desiderata Docenti:
+                <q-badge :color="isDesiderataWindowOpen ? 'positive' : 'grey-7'" class="q-ml-sm q-px-sm q-py-xs font-bold text-caption">
+                  {{ isDesiderataWindowOpen ? 'ATTIVA (Aperta)' : 'DISATTIVATA (Chiusa)' }}
+                </q-badge>
+              </div>
+              <div class="text-caption text-grey-6">
+                {{ isDesiderataWindowOpen
+                  ? 'I docenti possono accedere e compilare autonomamente i propri desiderata orario.'
+                  : 'I docenti possono solo visualizzare in sola lettura le preferenze. Attiva la finestra per consentire modifiche.' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="row items-center gap-2">
+            <q-toggle
+              v-model="isDesiderataWindowOpen"
+              color="primary"
+              :label="isDesiderataWindowOpen ? 'Finestra Aperta' : 'Finestra Chiusa'"
+              :loading="loadingWindow"
+              @update:model-value="toggleDesiderataWindow"
+            />
+          </div>
+        </q-card-section>
+      </q-card>
+
+      <!-- Card: Matrice e Modifica Desiderata Docenti (per Vicario / Responsabile Orario) -->
+      <q-card flat bordered class="rounded-2xl shadow-sm q-mb-xl" :class="$q.dark.isActive ? 'bg-dark border-grey-8' : 'bg-white'">
+        <q-card-section class="row items-center justify-between gap-4">
+          <div>
+            <div class="text-h6 text-weight-bold row items-center gap-2">
+              <q-icon name="person_search" color="primary" />
+              Gestione Desiderata per Singolo Docente
+            </div>
+            <div class="text-caption text-grey-6">
+              Visualizza o modifica la griglia dei desiderata di qualsiasi docente. Le modifiche salvate hanno effetto prioritario sulla generazione dell'orario.
+            </div>
+          </div>
+
+          <div style="min-width: 300px;">
+            <q-select
+              v-model="selectedDesiderataTeacherId"
+              :options="teacherOptions"
+              option-value="id"
+              option-label="displayName"
+              emit-value
+              map-options
+              outlined
+              dense
+              clearable
+              label="Seleziona Docente..."
+              @update:model-value="onDesiderataTeacherSelected"
+            >
+              <template v-slot:prepend>
+                <q-icon name="person" color="primary" />
+              </template>
+            </q-select>
+          </div>
+        </q-card-section>
+
+        <q-separator :class="$q.dark.isActive ? 'border-grey-8' : 'border-slate-100'" />
+
+        <!-- If no teacher selected -->
+        <div v-if="!selectedDesiderataTeacherId" class="text-center q-pa-xl text-slate-400">
+          <q-icon name="touch_app" size="48px" class="opacity-40 q-mb-sm" />
+          <div class="text-h6 text-grey-7">Nessun docente selezionato</div>
+          <p class="text-caption text-grey-5">Seleziona un docente dal menu sopra per visualizzare o configurare la sua disponibilità settimanale.</p>
+        </div>
+
+        <!-- Teacher Loading -->
+        <div v-else-if="loadingTeacherPrefs" class="row justify-center q-pa-xl">
+          <q-spinner-dots size="48px" color="primary" />
+        </div>
+
+        <!-- Teacher Desiderata Grid -->
+        <div v-else class="q-pa-md">
+          <!-- Summary bar & Quick Actions -->
+          <div class="row items-center justify-between gap-3 q-mb-md">
+            <div class="row items-center gap-2">
+              <q-badge color="positive" class="q-px-sm q-py-xs font-bold">
+                🟢 {{ countPreferred }} Ore Preferite
+              </q-badge>
+              <q-badge color="grey-6" class="q-px-sm q-py-xs font-bold">
+                ⚪ {{ countNeutral }} Ore Neutre
+              </q-badge>
+              <q-badge color="negative" class="q-px-sm q-py-xs font-bold">
+                🔴 {{ countUnavailable }} Ore Non Disponibili
+              </q-badge>
+            </div>
+
+            <div class="row items-center gap-2">
+              <!-- Quick day-off -->
+              <q-btn-dropdown dense flat color="primary" icon="event_busy" label="Giorno Libero Rapido" no-caps>
+                <q-list dense>
+                  <q-item v-for="d in prefDays" :key="d.index" clickable v-close-popup @click="setFullDayOff(d.index)">
+                    <q-item-section>{{ d.label }} (tutto il giorno Non Disp.)</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-btn-dropdown>
+              <q-btn flat dense color="grey-7" icon="restart_alt" label="Tutto Neutro" no-caps @click="resetTeacherPrefsToNeutral" />
+              <q-btn
+                unelevated
+                color="primary"
+                icon="save"
+                label="Salva Desiderata Docente"
+                no-caps
+                class="rounded-xl q-px-md font-bold"
+                :loading="savingTeacherPrefs"
+                @click="saveTeacherPrefs"
+              />
+            </div>
+          </div>
+
+          <!-- Weekly Matrix -->
+          <div class="overflow-x-auto border rounded-xl">
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700">
+                  <th class="p-3 border border-slate-200 text-left w-24">Ora</th>
+                  <th v-for="d in prefDays" :key="d.index" class="p-3 border border-slate-200 text-center font-bold">
+                    {{ d.label }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="h in 8" :key="h">
+                  <td class="p-3 border border-slate-200 font-bold text-center bg-slate-50 text-slate-800">
+                    {{ h }}ª Ora
+                  </td>
+                  <td
+                    v-for="d in prefDays"
+                    :key="d.index + '-' + h"
+                    class="p-2 border border-slate-200 text-center cursor-pointer transition-colors select-none"
+                    :class="getTeacherPrefCellBg(d.index, h)"
+                    @click="cycleTeacherPrefCell(d.index, h)"
+                  >
+                    <div class="py-2 px-1 rounded-lg">
+                      <div class="font-bold text-xs" :class="getTeacherPrefCellText(d.index, h)">
+                        {{ getTeacherPrefCellLabel(d.index, h) }}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="text-caption text-grey-6 q-mt-sm">
+            💡 Fai clic su una casella per alternare: 🟢 Preferito ➔ 🔴 Non Disponibile ➔ ⚪ Neutro.
+          </div>
+        </div>
       </q-card>
     </div>
 
@@ -886,12 +1049,197 @@ function confirmDeleteSpezzone(row) {
   });
 }
 
+// ----------------- TAB 4: Desiderata & Preferenze Docenti -----------------
+const isDesiderataWindowOpen = ref(false);
+const loadingWindow = ref(false);
+const selectedDesiderataTeacherId = ref(null);
+const teacherPrefsGrid = ref({});
+const loadingTeacherPrefs = ref(false);
+const savingTeacherPrefs = ref(false);
+
+const prefDays = computed(() => [
+  { index: 1, label: 'Lunedì' },
+  { index: 2, label: 'Martedì' },
+  { index: 3, label: 'Mercoledì' },
+  { index: 4, label: 'Giovedì' },
+  { index: 5, label: 'Venerdì' }
+]);
+
+const teacherOptions = computed(() => {
+  return (allTeachers.value || []).map(t => ({
+    id: t.user_id || t.id,
+    displayName: t.label || t.email || 'Docente'
+  }));
+});
+
+function initTeacherPrefsGrid() {
+  const g = {};
+  for (let d = 1; d <= 5; d++) {
+    g[d] = {};
+    for (let h = 1; h <= 8; h++) {
+      g[d][h] = 'neutral';
+    }
+  }
+  teacherPrefsGrid.value = g;
+}
+
+const countPreferred = computed(() => {
+  let count = 0;
+  for (let d = 1; d <= 5; d++) {
+    for (let h = 1; h <= 8; h++) {
+      if (teacherPrefsGrid.value[d]?.[h] === 'preferred') count++;
+    }
+  }
+  return count;
+});
+
+const countNeutral = computed(() => {
+  let count = 0;
+  for (let d = 1; d <= 5; d++) {
+    for (let h = 1; h <= 8; h++) {
+      if ((teacherPrefsGrid.value[d]?.[h] || 'neutral') === 'neutral') count++;
+    }
+  }
+  return count;
+});
+
+const countUnavailable = computed(() => {
+  let count = 0;
+  for (let d = 1; d <= 5; d++) {
+    for (let h = 1; h <= 8; h++) {
+      if (teacherPrefsGrid.value[d]?.[h] === 'unavailable') count++;
+    }
+  }
+  return count;
+});
+
+function getTeacherPrefCellBg(day, hour) {
+  const state = teacherPrefsGrid.value[day]?.[hour] || 'neutral';
+  if (state === 'preferred') return 'bg-emerald-100 hover:bg-emerald-200';
+  if (state === 'unavailable') return 'bg-rose-100 hover:bg-rose-200';
+  return 'bg-white hover:bg-slate-100';
+}
+
+function getTeacherPrefCellText(day, hour) {
+  const state = teacherPrefsGrid.value[day]?.[hour] || 'neutral';
+  if (state === 'preferred') return 'text-emerald-800';
+  if (state === 'unavailable') return 'text-rose-800';
+  return 'text-slate-400';
+}
+
+function getTeacherPrefCellLabel(day, hour) {
+  const state = teacherPrefsGrid.value[day]?.[hour] || 'neutral';
+  if (state === 'preferred') return '🟢 Preferito';
+  if (state === 'unavailable') return '🔴 Non Disp.';
+  return '⚪ Neutro';
+}
+
+function cycleTeacherPrefCell(day, hour) {
+  const current = teacherPrefsGrid.value[day]?.[hour] || 'neutral';
+  let next = 'neutral';
+  if (current === 'neutral') next = 'preferred';
+  else if (current === 'preferred') next = 'unavailable';
+  else if (current === 'unavailable') next = 'neutral';
+
+  if (!teacherPrefsGrid.value[day]) teacherPrefsGrid.value[day] = {};
+  teacherPrefsGrid.value[day][hour] = next;
+}
+
+function setFullDayOff(dayIndex) {
+  if (!teacherPrefsGrid.value[dayIndex]) teacherPrefsGrid.value[dayIndex] = {};
+  for (let h = 1; h <= 8; h++) {
+    teacherPrefsGrid.value[dayIndex][h] = 'unavailable';
+  }
+}
+
+function resetTeacherPrefsToNeutral() {
+  initTeacherPrefsGrid();
+}
+
+async function fetchDesiderataWindow() {
+  if (typeof timetableGenService.getDesiderataWindow !== 'function') return;
+  try {
+    const res = await timetableGenService.getDesiderataWindow();
+    isDesiderataWindowOpen.value = res.data?.is_open || false;
+  } catch (err) {
+    console.error('Error fetching desiderata window status', err);
+  }
+}
+
+async function toggleDesiderataWindow(val) {
+  if (typeof timetableGenService.setDesiderataWindow !== 'function') return;
+  loadingWindow.value = true;
+  try {
+    await timetableGenService.setDesiderataWindow(val);
+    $q.notify({
+      type: 'positive',
+      message: val ? 'Finestra inserimento desiderata docenti APERTA' : 'Finestra inserimento desiderata docenti CHIUSA'
+    });
+  } catch (err) {
+    isDesiderataWindowOpen.value = !val;
+    $q.notify({ type: 'negative', message: 'Errore durante l\'aggiornamento dello stato della finestra' });
+  } finally {
+    loadingWindow.value = false;
+  }
+}
+
+async function onDesiderataTeacherSelected(tId) {
+  if (!tId) {
+    teacherPrefsGrid.value = {};
+    return;
+  }
+  loadingTeacherPrefs.value = true;
+  initTeacherPrefsGrid();
+  try {
+    if (typeof timetableGenService.getPreferences === 'function') {
+      const res = await timetableGenService.getPreferences({ teacher_id: tId });
+      const prefs = res.data || [];
+      for (const p of prefs) {
+        if (teacherPrefsGrid.value[p.day_of_week] && teacherPrefsGrid.value[p.day_of_week][p.hour_index] !== undefined) {
+          teacherPrefsGrid.value[p.day_of_week][p.hour_index] = p.preference_type;
+        }
+      }
+    }
+  } catch (err) {
+    $q.notify({ type: 'negative', message: 'Errore nel caricamento preferenze del docente' });
+  } finally {
+    loadingTeacherPrefs.value = false;
+  }
+}
+
+async function saveTeacherPrefs() {
+  if (!selectedDesiderataTeacherId.value) return;
+  savingTeacherPrefs.value = true;
+  try {
+    const entries = [];
+    for (let d = 1; d <= 5; d++) {
+      for (let h = 1; h <= 8; h++) {
+        const val = teacherPrefsGrid.value[d]?.[h] || 'neutral';
+        if (val !== 'neutral') {
+          entries.push({
+            day_of_week: d,
+            hour_index: h,
+            preference_type: val
+          });
+        }
+      }
+    }
+    await timetableGenService.savePreferences({ preferences: entries }, { teacher_id: selectedDesiderataTeacherId.value });
+    $q.notify({ type: 'positive', message: 'Desiderata docente salvati con successo' });
+  } catch (err) {
+    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore salvataggio desiderata docente' });
+  } finally {
+    savingTeacherPrefs.value = false;
+  }
+}
+
 onMounted(async () => {
   await Promise.all([
     fetchRoomReqs(),
     fetchSubjects(),
     fetchTeachers(),
-    fetchClasses()
+    fetchClasses(),
+    fetchDesiderataWindow()
   ]);
   await fetchConstraints();
 });

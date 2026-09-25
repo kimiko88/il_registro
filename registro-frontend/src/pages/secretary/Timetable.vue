@@ -375,11 +375,34 @@
             <q-btn flat icon="tune" label="Configura Vincoli" to="/secretary/timetable-constraints" no-caps color="primary" dense size="sm" />
           </div>
 
+          <!-- Configuration Before Generation -->
+          <div v-if="!generating && !generationResult" class="q-my-md bg-purple-50 border border-purple-200 rounded-xl q-pa-md">
+            <div class="text-subtitle2 font-bold text-purple-9 q-mb-xs">Tempo di Calcolo & Ottimizzazione Algoritmica:</div>
+            <div class="text-caption text-slate-600 q-mb-sm">
+              Per istituti con molte classi e docenti (oltre 20-30 cattedre), imposta un tempo maggiore (5 o 10 minuti) per consentire all'algoritmo di completare più iterazioni e minimizzare buchi e sovrapposizioni.
+            </div>
+            <q-select
+              v-model="selectedTimeLimit"
+              :options="timeLimitOptions"
+              emit-value
+              map-options
+              outlined
+              dense
+              class="bg-white rounded-lg"
+            >
+              <template v-slot:prepend>
+                <q-icon name="timer" color="deep-purple-7" />
+              </template>
+            </q-select>
+          </div>
+
           <!-- Generation In Progress -->
           <div v-if="generating" class="q-pa-md text-center">
             <q-linear-progress indeterminate color="deep-purple-7" class="rounded-xl q-mb-md" />
             <div class="text-weight-bold text-deep-purple-8">Calcolo combinatorio orario in corso...</div>
-            <div class="text-caption text-grey-6">Tempo stimato: meno di 10-20 secondi</div>
+            <div class="text-caption text-grey-6 q-mt-xs">
+              Tempo trascorso: {{ elapsedSeconds }}s (limite massimo: {{ selectedTimeLimit }}s)
+            </div>
           </div>
 
           <!-- Generation Result -->
@@ -427,18 +450,196 @@
             :loading="generating"
             @click="runGeneration"
           />
-          <q-btn
-            v-else
-            unelevated
-            color="positive"
-            label="Pubblica Orario nel Registro"
-            icon="publish"
-            no-caps
-            class="rounded-xl q-px-lg font-bold"
-            :loading="publishing"
-            @click="publishGeneratedSchedule"
-          />
+          <template v-else>
+            <q-btn
+              outline
+              color="primary"
+              label="Anteprima & Modifica Orario"
+              icon="tune"
+              no-caps
+              class="rounded-xl q-px-md font-bold"
+              @click="openAdjustModal"
+            />
+            <q-btn
+              unelevated
+              color="positive"
+              label="Pubblica Orario nel Registro"
+              icon="publish"
+              no-caps
+              class="rounded-xl q-px-lg font-bold"
+              :loading="publishing"
+              @click="publishGeneratedSchedule"
+            />
+          </template>
         </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Modal: Anteprima & Modifica Orario Generato -->
+    <q-dialog v-model="showAdjustModal" persistent maximized transition-show="slide-up" transition-hide="slide-down">
+      <q-card class="column bg-slate-50">
+        <!-- Top Toolbar -->
+        <q-toolbar class="bg-primary text-white q-py-sm">
+          <q-icon name="tune" size="28px" class="q-mr-sm" />
+          <q-toolbar-title class="text-weight-bold">
+            Anteprima & Aggiustamenti Orario Generato
+          </q-toolbar-title>
+          <div class="row items-center q-gutter-sm">
+            <q-badge color="white" text-color="primary" class="font-bold text-sm q-px-sm q-py-xs">
+              {{ workingSlots.length }} Ore Totali
+            </q-badge>
+            <q-badge v-if="adjustHardConflicts.length > 0" color="negative" class="font-bold text-sm q-px-sm q-py-xs">
+              ⚠️ {{ adjustHardConflicts.length }} Conflitti Rilevati
+            </q-badge>
+            <q-btn flat round dense icon="close" v-close-popup />
+          </div>
+        </q-toolbar>
+
+        <!-- Filter & Actions Bar -->
+        <q-card-section class="bg-white border-b border-slate-200 q-py-sm row items-center justify-between gap-4">
+          <div class="row items-center gap-3">
+            <div style="min-width: 260px;">
+              <q-select
+                v-model="adjustSelectedClassId"
+                :options="adjustClassOptions"
+                option-value="id"
+                option-label="name"
+                emit-value
+                map-options
+                label="Filtra per Classe"
+                outlined
+                dense
+              >
+                <template v-slot:prepend>
+                  <q-icon name="school" color="primary" />
+                </template>
+              </q-select>
+            </div>
+
+            <div v-if="selectedSlotToMove" class="row items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-lg q-px-sm q-py-xs">
+              <q-icon name="pan_tool" color="indigo-7" />
+              <span class="text-caption font-bold text-indigo-9">
+                Spostamento attivo: <strong>{{ selectedSlotToMove.subject_name }}</strong> (Giorno {{ selectedSlotToMove.day_of_week }}, {{ selectedSlotToMove.hour_index }}ª ora). Clicca sulla cella di destinazione!
+              </span>
+              <q-btn flat dense round size="xs" icon="close" color="indigo-9" @click="selectedSlotToMove = null" />
+            </div>
+          </div>
+
+          <div class="row items-center gap-2">
+            <q-btn
+              flat
+              color="grey-8"
+              icon="undo"
+              label="Ripristina Originale"
+              no-caps
+              @click="resetWorkingSlots"
+            />
+            <q-btn
+              unelevated
+              color="primary"
+              icon="save"
+              label="Salva Aggiustamenti"
+              no-caps
+              class="rounded-xl q-px-md font-bold"
+              :loading="adjusting"
+              @click="saveAdjustedSchedule"
+            />
+            <q-btn
+              unelevated
+              color="positive"
+              icon="publish"
+              label="Pubblica Orario"
+              no-caps
+              class="rounded-xl q-px-md font-bold"
+              :loading="publishing"
+              @click="publishFromAdjustModal"
+            />
+          </div>
+        </q-card-section>
+
+        <!-- Conflicts banner if any -->
+        <q-banner v-if="adjustHardConflicts.length > 0" class="bg-rose-50 border-b border-rose-200 text-rose-900 q-px-md q-py-xs">
+          <template v-slot:avatar>
+            <q-icon name="warning" color="negative" />
+          </template>
+          <div class="text-caption font-bold">Rilevati conflitti nelle modifiche manuali:</div>
+          <div v-for="(hc, idx) in adjustHardConflicts" :key="idx" class="text-xs">
+            • {{ hc.description }}
+          </div>
+        </q-banner>
+
+        <!-- Grid Content -->
+        <q-card-section class="col overflow-auto q-pa-md">
+          <div v-if="!adjustSelectedClassId" class="text-center q-pa-xl text-slate-400">
+            <q-icon name="school" size="48px" class="opacity-40 q-mb-sm" />
+            <div class="text-h6">Seleziona una classe per visualizzare e regolare il relativo orario</div>
+          </div>
+
+          <div v-else class="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
+            <table class="w-full border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700">
+                  <th class="p-3 border border-slate-200 text-center w-24">Ora</th>
+                  <th v-for="d in adjustDays" :key="d.index" class="p-3 border border-slate-200 text-center font-bold">
+                    {{ d.label }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="h in 8" :key="h">
+                  <td class="p-3 border border-slate-200 font-bold text-center bg-slate-50 text-slate-800">
+                    {{ h }}ª Ora
+                  </td>
+                  <td
+                    v-for="d in adjustDays"
+                    :key="d.index + '-' + h"
+                    class="p-2 border border-slate-200 align-top transition-colors min-w-[130px] h-20"
+                    :class="getAdjustCellClass(d.index, h)"
+                    @click="onAdjustCellClick(d.index, h)"
+                  >
+                    <!-- Cell has assigned slot -->
+                    <div v-if="getSlotAt(d.index, h)" class="p-2 rounded-lg bg-indigo-50 border border-indigo-200 shadow-xs relative">
+                      <div class="font-bold text-xs text-indigo-950 truncate">
+                        {{ getSlotAt(d.index, h).subject_name }}
+                      </div>
+                      <div class="text-[11px] text-indigo-800 truncate row items-center gap-1 q-mt-xs">
+                        <q-icon name="person" size="13px" />
+                        {{ getSlotAt(d.index, h).teacher_name || 'Da nominare' }}
+                      </div>
+                      <div v-if="getSlotAt(d.index, h).room_name" class="text-[10px] text-indigo-600 truncate row items-center gap-1">
+                        <q-icon name="meeting_room" size="12px" />
+                        {{ getSlotAt(d.index, h).room_name }}
+                      </div>
+
+                      <div class="row justify-end q-mt-xs">
+                        <q-btn
+                          flat
+                          dense
+                          round
+                          size="xs"
+                          :color="selectedSlotToMove === getSlotAt(d.index, h) ? 'negative' : 'primary'"
+                          :icon="selectedSlotToMove === getSlotAt(d.index, h) ? 'close' : 'open_with'"
+                          @click.stop="toggleSlotToMove(getSlotAt(d.index, h))"
+                        >
+                          <q-tooltip>{{ selectedSlotToMove === getSlotAt(d.index, h) ? 'Annulla' : 'Sposta questa lezione' }}</q-tooltip>
+                        </q-btn>
+                      </div>
+                    </div>
+
+                    <!-- Empty Cell -->
+                    <div v-else-if="selectedSlotToMove" class="h-full flex items-center justify-center p-2 border-2 border-dashed border-primary rounded-lg bg-primary-1 cursor-pointer">
+                      <span class="text-xs text-primary font-bold">Sposta Qui</span>
+                    </div>
+
+                    <div v-else class="h-full flex items-center justify-center text-slate-300 text-xs">
+                      -
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </q-card-section>
       </q-card>
     </q-dialog>
   </q-page>
@@ -469,6 +670,43 @@ const publishing = ref(false)
 const generationJobId = ref(null)
 const generationResult = ref(null)
 let pollTimer = null
+
+const selectedTimeLimit = ref(20)
+const timeLimitOptions = [
+  { label: '20 secondi (Veloce / Test)', value: 20 },
+  { label: '1 minuto (Standard)', value: 60 },
+  { label: '2 minuti (Medio-Grandi)', value: 120 },
+  { label: '5 minuti (Scuole con tante classi e docenti)', value: 300 },
+  { label: '10 minuti (Ottimizzazione complessi scolastici ampi)', value: 600 }
+]
+const elapsedSeconds = ref(0)
+let timerInterval = null
+
+// Adjustment modal state
+const showAdjustModal = ref(false)
+const adjusting = ref(false)
+const workingSlots = ref([])
+const adjustSelectedClassId = ref(null)
+const selectedSlotToMove = ref(null)
+const adjustHardConflicts = ref([])
+
+const adjustDays = computed(() => [
+  { index: 1, label: 'Lunedì' },
+  { index: 2, label: 'Martedì' },
+  { index: 3, label: 'Mercoledì' },
+  { index: 4, label: 'Giovedì' },
+  { index: 5, label: 'Venerdì' }
+])
+
+const adjustClassOptions = computed(() => {
+  const map = {}
+  for (const s of workingSlots.value) {
+    if (s.class_id && !map[s.class_id]) {
+      map[s.class_id] = { id: s.class_id, name: s.class_name || s.class_id }
+    }
+  }
+  return Object.values(map).sort((a, b) => a.name.localeCompare(b.name))
+})
 
 const loading = ref(false)
 const saving = ref(false)
@@ -742,18 +980,26 @@ const removeAssignment = async (assignmentId) => {
 const openGenerateDialog = () => {
   generationResult.value = null
   generationJobId.value = null
+  elapsedSeconds.value = 0
   showGenerateDialog.value = true
 }
 
 const runGeneration = async () => {
   generating.value = true
   generationResult.value = null
+  elapsedSeconds.value = 0
+  if (timerInterval) clearInterval(timerInterval)
+  timerInterval = setInterval(() => {
+    elapsedSeconds.value++
+  }, 1000)
+
   try {
-    const res = await timetableGenService.startGeneration({ time_limit_seconds: 20 })
+    const res = await timetableGenService.startGeneration({ time_limit_seconds: selectedTimeLimit.value })
     generationJobId.value = res.data?.job_id
     pollJobStatus(generationJobId.value)
   } catch (err) {
     generating.value = false
+    if (timerInterval) clearInterval(timerInterval)
     $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore nell\'avvio della generazione' })
   }
 }
@@ -766,21 +1012,119 @@ const pollJobStatus = (jobId) => {
       const job = res.data
       if (job.status === 'completed') {
         clearInterval(pollTimer)
+        if (timerInterval) clearInterval(timerInterval)
         generating.value = false
         const summary = typeof job.result_summary === 'string' ? JSON.parse(job.result_summary) : job.result_summary
         generationResult.value = summary
         $q.notify({ type: 'positive', message: 'Calcolo orario completato con successo!' })
       } else if (job.status === 'failed') {
         clearInterval(pollTimer)
+        if (timerInterval) clearInterval(timerInterval)
         generating.value = false
         $q.notify({ type: 'negative', message: job.error_message || 'Generazione orario non riuscita' })
       }
     } catch (err) {
       clearInterval(pollTimer)
+      if (timerInterval) clearInterval(timerInterval)
       generating.value = false
       $q.notify({ type: 'negative', message: 'Errore durante la verifica dello stato del job' })
     }
   }, 1500)
+}
+
+const openAdjustModal = () => {
+  if (!generationResult.value) return
+  workingSlots.value = JSON.parse(JSON.stringify(generationResult.value.slots || []))
+  adjustHardConflicts.value = JSON.parse(JSON.stringify(generationResult.value.hard_conflicts || []))
+  selectedSlotToMove.value = null
+  if (adjustClassOptions.value.length > 0) {
+    adjustSelectedClassId.value = adjustClassOptions.value[0].id
+  }
+  showAdjustModal.value = true
+}
+
+const resetWorkingSlots = () => {
+  if (!generationResult.value) return
+  workingSlots.value = JSON.parse(JSON.stringify(generationResult.value.slots || []))
+  adjustHardConflicts.value = JSON.parse(JSON.stringify(generationResult.value.hard_conflicts || []))
+  selectedSlotToMove.value = null
+  $q.notify({ type: 'info', message: 'Orario ripristinato alla versione originaria calcolata' })
+}
+
+const getSlotAt = (day, hour) => {
+  return workingSlots.value.find(s => s.class_id === adjustSelectedClassId.value && s.day_of_week === day && s.hour_index === hour)
+}
+
+const toggleSlotToMove = (slot) => {
+  if (selectedSlotToMove.value === slot) {
+    selectedSlotToMove.value = null
+  } else {
+    selectedSlotToMove.value = slot
+  }
+}
+
+const onAdjustCellClick = (day, hour) => {
+  if (!selectedSlotToMove.value) {
+    const s = getSlotAt(day, hour)
+    if (s) selectedSlotToMove.value = s
+    return
+  }
+
+  const sourceSlot = selectedSlotToMove.value
+  const targetSlot = getSlotAt(day, hour)
+
+  if (targetSlot) {
+    // Swap positions
+    const prevDay = sourceSlot.day_of_week
+    const prevHour = sourceSlot.hour_index
+    sourceSlot.day_of_week = targetSlot.day_of_week
+    sourceSlot.hour_index = targetSlot.hour_index
+    targetSlot.day_of_week = prevDay
+    targetSlot.hour_index = prevHour
+    $q.notify({ type: 'info', message: `Scambiate le posizioni tra ${sourceSlot.subject_name} e ${targetSlot.subject_name}` })
+  } else {
+    // Move to empty cell
+    sourceSlot.day_of_week = day
+    sourceSlot.hour_index = hour
+    $q.notify({ type: 'info', message: `Spostata ${sourceSlot.subject_name} a ${adjustDays.value.find(d => d.index === day)?.label}, ${hour}ª ora` })
+  }
+
+  selectedSlotToMove.value = null
+}
+
+const getAdjustCellClass = (day, hour) => {
+  const slot = getSlotAt(day, hour)
+  if (selectedSlotToMove.value && selectedSlotToMove.value === slot) {
+    return 'bg-amber-100 ring-2 ring-amber-400'
+  }
+  if (slot) return 'bg-slate-50'
+  if (selectedSlotToMove.value) return 'bg-emerald-50 hover:bg-emerald-100 cursor-pointer'
+  return 'bg-white hover:bg-slate-50'
+}
+
+const saveAdjustedSchedule = async () => {
+  if (!generationJobId.value) return
+  adjusting.value = true
+  try {
+    const res = await timetableGenService.adjustSchedule(generationJobId.value, { slots: workingSlots.value })
+    generationResult.value = res.data
+    adjustHardConflicts.value = res.data?.hard_conflicts || []
+    if (adjustHardConflicts.value.length > 0) {
+      $q.notify({ type: 'warning', message: `Salvate modifiche con ${adjustHardConflicts.value.length} conflitti rilevati` })
+    } else {
+      $q.notify({ type: 'positive', message: 'Aggiustamenti orario salvati con successo!' })
+    }
+  } catch (err) {
+    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore durante il salvataggio degli aggiustamenti' })
+  } finally {
+    adjusting.value = false
+  }
+}
+
+const publishFromAdjustModal = async () => {
+  await saveAdjustedSchedule()
+  showAdjustModal.value = false
+  await publishGeneratedSchedule()
 }
 
 const publishGeneratedSchedule = async () => {

@@ -19,6 +19,15 @@ export const timetableGenService = {
   savePreferences(data, params) {
     return params ? api.post('/timetable/preferences', data, { params }) : api.post('/timetable/preferences', data);
   },
+  getDesiderataWindow() {
+    return api.get('/timetable/preferences/window');
+  },
+  setDesiderataWindow(isOpen) {
+    return api.post('/timetable/preferences/window', { is_open: isOpen });
+  },
+  adjustSchedule(jobId, data) {
+    return api.post(`/timetable/generate/${jobId}/adjust`, data);
+  },
 
   // Room Requirements per Subject
   getRoomRequirements() {
