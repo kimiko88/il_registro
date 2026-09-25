@@ -421,7 +421,7 @@ func (r *PostgresRepository) LoadAssignments(ctx context.Context, schoolID strin
 	query := `
 		SELECT cs.class_id, COALESCE(c.name || ' ' || COALESCE(c.section, ''), c.name, ''), c.building_id,
 		       cs.subject_id, s.name,
-		       COALESCE(t.id, 'unassigned-' || cs.id), COALESCE(t.user_id, 'unassigned-' || cs.id),
+		       COALESCE(t.id::text, 'unassigned-' || cs.id::text), COALESCE(t.user_id::text, 'unassigned-' || cs.id::text),
 		       COALESCE(NULLIF(TRIM(COALESCE(u.last_name, '') || ' ' || COALESCE(u.first_name, '')), ''), 'Docente da Nominare (Cattedra non assegnata)'),
 		       t.hiring_date,
 		       CEIL(cs.hours_per_week)::int

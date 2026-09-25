@@ -235,9 +235,10 @@ func (g *TimetableGenerator) Generate(
 
 					// Teacher preference score
 					pref := getTeacherPref(teacherPrefMap, lead.TeacherID, lead.TeacherUserID, day, hour)
-					if pref == PrefPreferred {
+					switch pref {
+					case PrefPreferred:
 						score += 15.0
-					} else if pref == PrefUnavailable {
+					case PrefUnavailable:
 						score -= 35.0
 					}
 					if getTeacherDayOffHours(teacherDayOffMap, lead.TeacherID, lead.TeacherUserID, day) >= 4 {
@@ -423,9 +424,10 @@ func (g *TimetableGenerator) Generate(
 
 					// 4. Teacher preference score (Desiderata)
 					pref := getTeacherPref(teacherPrefMap, a.TeacherID, a.TeacherUserID, day, hour)
-					if pref == PrefPreferred {
+					switch pref {
+					case PrefPreferred:
 						score += 15.0
-					} else if pref == PrefUnavailable {
+					case PrefUnavailable:
 						score -= 35.0
 					}
 					if getTeacherDayOffHours(teacherDayOffMap, a.TeacherID, a.TeacherUserID, day) >= 4 {
@@ -847,9 +849,10 @@ func evalTotalSlotScore(s GeneratedSlot, prefMap map[string]map[int]map[int]stri
 			tUID = *s.TeacherUserID
 		}
 		p := getTeacherPref(prefMap, *s.TeacherID, tUID, s.DayOfWeek, s.HourIndex)
-		if p == PrefPreferred {
+		switch p {
+		case PrefPreferred:
 			score += 15.0
-		} else if p == PrefUnavailable {
+		case PrefUnavailable:
 			score -= 35.0
 		}
 		if getTeacherDayOffHours(dayOffMap, *s.TeacherID, tUID, s.DayOfWeek) >= 4 {
