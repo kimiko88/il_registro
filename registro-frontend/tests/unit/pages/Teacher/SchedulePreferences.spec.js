@@ -52,7 +52,7 @@ describe('Teacher SchedulePreferences.vue — Teacher Desiderata Matrix', () => 
   it('renders header, seniority alert banner, and loads existing preferences', async () => {
     await flushPromises()
     expect(wrapper.text()).toContain('Desiderata Orario Scolastico')
-    expect(wrapper.text()).toContain('Criterio di Priorità e Anzianità di Servizio')
+    expect(wrapper.text()).toContain('Informativa Generazione Orario Scolastico')
     expect(timetableGenService.getPreferences).toHaveBeenCalled()
     expect(wrapper.vm.grid[1][1]).toBe('preferred')
     expect(wrapper.vm.grid[5][8]).toBe('unavailable')

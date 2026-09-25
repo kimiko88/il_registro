@@ -18,11 +18,11 @@ import (
 )
 
 type mockIntegrationTimetableRepo struct {
-	preferences []timetablegen.TeacherPreference
-	reqs        []timetablegen.SubjectRoomRequirement
-	constraints []timetablegen.TimetableConstraint
-	jobs        map[string]*timetablegen.TimetableJob
-	published   []timetablegen.GeneratedSlot
+	preferences      []timetablegen.TeacherPreference
+	reqs             []timetablegen.SubjectRoomRequirement
+	constraints      []timetablegen.TimetableConstraint
+	jobs             map[string]*timetablegen.TimetableJob
+	published        []timetablegen.GeneratedSlot
 	assignments      []timetablegen.AssignmentData
 	rooms            []timetablegen.RoomData
 	associatedGroups []timetablegen.AssociatedGroup
