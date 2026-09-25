@@ -218,7 +218,7 @@ func TestEmergencySubstitutionsWorkflow_Integration(t *testing.T) {
 	// 3. Query Recommendation Scoring Algorithm
 	{
 		rSecretary := setupSubstitutionsIntegrationRouter(repo, "sec-1", "secretary", schoolID)
-		req := httptest.NewRequest("GET", fmt.Sprintf("/api/v1/substitutions/recommend-substitutes?class_id=class-3B&subject_id=subj-fisica&date=2026-10-20&hour=3"), nil)
+		req := httptest.NewRequest("GET", "/api/v1/substitutions/recommend-substitutes?class_id=class-3B&subject_id=subj-fisica&date=2026-10-20&hour=3", nil)
 		w := httptest.NewRecorder()
 		rSecretary.ServeHTTP(w, req)
 

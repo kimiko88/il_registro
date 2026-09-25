@@ -38,6 +38,19 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		timetableGroup.GET("/constraints", h.ListConstraints)
 		timetableGroup.POST("/constraints", h.requireTimetableManagerRole, h.SaveConstraint)
 		timetableGroup.DELETE("/constraints/:id", h.requireTimetableManagerRole, h.DeleteConstraint)
+
+		// Curriculum Plans & Class Daily Limits
+		timetableGroup.GET("/academic-years", h.requireTimetableManagerRole, h.ListAcademicYears)
+		timetableGroup.GET("/classes-plans", h.requireTimetableManagerRole, h.ListClassesCurriculumPlans)
+		timetableGroup.GET("/classes/:classID/plan", h.requireTimetableManagerRole, h.GetClassCurriculumPlan)
+		timetableGroup.PUT("/classes/:classID/plan", h.requireTimetableManagerRole, h.SaveClassCurriculumPlan)
+		timetableGroup.POST("/classes/:classID/inherit", h.requireTimetableManagerRole, h.InheritClassCurriculumPlan)
+		timetableGroup.POST("/inherit-all-plans", h.requireTimetableManagerRole, h.InheritAllClassesCurriculumPlans)
+
+		// Teacher Quick Preferences (Tabular representation)
+		timetableGroup.GET("/teachers-quick-preferences", h.requireTimetableManagerRole, h.GetTeachersQuickPreferences)
+		timetableGroup.POST("/teachers-quick-preferences", h.requireTimetableManagerRole, h.SaveTeachersQuickPreferences)
+		timetableGroup.PUT("/teachers-quick-preferences/:teacherID", h.requireTimetableManagerRole, h.SaveSingleTeacherQuickPreference)
 	}
 }
 
@@ -301,4 +314,164 @@ func (h *Handler) DeleteConstraint(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "vincolo orario rimosso con successo"})
+}
+
+// ----------------- Curriculum Plans & Class Daily Limits -----------------
+
+func (h *Handler) ListAcademicYears(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	years, err := h.service.ListAcademicYears(c.Request.Context(), schoolID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, years)
+}
+
+func (h *Handler) ListClassesCurriculumPlans(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	academicYear := c.Query("academic_year")
+	plans, err := h.service.ListClassesCurriculumPlans(c.Request.Context(), schoolID, academicYear)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, plans)
+}
+
+func (h *Handler) GetClassCurriculumPlan(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	classID := c.Param("classID")
+	plan, err := h.service.GetClassCurriculumPlan(c.Request.Context(), schoolID, classID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, plan)
+}
+
+func (h *Handler) SaveClassCurriculumPlan(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	classID := c.Param("classID")
+
+	var req SaveClassCurriculumPlanRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.SaveClassCurriculumPlan(c.Request.Context(), schoolID, classID, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	updatedPlan, err := h.service.GetClassCurriculumPlan(c.Request.Context(), schoolID, classID)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"message": "piano orario salvato con successo"})
+		return
+	}
+	c.JSON(http.StatusOK, updatedPlan)
+}
+
+func (h *Handler) InheritClassCurriculumPlan(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	classID := c.Param("classID")
+
+	var req InheritPlanRequest
+	_ = c.ShouldBindJSON(&req) // Optional body
+
+	if req.SourceAcademicYear == "" {
+		req.SourceAcademicYear = c.Query("source_academic_year")
+	}
+
+	plan, err := h.service.InheritClassCurriculumPlan(c.Request.Context(), schoolID, classID, req.SourceAcademicYear)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, plan)
+}
+
+func (h *Handler) InheritAllClassesCurriculumPlans(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+
+	var req InheritPlanRequest
+	_ = c.ShouldBindJSON(&req)
+
+	if req.SourceAcademicYear == "" {
+		req.SourceAcademicYear = c.Query("source_academic_year")
+	}
+
+	result, err := h.service.InheritAllClassesCurriculumPlans(c.Request.Context(), schoolID, req.SourceAcademicYear)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// ----------------- Teacher Quick Preferences Handlers -----------------
+
+func (h *Handler) GetTeachersQuickPreferences(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	var academicYearID *string
+	if ayID := c.Query("academic_year_id"); ayID != "" {
+		academicYearID = &ayID
+	}
+
+	res, err := h.service.GetTeachersQuickPreferences(c.Request.Context(), schoolID, academicYearID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) SaveTeachersQuickPreferences(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	var req SaveTeacherQuickPreferencesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.SaveTeacherQuickPreferences(c.Request.Context(), schoolID, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "preferenze rapide docenti salvate con successo"})
+}
+
+func (h *Handler) SaveSingleTeacherQuickPreference(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	teacherID := c.Param("teacherID")
+	if teacherID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "teacherID obbligatorio"})
+		return
+	}
+
+	var item TeacherQuickPreferenceItem
+	if err := c.ShouldBindJSON(&item); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	item.TeacherID = teacherID
+
+	var academicYearID *string
+	if ayID := c.Query("academic_year_id"); ayID != "" {
+		academicYearID = &ayID
+	}
+
+	req := SaveTeacherQuickPreferencesRequest{
+		AcademicYearID: academicYearID,
+		Preferences:    []TeacherQuickPreferenceItem{item},
+	}
+
+	if err := h.service.SaveTeacherQuickPreferences(c.Request.Context(), schoolID, req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "preferenze rapide docente salvate con successo"})
 }

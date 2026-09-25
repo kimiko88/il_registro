@@ -219,3 +219,72 @@ type RoomData struct {
 	Capacity   int
 	IsActive   bool
 }
+
+// Class Daily Limits (Min and Max hours per day for class)
+type ClassDailyLimit struct {
+	ClassID        string `json:"class_id"`
+	MinHoursPerDay int    `json:"min_hours_per_day"`
+	MaxHoursPerDay int    `json:"max_hours_per_day"`
+}
+
+// Class Curriculum Plan & Subject Hours
+type ClassSubjectPlanItem struct {
+	ID           string  `json:"id,omitempty"`
+	SubjectID    string  `json:"subject_id"`
+	SubjectName  string  `json:"subject_name,omitempty"`
+	HoursPerWeek float64 `json:"hours_per_week"`
+	TeacherID    *string `json:"teacher_id,omitempty"`
+	TeacherName  string  `json:"teacher_name,omitempty"`
+}
+
+type ClassCurriculumPlan struct {
+	ClassID        string                 `json:"class_id"`
+	ClassName      string                 `json:"class_name"`
+	Section        string                 `json:"section"`
+	AcademicYear   string                 `json:"academic_year"`
+	MinHoursPerDay int                    `json:"min_hours_per_day"`
+	MaxHoursPerDay int                    `json:"max_hours_per_day"`
+	TotalHoursWeek float64                `json:"total_hours_week"`
+	Subjects       []ClassSubjectPlanItem `json:"subjects"`
+}
+
+type SaveClassCurriculumPlanRequest struct {
+	MinHoursPerDay int                    `json:"min_hours_per_day"`
+	MaxHoursPerDay int                    `json:"max_hours_per_day"`
+	Subjects       []ClassSubjectPlanItem `json:"subjects"`
+}
+
+type InheritPlanRequest struct {
+	SourceAcademicYear string `json:"source_academic_year,omitempty"`
+}
+
+type InheritAllResult struct {
+	ClassesUpdated int    `json:"classes_updated"`
+	SubjectsCopied int    `json:"subjects_copied"`
+	Message        string `json:"message"`
+}
+
+// Teacher Quick Preferences (Tabular representation for all teachers)
+type TeacherQuickPreferenceItem struct {
+	TeacherID             string `json:"teacher_id" binding:"required"`
+	TeacherUserID         string `json:"teacher_user_id,omitempty"`
+	TeacherName           string `json:"teacher_name,omitempty"`
+	SubjectName           string `json:"subject_name,omitempty"`
+	DayOff                int    `json:"day_off"`                     // 0=none, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+	TimeSlotPref          string `json:"time_slot_pref"`              // "none", "early_hours", "late_hours"
+	MaxHoursPerDay        int    `json:"max_hours_per_day,omitempty"` // optional (e.g. 4, 5, 6)
+	Notes                 string `json:"notes,omitempty"`
+	PreferredHoursCount   int    `json:"preferred_hours_count,omitempty"`
+	UnavailableHoursCount int    `json:"unavailable_hours_count,omitempty"`
+}
+
+type SaveTeacherQuickPreferencesRequest struct {
+	AcademicYearID *string                      `json:"academic_year_id,omitempty"`
+	Preferences    []TeacherQuickPreferenceItem `json:"preferences" binding:"required"`
+}
+
+type TeacherQuickPreferencesOverviewResponse struct {
+	AcademicYearID *string                      `json:"academic_year_id,omitempty"`
+	Teachers       []TeacherQuickPreferenceItem `json:"teachers"`
+	DayOffCounts   map[int]int                  `json:"day_off_counts"`
+}

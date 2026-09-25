@@ -962,3 +962,72 @@ Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le pr
     - Backend: unit test `internal/groups` e `internal/timetablegen` passati al 100%; integration test `tests/integration/...` passati con successo.
     - Frontend: suite completa di 213 file e 1.435 test unitari passata; E2E workflow test passato; ESLint con 0 errori.
 
+- [x] **Completato (Monte Ore Materie per Classe, Limiti Giornalieri Min/Max ed Ereditarietà da Anni Precedenti - Settembre 2026)**:
+  - **1. Requisiti & Architettura Dati**:
+    - Possibilità di definire per ogni singola classe il monte ore settimanale di ciascuna materia (`class_subjects.hours_per_week`) e il docente assegnato.
+    - Configurazione dei limiti giornalieri per ciascuna classe: ore minime (`min_hours_per_day`) e ore massime (`max_hours_per_day`), memorizzati come vincolo strutturale `class_daily_hours` nella tabella `timetable_constraints`.
+    - Ereditarietà automatica o manuale dei piani orari da anni scolastici precedenti: per singola classe o in blocco ("Tutte le classi") da qualsiasi anno scolastico pregresso censito nel sistema.
+    - Totale flessibilità di modifica: aggiunta di nuove materie, rimozione materie, stepper orario +/- per materia, ricalcolo istantaneo del monte ore complessivo settimanale e della media giornaliera.
+  - **2. Backend (`registro-backend/internal/timetablegen`)**:
+    - `model.go`: Definiti i modelli `ClassDailyLimit`, `ClassSubjectPlanItem`, `ClassCurriculumPlan`, `SaveClassCurriculumPlanRequest`, `InheritPlanRequest`, `InheritAllResult`.
+    - `repository.go`:
+      - `ListAcademicYears`: recupera tutti gli anni accademici distinti presenti nell'istituto.
+      - `ListClassesCurriculumPlans`: elenca tutte le classi con i rispettivi piani orari, materie associate e vincoli giornalieri min/max.
+      - `GetClassCurriculumPlan`: recupera il piano dettagliato di una specifica classe con i limiti giornalieri.
+      - `SaveClassCurriculumPlan`: salva atomicamente le ore per materia (`class_subjects`) e aggiorna/crea il vincolo `class_daily_hours`.
+      - `InheritClassCurriculumPlan`: eredita materie, ore settimanali e limiti giornalieri per una singola classe dall'anno sorgente specificato.
+      - `InheritAllClassesCurriculumPlans`: operazione batch per ereditare l'intero piano didattico dell'istituto dall'anno sorgente a quello corrente.
+    - `generator.go`:
+      - Caricamento dei vincoli `class_daily_hours` e tracciamento in matrice `classDayHours[classID][day]`.
+      - Vincolo hard in Fase 1A (gruppi associati/lingue) e Fase 1B (assegnazioni standard): nessun giorno può superare `max_hours_per_day` della classe.
+      - Ottimizzazione obiettivo: punteggio bonus (+8.0) per le giornate che non hanno ancora raggiunto il `min_hours_per_day` della classe.
+      - Rispettato il tetto massimo della classe durante le fasi di local search e swap di riparazione.
+      - Notifica e monitoraggio violazioni soft nel riepilogo del job di generazione se una classe non raggiunge il minimo o sfora il massimo.
+    - `service.go` & `handler.go`: Esposti endpoint REST protetti da ruoli manageriali (`/timetable/academic-years`, `/timetable/classes-plans`, `/timetable/classes/:classID/plan`, `/timetable/classes/:classID/inherit`, `/timetable/inherit-all-plans`).
+  - **3. Frontend (`registro-frontend`)**:
+    - `timetableGenService.js`: Aggiunti metodi API dedicati (`getAcademicYears`, `getClassesCurriculumPlans`, `getClassCurriculumPlan`, `saveClassCurriculumPlan`, `inheritClassCurriculumPlan`, `inheritAllClassesCurriculumPlans`).
+    - `TimetableConstraints.vue`:
+      - Aggiunta 5ª scheda: **"Ore Materie & Limiti Classi"** (`curriculum`) con selettore anno scolastico e selettore classe con indicatori KPI (Totale ore/settimana, Media ore/giorno).
+      - Card **"Limiti Giornalieri per la Classe"**: campi numerici interattivi per `min_hours_per_day` e `max_hours_per_day`.
+      - Tabella interattiva materie: stepper `+` e `-` per regolazione rapida ore settimanali, input numerico, chip docente assegnato o segnalazione cattedra vacante.
+      - Modale **"Aggiungi Materia"** con selezione materia, docente opzionale e ore/settimana.
+      - Modale **"Eredita da Anno Precedente"**: scelta dell'anno scolastico sorgente e ambito di applicazione (solo classe selezionata o tutte le classi dell'istituto).
+      - Pulsanti di azione rapida: salvataggio immediato e ripristino valori.
+  - **4. Test & Qualità**:
+    - Backend: `TestCurriculumPlansAndDailyLimits` e test del generatore passati con successo; integration test completato senza errori; compilazione API server `server.exe` pulita.
+    - Frontend: `TimetableConstraints.spec.js` (5/5 passati), `SchedulePreferences.spec.js` (3/3 passati), `timetable-generation-workflow.spec.js` (3/3 passati).
+
+- [x] **Completato (Rappresentazione Tabellare Desiderata Docenti: Giorno Libero, Preferenza Prime/Ultime Ore & Bilanciamento - Settembre 2026)**:
+  - **1. Requisiti & Architettura**:
+    - Vista tabellare rapida per visualizzare e configurare in blocco tutti i docenti dell'istituto in un'unica schermata senza dover selezionare un docente alla volta.
+    - Configurazione istantanea del **Giorno Libero Desiderato** per ciascun docente (`Nessun giorno libero`, `Lunedì`, `Martedì`, `Mercoledì`, `Giovedì`, `Venerdì`, `Sabato`).
+    - Configurazione istantanea della **Preferenza Fascia Oraria**: `Indifferente / Neutro`, `🌅 Prime Ore (1ª-3ª)`, `🌇 Ultime Ore (4ª-6ª)`.
+    - Supporto a **Max Ore/Giorno** opzionale per docente.
+    - Sincronizzazione automatica e bidirezionale: le impostazioni rapide aggiornano istantaneamente sia i vincoli strutturali (`teacher_quick_preferences` in `timetable_constraints`) sia la matrice oraria dettagliata (`teacher_schedule_preferences`) preservando eventuali note e indisponibilità puntuali preesistenti.
+    - Card analitica di **Bilanciamento Giorni Liberi Richiesti**: badge interattivi con il conteggio dei docenti per ciascun giorno della settimana (e filtro rapido istantaneo con un clic).
+    - Sub-navigazione intuitiva: switch istantaneo tra **"Rappresentazione Tabellare (Tutti i Docenti)"** e **"Matrice Oraria Dettagliata (Singolo Docente)"**.
+  - **2. Backend (`registro-backend/internal/timetablegen`)**:
+    - `model.go`: Definiti `TeacherQuickPreferenceItem`, `SaveTeacherQuickPreferencesRequest`, `TeacherQuickPreferencesOverviewResponse`.
+    - `repository.go`:
+      - `GetTeachersQuickPreferences`: estrae tutti i docenti, le materie insegnate, deduce il giorno libero e la fascia oraria preferita o carica il vincolo salvato, calcolando la distribuzione statistica dei giorni liberi.
+      - `SaveTeacherQuickPreferences`: salva il vincolo strutturale `teacher_quick_preferences` e sincronizza le preferenze orarie su `teacher_schedule_preferences`.
+    - `generator.go`:
+      - Caricamento in fase di generazione del vincolo `teacher_quick_preferences`.
+      - Penalità forte (-50.0) se si tenta di assegnare ore nel giorno libero desiderato dal docente (sia in Fase 1A gruppi associati che Fase 1B cattedre standard).
+      - Bonus (+12.0) e penalità (-8.0) per rispetto della preferenza prime ore (ore 1-3) o ultime ore (ore 4-6).
+      - Rilevamento e inclusione di violazioni soft `teacher_day_off` nel report finale del calcolo orario.
+    - `service.go` & `handler.go`: Nuovi endpoint REST `/timetable/teachers-quick-preferences` (GET e POST) e `/timetable/teachers-quick-preferences/:teacherID` (PUT).
+  - **3. Frontend (`registro-frontend`)**:
+    - `timetableGenService.js`: Aggiunti `getTeachersQuickPreferences`, `saveTeachersQuickPreferences`, `saveTeacherQuickPreference`.
+    - `TimetableConstraints.vue`:
+      - Sub-tabs tra vista tabellare globale e matrice oraria del singolo docente.
+      - Tabella interattiva completa con selettori rapidi `day_off` e `time_slot_pref`, input `max_hours_per_day`, chip di riepilogo ore e azioni rapide (salvataggio singola riga + apertura matrice oraria dettagliata).
+      - Filtri cumulativi: ricerca full-text per docente o materia, filtro per giorno libero, filtro per fascia oraria.
+      - Card KPI con distribuzione giorni liberi e conteggi aggiornati in tempo reale.
+      - Pulsante globale **"Salva Tutti i Desiderata Rapidi"** in testata e a piè di tabella.
+  - **4. Test & Qualità**:
+    - Backend: unit test `TestTeacherQuickPreferences` e suite `timetablegen` passati al 100% (8/8); integration test completato senza errori; compilazione `server.exe` pulita con 0 errori.
+    - Frontend: `TimetableConstraints.spec.js` passato con 8/8 test (100%); `SchedulePreferences.spec.js` (3/3); `timetable-generation-workflow.spec.js` (3/3); ESLint passato con 0 errori.
+
+
+

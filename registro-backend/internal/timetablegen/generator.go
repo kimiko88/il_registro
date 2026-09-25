@@ -2,6 +2,7 @@ package timetablegen
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -108,6 +109,54 @@ func (g *TimetableGenerator) Generate(
 		}
 	}
 
+	// Index class daily limits (min/max hours per day)
+	classDailyLimits := make(map[string]ClassDailyLimit)
+	for _, c := range constraints {
+		if c.ConstraintType == "class_daily_hours" && c.IsActive && c.TargetID != nil {
+			var p struct {
+				MinHoursPerDay int `json:"min_hours_per_day"`
+				MaxHoursPerDay int `json:"max_hours_per_day"`
+			}
+			if err := json.Unmarshal(c.Parameters, &p); err == nil {
+				minH := p.MinHoursPerDay
+				maxH := p.MaxHoursPerDay
+				if maxH <= 0 {
+					maxH = g.config.MaxHoursPerDay
+				}
+				if minH <= 0 {
+					minH = 4
+				}
+				if minH > maxH {
+					minH = maxH
+				}
+				classDailyLimits[*c.TargetID] = ClassDailyLimit{
+					ClassID:        *c.TargetID,
+					MinHoursPerDay: minH,
+					MaxHoursPerDay: maxH,
+				}
+			}
+		}
+	}
+	classDayHours := make(map[string]map[int]int) // classID -> day -> count
+
+	// Index teacher quick preferences (giorno libero, prime/ultime ore)
+	teacherQuickPrefs := make(map[string]TeacherQuickPreferenceItem)
+	for _, c := range constraints {
+		if c.ConstraintType == "teacher_quick_preferences" && c.IsActive {
+			var p struct {
+				Teachers []TeacherQuickPreferenceItem `json:"teachers"`
+			}
+			if err := json.Unmarshal(c.Parameters, &p); err == nil {
+				for _, tq := range p.Teachers {
+					teacherQuickPrefs[tq.TeacherID] = tq
+					if tq.TeacherUserID != "" {
+						teacherQuickPrefs[tq.TeacherUserID] = tq
+					}
+				}
+			}
+		}
+	}
+
 	var generatedSlots []GeneratedSlot
 	var unassigned []UnassignedSlot
 	var hardConflicts []HardConflict
@@ -181,6 +230,22 @@ func (g *TimetableGenerator) Generate(
 						continue
 					}
 
+					// Check daily limits for all participating classes
+					exceedsMax := false
+					for _, ga := range groupAssigns {
+						cMaxH := g.config.MaxHoursPerDay
+						if lim, ok := classDailyLimits[ga.ClassID]; ok && lim.MaxHoursPerDay > 0 {
+							cMaxH = lim.MaxHoursPerDay
+						}
+						if classDayHours[ga.ClassID] != nil && classDayHours[ga.ClassID][day] >= cMaxH {
+							exceedsMax = true
+							break
+						}
+					}
+					if exceedsMax {
+						continue
+					}
+
 					// Check teacher is free or already allocated to this exact group
 					if isBusy(teacherBusy, lead.TeacherID, day, hour) {
 						if teacherGroupBusy[lead.TeacherID] == nil ||
@@ -245,6 +310,31 @@ func (g *TimetableGenerator) Generate(
 						score -= 40.0
 					}
 
+					// Teacher quick preference check (giorno libero, prime/ultime ore)
+					tqLead, existsLead := teacherQuickPrefs[lead.TeacherID]
+					if !existsLead && lead.TeacherUserID != "" {
+						tqLead, existsLead = teacherQuickPrefs[lead.TeacherUserID]
+					}
+					if existsLead {
+						if tqLead.DayOff > 0 && day == tqLead.DayOff {
+							score -= 50.0
+						}
+						switch tqLead.TimeSlotPref {
+						case "early_hours":
+							if hour <= 3 {
+								score += 12.0
+							} else if hour >= 5 {
+								score -= 8.0
+							}
+						case "late_hours":
+							if hour >= 4 {
+								score += 12.0
+							} else if hour <= 2 {
+								score -= 8.0
+							}
+						}
+					}
+
 					candidates = append(candidates, GroupCandidate{
 						Day:      day,
 						Hour:     hour,
@@ -288,6 +378,11 @@ func (g *TimetableGenerator) Generate(
 
 			for _, ga := range groupAssigns {
 				setBusy(classBusy, ga.ClassID, best.Day, best.Hour)
+
+				if classDayHours[ga.ClassID] == nil {
+					classDayHours[ga.ClassID] = make(map[int]int)
+				}
+				classDayHours[ga.ClassID][best.Day]++
 
 				if classSubjectDayCount[ga.ClassID] == nil {
 					classSubjectDayCount[ga.ClassID] = make(map[string]map[int]int)
@@ -367,6 +462,25 @@ func (g *TimetableGenerator) Generate(
 						continue
 					}
 
+					// Hard check 1B: Class daily limits
+					cMaxH := g.config.MaxHoursPerDay
+					cMinH := 4
+					if lim, ok := classDailyLimits[a.ClassID]; ok {
+						if lim.MaxHoursPerDay > 0 {
+							cMaxH = lim.MaxHoursPerDay
+						}
+						if lim.MinHoursPerDay > 0 {
+							cMinH = lim.MinHoursPerDay
+						}
+					}
+					curClassH := 0
+					if classDayHours[a.ClassID] != nil {
+						curClassH = classDayHours[a.ClassID][day]
+					}
+					if curClassH >= cMaxH {
+						continue
+					}
+
 					// Hard check 2: Teacher busy?
 					// For assigned teachers: cannot be in another class at the same time
 					if !isUnassignedTeacher && isBusy(teacherBusy, a.TeacherID, day, hour) {
@@ -411,6 +525,11 @@ func (g *TimetableGenerator) Generate(
 						score -= 15.0
 					}
 
+					// Favor reaching minimum hours per day for class
+					if curClassH < cMinH {
+						score += 8.0
+					}
+
 					// 2. Heavy subjects (Matematica, Fisica, Latino) avoid last hour
 					isHeavy := isHeavySubject(a.SubjectName)
 					if isHeavy && hour >= g.config.MaxHoursPerDay {
@@ -434,6 +553,31 @@ func (g *TimetableGenerator) Generate(
 						score -= 40.0
 					}
 
+					// 4b. Teacher quick preferences (giorno libero, prime/ultime ore)
+					tqA, existsA := teacherQuickPrefs[a.TeacherID]
+					if !existsA && a.TeacherUserID != "" {
+						tqA, existsA = teacherQuickPrefs[a.TeacherUserID]
+					}
+					if existsA {
+						if tqA.DayOff > 0 && day == tqA.DayOff {
+							score -= 50.0
+						}
+						switch tqA.TimeSlotPref {
+						case "early_hours":
+							if hour <= 3 {
+								score += 12.0
+							} else if hour >= 5 {
+								score -= 8.0
+							}
+						case "late_hours":
+							if hour >= 4 {
+								score += 12.0
+							} else if hour <= 2 {
+								score -= 8.0
+							}
+						}
+					}
+
 					candidates = append(candidates, Candidate{
 						Day:      day,
 						Hour:     hour,
@@ -447,6 +591,11 @@ func (g *TimetableGenerator) Generate(
 			// If no candidates found, attempt intelligent repair/swap within the class
 			if len(candidates) == 0 {
 				repaired := false
+				aMaxH := g.config.MaxHoursPerDay
+				if lim, ok := classDailyLimits[a.ClassID]; ok && lim.MaxHoursPerDay > 0 {
+					aMaxH = lim.MaxHoursPerDay
+				}
+
 				// Try to find a slot in this class currently occupied by another subject that has no lab constraint,
 				// where that other subject can be moved elsewhere and our teacher is free in that slot.
 				for slotIdx, existing := range generatedSlots {
@@ -475,6 +624,9 @@ func (g *TimetableGenerator) Generate(
 							if isBusy(classBusy, a.ClassID, altDay, altHour) {
 								continue
 							}
+							if classDayHours[a.ClassID] != nil && classDayHours[a.ClassID][altDay] >= aMaxH {
+								continue
+							}
 							if existingTeacherID != "" && isBusy(teacherBusy, existingTeacherID, altDay, altHour) {
 								continue
 							}
@@ -490,6 +642,11 @@ func (g *TimetableGenerator) Generate(
 
 							generatedSlots[slotIdx].DayOfWeek = altDay
 							generatedSlots[slotIdx].HourIndex = altHour
+
+							if classDayHours[a.ClassID] != nil {
+								classDayHours[a.ClassID][day]--
+								classDayHours[a.ClassID][altDay]++
+							}
 
 							// Now slot (day, hour) is free for assignment a!
 							candidates = append(candidates, Candidate{
@@ -538,6 +695,11 @@ func (g *TimetableGenerator) Generate(
 			if best.RoomID != nil {
 				setBusy(roomBusy, *best.RoomID, best.Day, best.Hour)
 			}
+
+			if classDayHours[a.ClassID] == nil {
+				classDayHours[a.ClassID] = make(map[int]int)
+			}
+			classDayHours[a.ClassID][best.Day]++
 
 			// Update counts
 			if classSubjectDayCount[a.ClassID] == nil {
@@ -697,6 +859,46 @@ func (g *TimetableGenerator) Generate(
 				Description:    fmt.Sprintf("Docente %s assegnato in orario non desiderato (%s %dª ora per %s)", s.TeacherName, dayName(s.DayOfWeek), s.HourIndex, s.ClassName),
 				Penalty:        35.0,
 			})
+		}
+
+		// Quick preferences day-off violation check
+		tqCheck, existsCheck := teacherQuickPrefs[*s.TeacherID]
+		if !existsCheck && tUID != "" {
+			tqCheck, existsCheck = teacherQuickPrefs[tUID]
+		}
+		if existsCheck && tqCheck.DayOff > 0 && s.DayOfWeek == tqCheck.DayOff {
+			softViolations = append(softViolations, SoftViolation{
+				ConstraintType: "teacher_day_off",
+				TeacherID:      s.TeacherID,
+				ClassID:        &s.ClassID,
+				Description:    fmt.Sprintf("Docente %s assegnato nel giorno libero richiesto (%s %dª ora per %s)", s.TeacherName, dayName(s.DayOfWeek), s.HourIndex, s.ClassName),
+				Penalty:        50.0,
+			})
+		}
+	}
+
+	// Record any soft violations for class minimum daily hours
+	for classID, limit := range classDailyLimits {
+		if limit.MinHoursPerDay > 0 && classDayHours[classID] != nil {
+			cName := classID
+			for _, a := range assignments {
+				if a.ClassID == classID {
+					cName = a.ClassName
+					break
+				}
+			}
+			for day := 1; day <= g.config.MaxDaysPerWeek; day++ {
+				hCount := classDayHours[classID][day]
+				if hCount > 0 && hCount < limit.MinHoursPerDay {
+					cid := classID
+					softViolations = append(softViolations, SoftViolation{
+						ConstraintType: "class_min_daily_hours",
+						ClassID:        &cid,
+						Description:    fmt.Sprintf("Classe %s: il %s ha solo %d ore (minimo previsto: %d)", cName, dayName(day), hCount, limit.MinHoursPerDay),
+						Penalty:        20.0,
+					})
+				}
+			}
 		}
 	}
 

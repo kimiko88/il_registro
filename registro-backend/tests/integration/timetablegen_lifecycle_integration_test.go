@@ -216,6 +216,75 @@ func (m *mockIntegrationTimetableRepo) PublishGeneratedSchedule(ctx context.Cont
 	return nil
 }
 
+func (m *mockIntegrationTimetableRepo) ListAcademicYears(ctx context.Context, schoolID string) ([]string, error) {
+	return []string{"2024/2025", "2023/2024"}, nil
+}
+
+func (m *mockIntegrationTimetableRepo) ListClassesCurriculumPlans(ctx context.Context, schoolID, academicYear string) ([]timetablegen.ClassCurriculumPlan, error) {
+	return []timetablegen.ClassCurriculumPlan{
+		{
+			ClassID:        "class-1",
+			ClassName:      "1A",
+			AcademicYear:   "2024/2025",
+			MinHoursPerDay: 4,
+			MaxHoursPerDay: 6,
+			TotalHoursWeek: 2,
+			Subjects: []timetablegen.ClassSubjectPlanItem{
+				{SubjectID: "sub-1", SubjectName: "Matematica", HoursPerWeek: 2},
+			},
+		},
+	}, nil
+}
+
+func (m *mockIntegrationTimetableRepo) GetClassCurriculumPlan(ctx context.Context, schoolID, classID string) (*timetablegen.ClassCurriculumPlan, error) {
+	return &timetablegen.ClassCurriculumPlan{
+		ClassID:        classID,
+		ClassName:      "1A",
+		AcademicYear:   "2024/2025",
+		MinHoursPerDay: 4,
+		MaxHoursPerDay: 6,
+		TotalHoursWeek: 2,
+		Subjects: []timetablegen.ClassSubjectPlanItem{
+			{SubjectID: "sub-1", SubjectName: "Matematica", HoursPerWeek: 2},
+		},
+	}, nil
+}
+
+func (m *mockIntegrationTimetableRepo) SaveClassCurriculumPlan(ctx context.Context, schoolID, classID string, req timetablegen.SaveClassCurriculumPlanRequest) error {
+	return nil
+}
+
+func (m *mockIntegrationTimetableRepo) InheritClassCurriculumPlan(ctx context.Context, schoolID, targetClassID, sourceAcademicYear string) (*timetablegen.ClassCurriculumPlan, error) {
+	return &timetablegen.ClassCurriculumPlan{
+		ClassID:        targetClassID,
+		ClassName:      "1A",
+		AcademicYear:   "2024/2025",
+		MinHoursPerDay: 4,
+		MaxHoursPerDay: 6,
+		TotalHoursWeek: 4,
+		Subjects: []timetablegen.ClassSubjectPlanItem{
+			{SubjectID: "sub-1", SubjectName: "Matematica", HoursPerWeek: 2},
+			{SubjectID: "sub-2", SubjectName: "Italiano", HoursPerWeek: 2},
+		},
+	}, nil
+}
+
+func (m *mockIntegrationTimetableRepo) InheritAllClassesCurriculumPlans(ctx context.Context, schoolID, sourceAcademicYear string) (*timetablegen.InheritAllResult, error) {
+	return &timetablegen.InheritAllResult{
+		ClassesUpdated: 1,
+		SubjectsCopied: 2,
+		Message:        "Ereditato con successo",
+	}, nil
+}
+
+func (m *mockIntegrationTimetableRepo) GetTeachersQuickPreferences(ctx context.Context, schoolID string, academicYearID *string) ([]timetablegen.TeacherQuickPreferenceItem, map[int]int, error) {
+	return nil, nil, nil
+}
+
+func (m *mockIntegrationTimetableRepo) SaveTeacherQuickPreferences(ctx context.Context, schoolID string, academicYearID *string, items []timetablegen.TeacherQuickPreferenceItem) error {
+	return nil
+}
+
 func setupTimetableIntegrationRouter(repo timetablegen.Repository, role, userID, schoolID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

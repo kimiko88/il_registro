@@ -42,6 +42,18 @@ type Service interface {
 	GetJobStatus(ctx context.Context, schoolID, jobID string) (*TimetableJob, error)
 	PublishSchedule(ctx context.Context, schoolID, userID, jobID string) error
 	AdjustJobSlots(ctx context.Context, schoolID, userID, jobID string, req AdjustTimetableRequest) (*TimetableGenerationResult, error)
+
+	// Academic Years, Curriculum Plans & Class Daily Limits
+	ListAcademicYears(ctx context.Context, schoolID string) ([]string, error)
+	ListClassesCurriculumPlans(ctx context.Context, schoolID, academicYear string) ([]ClassCurriculumPlan, error)
+	GetClassCurriculumPlan(ctx context.Context, schoolID, classID string) (*ClassCurriculumPlan, error)
+	SaveClassCurriculumPlan(ctx context.Context, schoolID, classID string, req SaveClassCurriculumPlanRequest) error
+	InheritClassCurriculumPlan(ctx context.Context, schoolID, targetClassID, sourceAcademicYear string) (*ClassCurriculumPlan, error)
+	InheritAllClassesCurriculumPlans(ctx context.Context, schoolID, sourceAcademicYear string) (*InheritAllResult, error)
+
+	// Teacher Quick Preferences
+	GetTeachersQuickPreferences(ctx context.Context, schoolID string, academicYearID *string) (*TeacherQuickPreferencesOverviewResponse, error)
+	SaveTeacherQuickPreferences(ctx context.Context, schoolID string, req SaveTeacherQuickPreferencesRequest) error
 }
 
 type service struct {
@@ -368,4 +380,57 @@ func (s *service) AdjustJobSlots(ctx context.Context, schoolID, userID, jobID st
 	}
 
 	return &result, nil
+}
+
+// ----------------- Curriculum Plans & Class Daily Limits -----------------
+
+func (s *service) ListAcademicYears(ctx context.Context, schoolID string) ([]string, error) {
+	return s.repo.ListAcademicYears(ctx, schoolID)
+}
+
+func (s *service) ListClassesCurriculumPlans(ctx context.Context, schoolID, academicYear string) ([]ClassCurriculumPlan, error) {
+	return s.repo.ListClassesCurriculumPlans(ctx, schoolID, academicYear)
+}
+
+func (s *service) GetClassCurriculumPlan(ctx context.Context, schoolID, classID string) (*ClassCurriculumPlan, error) {
+	return s.repo.GetClassCurriculumPlan(ctx, schoolID, classID)
+}
+
+func (s *service) SaveClassCurriculumPlan(ctx context.Context, schoolID, classID string, req SaveClassCurriculumPlanRequest) error {
+	if req.MaxHoursPerDay <= 0 {
+		req.MaxHoursPerDay = 6
+	}
+	if req.MinHoursPerDay <= 0 {
+		req.MinHoursPerDay = 4
+	}
+	if req.MinHoursPerDay > req.MaxHoursPerDay {
+		req.MinHoursPerDay = req.MaxHoursPerDay
+	}
+	return s.repo.SaveClassCurriculumPlan(ctx, schoolID, classID, req)
+}
+
+func (s *service) InheritClassCurriculumPlan(ctx context.Context, schoolID, targetClassID, sourceAcademicYear string) (*ClassCurriculumPlan, error) {
+	return s.repo.InheritClassCurriculumPlan(ctx, schoolID, targetClassID, sourceAcademicYear)
+}
+
+func (s *service) InheritAllClassesCurriculumPlans(ctx context.Context, schoolID, sourceAcademicYear string) (*InheritAllResult, error) {
+	return s.repo.InheritAllClassesCurriculumPlans(ctx, schoolID, sourceAcademicYear)
+}
+
+// ----------------- Teacher Quick Preferences -----------------
+
+func (s *service) GetTeachersQuickPreferences(ctx context.Context, schoolID string, academicYearID *string) (*TeacherQuickPreferencesOverviewResponse, error) {
+	teachers, dayOffCounts, err := s.repo.GetTeachersQuickPreferences(ctx, schoolID, academicYearID)
+	if err != nil {
+		return nil, err
+	}
+	return &TeacherQuickPreferencesOverviewResponse{
+		AcademicYearID: academicYearID,
+		Teachers:       teachers,
+		DayOffCounts:   dayOffCounts,
+	}, nil
+}
+
+func (s *service) SaveTeacherQuickPreferences(ctx context.Context, schoolID string, req SaveTeacherQuickPreferencesRequest) error {
+	return s.repo.SaveTeacherQuickPreferences(ctx, schoolID, req.AcademicYearID, req.Preferences)
 }

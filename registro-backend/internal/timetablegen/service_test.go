@@ -174,6 +174,90 @@ func (m *mockTimetableRepo) PublishGeneratedSchedule(ctx context.Context, school
 	return nil
 }
 
+func (m *mockTimetableRepo) ListAcademicYears(ctx context.Context, schoolID string) ([]string, error) {
+	return []string{"2024/2025", "2023/2024"}, nil
+}
+
+func (m *mockTimetableRepo) ListClassesCurriculumPlans(ctx context.Context, schoolID, academicYear string) ([]ClassCurriculumPlan, error) {
+	return []ClassCurriculumPlan{
+		{
+			ClassID:        "c-1",
+			ClassName:      "1A",
+			AcademicYear:   "2024/2025",
+			MinHoursPerDay: 4,
+			MaxHoursPerDay: 6,
+			TotalHoursWeek: 5,
+			Subjects: []ClassSubjectPlanItem{
+				{SubjectID: "s-1", SubjectName: "Matematica", HoursPerWeek: 5},
+			},
+		},
+	}, nil
+}
+
+func (m *mockTimetableRepo) GetClassCurriculumPlan(ctx context.Context, schoolID, classID string) (*ClassCurriculumPlan, error) {
+	return &ClassCurriculumPlan{
+		ClassID:        classID,
+		ClassName:      "1A",
+		AcademicYear:   "2024/2025",
+		MinHoursPerDay: 4,
+		MaxHoursPerDay: 6,
+		TotalHoursWeek: 5,
+		Subjects: []ClassSubjectPlanItem{
+			{SubjectID: "s-1", SubjectName: "Matematica", HoursPerWeek: 5},
+		},
+	}, nil
+}
+
+func (m *mockTimetableRepo) SaveClassCurriculumPlan(ctx context.Context, schoolID, classID string, req SaveClassCurriculumPlanRequest) error {
+	return nil
+}
+
+func (m *mockTimetableRepo) InheritClassCurriculumPlan(ctx context.Context, schoolID, targetClassID, sourceAcademicYear string) (*ClassCurriculumPlan, error) {
+	return &ClassCurriculumPlan{
+		ClassID:        targetClassID,
+		ClassName:      "1A",
+		AcademicYear:   "2024/2025",
+		MinHoursPerDay: 4,
+		MaxHoursPerDay: 6,
+		TotalHoursWeek: 6,
+		Subjects: []ClassSubjectPlanItem{
+			{SubjectID: "s-1", SubjectName: "Matematica", HoursPerWeek: 4},
+			{SubjectID: "s-2", SubjectName: "Italiano", HoursPerWeek: 2},
+		},
+	}, nil
+}
+
+func (m *mockTimetableRepo) InheritAllClassesCurriculumPlans(ctx context.Context, schoolID, sourceAcademicYear string) (*InheritAllResult, error) {
+	return &InheritAllResult{
+		ClassesUpdated: 1,
+		SubjectsCopied: 2,
+		Message:        "Ereditato con successo",
+	}, nil
+}
+
+func (m *mockTimetableRepo) GetTeachersQuickPreferences(ctx context.Context, schoolID string, academicYearID *string) ([]TeacherQuickPreferenceItem, map[int]int, error) {
+	return []TeacherQuickPreferenceItem{
+		{
+			TeacherID:    "t-1",
+			TeacherName:  "Prof Rossi",
+			SubjectName:  "Matematica",
+			DayOff:       1,
+			TimeSlotPref: "early_hours",
+		},
+		{
+			TeacherID:    "t-2",
+			TeacherName:  "Prof Bianchi",
+			SubjectName:  "Italiano",
+			DayOff:       3,
+			TimeSlotPref: "late_hours",
+		},
+	}, map[int]int{1: 1, 3: 1}, nil
+}
+
+func (m *mockTimetableRepo) SaveTeacherQuickPreferences(ctx context.Context, schoolID string, academicYearID *string, items []TeacherQuickPreferenceItem) error {
+	return nil
+}
+
 func TestTimetableService(t *testing.T) {
 	repo := newMockTimetableRepo()
 	svc := NewService(repo, nil)
@@ -320,5 +404,97 @@ func TestTimetableService(t *testing.T) {
 	}
 	if len(conflictRes.HardConflicts) == 0 {
 		t.Errorf("expected collision to be flagged in HardConflicts")
+	}
+}
+
+func TestCurriculumPlansAndDailyLimits(t *testing.T) {
+	repo := newMockTimetableRepo()
+	svc := NewService(repo, nil)
+	ctx := context.Background()
+	schoolID := "school-1"
+
+	// 1. List Academic Years
+	years, err := svc.ListAcademicYears(ctx, schoolID)
+	if err != nil {
+		t.Fatalf("failed to list academic years: %v", err)
+	}
+	if len(years) < 2 {
+		t.Errorf("expected at least 2 academic years, got %d", len(years))
+	}
+
+	// 2. List Classes Plans
+	plans, err := svc.ListClassesCurriculumPlans(ctx, schoolID, "2024/2025")
+	if err != nil {
+		t.Fatalf("failed to list classes curriculum plans: %v", err)
+	}
+	if len(plans) != 1 || plans[0].ClassName != "1A" {
+		t.Errorf("unexpected classes plans: %+v", plans)
+	}
+
+	// 3. Save Curriculum Plan
+	saveReq := SaveClassCurriculumPlanRequest{
+		MinHoursPerDay: 4,
+		MaxHoursPerDay: 6,
+		Subjects: []ClassSubjectPlanItem{
+			{SubjectID: "s-1", SubjectName: "Matematica", HoursPerWeek: 5},
+			{SubjectID: "s-2", SubjectName: "Italiano", HoursPerWeek: 4},
+		},
+	}
+	if err := svc.SaveClassCurriculumPlan(ctx, schoolID, "c-1", saveReq); err != nil {
+		t.Fatalf("failed to save class curriculum plan: %v", err)
+	}
+
+	// 4. Inherit Class Plan
+	inherited, err := svc.InheritClassCurriculumPlan(ctx, schoolID, "c-1", "2023/2024")
+	if err != nil {
+		t.Fatalf("failed to inherit class curriculum plan: %v", err)
+	}
+	if len(inherited.Subjects) != 2 {
+		t.Errorf("expected 2 inherited subjects, got %d", len(inherited.Subjects))
+	}
+
+	// 5. Inherit All Classes
+	allRes, err := svc.InheritAllClassesCurriculumPlans(ctx, schoolID, "2023/2024")
+	if err != nil {
+		t.Fatalf("failed to inherit all classes: %v", err)
+	}
+	if allRes.ClassesUpdated != 1 {
+		t.Errorf("expected 1 class updated, got %d", allRes.ClassesUpdated)
+	}
+}
+
+func TestTeacherQuickPreferences(t *testing.T) {
+	ctx := context.Background()
+	repo := newMockTimetableRepo()
+	svc := NewService(repo, nil)
+	schoolID := "school-test-1"
+
+	// 1. Get Teachers Quick Preferences
+	res, err := svc.GetTeachersQuickPreferences(ctx, schoolID, nil)
+	if err != nil {
+		t.Fatalf("failed to get teachers quick preferences: %v", err)
+	}
+	if len(res.Teachers) != 2 {
+		t.Errorf("expected 2 teachers, got %d", len(res.Teachers))
+	}
+	if res.Teachers[0].DayOff != 1 || res.Teachers[0].TimeSlotPref != "early_hours" {
+		t.Errorf("unexpected teacher 0 quick preferences: %+v", res.Teachers[0])
+	}
+	if res.DayOffCounts[1] != 1 || res.DayOffCounts[3] != 1 {
+		t.Errorf("unexpected day off counts: %+v", res.DayOffCounts)
+	}
+
+	// 2. Save Teachers Quick Preferences
+	saveReq := SaveTeacherQuickPreferencesRequest{
+		Preferences: []TeacherQuickPreferenceItem{
+			{
+				TeacherID:    "t-1",
+				DayOff:       2,
+				TimeSlotPref: "late_hours",
+			},
+		},
+	}
+	if err := svc.SaveTeacherQuickPreferences(ctx, schoolID, saveReq); err != nil {
+		t.Fatalf("failed to save teacher quick preferences: %v", err)
 	}
 }
