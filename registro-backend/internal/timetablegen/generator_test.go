@@ -179,9 +179,10 @@ func TestGenerator_AssociatedGroupCoTeaching(t *testing.T) {
 
 	for _, s := range result.Slots {
 		slotKey := string(rune(s.DayOfWeek*10 + s.HourIndex))
-		if s.ClassID == "class-3a" {
+		switch s.ClassID {
+		case "class-3a":
 			slots3A[slotKey] = s
-		} else if s.ClassID == "class-3b" {
+		case "class-3b":
 			slots3B[slotKey] = s
 		}
 	}

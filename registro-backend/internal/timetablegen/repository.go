@@ -408,6 +408,9 @@ func (r *PostgresRepository) LoadAssignments(ctx context.Context, schoolID strin
 		}
 		list = append(list, a)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate assignments: %w", err)
+	}
 
 	// 2. Load explicit unassigned hours ("spezzoni orari") from timetable_constraints
 	cQuery := `
@@ -451,6 +454,9 @@ func (r *PostgresRepository) LoadAssignments(ctx context.Context, schoolID strin
 				}
 			}
 		}
+		if err := cRows.Err(); err != nil {
+			return nil, fmt.Errorf("failed to iterate unassigned hours: %w", err)
+		}
 	}
 
 	// 3. Link associated groups to assignments
@@ -469,7 +475,7 @@ func (r *PostgresRepository) LoadAssignments(ctx context.Context, schoolID strin
 		}
 	}
 
-	return list, rows.Err()
+	return list, nil
 }
 
 func (r *PostgresRepository) LoadRooms(ctx context.Context, schoolID string) ([]RoomData, error) {
@@ -536,6 +542,9 @@ func (r *PostgresRepository) LoadAssociatedGroups(ctx context.Context, schoolID 
 				}
 			}
 		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
 	}
 
 	// 2. Load from groups table where students belong to multiple classes
@@ -589,6 +598,9 @@ func (r *PostgresRepository) LoadAssociatedGroups(ctx context.Context, schoolID 
 					}
 				}
 			}
+		}
+		if err := gRows.Err(); err != nil {
+			return nil, err
 		}
 	}
 
