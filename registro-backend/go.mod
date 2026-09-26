@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/gabriel-vasile/mimetype v1.4.15
-	github.com/gin-contrib/gzip v1.2.7
+	github.com/gin-contrib/gzip v1.2.8
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-pdf/fpdf v0.9.0
 	github.com/go-redis/redis_rate/v10 v10.0.1
