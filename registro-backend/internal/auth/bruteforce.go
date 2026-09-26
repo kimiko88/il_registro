@@ -65,7 +65,7 @@ func (r *RedisLoginRateLimiter) RecordFailure(ctx context.Context, email, ipAddr
 	// Increment IP counter and set TTL if first failure
 	ipKey := fmt.Sprintf("login:fail:ip:%s", ipAddress)
 	pipe := r.rdb.Pipeline()
-	incrIP := pipe.Incr(ctx, ipKey)
+	pipe.Incr(ctx, ipKey)
 	pipe.Expire(ctx, ipKey, WindowLoginAttemptsPerIP)
 
 	var emailKey string
@@ -78,8 +78,6 @@ func (r *RedisLoginRateLimiter) RecordFailure(ctx context.Context, email, ipAddr
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		log.Printf("loginLimiter: failed to record failure in Redis: %v", err)
-	} else if incrIP.Val() == 1 {
-		// New window initialized
 	}
 }
 

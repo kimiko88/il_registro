@@ -188,7 +188,6 @@ func (r *PostgresRepository) ListRooms(ctx context.Context, schoolID string, bui
 	if roomType != nil && *roomType != "" {
 		conditions = append(conditions, fmt.Sprintf("r.room_type = $%d", idx))
 		args = append(args, *roomType)
-		idx++
 	}
 
 	if activeOnly {
@@ -450,7 +449,6 @@ func (r *PostgresRepository) ListBookings(ctx context.Context, filter BookingFil
 	if filter.ParentBookingID != nil && *filter.ParentBookingID != "" {
 		conditions = append(conditions, fmt.Sprintf("(b.parent_booking_id = $%d OR b.id = $%d)", idx, idx))
 		args = append(args, *filter.ParentBookingID)
-		idx++
 	}
 
 	query := fmt.Sprintf(`
