@@ -19,6 +19,8 @@ Questo documento descrive gli endpoint REST e le connessioni WebSocket del backe
 - [Utenti & Fascicolo](#utenti--fascicolo)
 - [Lezioni e Agenda](#lezioni-e-agenda)
 - [Orario Scolastico](#orario-scolastico)
+- [Plessi e Aule Prenotabili](#plessi-e-aule-prenotabili)
+- [Generatore Orario Scolastico & Desiderata Docenti](#generatore-orario-scolastico--desiderata-docenti)
 - [Sostituzioni Docenti](#sostituzioni-docenti)
 - [Colloqui e Ricevimento Famiglie](#colloqui-e-ricevimento-famiglie)
 - [Voti, Rubriche ed Educazione Civica](#voti-rubriche-ed-educazione-civica)
@@ -192,6 +194,163 @@ Recupera l'orario settimanale individuale del docente specificato.
 
 ### `POST /api/v1/teachers/:id/schedule`
 Imposta o modifica l'orario scolastico del docente (sincronizzazione bidirezionale con le classi coinvolte).
+
+---
+
+## Plessi e Aule Prenotabili
+
+Gestione multi-plesso e aule speciali/laboratori prenotabili dai docenti (con supporto a prenotazioni spot o ricorrenti per classe/ora e verifica preventiva anti-sovrapposizione).
+
+### `GET /api/v1/rooms/buildings`
+Restituisce l'elenco dei plessi/sedi dell'istituto scolastico dell'utente autenticato.
+**Query Parameters**: `school_id` (opzionale per amministratori).
+
+### `POST /api/v1/rooms/buildings`
+Crea una nuova sede o plesso scolastico.
+**Ruoli ammessi**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`, `secretary`.
+**Request Body**:
+```json
+{
+  "school_id": "uuid",
+  "name": "Sede Succursale Nord",
+  "address": "Via Roma 123",
+  "code": "SUCC-N"
+}
+```
+
+### `GET /api/v1/rooms`
+Lista le aule della scuola con supporto ai filtri per sede, tipologia e disponibilità alla prenotazione.
+**Query Parameters**:
+- `building_id`: filtra per plesso specifico
+- `room_type`: filtra per tipologia (`standard`, `lab_computer`, `lab_science`, `lab_languages`, `gym`, `auditorium`)
+- `only_bookable`: `true` per mostrare solo le aule prenotabili dai docenti
+
+### `POST /api/v1/rooms`
+Crea una nuova aula o laboratorio assegnato a un plesso.
+**Ruoli ammessi**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`, `secretary`.
+**Request Body**:
+```json
+{
+  "building_id": "uuid",
+  "name": "Laboratorio di Informatica 1",
+  "room_type": "lab_computer",
+  "capacity": 28,
+  "is_bookable": true,
+  "equipment": ["30 PC", "Lavagna Interattiva Touch", "Rete LAN Gigabit"]
+}
+```
+
+### `GET /api/v1/rooms/:id/availability`
+Verifica la disponibilità di una specifica aula per una determinata data e ora di lezione.
+**Query Parameters**:
+- `date`: data nel formato `YYYY-MM-DD`
+- `time_slot`: ora di lezione (es. `1`, `2`, `3`)
+
+### `GET /api/v1/rooms/bookings`
+Recupera le prenotazioni attive delle aule con filtri cronologici e per risorsa.
+**Query Parameters**: `room_id`, `teacher_id`, `class_id`, `from`, `to`.
+
+### `POST /api/v1/rooms/bookings`
+Effettua la prenotazione di un'aula da parte di un docente per una specifica classe ed ora. Supporta prenotazioni spot oppure ricorrenti settimanali fino a una data limite. Il server effettua un controllo atomico anti-sovrapposizione.
+**Ruoli ammessi**: `teacher`, `principal`, `vice_principal`, `admin`, `superadmin`, `secretary`.
+**Request Body**:
+```json
+{
+  "room_id": "uuid",
+  "class_id": "uuid",
+  "date": "2026-10-05",
+  "time_slot": 3,
+  "reason": "Attività laboratoriale coding con robot educativi",
+  "is_recurring": true,
+  "recurrence_rule": "weekly",
+  "recurrence_end_date": "2026-12-22"
+}
+```
+
+### `DELETE /api/v1/rooms/bookings/:id`
+Annulla una prenotazione esistente. I docenti possono cancellare solo le proprie prenotazioni; la Segreteria e la Dirigenza possono cancellare qualsiasi prenotazione.
+
+---
+
+## Generatore Orario Scolastico & Desiderata Docenti
+
+Motore intelligente basato su Constraint Satisfaction Problem (CSP) con euristica pesata per la generazione automatica dell'orario scolastico per il Dirigente/Vicario/Collaboratore DS.
+Prioritizza i desiderata dei docenti con maggiore anzianità di servizio (`hiring_date`), accoppia classi e docenti nei rispettivi plessi e assegna laboratori/palestre evitando sovrapposizioni e trasferimenti impossibili. Il tempo di calcolo è ottimizzato per completarsi in meno di 30 secondi.
+
+### `POST /api/v1/timetable/generate`
+Avvia in background il job di generazione dell'orario scolastico dell'istituto.
+**Ruoli ammessi**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`.
+**Request Body**:
+```json
+{
+  "academic_year": "2026/2027",
+  "school_id": "uuid",
+  "max_computation_seconds": 25,
+  "seniority_weight": 2.5
+}
+```
+**Response `202 Accepted`**:
+```json
+{
+  "job_id": "uuid-job",
+  "status": "running",
+  "message": "Generazione orario avviata in background"
+}
+```
+
+### `GET /api/v1/timetable/generate/:jobID`
+Interroga lo stato di avanzamento del calcolo dell'orario (polling).
+**Response `200 OK`**:
+```json
+{
+  "job_id": "uuid-job",
+  "status": "completed",
+  "fitness_score": 94.8,
+  "execution_time_ms": 1420,
+  "soft_violations": [
+    "Docente Bianchi: giorno libero assegnato Mercoledì anziché Venerdì per evitare ora buca classe 3B"
+  ],
+  "proposed_schedule": [
+    {
+      "class_id": "uuid-classe",
+      "teacher_id": "uuid-docente",
+      "subject_id": "uuid-materia",
+      "room_id": "uuid-lab",
+      "day_of_week": 1,
+      "time_slot": 2
+    }
+  ]
+}
+```
+
+### `POST /api/v1/timetable/generate/:jobID/publish`
+Pubblica l'orario calcolato, scrivendolo in modo atomico nella tabella ufficiale `class_schedules` per tutte le classi e i docenti coinvolti.
+**Ruoli ammessi**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`.
+
+### `GET /api/v1/timetable/preferences`
+Recupera i desiderata del docente autenticato (o per un docente specifico passando `teacher_id` con ruolo amministrativo/presidenza).
+
+### `POST /api/v1/timetable/preferences`
+Salva o aggiorna i desiderata orari del docente.
+**Ruoli ammessi**: `teacher`, `principal`, `vice_principal`, `admin`, `superadmin`.
+**Request Body**:
+```json
+{
+  "preferred_free_day": 5,
+  "preferred_slots": [1, 2, 3],
+  "avoid_slots": [6],
+  "max_hours_per_day": 4,
+  "notes": "Preferenza orario antimeridiano nei primi giorni della settimana"
+}
+```
+
+### `GET /api/v1/timetable/constraints` e `POST /api/v1/timetable/constraints`
+Lettura e configurazione dei vincoli orari di istituto e di plesso (giorni scolastici settimanali 5 o 6 giorni, ore per giorno, limite ore buche consentite per docente, pesatura desiderata per anzianità di servizio).
+**Ruoli ammessi per POST**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`.
+
+### `GET /api/v1/timetable/room-requirements` e `POST /api/v1/timetable/room-requirements`
+Gestione dei requisiti speciali di aula per materia/classe (ad es. Scienze Motorie richiede `gym`, Chimica richiede `lab_science`), garantendo che il generatore orario allochi l'aula nel medesimo plesso della classe.
+**Ruoli ammessi per POST**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`.
 
 ---
 

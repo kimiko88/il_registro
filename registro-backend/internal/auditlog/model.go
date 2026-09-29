@@ -29,6 +29,8 @@ type FilterParams struct {
 	To         string
 	Page       int
 	Limit      int
+	CursorTime string // created_at ISO string for O(1) keyset pagination
+	CursorID   string // id UUID string for tie-breaking in keyset pagination
 }
 
 type PaginatedAuditLogs struct {
@@ -37,4 +39,5 @@ type PaginatedAuditLogs struct {
 	Page       int          `json:"page"`
 	Limit      int          `json:"limit"`
 	TotalPages int          `json:"total_pages"`
+	NextCursor string       `json:"next_cursor,omitempty"`
 }

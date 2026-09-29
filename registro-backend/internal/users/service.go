@@ -14,6 +14,8 @@ import (
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+
+	"registro-backend/pkg/crypto"
 )
 
 var (
@@ -140,7 +142,7 @@ func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUs
 		return nil, err
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcryptCost)
+	hash, err := bcrypt.GenerateFromPassword(crypto.PrehashPassword(req.Password), bcryptCost)
 	if err != nil {
 		return nil, fmt.Errorf("password hashing failed: %w", err)
 	}
@@ -365,9 +367,12 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 		return err
 	}
 
-	// Field is CurrentPassword in ChangePasswordRequest DTO
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
-		return ErrCurrentPasswordIncorrect
+	// Field is CurrentPassword in ChangePasswordRequest DTO (supports pre-hashed and legacy raw)
+	preCurrent := crypto.PrehashPassword(req.CurrentPassword)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), preCurrent); err != nil {
+		if legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); legacyErr != nil {
+			return ErrCurrentPasswordIncorrect
+		}
 	}
 
 	// Check password history
@@ -375,13 +380,15 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 	if err != nil {
 		return err
 	}
+	preNew := crypto.PrehashPassword(req.NewPassword)
 	for _, old := range history {
-		if bcrypt.CompareHashAndPassword([]byte(old), []byte(req.NewPassword)) == nil {
+		if bcrypt.CompareHashAndPassword([]byte(old), preNew) == nil ||
+			bcrypt.CompareHashAndPassword([]byte(old), []byte(req.NewPassword)) == nil {
 			return ErrPasswordRecentlyUsed
 		}
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcryptCost)
+	hash, err := bcrypt.GenerateFromPassword(preNew, bcryptCost)
 	if err != nil {
 		return err
 	}
@@ -447,16 +454,18 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 		return err
 	}
 
+	preNew := crypto.PrehashPassword(newPassword)
 	history, err := s.repo.GetPasswordHistory(ctx, userID)
 	if err == nil {
 		for _, old := range history {
-			if bcrypt.CompareHashAndPassword([]byte(old), []byte(newPassword)) == nil {
+			if bcrypt.CompareHashAndPassword([]byte(old), preNew) == nil ||
+				bcrypt.CompareHashAndPassword([]byte(old), []byte(newPassword)) == nil {
 				return errors.New("la nuova password non può essere uguale a una delle ultime 5 password utilizzate")
 			}
 		}
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcryptCost)
+	hash, err := bcrypt.GenerateFromPassword(preNew, bcryptCost)
 	if err != nil {
 		return err
 	}

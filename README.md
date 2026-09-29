@@ -139,6 +139,8 @@ il_registro è pensato per essere **auto-ospitato da scuole, Comuni, Regioni o d
 | **Comunicazioni**         | Circolari, comunicazioni urgenti con **Presa d'Atto obbligatoria**, notifiche real-time WebSocket e Web Push                              |
 | **Accessibilità & UX**    | **Font DSA OpenDyslexic**, alto contrasto, **Ricerca Globale `Ctrl+K`**, **Toast & Undo (15s)**, Timeline del Giorno, Skeleton screens    |
 | **PWA & Offline Outbox**  | Installabile su desktop/mobile (PWA), **Coda Outbox Offline** per operazioni docente con sync FIFO automatico                             |
+| **Aule & Multi-Plesso**   | **Gestione Aule Prenotabili nei Vari Plessi**: anagrafica plessi, tipologia e capienza laboratori, disponibilità live e prenotazioni spot/ricorrenti docenti per classe con verifica sovrapposizioni |
+| **Generatore Orario (CSP)** | **Motore Intelligente Orario Scolastico**: generazione automatica vincolata (< 30s) per Dirigenza/Vicario, allocazione laboratori nel plesso della classe, rispetto desiderata docenti e priorità basata su anzianità di servizio (`hiring_date`) |
 
 ---
 

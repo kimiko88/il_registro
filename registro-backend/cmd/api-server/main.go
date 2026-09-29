@@ -53,6 +53,7 @@ import (
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/recovery"
 	"registro-backend/internal/reports"
+	"registro-backend/internal/rooms"
 	"registro-backend/internal/rubrics"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schoolcalendar"
@@ -73,6 +74,7 @@ import (
 	"registro-backend/internal/teachers"
 	"registro-backend/internal/tenants"
 	"registro-backend/internal/textbooks"
+	"registro-backend/internal/timetablegen"
 	"registro-backend/internal/timetables"
 	"registro-backend/internal/trips"
 	"registro-backend/internal/uda"
@@ -82,6 +84,7 @@ import (
 	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
+	"registro-backend/pkg/queue"
 	"registro-backend/pkg/upload"
 	"registro-backend/pkg/version"
 	"registro-backend/pkg/wsticket"
@@ -100,9 +103,10 @@ func main() {
 	// 2. Init Logger
 	logger.Init(cfg.Server.Mode)
 
-	// 2a. Init rate limiter backend (Redis-backed if REDIS_URL is set, in-memory otherwise).
+	// 2a. Init rate limiter backend (Redis-backed if configured, in-memory otherwise).
 	// Must be called before the first request, so we do it right after logging is up.
-	middleware.InitRateLimiter(os.Getenv("REDIS_URL"))
+	redisURL := cfg.RedisURL()
+	middleware.InitRateLimiter(redisURL)
 
 	// 3. Connect DB
 	database, err := db.Connect(cfg.Database)
@@ -119,9 +123,9 @@ func main() {
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
 	mfaService := auth.NewMFAService("RegistroElettronico")
-	wsHub := ws.NewHub(os.Getenv("REDIS_URL"))
+	wsHub := ws.NewHub(redisURL)
 	go wsHub.Run(ctx)
-	appCache := cache.NewCache(os.Getenv("REDIS_URL"))
+	appCache := cache.NewCache(redisURL)
 	defer func() { _ = appCache.Close() }()
 
 	// 5. Setup Repositories
@@ -152,7 +156,16 @@ func main() {
 	// Repository FEQ — firma qualificata con valore legale (CAD art. 21 / eIDAS)
 	feqRepo := signatures.NewFEQRepository(database)
 
-	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
+	revocationStore := jwt.NewRevocationStore(redisURL)
+	defer func() { _ = revocationStore.Close() }()
+
+	loginLimiter := auth.NewLoginRateLimiter(redisURL)
+
+	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo, revocationStore)
+
+	taskQueue := queue.NewQueue(redisURL)
+	taskQueue.Start()
+	defer taskQueue.Stop()
 
 	// 6. Setup Services
 	mailerCfg := mailer.MailConfig{
@@ -169,10 +182,12 @@ func main() {
 	schoolCalendarSvc := schoolcalendar.NewService(schoolCalendarRepo)
 
 	authSvc := auth.NewService(authRepo, tokenManager, mfaService, mailerSvc)
+	authSvc.SetRevocationStore(revocationStore)
+	authSvc.SetLoginRateLimiter(loginLimiter)
 	usersSvc := users.NewService(usersRepo)
 	classesSvc := classes.NewService(classesRepo)
 	gradesSvc := grades.NewService(gradesRepo, usersRepo, database, wsHub)
-	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
+	gradesAnalytics := grades.NewAnalyticsService(gradesRepo, appCache)
 	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub, schoolCalendarSvc)
 	docsSvc := documents.NewService(docsRepo)
 	schedSvc := scheduling.NewService(schedRepo, teachersRepo, nil, nil, nil)
@@ -201,7 +216,8 @@ func main() {
 
 	rubricsSvc := rubrics.NewService(rubricsRepo, usersRepo)
 
-	wsTicketStore := wsticket.NewStore()
+	wsTicketStore := wsticket.NewStore(redisURL)
+	defer func() { _ = wsTicketStore.Close() }()
 
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc, wsTicketStore)
@@ -228,6 +244,14 @@ func main() {
 	tripsH := trips.NewHandler(tripsSvc)
 	rubricsH := rubrics.NewHandler(rubricsSvc)
 	schoolCalendarH := schoolcalendar.NewHandler(schoolCalendarSvc)
+
+	roomsRepo := rooms.NewRepository(database)
+	roomsSvc := rooms.NewService(roomsRepo)
+	roomsH := rooms.NewHandler(roomsSvc)
+
+	timetableGenRepo := timetablegen.NewRepository(database)
+	timetableGenSvc := timetablegen.NewService(timetableGenRepo, nil)
+	timetableGenH := timetablegen.NewHandler(timetableGenSvc)
 
 	a11yRepo := accessibility.NewRepository(database)
 	a11ySvc := accessibility.NewService(a11yRepo)
@@ -270,6 +294,10 @@ func main() {
 	r.Use(middleware.TimeoutMiddleware(30 * time.Second))
 	// Compress JSON/text responses (60-80% size reduction). Excluded: /metrics (Prometheus plain text).
 	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPaths([]string{"/metrics"})))
+	// 2MB request body size limit to prevent memory exhaustion DoS (skips multipart uploads)
+	r.Use(middleware.RequestBodyLimitMiddleware(2 * 1024 * 1024))
+	// HTTP conditional caching (ETag / 304 Not Modified)
+	r.Use(middleware.ETagMiddleware())
 
 	middleware.InitCircuitBreaker()
 
@@ -357,6 +385,8 @@ func main() {
 		authH.RegisterRoutes(api, authMiddleware)
 		api.GET("/public/schools", schoolsH.ListPublic)
 		api.POST("/public/accessibility-feedback", a11yH.SubmitPublic)
+		api.POST("/public/csp-report", handler.HandleCSPReport)
+		r.POST("/public/csp-report", handler.HandleCSPReport)
 
 		api.GET("/ws", authMiddleware.AuthenticateWSTicket(wsTicketStore), func(c *gin.Context) {
 			wsHandler.Listen(c)
@@ -412,6 +442,8 @@ func main() {
 			docsH.RegisterRoutes(uploadLimited)
 			schedH.RegisterRoutes(protected)
 			timetablesH.RegisterRoutes(protected)
+			roomsH.RegisterRoutes(protected)
+			timetableGenH.RegisterRoutes(protected)
 			agendaH.RegisterRoutes(protected)
 			colloquiH.RegisterRoutes(protected)
 			verbaliH.RegisterRoutes(protected)
@@ -477,6 +509,9 @@ func main() {
 
 			studentsFascicoloH := students.NewFascicoloHandler(database)
 			studentsFascicoloH.RegisterRoutes(protected)
+
+			studentsReligionH := students.NewReligionHandler(database)
+			studentsReligionH.RegisterRoutes(protected)
 
 			subsRepo := substitutions.NewRepository(database)
 			subsSvc := substitutions.NewService(subsRepo)

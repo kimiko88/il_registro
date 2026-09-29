@@ -249,10 +249,23 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 	}
 
 	resp := &ClassGradesResponse{ClassID: classID}
+	var isReligion bool
+	if filter.SubjectID != "" {
+		isIRC, _ := s.validator.IsReligionSubject(ctx, filter.SubjectID)
+		isReligion = isIRC
+		resp.IsReligionSubject = isIRC
+	}
+
 	studentUsers, err := s.userRepo.GetStudentsByClass(ctx, classID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch class students: %w", err)
 	}
+
+	var religionChoices map[string]string
+	if isReligion {
+		religionChoices, _ = s.validator.GetClassReligionChoices(ctx, classID)
+	}
+
 	for _, u := range studentUsers {
 		sID := u.StudentID
 		gList := studentMap[sID]
@@ -260,12 +273,25 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 			gList = []GradeResponse{}
 		}
 		avg1, avg2 := calcSemesterAverages(gList)
+
+		var relChoice string
+		if isReligion && religionChoices != nil {
+			if c, ok := religionChoices[sID]; ok {
+				relChoice = c
+			} else if c, ok := religionChoices[u.ID]; ok {
+				relChoice = c
+			} else {
+				relChoice = "avvalente"
+			}
+		}
+
 		resp.Students = append(resp.Students, StudentGradeSummary{
-			StudentID:    sID,
-			FullName:     u.FirstName + " " + u.LastName,
-			AvgSemester1: avg1,
-			AvgSemester2: avg2,
-			Grades:       gList,
+			StudentID:      sID,
+			FullName:       u.FirstName + " " + u.LastName,
+			AvgSemester1:   avg1,
+			AvgSemester2:   avg2,
+			Grades:         gList,
+			ReligionChoice: relChoice,
 		})
 	}
 
@@ -407,6 +433,38 @@ func (s *service) AddGrade(ctx context.Context, teacherID string, req CreateGrad
 		return nil, fmt.Errorf("teacher is not associated with a school")
 	}
 	schoolID := *teacherUser.SchoolID
+
+	// ── Validazione IRC ──────────────────────────────────────────────────────
+	// Se la materia è IRC, il GradeType deve essere 'judgment' e il valore
+	// deve corrispondere a uno dei 6 giudizi ammessi (passati come Description).
+	if s.validator != nil {
+		isIRC, ircErr := s.validator.IsReligionSubject(ctx, req.SubjectID)
+		if ircErr != nil {
+			return nil, fmt.Errorf("religion subject check failed: %w", ircErr)
+		}
+		if isIRC {
+			// 1. Il tipo di voto deve essere "judgment"
+			if req.GradeType != string(GradeTypeJudgment) {
+				return nil, fmt.Errorf("validation failed: la materia IRC accetta solo voti di tipo 'judgment' (giudizi), non '%s'", req.GradeType)
+			}
+			// 2. Il giudizio (in Description) deve essere uno dei 6 valori IRC
+			numericVal, ircValidErr := s.validator.ValidateReligionJudgment(req.Description)
+			if ircValidErr != nil {
+				return nil, fmt.Errorf("validation failed: %w", ircValidErr)
+			}
+			// 3. Il valore numerico viene impostato automaticamente dalla mappatura
+			req.GradeValue = numericVal
+			// 4. Verifica avvalimento studente
+			avvalente, avvErr := s.validator.IsStudentAvvalente(ctx, req.StudentID, schoolID)
+			if avvErr != nil {
+				return nil, fmt.Errorf("avvalimento check failed: %w", avvErr)
+			}
+			if !avvalente {
+				return nil, fmt.Errorf("validation failed: lo studente non si avvale dell'IRC; impossibile registrare un voto di religione")
+			}
+		}
+	}
+	// ─────────────────────────────────────────────────────────────────────────
 
 	teacherProfileID, err := s.resolveTeacherProfileID(ctx, teacherID)
 	if err != nil {
@@ -644,6 +702,30 @@ func (s *service) UpdateGrade(ctx context.Context, teacherID string, gradeID str
 	if err := s.validator.ValidateModification(*grade, req); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
+
+	// ── Validazione IRC su modifica ──────────────────────────────────────────
+	if s.validator != nil {
+		isIRC, ircErr := s.validator.IsReligionSubject(ctx, grade.SubjectID)
+		if ircErr != nil {
+			return nil, fmt.Errorf("religion subject check failed: %w", ircErr)
+		}
+		if isIRC {
+			// Se viene modificato il GradeType, deve rimanere 'judgment'
+			if req.GradeType != nil && *req.GradeType != string(GradeTypeJudgment) {
+				return nil, fmt.Errorf("validation failed: la materia IRC accetta solo voti di tipo 'judgment'")
+			}
+			// Se viene modificata la descrizione (giudizio), deve essere uno dei 6 IRC
+			if req.Description != nil {
+				numericVal, ircValidErr := s.validator.ValidateReligionJudgment(*req.Description)
+				if ircValidErr != nil {
+					return nil, fmt.Errorf("validation failed: %w", ircValidErr)
+				}
+				// Aggiorna il valore numerico in base al nuovo giudizio
+				req.GradeValue = &numericVal
+			}
+		}
+	}
+	// ─────────────────────────────────────────────────────────────────────────
 
 	history := &GradeHistory{
 		GradeID:        grade.ID,

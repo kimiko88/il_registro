@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"registro-backend/pkg/wsticket"
 
@@ -242,6 +243,13 @@ func (h *Handler) Logout(c *gin.Context) {
 		}
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		return
+	}
+
+	// Invalidate current JWT access token immediately in distributed JTI blacklist
+	authHeader := c.GetHeader("Authorization")
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+		_ = h.service.RevokeAccessToken(c.Request.Context(), tokenStr)
 	}
 
 	setRefreshTokenCookie(c, "", -1)

@@ -14,14 +14,17 @@ type Repository interface {
 	Insert(ctx context.Context, event *AuditEvent) error
 	InsertAsync(event AuditEvent)
 	List(ctx context.Context, p FilterParams) ([]AuditEvent, int, error)
+	Close() error
 }
 
 type repository struct {
-	db *sql.DB
+	db     *sql.DB
+	worker *BatchWorker
 }
 
 func NewRepository(db *sql.DB) Repository {
-	r := &repository{db: db}
+	worker := NewBatchWorker(db, 100, 500*time.Millisecond)
+	r := &repository{db: db, worker: worker}
 	r.ensureTable()
 	return r
 }
@@ -74,6 +77,10 @@ func (r *repository) Insert(ctx context.Context, event *AuditEvent) error {
 }
 
 func (r *repository) InsertAsync(event AuditEvent) {
+	if r.worker != nil {
+		r.worker.Enqueue(event)
+		return
+	}
 	go func(ev AuditEvent) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -81,6 +88,13 @@ func (r *repository) InsertAsync(event AuditEvent) {
 			logrus.Errorf("Async audit log insert error: %v", err)
 		}
 	}(event)
+}
+
+func (r *repository) Close() error {
+	if r.worker != nil {
+		r.worker.Stop()
+	}
+	return nil
 }
 
 func (r *repository) List(ctx context.Context, p FilterParams) ([]AuditEvent, int, error) {
@@ -124,6 +138,13 @@ func (r *repository) List(ctx context.Context, p FilterParams) ([]AuditEvent, in
 		argID++
 	}
 
+	// Keyset / Cursor-based pagination filter for O(1) continuous navigation
+	if p.CursorTime != "" && p.CursorID != "" {
+		where += fmt.Sprintf(" AND (created_at < $%d::timestamp OR (created_at = $%d::timestamp AND id < $%d::uuid))", argID, argID, argID+1)
+		args = append(args, p.CursorTime, p.CursorID)
+		argID += 2
+	}
+
 	countQuery := "SELECT COUNT(*) FROM audit_logs " + where
 	var total int
 	err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total)
@@ -134,13 +155,20 @@ func (r *repository) List(ctx context.Context, p FilterParams) ([]AuditEvent, in
 	if p.Limit <= 0 {
 		p.Limit = 20
 	}
-	if p.Page <= 0 {
-		p.Page = 1
-	}
-	offset := (p.Page - 1) * p.Limit
 
-	listQuery := fmt.Sprintf("SELECT id, school_id, actor_id, actor_role, actor_name, action, entity_type, entity_id, details, ip_address, user_agent, created_at FROM audit_logs %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d", where, argID, argID+1)
-	args = append(args, p.Limit, offset)
+	var listQuery string
+	if p.CursorTime != "" && p.CursorID != "" {
+		// Keyset pagination avoids costly OFFSET scans
+		listQuery = fmt.Sprintf("SELECT id, school_id, actor_id, actor_role, actor_name, action, entity_type, entity_id, details, ip_address, user_agent, created_at FROM audit_logs %s ORDER BY created_at DESC, id DESC LIMIT $%d", where, argID)
+		args = append(args, p.Limit)
+	} else {
+		if p.Page <= 0 {
+			p.Page = 1
+		}
+		offset := (p.Page - 1) * p.Limit
+		listQuery = fmt.Sprintf("SELECT id, school_id, actor_id, actor_role, actor_name, action, entity_type, entity_id, details, ip_address, user_agent, created_at FROM audit_logs %s ORDER BY created_at DESC, id DESC LIMIT $%d OFFSET $%d", where, argID, argID+1)
+		args = append(args, p.Limit, offset)
+	}
 
 	rows, err := r.db.QueryContext(ctx, listQuery, args...)
 	if err != nil {

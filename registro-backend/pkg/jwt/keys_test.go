@@ -81,3 +81,14 @@ func TestGetOrGenerateKeys_ReadOnlyDirectoryFallback(t *testing.T) {
 		t.Fatalf("expected non-nil in-memory keys")
 	}
 }
+
+func TestGetOrGenerateKeys_ProductionRequiresKey(t *testing.T) {
+	t.Setenv("APP_ENV", "production")
+	t.Setenv("RSA_PRIVATE_KEY", "")
+	t.Setenv("JWT_PRIVATE_KEY", "")
+
+	_, _, err := GetOrGenerateKeys("non_existent_1.pem", "non_existent_2.pem")
+	if err == nil {
+		t.Fatalf("expected error in production when keys are missing, got nil")
+	}
+}

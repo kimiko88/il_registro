@@ -108,11 +108,34 @@
               <!-- Subject Averages -->
               <q-td v-for="sub in matrix.subjects" :key="sub.id" align="center" class="subject-cell">
                 <div class="text-caption text-slate-400 q-mb-xs">
-                  {{ props.row.subject_data[sub.id]?.average?.toFixed(1) || '-' }}
+                  {{ (sub.is_religion || sub.is_judgment_only) ? (props.row.subject_data[sub.id]?.proposed_judgment || '-') : (props.row.subject_data[sub.id]?.average?.toFixed(1) || '-') }}
                 </div>
                 
+                <!-- Studente non avvalente o con attività alternativa -->
+                <template v-if="sub.is_religion && props.row.religion_choice && props.row.religion_choice !== 'avvalente'">
+                  <q-badge
+                    :color="props.row.religion_choice === 'attivita_alternativa' ? 'teal-7' : 'grey-6'"
+                    class="q-py-xs q-px-sm text-caption text-weight-bold"
+                  >
+                    {{ props.row.religion_choice === 'attivita_alternativa' ? 'Att. Alternativa' : 'Non Avvalente' }}
+                  </q-badge>
+                </template>
+
+                <!-- Materia IRC / solo giudizi: select con i 6 giudizi ministeriali -->
+                <template v-else-if="sub.is_religion || sub.is_judgment_only">
+                  <q-select
+                    v-if="scrutinyData[props.row.student_id]"
+                    v-model="scrutinyData[props.row.student_id].grades[sub.id]"
+                    :options="RELIGION_JUDGMENT_OPTIONS"
+                    dense outlined
+                    options-dense
+                    class="grade-input rounded-lg overflow-hidden"
+                  />
+                </template>
+
+                <!-- Materie standard con voto numerico -->
                 <q-input
-                  v-if="scrutinyData[props.row.student_id]"
+                  v-else-if="scrutinyData[props.row.student_id]"
                   v-model.number="scrutinyData[props.row.student_id].grades[sub.id]"
                   type="number"
                   dense outlined
@@ -315,6 +338,7 @@ import { scrutinyService } from '@/services/scrutinyService'
 import { useAuthStore } from '@/stores/auth'
 import { useClassesStore } from '@/stores/classes'
 import { useSchoolYearStore } from '@/stores/schoolYear'
+import { RELIGION_JUDGMENT_OPTIONS, RELIGION_JUDGMENT_MAP } from '@/utils/gradeUtils'
 
 const $q = useQuasar()
 const { t } = useI18n()
@@ -440,7 +464,16 @@ const fetchMatrix = async () => {
       }
       subjects.forEach(sub => {
         const existing = s.record?.grades?.find(g => g.subject_id === sub.id)
-        newScrutinyData[s.student_id].grades[sub.id] = existing ? existing.final_grade : Math.round(s.subject_data[sub.id]?.average || 6)
+        if (sub.is_religion || sub.is_judgment_only) {
+          if (existing) {
+            const entry = Object.entries(RELIGION_JUDGMENT_MAP).find(([, v]) => v === Math.round(existing.final_grade))
+            newScrutinyData[s.student_id].grades[sub.id] = entry ? entry[0] : (s.subject_data[sub.id]?.proposed_judgment || 'Sufficiente')
+          } else {
+            newScrutinyData[s.student_id].grades[sub.id] = s.subject_data[sub.id]?.proposed_judgment || 'Sufficiente'
+          }
+        } else {
+          newScrutinyData[s.student_id].grades[sub.id] = existing ? existing.final_grade : Math.round(s.subject_data[sub.id]?.average || 6)
+        }
       })
     })
 
@@ -469,10 +502,25 @@ const saveStudentScrutiny = async (studentId, silent = false) => {
       semester: period.value,
       conduct_grade: data.conduct_grade,
       final_decision: data.final_decision,
-      grades: Object.keys(data.grades).map(sid => ({
-        subject_id: sid,
-        final_grade: data.grades[sid]
-      }))
+      grades: Object.keys(data.grades)
+        .filter(sid => {
+          const sub = matrix.value.subjects?.find(s => s.id === sid)
+          const student = matrix.value.students?.find(st => st.student_id === studentId)
+          if (sub?.is_religion && student?.religion_choice && student.religion_choice !== 'avvalente') {
+            return false // Esonerato: non salvare voto di religione
+          }
+          return true
+        })
+        .map(sid => {
+          let val = data.grades[sid]
+          if (typeof val === 'string' && RELIGION_JUDGMENT_MAP[val] !== undefined) {
+            val = RELIGION_JUDGMENT_MAP[val]
+          }
+          return {
+            subject_id: sid,
+            final_grade: typeof val === 'number' ? val : Number(val) || 6
+          }
+        })
     }
     await scrutinyService.save(payload)
     if (!silent) {

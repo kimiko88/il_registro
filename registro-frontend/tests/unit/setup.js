@@ -55,8 +55,7 @@ const mockQ = {
 }
 
 // Mock vue-i18n globally to avoid "SyntaxError: Need to install with app.use function"
-vi.mock('vue-i18n', async (importOriginal) => {
-    const actual = await importOriginal().catch(() => ({}))
+vi.mock('vue-i18n', () => {
     const translate = (msg, params) => {
         let val = getNestedValue(itMessages, msg) || msg
         if (typeof val === 'string' && params && typeof params === 'object') {
@@ -69,7 +68,6 @@ vi.mock('vue-i18n', async (importOriginal) => {
     const hasTranslation = (msg) => !!getNestedValue(itMessages, msg)
 
     return {
-        ...actual,
         useI18n: () => ({
             t: translate,
             te: hasTranslation,

@@ -36,6 +36,9 @@ const (
 	ResourceMaintenance     Resource = "maintenance"
 	ResourcePreservation    Resource = "preservation"
 	ResourcePrivacy         Resource = "privacy"
+	ResourceRooms           Resource = "rooms"
+	ResourceRoomBookings    Resource = "room_bookings"
+	ResourceTimetableGen    Resource = "timetable_generation"
 )
 
 const (
@@ -159,6 +162,22 @@ const (
 	// Privacy / DPO
 	PrivacyRead  Permission = "privacy:read"
 	PrivacyAudit Permission = "privacy:audit"
+
+	// Rooms Permissions
+	RoomsRead   Permission = "rooms:read"
+	RoomsManage Permission = "rooms:manage"
+
+	// Room Bookings Permissions
+	RoomBookingsRead      Permission = "room_bookings:read"
+	RoomBookingsCreate    Permission = "room_bookings:create"
+	RoomBookingsCancelOwn Permission = "room_bookings:cancel_own"
+	RoomBookingsManageAll Permission = "room_bookings:manage_all"
+
+	// Timetable Generation & Preferences
+	TimetableGenTrigger  Permission = "timetable_generation:trigger"
+	TimetablePrefsWrite  Permission = "timetable_preferences:write"
+	TimetablePrefsRead   Permission = "timetable_preferences:read"
+	TimetableRulesManage Permission = "timetable_rules:manage"
 )
 
 // RoleDefinitions maps all 25 roles and functional duties to their permissions
@@ -174,6 +193,8 @@ var RoleDefinitions = map[string][]Permission{
 		PCTORead, PCTOCreate, PCTOUpdate, PCTODelete,
 		TechnicalConfig, TechnicalSupport,
 		CommunicationsRead, CommunicationsCreate, CommunicationsUpdate, CommunicationsDelete,
+		RoomsRead, RoomsManage, RoomBookingsRead, RoomBookingsCreate, RoomBookingsManageAll,
+		TimetableGenTrigger, TimetablePrefsWrite, TimetablePrefsRead, TimetableRulesManage,
 	},
 	"admin": {
 		UserCreate, UserRead, UserUpdate, UserDelete, UserImport, UserExport, UserAudit,
@@ -185,6 +206,8 @@ var RoleDefinitions = map[string][]Permission{
 		PCTORead, PCTOCreate, PCTOUpdate, PCTODelete,
 		TechnicalConfig, TechnicalSupport,
 		CommunicationsRead, CommunicationsCreate, CommunicationsUpdate, CommunicationsDelete,
+		RoomsRead, RoomsManage, RoomBookingsRead, RoomBookingsManageAll,
+		TimetableGenTrigger, TimetablePrefsRead, TimetableRulesManage,
 	},
 
 	// 2. Dirigente scolastico (massima visibilità istituzionale e validazioni)
@@ -203,6 +226,8 @@ var RoleDefinitions = map[string][]Permission{
 		PCTORead, PCTOCreate, PCTOUpdate, PCTODelete,
 		AccountingRead,
 		ProtocolRead,
+		RoomsRead, RoomsManage, RoomBookingsRead, RoomBookingsManageAll,
+		TimetableGenTrigger, TimetablePrefsRead, TimetableRulesManage,
 	},
 
 	// 3. Collaboratore del dirigente / Vicario
@@ -216,6 +241,8 @@ var RoleDefinitions = map[string][]Permission{
 		CommunicationsRead, CommunicationsCreate, CommunicationsUpdate,
 		VerbaliRead, VerbaliUpdate,
 		PCTORead, PCTOCreate, PCTOUpdate, PCTODelete,
+		RoomsRead, RoomsManage, RoomBookingsRead, RoomBookingsManageAll,
+		TimetableGenTrigger, TimetablePrefsRead, TimetableRulesManage,
 	},
 	"collaboratore_ds": {
 		UserRead, UserAudit,
@@ -226,6 +253,8 @@ var RoleDefinitions = map[string][]Permission{
 		SchedulingRead,
 		CommunicationsRead, CommunicationsCreate, CommunicationsUpdate,
 		VerbaliRead, VerbaliUpdate,
+		RoomsRead, RoomsManage, RoomBookingsRead, RoomBookingsManageAll,
+		TimetableGenTrigger, TimetablePrefsRead, TimetableRulesManage,
 	},
 
 	// 4. DSGA (Direttore dei Servizi Generali e Amministrativi)
@@ -249,6 +278,7 @@ var RoleDefinitions = map[string][]Permission{
 		DocumentRead, DocumentCreate, DocumentUpdate, DocumentDelete,
 		PCTORead, PCTOCreate, PCTOUpdate, PCTODelete,
 		CommunicationsRead, CommunicationsCreate,
+		RoomsRead, RoomsManage, RoomBookingsRead, RoomBookingsManageAll,
 	},
 
 	// 5. Docente (ruolo base)
@@ -260,6 +290,8 @@ var RoleDefinitions = map[string][]Permission{
 		DocumentRead, DocumentCreate,
 		CommunicationsRead,
 		VerbaliRead,
+		RoomsRead, RoomBookingsRead, RoomBookingsCreate, RoomBookingsCancelOwn,
+		TimetablePrefsWrite, TimetablePrefsRead,
 	},
 
 	// 6. Coordinatore di classe (incarico aggiuntivo docente)
@@ -270,6 +302,8 @@ var RoleDefinitions = map[string][]Permission{
 		CommunicationsCreate,
 		VerbaliRead, VerbaliUpdate,
 		InclusionRead,
+		RoomsRead, RoomBookingsRead, RoomBookingsCreate, RoomBookingsCancelOwn,
+		TimetablePrefsWrite, TimetablePrefsRead,
 	},
 	"coordinator": {
 		GradeRead,
@@ -278,6 +312,8 @@ var RoleDefinitions = map[string][]Permission{
 		CommunicationsCreate,
 		VerbaliRead, VerbaliUpdate,
 		InclusionRead,
+		RoomsRead, RoomBookingsRead, RoomBookingsCreate, RoomBookingsCancelOwn,
+		TimetablePrefsWrite, TimetablePrefsRead,
 	},
 
 	// 7. Segretario del consiglio di classe (incarico aggiuntivo docente)

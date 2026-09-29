@@ -101,6 +101,12 @@
           outlined autofocus
           :rules="[val => !!val || t('common.required')]"
         />
+        <q-checkbox
+          v-model="newSubjectIsReligion"
+          label="Materia IRC (Religione Cattolica) - Solo giudizi"
+          color="indigo"
+          class="q-mt-sm"
+        />
         <div class="row justify-end q-mt-md">
           <q-btn :label="t('secretaryClasses.createSubject')" color="primary" @click="createSubject" />
         </div>
@@ -197,15 +203,23 @@ const removeAssignment = async (row) => {
   }
 }
 
+const newSubjectIsReligion = ref(false)
+
 const openCreateSubject = () => {
   newSubjectName.value = ''
+  newSubjectIsReligion.value = false
   showSubjectDialog.value = true
 }
 
 const createSubject = async () => {
   if (!newSubjectName.value) return
   try {
-    await adminService.createSubject({ name: newSubjectName.value, school_id: props.schoolId })
+    await adminService.createSubject({
+      name: newSubjectName.value,
+      school_id: props.schoolId,
+      is_religion: newSubjectIsReligion.value,
+      is_judgment_only: newSubjectIsReligion.value
+    })
     $q.notify({ type: 'positive', message: t('secretaryClasses.subjectCreated') })
     showSubjectDialog.value = false
     emit('subjects-updated')

@@ -53,13 +53,42 @@
               {{ group.name }}
             </div>
 
+            <!-- Subject & Teacher Badges -->
+            <div class="row items-center q-gutter-xs q-mt-xs q-mb-sm">
+              <q-chip
+                v-if="group.subject_name || getSubjectName(group.subject_id)"
+                dense
+                size="12px"
+                icon="menu_book"
+                color="blue-1"
+                text-color="blue-9"
+                class="q-ma-none text-weight-medium"
+              >
+                {{ group.subject_name || getSubjectName(group.subject_id) }}
+              </q-chip>
+              <q-chip
+                v-if="group.teacher_name || getTeacherName(group.teacher_id)"
+                dense
+                size="12px"
+                icon="person"
+                color="purple-1"
+                text-color="purple-9"
+                class="q-ma-none text-weight-medium"
+              >
+                {{ group.teacher_name || getTeacherName(group.teacher_id) }}
+              </q-chip>
+            </div>
+
             <div class="text-body2 text-slate-600 q-mt-xs q-mb-md line-clamp-2">
               {{ group.description || 'Nessuna descrizione specificata.' }}
             </div>
           </q-card-section>
 
           <q-card-actions class="bg-slate-50 border-t border-slate-200 justify-between q-px-md">
-            <q-btn flat dense icon="person_add" color="primary" label="Gestisci Studenti" @click="openManageStudentsModal(group)" />
+            <div class="row items-center q-gutter-xs">
+              <q-btn flat dense icon="edit" color="primary" label="Modifica" @click="openEditModal(group)" />
+              <q-btn flat dense icon="person_add" color="secondary" label="Studenti" @click="openManageStudentsModal(group)" />
+            </div>
             <div>
               <q-btn flat round dense icon="delete" color="negative" @click="confirmDeleteGroup(group)" />
             </div>
@@ -68,13 +97,13 @@
       </div>
     </div>
 
-    <!-- Create Group Modal -->
-    <q-dialog v-model="showCreateModal" persistent max-width="550px">
-      <q-card style="width: 550px; max-width: 95vw" class="rounded-xl">
+    <!-- Create / Edit Group Modal -->
+    <q-dialog v-model="showCreateModal" persistent max-width="650px">
+      <q-card style="width: 650px; max-width: 95vw" class="rounded-xl">
         <q-card-section class="bg-primary text-white row items-center justify-between q-py-md q-px-lg">
           <div class="text-h6 text-weight-bold">
             <q-icon name="groups" class="q-mr-xs" />
-            Nuovo Gruppo Linguistico / Articolato
+            {{ editingGroupId ? 'Modifica Gruppo Linguistico / Articolato' : 'Nuovo Gruppo Linguistico / Articolato' }}
           </div>
           <q-btn icon="close" flat round dense v-close-popup :aria-label="$t('common.close') || 'Chiudi'" />
         </q-card-section>
@@ -87,19 +116,117 @@
             outlined dense hide-bottom-space
             :rules="[val => !!val || 'Campo obbligatorio']"
           />
+
+          <!-- Docente Assegnato -->
+          <q-select
+            v-model="createForm.teacher_id"
+            :options="teacherOptions"
+            option-value="id"
+            option-label="displayName"
+            emit-value
+            map-options
+            clearable
+            outlined dense
+            label="Docente Assegnato"
+            placeholder="Seleziona docente"
+          >
+            <template v-slot:prepend>
+              <q-icon name="person" color="primary" />
+            </template>
+          </q-select>
+
+          <!-- Materia Coinvolta -->
+          <q-select
+            v-model="createForm.subject_id"
+            :options="subjectOptions"
+            option-value="id"
+            option-label="name"
+            emit-value
+            map-options
+            clearable
+            outlined dense
+            label="Materia (es. Lingua Inglese, Francese...)"
+            placeholder="Seleziona materia"
+          >
+            <template v-slot:prepend>
+              <q-icon name="menu_book" color="primary" />
+            </template>
+          </q-select>
+
+          <!-- Classi Coinvolte -->
+          <q-select
+            v-model="createForm.class_ids"
+            :options="classOptions"
+            option-value="id"
+            option-label="displayName"
+            emit-value
+            map-options
+            multiple
+            use-chips
+            outlined dense
+            label="Classi Coinvolte nell'Articolazione"
+            placeholder="Seleziona una o più classi"
+            @update:model-value="onClassesChanged"
+          >
+            <template v-slot:prepend>
+              <q-icon name="school" color="primary" />
+            </template>
+          </q-select>
+
+          <!-- Quick Student Selection for Involved Classes -->
+          <div v-if="createForm.class_ids && createForm.class_ids.length > 0" class="border rounded-lg bg-slate-50 q-pa-sm">
+            <div class="row items-center justify-between q-mb-xs">
+              <div class="text-caption text-weight-bold text-slate-700">
+                Studenti delle Classi Selezionate ({{ classStudents.length }} trovati, {{ createForm.student_ids.length }} selezionati)
+              </div>
+              <div class="row q-gutter-xs">
+                <q-btn flat dense size="xs" color="primary" label="Seleziona Tutti" @click="selectAllClassStudents" />
+                <q-btn flat dense size="xs" color="grey-7" label="Deseleziona" @click="createForm.student_ids = []" />
+              </div>
+            </div>
+
+            <div v-if="loadingClassStudents" class="text-center q-pa-sm">
+              <q-spinner size="20px" color="primary" />
+            </div>
+            <q-scroll-area v-else style="height: 160px;" class="bg-white rounded border q-pa-xs">
+              <div v-if="classStudents.length === 0" class="text-caption text-grey-5 text-center q-pa-sm">
+                Nessuno studente trovato per le classi selezionate
+              </div>
+              <div v-else class="row q-col-gutter-xs">
+                <div v-for="st in classStudents" :key="st.id" class="col-12 col-sm-6">
+                  <q-checkbox
+                    v-model="createForm.student_ids"
+                    :val="st.id"
+                    dense
+                    size="sm"
+                    color="primary"
+                    :label="`${st.last_name || ''} ${st.first_name || ''} (${st.class_name || ''})`"
+                  />
+                </div>
+              </div>
+            </q-scroll-area>
+          </div>
+
           <q-input
             v-model="createForm.description"
             type="textarea"
-            rows="3"
+            rows="2"
             label="Descrizione e Finalità Didattica"
-            placeholder="es. Gruppo trasversale per potenziamento lingua o articolazione informatica"
+            placeholder="es. Gruppo trasversale per potenziamento lingua o articolazione orario"
             outlined dense hide-bottom-space
           />
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md bg-slate-50">
           <q-btn flat label="Annulla" v-close-popup />
-          <q-btn color="primary" icon="save" label="Crea Gruppo" unelevated :loading="submitting" @click="saveGroup" />
+          <q-btn
+            color="primary"
+            icon="save"
+            :label="editingGroupId ? 'Salva Modifiche' : 'Crea Gruppo'"
+            unelevated
+            :loading="submitting"
+            @click="saveGroup"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -139,7 +266,9 @@
                 </q-item-section>
                 <q-item-section>
                   <q-item-label class="text-weight-bold">{{ student.last_name }} {{ student.first_name }}</q-item-label>
-                  <q-item-label caption class="text-slate-500">Matr: {{ student.id.substring(0,8) }}</q-item-label>
+                  <q-item-label caption class="text-slate-500">
+                    {{ student.class_name ? `Classe ${student.class_name}` : `Matr: ${student.id.substring(0,8)}` }}
+                  </q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -160,9 +289,13 @@ import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import api from '@/services/api'
+import adminService from '@/services/adminService'
+import { useAuthStore } from '@/stores/auth'
 
 const $q = useQuasar()
 const { t } = useI18n()
+const authStore = useAuthStore()
+
 const groups = ref([])
 const loading = ref(false)
 const submitting = ref(false)
@@ -170,15 +303,47 @@ const submitting = ref(false)
 const showCreateModal = ref(false)
 const showManageModal = ref(false)
 const selectedGroup = ref(null)
+const editingGroupId = ref(null)
+
+const teachers = ref([])
+const subjects = ref([])
+const classes = ref([])
 
 const allStudents = ref([])
+const classStudents = ref([])
 const loadingStudents = ref(false)
+const loadingClassStudents = ref(false)
 const studentFilter = ref('')
 const selectedStudentIds = ref([])
 
 const createForm = ref({
   name: '',
+  subject_id: null,
+  teacher_id: null,
+  class_ids: [],
+  student_ids: [],
   description: ''
+})
+
+const teacherOptions = computed(() => {
+  return teachers.value.map(t => ({
+    id: t.id,
+    displayName: `${t.last_name || ''} ${t.first_name || ''}`.trim() || t.name || t.email || 'Docente'
+  }))
+})
+
+const subjectOptions = computed(() => {
+  return subjects.value.map(s => ({
+    id: s.id,
+    name: s.name
+  }))
+})
+
+const classOptions = computed(() => {
+  return classes.value.map(c => ({
+    id: c.id,
+    displayName: c.name || `${c.year_number || ''}${c.section || ''}`.trim() || 'Classe'
+  }))
 })
 
 const filteredAllStudents = computed(() => {
@@ -186,9 +351,45 @@ const filteredAllStudents = computed(() => {
   const q = studentFilter.value.toLowerCase()
   return allStudents.value.filter(s =>
     (s.first_name || '').toLowerCase().includes(q) ||
-    (s.last_name || '').toLowerCase().includes(q)
+    (s.last_name || '').toLowerCase().includes(q) ||
+    (s.class_name || '').toLowerCase().includes(q)
   )
 })
+
+const getSubjectName = (subjectId) => {
+  if (!subjectId) return ''
+  const s = subjects.value.find(sub => sub.id === subjectId)
+  return s ? s.name : ''
+}
+
+const getTeacherName = (teacherId) => {
+  if (!teacherId) return ''
+  const t = teachers.value.find(tch => tch.id === teacherId)
+  if (!t) return ''
+  return `${t.last_name || ''} ${t.first_name || ''}`.trim() || t.name || t.email || ''
+}
+
+const loadMetadata = async () => {
+  try {
+    const [tRes, cRes, sRes] = await Promise.allSettled([
+      adminService.getTeachersList(),
+      adminService.getClasses(),
+      api.get('/subjects')
+    ])
+
+    if (tRes.status === 'fulfilled') {
+      teachers.value = tRes.value.data || []
+    }
+    if (cRes.status === 'fulfilled') {
+      classes.value = cRes.value.data || []
+    }
+    if (sRes.status === 'fulfilled') {
+      subjects.value = sRes.value.data || []
+    }
+  } catch (err) {
+    console.error('Error loading metadata:', err)
+  }
+}
 
 const fetchGroups = async () => {
   loading.value = true
@@ -203,8 +404,54 @@ const fetchGroups = async () => {
 }
 
 const openCreateModal = () => {
-  createForm.value = { name: '', description: '' }
+  editingGroupId.value = null
+  createForm.value = {
+    name: '',
+    subject_id: null,
+    teacher_id: null,
+    class_ids: [],
+    student_ids: [],
+    description: ''
+  }
+  classStudents.value = []
   showCreateModal.value = true
+}
+
+const openEditModal = (group) => {
+  editingGroupId.value = group.id
+  createForm.value = {
+    name: group.name,
+    subject_id: group.subject_id || null,
+    teacher_id: group.teacher_id || null,
+    class_ids: group.class_ids || [],
+    student_ids: (group.students || []).map(s => s.id || s.student_id),
+    description: group.description || ''
+  }
+  showCreateModal.value = true
+  if (createForm.value.class_ids.length > 0) {
+    onClassesChanged(createForm.value.class_ids)
+  }
+}
+
+const onClassesChanged = async (classIds) => {
+  if (!classIds || classIds.length === 0) {
+    classStudents.value = []
+    return
+  }
+  loadingClassStudents.value = true
+  try {
+    const uRes = await api.get('/users', { params: { role: 'student', page_size: 500 } })
+    const all = uRes.data?.users || uRes.data || []
+    classStudents.value = all.filter(s => classIds.includes(s.class_id))
+  } catch (err) {
+    classStudents.value = []
+  } finally {
+    loadingClassStudents.value = false
+  }
+}
+
+const selectAllClassStudents = () => {
+  createForm.value.student_ids = classStudents.value.map(s => s.id)
 }
 
 const saveGroup = async () => {
@@ -214,12 +461,30 @@ const saveGroup = async () => {
   }
   submitting.value = true
   try {
-    await api.post('/groups', createForm.value)
-    $q.notify({ type: 'positive', message: 'Gruppo Linguistico / Articolato creato con successo' })
+    const payload = {
+      school_id: authStore.user?.school_id || '',
+      name: createForm.value.name,
+      subject_id: createForm.value.subject_id || null,
+      teacher_id: createForm.value.teacher_id || null,
+      description: createForm.value.description || '',
+      student_ids: createForm.value.student_ids || []
+    }
+
+    if (editingGroupId.value) {
+      await api.put(`/groups/${editingGroupId.value}`, payload)
+      if (payload.student_ids.length > 0) {
+        await api.post(`/groups/${editingGroupId.value}/students`, { student_ids: payload.student_ids })
+      }
+      $q.notify({ type: 'positive', message: 'Gruppo modificato con successo' })
+    } else {
+      await api.post('/groups', payload)
+      $q.notify({ type: 'positive', message: 'Gruppo Linguistico / Articolato creato con successo' })
+    }
+
     showCreateModal.value = false
     await fetchGroups()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore creazione gruppo' })
+    $q.notify({ type: 'negative', message: err.response?.data?.error || 'Errore salvataggio gruppo' })
   } finally {
     submitting.value = false
   }
@@ -289,6 +554,7 @@ const confirmDeleteGroup = (group) => {
 }
 
 onMounted(() => {
+  loadMetadata()
   fetchGroups()
 })
 </script>

@@ -14,6 +14,39 @@ export const ITALIAN_GRADE_OPTIONS = [
   'A'
 ]
 
+// Giudizi ufficiali per l'Insegnamento della Religione Cattolica (IRC)
+export const RELIGION_JUDGMENT_OPTIONS = [
+  'Ottimo',
+  'Distinto',
+  'Buono',
+  'Sufficiente',
+  'Insufficiente',
+  'Non classificabile'
+]
+
+export const RELIGION_JUDGMENT_MAP = {
+  'Ottimo': 10,
+  'Distinto': 8,
+  'Buono': 7,
+  'Sufficiente': 6,
+  'Insufficiente': 4,
+  'Non classificabile': 0
+}
+
+export function isReligionJudgment(val) {
+  if (!val) return false
+  return RELIGION_JUDGMENT_OPTIONS.some(opt => opt.toLowerCase() === String(val).trim().toLowerCase())
+}
+
+export function religionJudgmentToNumeric(judgment) {
+  if (!judgment) return null
+  const clean = String(judgment).trim().toLowerCase()
+  for (const [key, val] of Object.entries(RELIGION_JUDGMENT_MAP)) {
+    if (key.toLowerCase() === clean) return val
+  }
+  return null
+}
+
 export function gradeToNumeric(val) {
   if (val === undefined || val === null || val === '') return null
   if (typeof val === 'number') {
@@ -24,7 +57,7 @@ export function gradeToNumeric(val) {
   }
   const clean = String(val).trim().toUpperCase()
   if (clean === 'A' || clean === 'ASSENTE' || clean === 'ABSENT') return -1
-  if (clean === 'NC' || clean === 'NON CLASSIFICATO' || clean === 'E' || clean === 'ESENTE' || clean === 'NV' || clean === 'NON VALUTATO') return null
+  if (clean === 'NC' || clean === 'NON CLASSIFICABILE' || clean === 'NON CLASSIFICATO' || clean === 'E' || clean === 'ESENTE' || clean === 'NV' || clean === 'NON VALUTATO') return null
 
   // Judgments to standard numerical scale
   if (clean === 'ECCELLENTE' || clean === 'OTTIMO' || clean === 'O' || clean === 'AVANZATO') return 10
@@ -93,9 +126,11 @@ export function gradeToNumeric(val) {
 
 export function formatGrade(val, customSeparator = null) {
   if (val === undefined || val === null || val === '' || val === '-') return '-'
+  if (typeof val === 'string' && isNaN(Number(val))) return String(val)
   let num = Number(val)
   if (isNaN(num)) return String(val)
   if (num === -1) return 'A'
+  if (num === 0) return 'Non class.'
 
   // Clamp within bounds [-1, 10]
   if (num < -1) num = -1
@@ -140,8 +175,18 @@ export function formatGrade(val, customSeparator = null) {
 
 export function getGradeColor(val) {
   if (val === null || val === undefined || val === '' || val === '-') return 'white'
+  if (typeof val === 'string') {
+    const lower = val.trim().toLowerCase()
+    if (lower === 'ottimo') return 'green-2'
+    if (lower === 'distinto') return 'teal-2'
+    if (lower === 'buono') return 'light-green-2'
+    if (lower === 'sufficiente') return 'amber-2'
+    if (lower === 'insufficiente') return 'red-2'
+    if (lower === 'non classificabile' || lower === 'non class.') return 'grey-4'
+  }
   const num = typeof val === 'string' ? gradeToNumeric(val) : Number(val)
   if (num === null || isNaN(num)) return 'white'
+  if (num === 0) return 'grey-4'
   if (num < 0) return 'grey-3'
   if (num < 5) return 'red-2'
   if (num < 6) return 'amber-2'

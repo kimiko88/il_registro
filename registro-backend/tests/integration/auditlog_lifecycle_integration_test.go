@@ -59,6 +59,10 @@ func (m *mockAuditLogLifecycleRepo) List(ctx context.Context, p auditlog.FilterP
 	return filtered, len(filtered), nil
 }
 
+func (m *mockAuditLogLifecycleRepo) Close() error {
+	return nil
+}
+
 func setupAuditLogRouter(repo auditlog.Repository) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

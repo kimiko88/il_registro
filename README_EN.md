@@ -137,6 +137,8 @@ il_registro is designed to be **self-hosted by schools, municipalities, regions,
 | **Communications**        | School circulars, urgent announcements with **Mandatory Read Acknowledgment**, real-time WebSocket & Web Push notifications          |
 | **Accessibility & UX**    | **OpenDyslexic DSA Font**, high contrast, **Global Search `Ctrl+K`**, **Toast & Undo (15s)**, Daily Timeline, Skeleton screens       |
 | **PWA & Offline Outbox**  | Desktop & mobile installable (PWA), **Offline Outbox Queue** for teacher actions with automatic FIFO background synchronization      |
+| **Multi-Building Rooms**  | **Multi-Building Bookable Rooms Management**: building sites, special labs & gyms, live availability and teacher spot/recurring bookings with clash detection |
+| **Timetable Generator (CSP)** | **Constraint-Satisfaction Timetable Engine**: automated timetable generation (< 30s) for administration/vice-principal, room/building matching, teacher preferences with seniority weighting based on `hiring_date` |
 
 ---
 

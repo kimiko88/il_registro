@@ -484,16 +484,18 @@ type GradeSummary struct {
 }
 
 type ClassGradesResponse struct {
-	ClassID  string                `json:"class_id"`
-	Students []StudentGradeSummary `json:"students"`
+	ClassID           string                `json:"class_id"`
+	IsReligionSubject bool                  `json:"is_religion_subject,omitempty"`
+	Students          []StudentGradeSummary `json:"students"`
 }
 
 type StudentGradeSummary struct {
-	StudentID    string          `json:"student_id"`
-	FullName     string          `json:"full_name"`
-	AvgSemester1 float64         `json:"avg_semester1"`
-	AvgSemester2 float64         `json:"avg_semester2"`
-	Grades       []GradeResponse `json:"grades"`
+	StudentID      string          `json:"student_id"`
+	FullName       string          `json:"full_name"`
+	AvgSemester1   float64         `json:"avg_semester1"`
+	AvgSemester2   float64         `json:"avg_semester2"`
+	Grades         []GradeResponse `json:"grades"`
+	ReligionChoice string          `json:"religion_choice,omitempty"`
 }
 
 type SubjectStatsResponse struct {

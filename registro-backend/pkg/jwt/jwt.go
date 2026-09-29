@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 var (
@@ -54,6 +55,7 @@ func (tm *TokenManager) GenerateAccessToken(userID, email, role, schoolID string
 		Role:     role,
 		SchoolID: schoolID,
 		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        uuid.New().String(),
 			ExpiresAt: jwt.NewNumericDate(now.Add(tm.accessTokenTTL)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
@@ -123,4 +125,20 @@ func (tm *TokenManager) ValidateToken(tokenString string) (*Claims, error) {
 // GetAccessTokenTTL returns access token TTL in seconds
 func (tm *TokenManager) GetAccessTokenTTL() int64 {
 	return int64(tm.accessTokenTTL.Seconds())
+}
+
+// ExtractJTI validates the token and returns its JTI (claim ID) and remaining TTL until expiration.
+func (tm *TokenManager) ExtractJTI(tokenString string) (string, time.Duration, error) {
+	claims, err := tm.ValidateToken(tokenString)
+	if err != nil {
+		return "", 0, err
+	}
+	if claims.ID == "" {
+		return "", 0, errors.New("token missing jti claim")
+	}
+	remaining := time.Until(claims.ExpiresAt.Time)
+	if remaining < 0 {
+		remaining = 0
+	}
+	return claims.ID, remaining, nil
 }

@@ -3,10 +3,10 @@
     <div class="text-caption text-weight-bold text-slate-700 row items-center justify-between q-mb-xs">
       <span class="row items-center">
         <q-icon name="accessibility_new" color="primary" class="q-mr-xs" />
-        Misure Compensative BES / DSA
+        {{ t('compensativeMeasures.title') || 'Misure Compensative BES / DSA' }}
       </span>
       <q-chip v-if="modelValue.length > 0" dense color="primary" text-color="white" size="xs">
-        {{ modelValue.length }} selezionate
+        {{ t('compensativeMeasures.selectedCount', { count: modelValue.length }) || `${modelValue.length} selezionate` }}
       </q-chip>
     </div>
 
@@ -33,14 +33,14 @@
         v-model="customInput"
         dense
         outlined
-        placeholder="+ Aggiungi misura personalizzata (es. Software per mappe)"
+        :placeholder="t('compensativeMeasures.customPlaceholder') || '+ Aggiungi misura personalizzata (es. Software per mappe)'"
         class="col"
         @keydown.enter.prevent="addCustomMeasure"
       />
       <q-btn
         color="secondary"
         icon="add"
-        label="Aggiungi"
+        :label="t('common.add') || 'Aggiungi'"
         dense
         unelevated
         no-caps
@@ -70,18 +70,18 @@ const emit = defineEmits(['update:modelValue'])
 
 const customInput = ref('')
 
-const defaultMeasures = [
-  { value: 'calcolatrice', label: 'Uso Calcolatrice' },
-  { value: 'tempo_aggiuntivo_30', label: 'Tempo Agg. (+30%)' },
-  { value: 'tempo_aggiuntivo_50', label: 'Tempo Agg. (+50%)' },
-  { value: 'prova_equipollente', label: 'Prova Equipollente' },
-  { value: 'sintesi_vocale', label: 'Sintesi Vocale' },
-  { value: 'mappe_concettuali', label: 'Mappe Concettuali' },
-  { value: 'tavola_pitagorica', label: 'Tavola Pitagorica' },
-  { value: 'tabelle_formule', label: 'Tabelle / Formulario' },
-  { value: 'dizionario_ortografico', label: 'Dizionario Digitale' },
-  { value: 'testo_ingrandito', label: 'Testo Ingrandito / High Contrast' }
-]
+const defaultMeasures = computed(() => [
+  { value: 'calcolatrice', label: t('compensativeMeasures.calculator') || 'Uso Calcolatrice' },
+  { value: 'tempo_aggiuntivo_30', label: t('compensativeMeasures.extraTime30') || 'Tempo Agg. (+30%)' },
+  { value: 'tempo_aggiuntivo_50', label: t('compensativeMeasures.extraTime50') || 'Tempo Agg. (+50%)' },
+  { value: 'prova_equipollente', label: t('compensativeMeasures.equivalentExam') || 'Prova Equipollente' },
+  { value: 'sintesi_vocale', label: t('compensativeMeasures.speechSynthesis') || 'Sintesi Vocale' },
+  { value: 'mappe_concettuali', label: t('compensativeMeasures.conceptMaps') || 'Mappe Concettuali' },
+  { value: 'tavola_pitagorica', label: t('compensativeMeasures.multiplicationTable') || 'Tavola Pitagorica' },
+  { value: 'tabelle_formule', label: t('compensativeMeasures.formulaTables') || 'Tabelle / Formulario' },
+  { value: 'dizionario_ortografico', label: t('compensativeMeasures.digitalDictionary') || 'Dizionario Digitale' },
+  { value: 'testo_ingrandito', label: t('compensativeMeasures.largePrint') || 'Testo Ingrandito / High Contrast' }
+])
 
 const customMeasures = ref([])
 

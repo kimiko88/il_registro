@@ -50,7 +50,7 @@ func TestTaskCreation_AllTypes(t *testing.T) {
 
 func TestClient_LifecycleAndErrors(t *testing.T) {
 	client := fastTestClient()
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	// Canceled context for instant returns without waiting for network timeouts
 	ctx, cancel := context.WithCancel(context.Background())
@@ -81,7 +81,7 @@ func TestClient_LifecycleAndErrors(t *testing.T) {
 
 func TestServer_Handlers(t *testing.T) {
 	client := fastTestClient()
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	srv := &Server{
 		client: client,

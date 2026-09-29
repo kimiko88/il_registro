@@ -435,9 +435,201 @@ paths:
         - Amministrazione
       security:
         - BearerAuth: []
+  /rooms/buildings:
+    get:
+      summary: Lista plessi scolastici
+      tags:
+        - Aule e Plessi
+      security:
+        - BearerAuth: []
       responses:
         '200':
-          description: Dati pseudonimizzati con successo
+          description: Elenco dei plessi scolastici
+    post:
+      summary: Creazione nuovo plesso scolastico
+      tags:
+        - Aule e Plessi
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Plesso scolastico creato
+  /rooms:
+    get:
+      summary: Lista aule e laboratori (supporta filtri per plesso, tipo e disponibilità)
+      tags:
+        - Aule e Plessi
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: building_id
+          in: query
+          schema:
+            type: string
+        - name: room_type
+          in: query
+          schema:
+            type: string
+        - name: only_bookable
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Elenco delle aule
+    post:
+      summary: Creazione nuova aula o laboratorio prenotabile
+      tags:
+        - Aule e Plessi
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Aula creata con successo
+  /rooms/{id}/availability:
+    get:
+      summary: Verifica disponibilità aula per data e slot orario
+      tags:
+        - Aule e Plessi
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: time_slot
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Disponibilità aula verificata
+  /rooms/bookings:
+    get:
+      summary: Lista prenotazioni aule attive
+      tags:
+        - Aule e Plessi
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Elenco delle prenotazioni
+    post:
+      summary: Effettua prenotazione aula per classe e ora (spot o ricorrente)
+      tags:
+        - Aule e Plessi
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Prenotazione effettuata con successo
+        '409':
+          description: Conflitto di prenotazione (aula già occupata)
+  /rooms/bookings/{id}:
+    delete:
+      summary: Annullamento prenotazione aula
+      tags:
+        - Aule e Plessi
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Prenotazione annullata
+  /timetable/generate:
+    post:
+      summary: Avvia generazione orario scolastico automatica con risolutore CSP e priorità anzianità
+      tags:
+        - Orario Scolastico
+      security:
+        - BearerAuth: []
+      responses:
+        '202':
+          description: Generazione orario avviata in background
+  /timetable/generate/{jobID}:
+    get:
+      summary: Polling stato avanzamento calcolo orario
+      tags:
+        - Orario Scolastico
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: jobID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stato del job e orario proposto
+  /timetable/generate/{jobID}/publish:
+    post:
+      summary: Pubblicazione orario calcolato nelle tabelle ufficiali
+      tags:
+        - Orario Scolastico
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: jobID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Orario pubblicato con successo
+  /timetable/preferences:
+    get:
+      summary: Recupera desiderata orario docente
+      tags:
+        - Orario Scolastico
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Desiderata docente
+    post:
+      summary: Salva desiderata orario docente
+      tags:
+        - Orario Scolastico
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Desiderata salvati con successo
+  /timetable/constraints:
+    get:
+      summary: Lista vincoli orario istituto e plessi
+      tags:
+        - Orario Scolastico
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Elenco vincoli orari
+    post:
+      summary: Salva vincoli orario istituto
+      tags:
+        - Orario Scolastico
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Vincoli salvati con successo
 components:
   securitySchemes:
     BearerAuth:

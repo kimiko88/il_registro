@@ -29,6 +29,8 @@ export function useMenuItems(role, assignments = []) {
             { label: 'Rilevazione Scioperi', icon: 'campaign', path: '/ata/strike' },
             { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
             { label: 'Feature Flags & Istituto', icon: 'toggle_on', path: '/admin/school-settings' },
+            { label: 'Aule & Plessi', icon: 'meeting_room', path: '/secretary/rooms' },
+            { label: 'Orario Scolastico & Cattedre', icon: 'schedule', path: '/secretary/timetable' },
             { label: 'Verbali & Modelli Riunioni', icon: 'gavel', path: '/secretary/verbali' },
             { label: 'Analytics', icon: 'analytics', path: '/admin/analytics' },
             { label: 'Google & Teams E-Learning', icon: 'hub', path: '/admin/elearning' },
@@ -43,7 +45,9 @@ export function useMenuItems(role, assignments = []) {
                     { label: 'Studenti', icon: 'school', path: '/secretary/students' },
                     { label: 'Utenti', icon: 'people', path: '/secretary/users' },
                     { label: 'Classi', icon: 'room', path: '/secretary/classes' },
+                    { label: 'Aule & Plessi', icon: 'meeting_room', path: '/secretary/rooms' },
                     { label: 'Orario Scolastico', icon: 'schedule', path: '/secretary/timetable' },
+                    { label: 'Vincoli Orario & Aule', icon: 'tune', path: '/secretary/timetable-constraints' },
                     { label: 'Gruppi Linguistici / Articolati', icon: 'groups', path: '/secretary/groups' }
                 ]
             },
@@ -101,6 +105,8 @@ export function useMenuItems(role, assignments = []) {
                 icon: 'event',
                 children: [
                     { label: 'Orario Lezioni', icon: 'schedule', path: '/teacher/timetable' },
+                    { label: 'Prenota Aula / Lab', icon: 'meeting_room', path: '/teacher/room-booking' },
+                    { label: 'Desiderata Orario', icon: 'thumb_up_alt', path: '/teacher/schedule-preferences' },
                     { label: 'Agenda', icon: 'edit_calendar', path: '/teacher/agenda' },
                     { label: 'Colloqui', icon: 'event', path: '/teacher/colloqui' },
                     { label: 'Ricevimento Generale', icon: 'meeting_room', path: '/teacher/general-meetings' },
@@ -127,6 +133,8 @@ export function useMenuItems(role, assignments = []) {
                 children: [
                     { label: 'Gestione Sostituzioni', icon: 'swap_horiz', path: '/secretary/substitutions' },
                     { label: 'Orario Scolastico', icon: 'schedule', path: '/secretary/timetable' },
+                    { label: 'Aule & Plessi', icon: 'meeting_room', path: '/secretary/rooms' },
+                    { label: 'Vincoli Orario & Aule', icon: 'tune', path: '/secretary/timetable-constraints' },
                     { label: 'Presenze Personale & Docenti', icon: 'co_present', path: '/ata/attendance' },
                     { label: 'Rilevazione Scioperi', icon: 'campaign', path: '/ata/strike' },
                     { label: 'Verbali & Riunioni', icon: 'gavel', path: '/secretary/verbali' },
@@ -381,7 +389,9 @@ export function useMenuItems(role, assignments = []) {
                     { label: 'Rilevazione Scioperi', icon: 'campaign', path: '/ata/strike' },
                     { label: 'Cartellino & Piano Ferie', icon: 'calendar_month', path: '/ata/timecard' },
                     { label: 'Sostituzioni Docenti', icon: 'swap_horiz', path: '/secretary/substitutions' },
-                    { label: 'Orario Scolastico', icon: 'schedule', path: '/secretary/timetable' }
+                    { label: 'Orario Scolastico', icon: 'schedule', path: '/secretary/timetable' },
+                    { label: 'Aule & Plessi', icon: 'meeting_room', path: '/secretary/rooms' },
+                    { label: 'Vincoli Orario & Aule', icon: 'tune', path: '/secretary/timetable-constraints' }
                 ]
             },
             {

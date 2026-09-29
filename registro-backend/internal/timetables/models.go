@@ -15,6 +15,8 @@ type ClassSchedule struct {
 	TeacherID   *string   `json:"teacher_id"`
 	TeacherName string    `json:"teacher_name,omitempty"`
 	Room        string    `json:"room"`
+	RoomID      *string   `json:"room_id,omitempty"`
+	BuildingID  *string   `json:"building_id,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -24,11 +26,13 @@ type UpdateScheduleRequest struct {
 }
 
 type ScheduleEntry struct {
-	DayOfWeek int     `json:"day_of_week"`
-	HourIndex int     `json:"hour_index"`
-	SubjectID string  `json:"subject_id"`
-	TeacherID *string `json:"teacher_id"`
-	Room      string  `json:"room"`
+	DayOfWeek  int     `json:"day_of_week"`
+	HourIndex  int     `json:"hour_index"`
+	SubjectID  string  `json:"subject_id"`
+	TeacherID  *string `json:"teacher_id"`
+	Room       string  `json:"room"`
+	RoomID     *string `json:"room_id,omitempty"`
+	BuildingID *string `json:"building_id,omitempty"`
 }
 
 type UpdateTeacherScheduleRequest struct {
@@ -36,9 +40,11 @@ type UpdateTeacherScheduleRequest struct {
 }
 
 type TeacherScheduleEntry struct {
-	DayOfWeek int    `json:"day_of_week"`
-	HourIndex int    `json:"hour_index"`
-	ClassID   string `json:"class_id"`
-	SubjectID string `json:"subject_id"`
-	Room      string `json:"room"`
+	DayOfWeek  int     `json:"day_of_week"`
+	HourIndex  int     `json:"hour_index"`
+	ClassID    string  `json:"class_id"`
+	SubjectID  string  `json:"subject_id"`
+	Room       string  `json:"room"`
+	RoomID     *string `json:"room_id,omitempty"`
+	BuildingID *string `json:"building_id,omitempty"`
 }

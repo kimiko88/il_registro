@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"registro-backend/pkg/crypto"
 	"registro-backend/pkg/logger"
 )
 
@@ -81,6 +82,13 @@ func scanPlan(row interface {
 		plan.Content = PdpContent{}
 	}
 
+	// Decrypt clinical diagnosis at rest (GDPR Art. 9) with fallback to legacy cleartext
+	if plan.Diagnosis != "" {
+		if decrypted, err := crypto.DecryptString(plan.Diagnosis); err == nil {
+			plan.Diagnosis = decrypted
+		}
+	}
+
 	return plan, nil
 }
 
@@ -101,6 +109,14 @@ func (r *repository) Create(ctx context.Context, plan *PdpPlan) (*PdpPlan, error
 		return nil, fmt.Errorf("pdp.Create: marshal content: %w", err)
 	}
 
+	// Encrypt clinical diagnosis at rest (GDPR Art. 9)
+	encDiagnosis := plan.Diagnosis
+	if encDiagnosis != "" {
+		if cipherText, err := crypto.EncryptString(encDiagnosis); err == nil {
+			encDiagnosis = cipherText
+		}
+	}
+
 	query := `
 		INSERT INTO pdp_plans
 		  (student_id, class_id, school_id, academic_year, plan_type, diagnosis,
@@ -110,7 +126,7 @@ func (r *repository) Create(ctx context.Context, plan *PdpPlan) (*PdpPlan, error
 	`
 	row := r.db.QueryRowContext(ctx, query,
 		plan.StudentID, plan.ClassID, plan.SchoolID, plan.AcademicYear,
-		plan.PlanType, plan.Diagnosis, contentJSON,
+		plan.PlanType, encDiagnosis, contentJSON,
 		plan.CoordinatorID, plan.ReferenteID, plan.CreatedBy,
 	)
 	if err := row.Scan(&plan.ID, &plan.CreatedAt, &plan.UpdatedAt); err != nil {
@@ -179,8 +195,14 @@ func (r *repository) Update(ctx context.Context, id string, req *UpdatePdpReques
 		i++
 	}
 	if req.Diagnosis != nil {
+		encDiagnosis := *req.Diagnosis
+		if encDiagnosis != "" {
+			if cipherText, err := crypto.EncryptString(encDiagnosis); err == nil {
+				encDiagnosis = cipherText
+			}
+		}
 		set += fmt.Sprintf("diagnosis = $%d, ", i)
-		args = append(args, *req.Diagnosis)
+		args = append(args, encDiagnosis)
 		i++
 	}
 	if req.Content != nil {

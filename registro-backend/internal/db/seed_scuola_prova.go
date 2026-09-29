@@ -970,6 +970,52 @@ func SeedScuolaDiProva(ctx context.Context, dbConn *sql.DB) error {
 	}
 	fmt.Println("[SEED] Sample Signed Verbale & Confidential Draft Verbale created.")
 
+	// Seed Sample Buildings (Plessi) and Bookable Rooms
+	var bldCentraleID, bldSuccursaleID string
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM school_buildings WHERE school_id = $1 AND name = $2`, schoolID, "Sede Centrale").Scan(&bldCentraleID)
+	if err != nil {
+		bldCentraleID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO school_buildings (id, school_id, name, address, notes, is_active, created_at, updated_at)
+			VALUES ($1, $2, 'Sede Centrale', 'Via delle Prove 10, Roma', 'Edificio principale, presidenza e segreteria', TRUE, NOW(), NOW())
+			ON CONFLICT (school_id, name) DO NOTHING
+		`, bldCentraleID, schoolID)
+	}
+
+	err = dbConn.QueryRowContext(ctx, `SELECT id FROM school_buildings WHERE school_id = $1 AND name = $2`, schoolID, "Succursale Sud").Scan(&bldSuccursaleID)
+	if err != nil {
+		bldSuccursaleID = uuid.New().String()
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO school_buildings (id, school_id, name, address, notes, is_active, created_at, updated_at)
+			VALUES ($1, $2, 'Succursale Sud', 'Via Roma 45, Roma', 'Plesso secondario con aule didattiche e palestra', TRUE, NOW(), NOW())
+			ON CONFLICT (school_id, name) DO NOTHING
+		`, bldSuccursaleID, schoolID)
+	}
+
+	// Seed Sample Rooms
+	sampleRooms := []struct {
+		name      string
+		bldID     string
+		roomType  string
+		capacity  int
+		equipment string
+	}{
+		{"Laboratorio di Informatica A", bldCentraleID, "lab_informatica", 28, `["28 PC All-in-One", "LIM SmartBoard", "Fibra 1Gbps", "Proiettore"]`},
+		{"Laboratorio di Scienze & Chimica", bldCentraleID, "lab_chimica", 24, `["Cappa aspirante", "Microscopi ottici", "Banco reagenti"]`},
+		{"Palestra Principale", bldSuccursaleID, "palestra", 60, `["Campo basket", "Campo pallavolo", "Spogliatoi"]`},
+		{"Aula Magna / Auditorium", bldCentraleID, "aula_magna", 120, `["Impianto audio", "Microfoni wireless", "Maxi schermo", "Climatizzazione"]`},
+		{"Laboratorio Linguistico", bldSuccursaleID, "lab_lingue", 25, `["Cuffie stereo", "Software multimediale", "SmartTV 75 pollici"]`},
+	}
+
+	for _, sr := range sampleRooms {
+		_, _ = dbConn.ExecContext(ctx, `
+			INSERT INTO bookable_rooms (id, school_id, building_id, name, room_type, capacity, equipment, requires_booking, is_active, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, TRUE, TRUE, NOW(), NOW())
+			ON CONFLICT (school_id, name) DO NOTHING
+		`, uuid.New().String(), schoolID, sr.bldID, sr.name, sr.roomType, sr.capacity, sr.equipment)
+	}
+	fmt.Println("[SEED] School buildings and bookable rooms created.")
+
 	fmt.Println("[SEED] Complete seeding for 'Scuola di Prova' finished successfully!")
 	return nil
 }

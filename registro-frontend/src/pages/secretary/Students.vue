@@ -31,8 +31,28 @@
           </q-input>
         </template>
         
+        <template v-slot:body-cell-religion="props">
+          <q-td :props="props" class="text-center">
+            <q-chip
+              clickable
+              dense
+              :color="getReligionChipColor(props.row.religion_choice)"
+              text-color="white"
+              class="text-weight-bold cursor-pointer"
+              @click="openReligionDialog(props.row)"
+            >
+              <q-icon :name="getReligionChipIcon(props.row.religion_choice)" class="q-mr-xs" size="14px" />
+              {{ getReligionLabel(props.row.religion_choice) }}
+              <q-tooltip>Modifica scelta di avvalimento IRC</q-tooltip>
+            </q-chip>
+          </q-td>
+        </template>
+
         <template v-slot:body-cell-actions="props">
           <q-td :props="props" class="text-right">
+            <q-btn flat round dense icon="church" color="indigo" @click="openReligionDialog(props.row)">
+              <q-tooltip>Avvalimento Religione (IRC)</q-tooltip>
+            </q-btn>
             <q-btn flat round dense icon="edit" color="blue" @click="editStudent(props.row)">
               <q-tooltip>Modifica Studente</q-tooltip>
             </q-btn>
@@ -83,6 +103,25 @@
               map-options
               :loading="loadingClasses"
             />
+
+            <q-select
+              v-model="userForm.religion_choice"
+              :options="religionOptions"
+              label="Scelta Religione Cattolica (IRC)"
+              outlined
+              dense
+              emit-value
+              map-options
+            >
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold">{{ scope.opt.label }}</q-item-label>
+                    <q-item-label caption>{{ scope.opt.description }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
 
             <q-input
               v-if="!isEditing"
@@ -221,6 +260,60 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <!-- Quick Religion Choice Dialog -->
+    <q-dialog v-model="showReligionDialog">
+      <q-card style="width: min(500px, 95vw)" class="rounded-xl shadow-24 bg-white">
+        <q-card-section class="row items-center q-pa-lg border-b border-slate-100 bg-slate-50">
+          <div class="row items-center">
+            <q-avatar color="indigo-1" text-color="indigo" icon="church" size="36px" class="q-mr-sm" />
+            <div>
+              <div class="text-h6 text-weight-bold text-slate-800">Avvalimento Religione Cattolica</div>
+              <div class="text-caption text-slate-500">{{ selectedStudentForReligion?.last_name }} {{ selectedStudentForReligion?.first_name }}</div>
+            </div>
+          </div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-lg">
+          <p class="text-body2 text-slate-600 q-mb-md">
+            Seleziona la modalità di partecipazione all'Insegnamento della Religione Cattolica (IRC). La scelta persiste finché non viene modificata manualmente.
+          </p>
+          <q-list class="q-gutter-y-sm">
+            <q-item
+              v-for="opt in religionOptions"
+              :key="opt.value"
+              tag="label"
+              clickable
+              v-ripple
+              class="border rounded-lg"
+              :class="selectedReligionChoice === opt.value ? 'bg-indigo-50 border-indigo-500' : 'border-slate-200'"
+            >
+              <q-item-section avatar>
+                <q-radio v-model="selectedReligionChoice" :val="opt.value" color="indigo" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">{{ opt.label }}</q-item-label>
+                <q-item-label caption>{{ opt.description }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md bg-slate-50 border-t border-slate-100">
+          <q-btn flat label="Annulla" v-close-popup color="slate-400" no-caps />
+          <q-btn
+            label="Salva Scelta"
+            color="primary"
+            class="rounded-lg q-px-lg"
+            no-caps
+            :loading="savingReligion"
+            @click="saveReligionChoice"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -229,6 +322,7 @@ import { ref, onMounted, reactive, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { userService } from '@/services/userService'
 import adminService from '@/services/adminService'
+import { religionService } from '@/services/religionService'
 import { useAuthStore } from '@/stores/auth'
 import { useQuasar } from 'quasar'
 import StudentRecords from '@/components/Secretary/StudentRecords.vue'
@@ -278,9 +372,68 @@ const openRecords = (student) => {
     showRecords.value = true
 }
 
+// Religion Choice Dialog
+const showReligionDialog = ref(false)
+const selectedStudentForReligion = ref(null)
+const selectedReligionChoice = ref('avvalente')
+const savingReligion = ref(false)
+
+const religionOptions = [
+    { label: 'Si avvale dell\'IRC', value: 'avvalente', description: 'Partecipa all\'Insegnamento della Religione Cattolica e riceve voti con giudizio' },
+    { label: 'Non si avvale (Esonero)', value: 'non_avvalente', description: 'Esonerato dalle lezioni di religione (non riceve valutazioni IRC)' },
+    { label: 'Attività Alternativa', value: 'attivita_alternativa', description: 'Svolge attività didattica alternativa' }
+]
+
+const getReligionChipColor = (choice) => {
+    switch (choice) {
+        case 'non_avvalente': return 'orange-8'
+        case 'attivita_alternativa': return 'purple-7'
+        default: return 'teal-7'
+    }
+}
+
+const getReligionChipIcon = (choice) => {
+    switch (choice) {
+        case 'non_avvalente': return 'block'
+        case 'attivita_alternativa': return 'swap_horiz'
+        default: return 'check_circle'
+    }
+}
+
+const getReligionLabel = (choice) => {
+    switch (choice) {
+        case 'non_avvalente': return 'Non avvalente'
+        case 'attivita_alternativa': return 'Attività Alternativa'
+        default: return 'Avvalente IRC'
+    }
+}
+
+const openReligionDialog = (student) => {
+    selectedStudentForReligion.value = student
+    selectedReligionChoice.value = student.religion_choice || 'avvalente'
+    showReligionDialog.value = true
+}
+
+const saveReligionChoice = async () => {
+    if (!selectedStudentForReligion.value) return
+    savingReligion.value = true
+    try {
+        const sId = selectedStudentForReligion.value.student_id || selectedStudentForReligion.value.id
+        await religionService.setStudentChoice(sId, selectedReligionChoice.value)
+        selectedStudentForReligion.value.religion_choice = selectedReligionChoice.value
+        $q.notify({ type: 'positive', message: 'Scelta di avvalimento IRC aggiornata' })
+        showReligionDialog.value = false
+    } catch (e) {
+        $q.notify({ type: 'negative', message: 'Errore aggiornamento avvalimento' })
+    } finally {
+        savingReligion.value = false
+    }
+}
+
 const columns = [
     { name: 'name', label: 'Nome', field: row => `${row.last_name} ${row.first_name}`, align: 'left', sortable: true },
     { name: 'class', label: 'Classe', field: row => row.class_name || row.ClassName || '-', align: 'center', sortable: true },
+    { name: 'religion', label: 'Avvalimento IRC', field: 'religion_choice', align: 'center', sortable: true },
     { name: 'email', label: 'Email', field: 'email', align: 'left' },
     { name: 'fiscal_code', label: 'Codice Fiscale', field: 'fiscal_code', align: 'left' },
     { name: 'actions', label: 'Azioni', align: 'right' }
@@ -310,8 +463,23 @@ onMounted(() => {
 const fetchStudents = async () => {
     loading.value = true
     try {
-        const res = await userService.getAll({ role: 'student' })
-        students.value = res.data.users || []
+        const [resUsers, resReligion] = await Promise.allSettled([
+            userService.getAll({ role: 'student' }),
+            religionService.listChoices({ school_id: authStore.user?.school_id })
+        ])
+        const usersList = resUsers.status === 'fulfilled' ? (resUsers.value.data.users || []) : []
+        const religionList = resReligion.status === 'fulfilled' ? (resReligion.value.data || []) : []
+
+        const religionMap = {}
+        religionList.forEach(r => {
+            if (r.student_id) religionMap[r.student_id] = r.choice
+            if (r.user_id) religionMap[r.user_id] = r.choice
+        })
+
+        students.value = usersList.map(u => ({
+            ...u,
+            religion_choice: religionMap[u.student_id] || religionMap[u.id] || 'avvalente'
+        }))
     } catch (e) {
         $q.notify({ type: 'negative', message: 'Errore caricamento studenti' })
     } finally {
@@ -343,7 +511,8 @@ const openEnrollment = () => {
         role: 'student',
         class_id: null,
         school_id: authStore.user.school_id,
-        password: ''
+        password: '',
+        religion_choice: 'avvalente'
     })
     fetchClasses()
     showUserDialog.value = true
@@ -353,6 +522,7 @@ const editStudent = (row) => {
     isEditing.value = true
     Object.assign(userForm, row)
     userForm.class_id = row.ClassID || row.class_id
+    userForm.religion_choice = row.religion_choice || 'avvalente'
     fetchClasses()
     showUserDialog.value = true
 }
@@ -361,14 +531,29 @@ const saveStudent = async () => {
     saving.value = true
     try {
         const payload = { ...userForm }
+        const chosenReligion = userForm.religion_choice || 'avvalente'
+        delete payload.religion_choice
+
+        let savedId = userForm.id
         if (isEditing.value) {
             delete payload.password
             await userService.update(userForm.id, payload)
             $q.notify({ type: 'positive', message: 'Studente aggiornato' })
         } else {
-            await userService.create(payload)
+            const createRes = await userService.create(payload)
+            savedId = createRes.data?.id || createRes.data?.user?.id
             $q.notify({ type: 'positive', message: 'Studente iscritto correttamente' })
         }
+
+        // Salva scelta di avvalimento IRC
+        if (savedId) {
+            try {
+                await religionService.setStudentChoice(savedId, chosenReligion)
+            } catch (errRel) {
+                console.warn('Errore salvataggio avvalimento:', errRel)
+            }
+        }
+
         showUserDialog.value = false
         fetchStudents()
     } catch (e) {

@@ -25,6 +25,15 @@ func (s *Service) CreateSubject(ctx context.Context, schoolID string, req Create
 	} else {
 		subj.IsMandatory = true // Default
 	}
+	if req.IsReligion != nil {
+		subj.IsReligion = *req.IsReligion
+		if subj.IsReligion {
+			subj.IsJudgmentOnly = true // IRC implica is_judgment_only
+		}
+	}
+	if req.IsJudgmentOnly != nil {
+		subj.IsJudgmentOnly = *req.IsJudgmentOnly
+	}
 
 	if err := s.repo.Create(ctx, subj); err != nil {
 		return nil, err
@@ -53,6 +62,15 @@ func (s *Service) UpdateSubject(ctx context.Context, id string, req CreateSubjec
 	subj.Description = req.Description
 	if req.IsMandatory != nil {
 		subj.IsMandatory = *req.IsMandatory
+	}
+	if req.IsReligion != nil {
+		subj.IsReligion = *req.IsReligion
+		if subj.IsReligion {
+			subj.IsJudgmentOnly = true
+		}
+	}
+	if req.IsJudgmentOnly != nil {
+		subj.IsJudgmentOnly = *req.IsJudgmentOnly
 	}
 
 	if err := s.repo.Update(ctx, subj); err != nil {

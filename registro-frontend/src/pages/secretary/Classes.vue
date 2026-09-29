@@ -142,6 +142,15 @@
               autofocus
               :rules="[val => (!!val && val.trim().length > 0) || (t('common.requiredField') || 'Campo obbligatorio')]"
             />
+            <q-checkbox
+              v-model="newSubjectIsReligion"
+              label="Materia IRC (Religione Cattolica) - Solo giudizi"
+              color="indigo"
+              class="q-mt-sm"
+            />
+            <div v-if="newSubjectIsReligion" class="text-caption text-indigo-7 q-mt-xs">
+              Questa materia accetta esclusivamente giudizi ministeriali (Non classificabile, Insufficiente, Sufficiente, Buono, Distinto, Ottimo) e gestisce l'avvalimento degli studenti.
+            </div>
           </q-card-section>
           <q-card-actions align="right" class="q-pa-lg bg-slate-50">
             <q-btn flat label="Annulla" v-close-popup color="slate-400" no-caps />
@@ -403,7 +412,10 @@ const removeAssignment = async (row) => {
     }
 }
 
+const newSubjectIsReligion = ref(false)
+
 const openCreateSubject = () => {
+    newSubjectIsReligion.value = false
     showSubjectDialog.value = true
 }
 
@@ -412,12 +424,15 @@ const createSubject = async () => {
     try {
         const payload = {
             name: newSubjectName.value,
-            school_id: authStore.user.school_id
+            school_id: authStore.user.school_id,
+            is_religion: newSubjectIsReligion.value,
+            is_judgment_only: newSubjectIsReligion.value
         }
         await adminService.createSubject(payload)
         $q.notify({ type: 'positive', message: 'Materia creata' })
         showSubjectDialog.value = false
         newSubjectName.value = ''
+        newSubjectIsReligion.value = false
         fetchSchoolData()
     } catch(e) {
         $q.notify({ type: 'negative', message: 'Errore creazione materia' })

@@ -50,6 +50,14 @@ func (h *Handler) CreateGroup(c *gin.Context) {
 		return
 	}
 
+	if req.SchoolID == "" {
+		req.SchoolID = c.GetString("school_id")
+	}
+	if req.SchoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id is required"})
+		return
+	}
+
 	group, err := h.service.CreateGroup(c.Request.Context(), req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

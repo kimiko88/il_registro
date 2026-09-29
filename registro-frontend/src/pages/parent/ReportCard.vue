@@ -125,11 +125,11 @@
             <template v-slot:body-cell-final_grade="props">
               <q-td :props="props" align="center">
                 <q-chip
-                  :color="props.row.final_grade >= 6 ? 'positive' : 'negative'"
+                  :color="getFinalGradeChipColor(props.row.final_grade)"
                   text-color="white"
                   class="text-weight-bold"
                 >
-                  {{ props.row.final_grade ?? '-' }}
+                  {{ formatFinalGrade(props.row.final_grade) }}
                 </q-chip>
               </q-td>
             </template>
@@ -289,6 +289,27 @@ async function loadDeficiencies() {
 function getAverageClass(avg) {
   if (!avg) return 'text-slate-400'
   return avg >= 6.0 ? 'text-positive font-bold' : 'text-negative font-bold'
+}
+
+function getFinalGradeChipColor(val) {
+  if (val === null || val === undefined || val === '' || val === '-') return 'grey-5'
+  if (typeof val === 'string') {
+    const v = val.toLowerCase().trim()
+    if (['ottimo', 'distinto', 'buono', 'sufficiente'].includes(v)) return 'positive'
+    if (['insufficiente'].includes(v)) return 'negative'
+    if (['non classificabile', 'non class.', 'non avvalente', 'att. alternativa', 'esonero', 'esonerato'].includes(v)) return 'grey-6'
+  }
+  const num = Number(val)
+  if (isNaN(num)) return 'grey-6'
+  if (num === 0) return 'grey-6'
+  return num >= 6 ? 'positive' : 'negative'
+}
+
+function formatFinalGrade(val) {
+  if (val === null || val === undefined || val === '') return '-'
+  if (typeof val === 'string') return val
+  if (val === 0) return 'Non class.'
+  return val
 }
 
 async function signReportCard() {

@@ -364,9 +364,9 @@
                 text-color="slate-700"
                 class="shadow-xs"
                 :options="[
-                  { label: 'Panoramica & Dettaglio', value: 'both', icon: 'dashboard' },
-                  { label: 'Solo Macro-Aree', value: 'macro', icon: 'view_agenda' },
-                  { label: 'Solo Profili', value: 'roles', icon: 'grid_view' }
+                  { label: t('strikeManagement.viewOverviewDetail'), value: 'both', icon: 'dashboard' },
+                  { label: t('strikeManagement.viewOnlyMacro'), value: 'macro', icon: 'view_agenda' },
+                  { label: t('strikeManagement.viewOnlyRoles'), value: 'roles', icon: 'grid_view' }
                 ]"
               />
             </div>
@@ -408,7 +408,7 @@
                   <!-- Rate Highlights -->
                   <div class="row items-baseline justify-between q-mt-md q-mb-xs">
                     <div class="text-caption text-slate-500 font-medium">
-                      Adesione Rilevata:
+                      {{ t('strikeManagement.detectedAdhesion') }}
                     </div>
                     <div class="text-h6 text-weight-bolder text-positive">
                       {{ macro.participatesRate }}%
@@ -418,10 +418,10 @@
 
                   <!-- Stacked Breakdown Progress Bar -->
                   <div class="stacked-progress-bar rounded-borders overflow-hidden bg-slate-100 row no-wrap q-my-sm" style="height: 8px;">
-                    <div v-if="macro.participates > 0" class="bg-positive" :style="{ width: ((macro.participates / macro.total) * 100) + '%' }" :title="`Aderiscono: ${macro.participates}`" />
-                    <div v-if="macro.not_participates > 0" class="bg-negative" :style="{ width: ((macro.not_participates / macro.total) * 100) + '%' }" :title="`Non aderiscono: ${macro.not_participates}`" />
-                    <div v-if="macro.undecided > 0" class="bg-amber-8" :style="{ width: ((macro.undecided / macro.total) * 100) + '%' }" :title="`Indecisi: ${macro.undecided}`" />
-                    <div v-if="macro.unanswered > 0" class="bg-slate-300" :style="{ width: ((macro.unanswered / macro.total) * 100) + '%' }" :title="`In attesa: ${macro.unanswered}`" />
+                    <div v-if="macro.participates > 0" class="bg-positive" :style="{ width: ((macro.participates / macro.total) * 100) + '%' }" :title="`${t('strikeManagement.participateCount')}: ${macro.participates}`" />
+                    <div v-if="macro.not_participates > 0" class="bg-negative" :style="{ width: ((macro.not_participates / macro.total) * 100) + '%' }" :title="`${t('strikeManagement.notParticipateCount')}: ${macro.not_participates}`" />
+                    <div v-if="macro.undecided > 0" class="bg-amber-8" :style="{ width: ((macro.undecided / macro.total) * 100) + '%' }" :title="`${t('strikeManagement.undecidedCount')}: ${macro.undecided}`" />
+                    <div v-if="macro.unanswered > 0" class="bg-slate-300" :style="{ width: ((macro.unanswered / macro.total) * 100) + '%' }" :title="`${t('strikeManagement.unansweredCount')}: ${macro.unanswered}`" />
                   </div>
 
                   <!-- 4-Stat Grid -->
@@ -430,7 +430,7 @@
                       <div class="p-2 rounded-lg bg-emerald-50/70 border border-emerald-100 text-caption">
                         <div class="text-emerald-700 text-xs font-semibold flex items-center">
                           <q-icon name="check_circle" size="13px" class="q-mr-xs text-positive" />
-                          Aderiscono
+                          {{ t('strikeManagement.participateCount') }}
                         </div>
                         <div class="text-weight-bolder text-emerald-900 text-subtitle2">
                           {{ macro.participates }}
@@ -441,7 +441,7 @@
                       <div class="p-2 rounded-lg bg-rose-50/70 border border-rose-100 text-caption">
                         <div class="text-rose-700 text-xs font-semibold flex items-center">
                           <q-icon name="cancel" size="13px" class="q-mr-xs text-negative" />
-                          Non Aderiscono
+                          {{ t('strikeManagement.notParticipateCount') }}
                         </div>
                         <div class="text-weight-bolder text-rose-900 text-subtitle2">
                           {{ macro.not_participates }}
@@ -452,7 +452,7 @@
                       <div class="p-2 rounded-lg bg-amber-50/70 border border-amber-100 text-caption">
                         <div class="text-amber-800 text-xs font-semibold flex items-center">
                           <q-icon name="help_outline" size="13px" class="q-mr-xs text-amber-8" />
-                          Non Deciso
+                          {{ t('strikeManagement.undecidedCount') }}
                         </div>
                         <div class="text-weight-bolder text-amber-900 text-subtitle2">
                           {{ macro.undecided }}
@@ -463,7 +463,7 @@
                       <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 text-caption">
                         <div class="text-slate-600 text-xs font-semibold flex items-center">
                           <q-icon name="hourglass_empty" size="13px" class="q-mr-xs text-slate-400" />
-                          In Attesa
+                          {{ t('strikeManagement.unansweredCount') }}
                         </div>
                         <div class="text-weight-bolder text-slate-700 text-subtitle2">
                           {{ macro.unanswered }}
@@ -481,7 +481,7 @@
             <div class="row items-center justify-between q-mb-sm gap-xs">
               <div class="text-subtitle2 text-weight-bold text-slate-700 flex items-center">
                 <q-icon name="list_alt" size="18px" class="q-mr-xs text-primary" />
-                Dettaglio per Singolo Profilo Professionale ({{ filteredByRoleCards.length }})
+                {{ t('strikeManagement.detailByRoleTitle', { count: filteredByRoleCards.length }) }}
               </div>
 
               <!-- Filter pills for role detail -->
@@ -493,7 +493,7 @@
                   size="sm"
                   :color="macroRoleFilter === 'all' ? 'primary' : 'grey-2'"
                   :text-color="macroRoleFilter === 'all' ? 'white' : 'slate-700'"
-                  label="Tutti i Profili"
+                  :label="t('strikeManagement.filterAllProfiles')"
                   class="q-px-sm text-weight-medium"
                   @click="macroRoleFilter = 'all'"
                 />
@@ -504,7 +504,7 @@
                   size="sm"
                   :color="macroRoleFilter === 'teachers' ? 'indigo-7' : 'grey-2'"
                   :text-color="macroRoleFilter === 'teachers' ? 'white' : 'slate-700'"
-                  label="Docenti"
+                  :label="t('strikeManagement.filterTeachers')"
                   class="q-px-sm text-weight-medium"
                   @click="macroRoleFilter = 'teachers'"
                 />
@@ -515,7 +515,7 @@
                   size="sm"
                   :color="macroRoleFilter === 'admin_tech' ? 'teal-7' : 'grey-2'"
                   :text-color="macroRoleFilter === 'admin_tech' ? 'white' : 'slate-700'"
-                  label="Amministrativi & Tecnici"
+                  :label="t('strikeManagement.filterAdminTech')"
                   class="q-px-sm text-weight-medium"
                   @click="macroRoleFilter = 'admin_tech'"
                 />
@@ -526,7 +526,7 @@
                   size="sm"
                   :color="macroRoleFilter === 'collaboratori' ? 'amber-9' : 'grey-2'"
                   :text-color="macroRoleFilter === 'collaboratori' ? 'white' : 'slate-700'"
-                  label="Collaboratori"
+                  :label="t('strikeManagement.filterCollaborators')"
                   class="q-px-sm text-weight-medium"
                   @click="macroRoleFilter = 'collaboratori'"
                 />
@@ -570,10 +570,10 @@
 
                       <!-- Stacked Progress Bar -->
                       <div class="stacked-progress-bar rounded-borders overflow-hidden bg-slate-100 row no-wrap q-my-xs" style="height: 6px;">
-                        <div v-if="cat.participates > 0" class="bg-positive" :style="{ width: ((cat.participates / cat.total) * 100) + '%' }" :title="`Aderiscono: ${cat.participates}`" />
-                        <div v-if="cat.not_participates > 0" class="bg-negative" :style="{ width: ((cat.not_participates / cat.total) * 100) + '%' }" :title="`Non aderiscono: ${cat.not_participates}`" />
-                        <div v-if="cat.undecided > 0" class="bg-amber-8" :style="{ width: ((cat.undecided / cat.total) * 100) + '%' }" :title="`Indecisi: ${cat.undecided}`" />
-                        <div v-if="cat.unanswered > 0" class="bg-slate-300" :style="{ width: ((cat.unanswered / cat.total) * 100) + '%' }" :title="`In attesa: ${cat.unanswered}`" />
+                        <div v-if="cat.participates > 0" class="bg-positive" :style="{ width: ((cat.participates / cat.total) * 100) + '%' }" :title="`${t('strikeManagement.participateCount')}: ${cat.participates}`" />
+                        <div v-if="cat.not_participates > 0" class="bg-negative" :style="{ width: ((cat.not_participates / cat.total) * 100) + '%' }" :title="`${t('strikeManagement.notParticipateCount')}: ${cat.not_participates}`" />
+                        <div v-if="cat.undecided > 0" class="bg-amber-8" :style="{ width: ((cat.undecided / cat.total) * 100) + '%' }" :title="`${t('strikeManagement.undecidedCount')}: ${cat.undecided}`" />
+                        <div v-if="cat.unanswered > 0" class="bg-slate-300" :style="{ width: ((cat.unanswered / cat.total) * 100) + '%' }" :title="`${t('strikeManagement.unansweredCount')}: ${cat.unanswered}`" />
                       </div>
                     </div>
 
@@ -1235,7 +1235,7 @@ const exportCsv = () => {
   if (!summary.value || !summary.value.staff || summary.value.staff.length === 0) {
     $q.notify({
       type: 'warning',
-      message: 'Nessun dato da esportare'
+      message: t('strikeManagement.noDataToExport')
     })
     return
   }
@@ -1270,7 +1270,7 @@ const exportCsv = () => {
 
   $q.notify({
     type: 'positive',
-    message: 'Report CSV esportato con successo',
+    message: t('strikeManagement.csvExportSuccess'),
     caption: filename
   })
 }

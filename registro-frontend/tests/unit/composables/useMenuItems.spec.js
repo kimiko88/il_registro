@@ -19,7 +19,7 @@ describe('useMenuItems', () => {
         it('should return admin menu items', () => {
             const menuItems = useMenuItems('admin')
 
-            expect(menuItems).toHaveLength(11)
+            expect(menuItems).toHaveLength(13)
             expect(menuItems[0].label).toBe('Dashboard')
             expect(menuItems[1].label).toBe('La Mia Scuola')
             expect(menuItems[2].label).toBe('Gestione Utenti')
@@ -52,7 +52,7 @@ describe('useMenuItems', () => {
         it('should return secretary menu items', () => {
             const flatItems = getFlatItems('secretary')
 
-            expect(flatItems).toHaveLength(20)
+            expect(flatItems).toHaveLength(22)
             expect(flatItems.map(item => item.label)).toContain('Documenti')
             expect(flatItems.map(item => item.label)).toContain('Studenti')
             expect(flatItems.map(item => item.label)).toContain('Flussi SIDI')
