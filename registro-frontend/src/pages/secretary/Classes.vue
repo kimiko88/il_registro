@@ -76,7 +76,7 @@
       v-model="showDialog"
       :is-edit="isEdit"
       :initial-data="form"
-      :academic-year-options="academicYearOptions"
+      :academic-year-options="schoolYearStore.availableSchoolYears"
       :teacher-user-options="teacherUserOptions"
       @saved="refreshClasses"
     />

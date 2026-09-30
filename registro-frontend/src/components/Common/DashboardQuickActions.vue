@@ -100,8 +100,11 @@ const visibleActions = computed(() =>
 function handleAction(action) {
   if (action.action) {
     action.action()
-  } else if (action.path) {
-    router.push(action.path)
+  } else if (action.path || action.route) {
+    const target = action.path || action.route
+    if (router.currentRoute?.value?.path !== target) {
+      router.push(target).catch(() => {})
+    }
   }
   emit('action', action)
 }

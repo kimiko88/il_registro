@@ -40,6 +40,13 @@
       </div>
     </div>
 
+    <!-- Quick Actions Contestuali per Ruolo (Fase 2 del Piano) -->
+    <DashboardQuickActions
+      :title="$t('dashboardPage.quickActionsTitle') || 'Azioni Rapide'"
+      :actions="actions"
+      @action="handleActionClick"
+    />
+
     <!-- Main Content Grid -->
     <div class="row q-col-gutter-lg">
       <!-- Recent Activity / Schedule -->
@@ -306,23 +313,16 @@
 
         <q-card class="no-shadow bordered-card">
           <q-card-section>
-            <div class="text-h6 text-weight-bold text-dark q-mb-md">{{ $t('common.actions') || 'Azioni Rapide' }}</div>
-            <div class="row q-col-gutter-sm">
-              <div class="col-6" v-for="action in actions" :key="action.key">
-                <q-btn 
-                  outline 
-                  class="full-width text-dark" 
-                  style="border-color: #e2e8f0; border-radius: 12px; height: 80px"
-                  no-caps
-                  :loading="navigatingAction === action.key"
-                  @click="handleActionClick(action)"
-                >
-                  <div class="column items-center">
-                    <q-icon :name="action.icon" color="primary" size="sm" class="q-mb-xs" />
-                    <div class="text-caption text-weight-medium">{{ action.label }}</div>
-                  </div>
-                </q-btn>
-              </div>
+            <div class="text-subtitle1 text-weight-bold text-dark q-mb-xs row items-center">
+              <q-icon name="help_outline" color="primary" class="q-mr-sm" size="20px" />
+              <span>{{ $t('dashboardPage.systemStatus') || 'Assistenza & Profilo' }}</span>
+            </div>
+            <div class="text-caption text-grey-7 q-mb-md">
+              {{ $t('dashboardPage.welcomeSub') || 'Accesso rapido a guide e impostazioni personali.' }}
+            </div>
+            <div class="column q-gutter-y-xs">
+              <q-btn flat class="full-width text-primary justify-start rounded-lg" icon="help" :label="$t('help.openHelp') || 'Centro Assistenza'" to="/support" />
+              <q-btn flat class="full-width text-grey-8 justify-start rounded-lg" icon="settings" :label="$t('nav.settings') || 'Impostazioni Profilo'" @click="navigateToProfile" />
             </div>
           </q-card-section>
         </q-card>
@@ -419,6 +419,8 @@ import { useQuasar } from 'quasar'
 import dashboardService from '@/services/dashboardService'
 import api from '@/services/api'
 import { useClassesStore } from '@/stores/classes'
+import DashboardQuickActions from '@/components/Common/DashboardQuickActions.vue'
+import { useMenuBadges } from '@/composables/useMenuBadges'
 
 import { useI18n } from 'vue-i18n'
 
@@ -454,6 +456,7 @@ const draftForm = ref({
 })
 
 const currentRole = computed(() => userRole.value || user.value?.role || 'student')
+const { getBadge } = useMenuBadges(currentRole)
 
 const isDashboardAdmin = computed(() =>
   ['secretary', 'admin', 'superadmin', 'principal', 'system_auditor'].includes(currentRole.value)
@@ -782,53 +785,132 @@ const formatDate = (dateString) => {
 
 const actions = computed(() => {
   const role = currentRole.value
+
+  // DOCENTE / COORDINATORE
   if (role === 'teacher' || role === 'coordinator') {
     return [
-      { key: 'attendance', label: t('dashboardPage.actionAttendance'), icon: 'how_to_reg', route: '/teacher/attendance' },
-      { key: 'grades', label: t('dashboardPage.actionGrades'), icon: 'grade', route: '/teacher/grades' },
-      { key: 'lessons', label: t('dashboardPage.actionLessons'), icon: 'edit_calendar', route: '/teacher/lessons' },
-      { key: 'agenda', label: t('dashboardPage.actionAgenda'), icon: 'event', route: '/teacher/agenda' }
+      { key: 'attendance', label: t('dashboardPage.actionAttendance') || 'Segna Presenze', icon: 'how_to_reg', color: 'positive', route: '/teacher/attendance', path: '/teacher/attendance' },
+      { key: 'grades', label: t('dashboardPage.actionGrades') || 'Inserisci Voti', icon: 'grade', color: 'primary', route: '/teacher/grades', path: '/teacher/grades', badge: getBadge('pendingGrades') },
+      { key: 'lessons', label: t('dashboardPage.actionLessons') || 'Registro Lezioni', icon: 'edit_calendar', color: 'indigo', route: '/teacher/lessons', path: '/teacher/lessons' },
+      { key: 'agenda', label: t('dashboardPage.actionAgenda') || 'Agenda & Colloqui', icon: 'event', color: 'teal', route: '/teacher/agenda', path: '/teacher/agenda', badge: getBadge('pendingColloqui') },
+      { key: 'classes', label: t('dashboardPage.statMyClasses') || 'Le Mie Classi', icon: 'class', color: 'cyan', route: '/teacher/classes', path: '/teacher/classes' },
+      { key: 'draft', label: t('dashboardPage.saveDraft') || 'Pianifica Bozza', icon: 'edit_note', color: 'amber', route: '', path: '', action: openDraftModal }
     ]
   }
-  if (role === 'secretary' || role === 'principal' || role === 'vice_principal') {
+
+  // VICE PRESIDE (Ruolo ibrido: presidenza / sostituzioni / orario + docenza)
+  if (role === 'vice_principal') {
     return [
-      { key: 'users', label: t('dashboardPage.actionUsers') || 'Utenti', icon: 'people', route: '/secretary/users' },
-      { key: 'classes', label: t('dashboardPage.actionClasses') || 'Classi', icon: 'school', route: '/secretary/classes' },
-      { key: 'documents', label: t('documentsPage.title') || 'Documenti', icon: 'folder', route: '/secretary/documents' },
-      { key: 'reports', label: t('reportsPage.title') || 'Report', icon: 'bar_chart', route: '/secretary/reports' }
+      { key: 'substitutions', label: t('dashboardPage.newSubstitution') || 'Nuova Sostituzione', icon: 'swap_horiz', color: 'warning', alertOnBadge: true, route: '/secretary/substitutions', path: '/secretary/substitutions', badge: getBadge('pendingSubstitutions') },
+      { key: 'timetable', label: t('timetablePage.title') || 'Orario Scuola', icon: 'schedule', color: 'teal', route: '/secretary/timetable', path: '/secretary/timetable' },
+      { key: 'lessons', label: t('dashboardPage.openRegister') || 'Registro (Mio)', icon: 'edit_calendar', color: 'indigo', route: '/teacher/lessons', path: '/teacher/lessons' },
+      { key: 'grades', label: t('dashboardPage.actionGrades') || 'Voti & Scrutinio', icon: 'grade', color: 'primary', route: '/teacher/grades', path: '/teacher/grades', badge: getBadge('pendingGrades') },
+      { key: 'attendance', label: t('ataPage.attendance') || 'Presenze Personale', icon: 'co_present', color: 'positive', route: '/ata/attendance', path: '/ata/attendance', badge: getBadge('absentStaff') },
+      { key: 'communications', label: t('communicationsPage.title') || 'Comunicazioni Istituto', icon: 'email', color: 'secondary', route: '/secretary/communications', path: '/secretary/communications', badge: getBadge('unreadMessages') }
     ]
   }
+
+  // SEGRETERIA / DIRIGENTE (PRINCIPAL)
+  if (role === 'secretary' || role === 'principal') {
+    return [
+      { key: 'substitutions', label: t('dashboardPage.newSubstitution') || 'Nuova Sostituzione', icon: 'swap_horiz', color: 'warning', alertOnBadge: true, route: '/secretary/substitutions', path: '/secretary/substitutions', badge: getBadge('pendingSubstitutions') },
+      { key: 'certificates', label: t('dashboardPage.issueCertificate') || 'Emetti Certificato', icon: 'workspace_premium', color: 'primary', route: '/secretary/certificates', path: '/secretary/certificates' },
+      { key: 'communications', label: t('dashboardPage.manageCirculars') || 'Gestisci Comunicazioni', icon: 'email', color: 'indigo', route: '/secretary/communications', path: '/secretary/communications', badge: getBadge('unreadMessages') },
+      { key: 'students', label: t('studentsPage.title') || 'Studenti & Famiglie', icon: 'school', color: 'teal', route: '/secretary/students', path: '/secretary/students' },
+      { key: 'classes', label: t('dashboardPage.actionClasses') || 'Classi & Gruppi', icon: 'room', color: 'secondary', route: '/secretary/classes', path: '/secretary/classes' },
+      { key: 'attendance', label: t('ataPage.attendance') || 'Presenze Personale', icon: 'co_present', color: 'positive', route: '/ata/attendance', path: '/ata/attendance', badge: getBadge('absentStaff') }
+    ]
+  }
+
+  // STUDENTE
   if (role === 'student') {
     return [
-      { key: 'grades', label: t('dashboardPage.viewGrades') || t('nav.myGrades') || 'Voti', icon: 'grade', route: '/student/grades' },
-      { key: 'attendance', label: t('dashboardPage.viewAttendance') || t('nav.myAttendance') || 'Presenze', icon: 'how_to_reg', route: '/student/attendance' },
-      { key: 'homework', label: t('agendaPage.homework') || 'Compiti', icon: 'assignment', route: '/student/homework' },
-      { key: 'timetable', label: t('timetablePage.title') || 'Orario', icon: 'schedule', route: '/student/timetable' }
+      { key: 'grades', label: t('dashboardPage.viewGrades') || t('nav.myGrades') || 'I Miei Voti', icon: 'grade', color: 'primary', route: '/student/grades', path: '/student/grades' },
+      { key: 'homework', label: t('agendaPage.homework') || 'Compiti da Fare', icon: 'assignment', color: 'warning', route: '/student/homework', path: '/student/homework', badge: getBadge('pendingHomework') },
+      { key: 'timetable', label: t('timetablePage.title') || 'Il Mio Orario', icon: 'schedule', color: 'teal', route: '/student/timetable', path: '/student/timetable' },
+      { key: 'attendance', label: t('dashboardPage.viewAttendance') || t('nav.myAttendance') || 'Le Mie Presenze', icon: 'how_to_reg', color: 'positive', route: '/student/attendance', path: '/student/attendance' },
+      { key: 'materials', label: t('didacticsPage.resourceCategory') || 'Materiale Didattico', icon: 'folder_shared', color: 'indigo', route: '/student/materials', path: '/student/materials' },
+      { key: 'communications', label: t('nav.communications') || 'Comunicazioni', icon: 'email', color: 'secondary', route: '/student/communications', path: '/student/communications', badge: getBadge('unreadMessages') }
     ]
   }
+
+  // GENITORE (PARENT)
   if (role === 'parent') {
     return [
-      { key: 'grades', label: t('dashboardPage.viewGrades') || t('nav.myGrades') || 'Voti', icon: 'grade', route: '/parent/grades' },
-      { key: 'attendance', label: t('dashboardPage.viewAttendance') || t('nav.myAttendance') || 'Presenze', icon: 'how_to_reg', route: '/parent/attendance' },
-      { key: 'colloqui', label: t('nav.colloqui') || 'Colloqui', icon: 'event', route: '/parent/colloqui' },
-      { key: 'communications', label: t('nav.communications') || 'Comunicazioni', icon: 'email', route: '/parent/communications' }
+      { key: 'children', label: t('nav.myChildren') || 'I Miei Figli', icon: 'family_restroom', color: 'teal', route: '/parent/children', path: '/parent/children' },
+      { key: 'grades', label: t('dashboardPage.viewGrades') || t('nav.myGrades') || 'Voti', icon: 'grade', color: 'primary', route: '/parent/grades', path: '/parent/grades' },
+      { key: 'colloqui', label: t('dashboardPage.bookColloquio') || 'Prenota Colloquio', icon: 'event', color: 'warning', route: '/parent/colloqui', path: '/parent/colloqui', badge: getBadge('pendingColloqui') },
+      { key: 'attendance', label: t('dashboardPage.viewAttendance') || t('nav.myAttendance') || 'Presenze & Giustificazioni', icon: 'how_to_reg', color: 'positive', route: '/parent/attendance', path: '/parent/attendance' },
+      { key: 'communications', label: t('nav.communications') || 'Comunicazioni', icon: 'email', color: 'indigo', route: '/parent/communications', path: '/parent/communications', badge: getBadge('unreadMessages') },
+      { key: 'payments', label: t('nav.payments') || 'Pagamenti & Ricevute', icon: 'receipt_long', color: 'secondary', route: '/parent/payments', path: '/parent/payments' }
     ]
   }
-  // admin / superadmin / system_auditor
+
+  // SUPERADMIN
+  if (role === 'superadmin') {
+    return [
+      { key: 'schools', label: t('dashboardPage.schoolManagement') || 'Gestione Scuole', icon: 'public', color: 'primary', route: '/admin/schools', path: '/admin/schools' },
+      { key: 'users', label: t('dashboardPage.actionUsers') || 'Gestione Utenti', icon: 'people', color: 'teal', route: '/admin/users', path: '/admin/users' },
+      { key: 'admins', label: t('nav.adminManagement') || 'Gestione Admin', icon: 'admin_panel_settings', color: 'indigo', route: '/admin/admins', path: '/admin/admins' },
+      { key: 'monitoring', label: t('nav.systemMonitoring') || 'Monitoraggio Sistema', icon: 'monitor_heart', color: 'negative', route: '/admin/monitoring', path: '/admin/monitoring' },
+      { key: 'audit', label: t('dashboardPage.auditLogs') || 'Audit Logs', icon: 'history', color: 'amber', route: '/admin/audit-logs', path: '/admin/audit-logs' },
+      { key: 'settings', label: t('settings.title') || 'Configurazione Globale', icon: 'settings', color: 'secondary', route: '/admin/settings', path: '/admin/settings' }
+    ]
+  }
+
+  // ATA / SPECIALIST
+  const ataRoles = [
+    'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico',
+    'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo',
+    'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio'
+  ]
+  if (ataRoles.includes(role)) {
+    return [
+      { key: 'attendance', label: t('ataPage.attendance') || 'Timbrature & Presenze', icon: 'fingerprint', color: 'positive', route: '/ata/attendance', path: '/ata/attendance' },
+      { key: 'substitutions', label: t('nav.substitutions') || 'Sostituzioni Attive', icon: 'swap_horiz', color: 'warning', alertOnBadge: true, route: '/ata/substitutions', path: '/ata/substitutions', badge: getBadge('pendingSubstitutions') },
+      { key: 'strike', label: t('ataPage.strike') || 'Gestione Scioperi', icon: 'campaign', color: 'amber', route: '/ata/strike', path: '/ata/strike' },
+      { key: 'communications', label: t('nav.communications') || 'Comunicazioni', icon: 'email', color: 'indigo', route: '/ata/communications', path: '/ata/communications', badge: getBadge('unreadMessages') },
+      { key: 'visitors', label: t('nav.visitorRegistry') || 'Registro Visitatori', icon: 'badge', color: 'teal', route: '/ata/visitors', path: '/ata/visitors' },
+      { key: 'settings', label: t('settings.title') || 'Impostazioni', icon: 'settings', color: 'secondary', route: '/ata/settings', path: '/ata/settings' }
+    ]
+  }
+
+  // ADMIN / SYSTEM_AUDITOR
   return [
-    { key: 'users', label: t('dashboardPage.actionUsers') || 'Utenti', icon: 'people', route: '/admin/users' },
-    { key: 'schools', label: t('dashboardPage.schoolManagement') || 'Scuole', icon: 'school', route: '/admin/schools' },
-    { key: 'analytics', label: t('nav.analytics') || 'Analytics', icon: 'bar_chart', route: '/admin/analytics' },
-    { key: 'settings', label: t('settings.title') || 'Impostazioni', icon: 'settings', route: '/admin/settings' }
+    { key: 'users', label: t('dashboardPage.actionUsers') || 'Aggiungi Utente', icon: 'people', color: 'primary', route: '/admin/users', path: '/admin/users' },
+    { key: 'schools', label: t('dashboardPage.schoolManagement') || 'La Mia Scuola', icon: 'school', color: 'secondary', route: '/admin/schools', path: '/admin/schools' },
+    { key: 'analytics', label: t('nav.analytics') || 'Analytics & Report', icon: 'bar_chart', color: 'indigo', route: '/admin/analytics', path: '/admin/analytics' },
+    { key: 'timetable', label: t('timetablePage.title') || 'Orario & Aule', icon: 'schedule', color: 'teal', route: '/secretary/timetable', path: '/secretary/timetable' },
+    { key: 'attendance', label: t('ataPage.attendance') || 'Presenze Personale', icon: 'co_present', color: 'positive', route: '/ata/attendance', path: '/ata/attendance', badge: getBadge('absentStaff') },
+    { key: 'settings', label: t('settings.title') || 'Impostazioni', icon: 'settings', color: 'amber', route: '/admin/settings', path: '/admin/settings' }
   ]
 })
 
 const handleActionClick = async (action) => {
-  if (action.route) {
-    navigatingAction.value = action.key
-    await router.push(action.route)
-    navigatingAction.value = null
+  if (!action) return
+  if (action.action) {
+    action.action()
+    return
   }
+  const target = action.route || action.path
+  if (target) {
+    navigatingAction.value = action.key
+    try {
+      await router.push(target)
+    } catch { /* ignorare errori di navigazione duplicata */ }
+    finally {
+      navigatingAction.value = null
+    }
+  }
+}
+
+const navigateToProfile = () => {
+  const role = currentRole.value
+  if (role === 'student') router.push('/student/profile')
+  else if (role === 'parent') router.push('/parent/profile')
+  else if (role === 'teacher' || role === 'vice_principal') router.push('/teacher/settings')
+  else if (role === 'admin' || role === 'superadmin') router.push('/admin/settings')
+  else router.push('/secretary/settings')
 }
 
 onMounted(() => {

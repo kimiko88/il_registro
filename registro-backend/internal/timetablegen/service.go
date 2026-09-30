@@ -277,11 +277,16 @@ func (s *service) PublishSchedule(ctx context.Context, schoolID, userID, jobID s
 		if len(r.Slots) > 0 {
 			slotsToPublish = r.Slots
 		} else if r.AlternativeID != nil {
+			found := false
 			for _, alt := range result.Alternatives {
 				if alt.ID == *r.AlternativeID {
 					slotsToPublish = alt.Slots
+					found = true
 					break
 				}
+			}
+			if !found {
+				return fmt.Errorf("alternativa orario %d non trovata nel job", *r.AlternativeID)
 			}
 		}
 	}
