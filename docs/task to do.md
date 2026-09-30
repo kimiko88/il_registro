@@ -1029,3 +1029,27 @@ Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le pr
   - **4. Test & Qualità**:
     - Backend: unit test `TestTeacherQuickPreferences` e suite `timetablegen` passati al 100% (8/8); integration test completato senza errori; compilazione `server.exe` pulita con 0 errori.
     - Frontend: `TimetableConstraints.spec.js` passato con 8/8 test (100%); `SchedulePreferences.spec.js` (3/3); `timetable-generation-workflow.spec.js` (3/3); ESLint passato con 0 errori.
+
+- [x] **Risoluzione Permessi ATA (Collaboratore Scolastico & Segreteria) e Integrità i18n Completa**:
+  - **1. Collaboratore Scolastico (CS)**:
+    - *Presenze Personale*: rimosso l'accesso alla dashboard presenze d'istituto (`/ata/attendance`) sia da `routes.js`, sia da `useMenuItems.js` sia dalle azioni rapide di `Dashboard.vue`. Il collaboratore scolastico consulta unicamente il proprio cartellino CCNL (`/ata/timecard`).
+    - *Portineria & Uscite Anticipate*: abilitato `collaboratore_scolastico` nel backend (`internal/users/service.go`) alla query `filter.Role == "student"` per permettere la selezione degli alunni nel Registro Visitatori (`/ata/visitor-registry`).
+  - **2. Segreteria & Scioperi**:
+    - Risolto errore 403 Forbidden su `GET /api/v1/strike-notices/:id/summary`: aggiunti ruoli `secretary`, `assistente_amministrativo` e `assistente_personale` a `IsAdminOrDSGA` e `CanCreateStrikeNotice` in `internal/strike/service.go`.
+  - **3. Internazionalizzazione (i18n)**:
+    - Aggiunto il namespace `ataPage` (`attendance`, `strike`, `timecard`, `visitors`, `desk`) in tutte le 11 lingue supportate (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `ru-RU`, `uk-UA`, `sq-AL`, `ar-SA`, `zh-CN`).
+    - Risolti i warning `[intlify]` e superato il test di integrità `i18nKeys.test.js` (231/231 test passati).
+  - **4. Verifica**:
+    - Backend: `go test ./...` passato al 100%.
+    - Frontend: `npm test` passato al 100% (297/297 test suite, 1667/1667 test).
+
+- [x] **Risoluzione Bug CI Backend (`-race` Data Race & Flaky Timers `timetablegen`)**:
+  - **1. Data Race in `internal/auth` (`MockRepository.UpdatePassword` & `TestLogin`)**:
+    - *Causa*: `TestLogin` e `TestHandler_Login_Integration` generavano l'hash password con la stringa grezza anziché `crypto.PrehashPassword`, scatenando inavvertitamente la goroutine di transparent auto-migration `UpdatePassword` in background. Poiché `s, mockRepo` era condiviso tra subtest `t.Run`, mentre la goroutine leggeva `m.ExpectedCalls`, il subtest successivo invocava `mockRepo.On()` modificando lo slice contemporaneamente (data race catturata da `-race`).
+    - *Fix*: Isolati tutti i subtest di `TestLogin`, `TestRegister` e `TestRefreshToken` con un'istanza dedicata di `setupTest(t)`; usato `crypto.PrehashPassword` nei test standard; creato subtest dedicato `LegacyPasswordMigration` sincronizzato deterministicamente tramite canale (`select/migrationDone`); rimosso accesso non protetto a `m.ExpectedCalls` in `UpdatePassword`.
+  - **2. Flaky Timing in `internal/timetablegen`**:
+    - *Causa*: `TestTimetableService` e `TestPublishSchedule_WithAlternativeID_And_CustomSlots` utilizzavano `time.Sleep` fisso (150ms / 200ms) per attendere la generazione in background. Sotto carico CI con `-race` attivo, la goroutine impiegava più tempo e `GetJobStatus` falliva restituendo `running` anziché `completed`.
+    - *Fix*: Sostituito lo sleep fisso con un loop di polling resiliente (`for i := 0; i < 50; i++ { time.Sleep(50 * time.Millisecond) ... }` fino a 2.5s con uscita immediata al completamento) sia negli unit test sia nel test di integrazione del ciclo vitale.
+  - **3. Verifica Suite Completa**:
+    - `go test -count=1 ./tests/... ./internal/...` passato al 100% su tutti i package (integration, unit, auth, timetablegen, ws, ecc.).
+

@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
 
+	"registro-backend/pkg/crypto"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 )
@@ -175,13 +176,8 @@ func (m *MockRepository) GetPasswordResetToken(ctx context.Context, token string
 }
 
 func (m *MockRepository) UpdatePassword(ctx context.Context, userID, hash string) error {
-	for _, call := range m.ExpectedCalls {
-		if call.Method == "UpdatePassword" {
-			args := m.Called(ctx, userID, hash)
-			return args.Error(0)
-		}
-	}
-	return nil
+	args := m.Called(ctx, userID, hash)
+	return args.Error(0)
 }
 
 func (m *MockRepository) ResetPasswordTx(ctx context.Context, userID, hash, tokenID string) error {
@@ -236,9 +232,8 @@ func setupTest(t *testing.T) (*Service, *MockRepository) {
 }
 
 func TestRegister(t *testing.T) {
-	s, mockRepo := setupTest(t)
-
 	t.Run("Success", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		req := &RegisterRequest{
 			Email:     "test@example.com",
 			Password:  "Password123!",
@@ -261,6 +256,7 @@ func TestRegister(t *testing.T) {
 	})
 
 	t.Run("EmailAlreadyExists", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		req := &RegisterRequest{
 			Email:     "existing@example.com",
 			Password:  "Password123!",
@@ -280,10 +276,8 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	s, mockRepo := setupTest(t)
-
 	password := "Password123!"
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword(crypto.PrehashPassword(password), bcrypt.MinCost)
 
 	user := &User{
 		ID:            "user-123",
@@ -295,6 +289,7 @@ func TestLogin(t *testing.T) {
 	}
 
 	t.Run("Success", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		req := &LoginRequest{
 			Email:    "test@example.com",
 			Password: password,
@@ -316,7 +311,44 @@ func TestLogin(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
+	t.Run("LegacyPasswordMigration", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
+
+		legacyHashed, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+		legacyUser := &User{
+			ID:            "user-legacy",
+			Email:         "legacy@example.com",
+			PasswordHash:  string(legacyHashed),
+			Role:          "student",
+			IsActive:      true,
+			EmailVerified: true,
+		}
+
+		migrationDone := make(chan struct{})
+		mockRepo.On("GetRecentLoginAttempts", mock.Anything, legacyUser.Email, mock.Anything, mock.Anything).Return(0, nil).Once()
+		mockRepo.On("GetUserByEmail", mock.Anything, legacyUser.Email).Return(legacyUser, nil).Once()
+		mockRepo.On("CreateRefreshToken", mock.Anything, mock.Anything).Return(nil).Once()
+		mockRepo.On("UpdateLastLogin", mock.Anything, legacyUser.ID).Return(nil).Once()
+		mockRepo.On("RecordLoginAttempt", mock.Anything, mock.Anything).Return(nil).Once()
+		mockRepo.On("UpdatePassword", mock.Anything, legacyUser.ID, mock.Anything).Run(func(args mock.Arguments) {
+			close(migrationDone)
+		}).Return(nil).Once()
+
+		req := &LoginRequest{Email: legacyUser.Email, Password: password}
+		resp, err := s.Login(context.Background(), req, "127.0.0.1", "test-agent")
+		assert.NoError(t, err)
+		assert.NotNil(t, resp)
+
+		select {
+		case <-migrationDone:
+		case <-time.After(2 * time.Second):
+			t.Fatal("timed out waiting for background password re-hash migration")
+		}
+		mockRepo.AssertExpectations(t)
+	})
+
 	t.Run("InvalidPassword", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		req := &LoginRequest{
 			Email:    "test@example.com",
 			Password: "wrongpassword",
@@ -336,6 +368,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("UserInactive", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		inactiveUser := &User{
 			ID:           "user-inactive",
 			Email:        "inactive@example.com",
@@ -356,6 +389,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("UserNotFound", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		req := &LoginRequest{
 			Email:    "unknown@example.com",
 			Password: "password",
@@ -376,12 +410,11 @@ func TestLogin(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	s, mockRepo := setupTest(t)
-
 	userID := "user-123"
 	token := "refresh-token-123"
 
 	t.Run("Success", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		rt := &RefreshToken{
 			ID:        "rt-1",
 			UserID:    userID,
@@ -410,6 +443,7 @@ func TestRefreshToken(t *testing.T) {
 	})
 
 	t.Run("RevokedToken", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		rt := &RefreshToken{
 			ID:        "rt-1",
 			UserID:    userID,
@@ -427,6 +461,7 @@ func TestRefreshToken(t *testing.T) {
 	})
 
 	t.Run("ExpiredToken", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
 		rt := &RefreshToken{
 			ID:        "rt-1",
 			UserID:    userID,

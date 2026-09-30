@@ -440,8 +440,8 @@ func TestIntegration_TimetableGenerationLifecycle(t *testing.T) {
 
 	// 5. Poll for completion
 	var jobResp timetablegen.TimetableJob
-	for i := 0; i < 20; i++ {
-		time.Sleep(20 * time.Millisecond)
+	for i := 0; i < 50; i++ {
+		time.Sleep(50 * time.Millisecond)
 		req = httptest.NewRequest(http.MethodGet, "/timetable/generate/"+jobID, nil)
 		w = httptest.NewRecorder()
 		routerVP.ServeHTTP(w, req)

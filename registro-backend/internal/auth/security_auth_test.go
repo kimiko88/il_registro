@@ -10,12 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
+	"registro-backend/pkg/crypto"
 )
 
 func TestConstantTimeLogin_InactiveUser(t *testing.T) {
 	svc, mockRepo := setupTest(t)
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte("Password123!"), bcrypt.MinCost)
+	hash, _ := bcrypt.GenerateFromPassword(crypto.PrehashPassword("Password123!"), bcrypt.MinCost)
 	inactiveUser := &User{
 		ID:           "inactive-user-1",
 		Email:        "inactive@example.com",

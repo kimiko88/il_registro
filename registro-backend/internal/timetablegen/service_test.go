@@ -296,10 +296,15 @@ func TestTimetableService(t *testing.T) {
 		t.Fatalf("expected non-empty jobID")
 	}
 
-	// Wait briefly for background goroutine to execute
-	time.Sleep(200 * time.Millisecond)
-
-	job, err := svc.GetJobStatus(ctx, schoolID, jobID)
+	// Wait for background goroutine to execute
+	var job *TimetableJob
+	for i := 0; i < 50; i++ {
+		time.Sleep(50 * time.Millisecond)
+		job, err = svc.GetJobStatus(ctx, schoolID, jobID)
+		if err == nil && job.Status == JobStatusCompleted {
+			break
+		}
+	}
 	if err != nil {
 		t.Fatalf("unexpected error getting job status: %v", err)
 	}
@@ -515,9 +520,14 @@ func TestPublishSchedule_WithAlternativeID_And_CustomSlots(t *testing.T) {
 		t.Fatalf("failed to start generation: %v", err)
 	}
 
-	time.Sleep(150 * time.Millisecond)
-
-	job, err := svc.GetJobStatus(ctx, schoolID, jobID)
+	var job *TimetableJob
+	for i := 0; i < 50; i++ {
+		time.Sleep(50 * time.Millisecond)
+		job, err = svc.GetJobStatus(ctx, schoolID, jobID)
+		if err == nil && job.Status == JobStatusCompleted {
+			break
+		}
+	}
 	if err != nil {
 		t.Fatalf("failed to get job status: %v", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"registro-backend/pkg/crypto"
 	"registro-backend/pkg/jwt"
 	"testing"
 	"time"
@@ -25,6 +26,7 @@ func setupTestHandler() (*Handler, *MockRepository, *jwt.TokenManager) {
 	mfaService := NewMFAService("Test")
 
 	service := NewService(mockRepo, tokenManager, mfaService, nil)
+	service.bcryptCost = bcrypt.MinCost
 	handler := NewHandler(service)
 
 	return handler, mockRepo, tokenManager
@@ -220,7 +222,7 @@ func TestHandler_Logout(t *testing.T) {
 func TestHandler_Login_Integration(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	passwordHash, _ := bcrypt.GenerateFromPassword([]byte("Password123!"), bcrypt.MinCost)
+	passwordHash, _ := bcrypt.GenerateFromPassword(crypto.PrehashPassword("Password123!"), bcrypt.MinCost)
 
 	tests := []struct {
 		name           string
