@@ -78,7 +78,7 @@ describe('Classes Page', () => {
     })
 
     it('fetches data on mount', () => {
-        expect(classesStore.fetchClasses).toHaveBeenCalledWith(expect.objectContaining({ school_id: 1 }))
+        expect(classesStore.fetchClasses).toHaveBeenCalledWith(expect.objectContaining({ school_id: 1 }), expect.anything())
         expect(mockAdminService.getSubjects).toHaveBeenCalled()
     })
 

@@ -498,3 +498,103 @@ func TestTeacherQuickPreferences(t *testing.T) {
 		t.Fatalf("failed to save teacher quick preferences: %v", err)
 	}
 }
+
+func TestPublishSchedule_WithAlternativeID_And_CustomSlots(t *testing.T) {
+	repo := newMockTimetableRepo()
+	svc := NewService(repo, nil)
+	ctx := context.Background()
+
+	schoolID := "school-test-alts"
+	userID := "user-admin-1"
+
+	// Start generation
+	jobID, err := svc.StartGeneration(ctx, schoolID, userID, GenerateTimetableRequest{
+		TimeLimitSeconds: 2,
+	})
+	if err != nil {
+		t.Fatalf("failed to start generation: %v", err)
+	}
+
+	time.Sleep(150 * time.Millisecond)
+
+	job, err := svc.GetJobStatus(ctx, schoolID, jobID)
+	if err != nil {
+		t.Fatalf("failed to get job status: %v", err)
+	}
+	if job.Status != JobStatusCompleted {
+		t.Fatalf("expected job to be completed, got %s", job.Status)
+	}
+
+	var result TimetableGenerationResult
+	if err := json.Unmarshal(job.ResultSummary, &result); err != nil {
+		t.Fatalf("failed to unmarshal result summary: %v", err)
+	}
+
+	if len(result.Alternatives) != 3 {
+		t.Fatalf("expected 3 alternatives, got %d", len(result.Alternatives))
+	}
+
+	// 1. Publish default (no AlternativeID given)
+	err = svc.PublishSchedule(ctx, schoolID, userID, jobID)
+	if err != nil {
+		t.Fatalf("failed to publish default schedule: %v", err)
+	}
+	if len(repo.published) != len(result.Slots) {
+		t.Errorf("expected %d published slots, got %d", len(result.Slots), len(repo.published))
+	}
+
+	// 2. Publish Alternative 2 (didactic_first)
+	alt2ID := 2
+	err = svc.PublishSchedule(ctx, schoolID, userID, jobID, PublishScheduleRequest{
+		AlternativeID: &alt2ID,
+	})
+	if err != nil {
+		t.Fatalf("failed to publish alternative 2: %v", err)
+	}
+	if len(repo.published) != len(result.Alternatives[1].Slots) {
+		t.Errorf("expected %d published slots for alt 2, got %d", len(result.Alternatives[1].Slots), len(repo.published))
+	}
+
+	// 3. Publish Alternative 3 (compact_teacher)
+	alt3ID := 3
+	err = svc.PublishSchedule(ctx, schoolID, userID, jobID, PublishScheduleRequest{
+		AlternativeID: &alt3ID,
+	})
+	if err != nil {
+		t.Fatalf("failed to publish alternative 3: %v", err)
+	}
+	if len(repo.published) != len(result.Alternatives[2].Slots) {
+		t.Errorf("expected %d published slots for alt 3, got %d", len(result.Alternatives[2].Slots), len(repo.published))
+	}
+
+	// 4. Publish custom slots directly
+	customSlot := GeneratedSlot{
+		ClassID:     "c-custom",
+		ClassName:   "1A",
+		SubjectID:   "s-custom",
+		SubjectName: "Matematica",
+		DayOfWeek:   1,
+		HourIndex:   1,
+	}
+	err = svc.PublishSchedule(ctx, schoolID, userID, jobID, PublishScheduleRequest{
+		Slots: []GeneratedSlot{customSlot},
+	})
+	if err != nil {
+		t.Fatalf("failed to publish custom slots: %v", err)
+	}
+	if len(repo.published) != 1 || repo.published[0].ClassID != "c-custom" {
+		t.Errorf("expected 1 custom published slot, got %+v", repo.published)
+	}
+
+	// 5. Error handling: Non-existent job
+	err = svc.PublishSchedule(ctx, schoolID, userID, "non-existent-job-id")
+	if err != ErrJobNotFound {
+		t.Errorf("expected ErrJobNotFound, got %v", err)
+	}
+
+	// 6. Error handling: Wrong school ID
+	err = svc.PublishSchedule(ctx, "wrong-school-id", userID, jobID)
+	if err != ErrForbidden {
+		t.Errorf("expected ErrForbidden, got %v", err)
+	}
+}

@@ -116,7 +116,10 @@ func (h *Handler) PublishSchedule(c *gin.Context) {
 	userID := c.GetString("user_id")
 	jobID := c.Param("jobID")
 
-	if err := h.service.PublishSchedule(c.Request.Context(), schoolID, userID, jobID); err != nil {
+	var req PublishScheduleRequest
+	_ = c.ShouldBindJSON(&req)
+
+	if err := h.service.PublishSchedule(c.Request.Context(), schoolID, userID, jobID, req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

@@ -234,51 +234,154 @@ func SeedOrarioTest(ctx context.Context, dbConn *sql.DB) error {
 			switch sec.Specialty {
 			case "Liceo Scientifico":
 				if yr <= 2 {
-					hm["ITA"] = 4; hm["STO"] = 2; hm["GEO"] = 1; hm["ING"] = 3; hm["MAT"] = 5
-					hm["FIS"] = 2; hm["SCI"] = 3; hm["ART"] = 2; hm["EDF"] = 2; hm["INF"] = 2; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 2
+					hm["GEO"] = 1
+					hm["ING"] = 3
+					hm["MAT"] = 5
+					hm["FIS"] = 2
+					hm["SCI"] = 3
+					hm["ART"] = 2
+					hm["EDF"] = 2
+					hm["INF"] = 2
+					hm["REL"] = 1
 				} else {
-					hm["ITA"] = 4; hm["STO"] = 2; hm["FIL"] = 3; hm["ING"] = 3; hm["MAT"] = 4
-					hm["FIS"] = 3; hm["SCI"] = 3; hm["ART"] = 2; hm["INF"] = 2; hm["EDF"] = 2; hm["DIR"] = 1; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 2
+					hm["FIL"] = 3
+					hm["ING"] = 3
+					hm["MAT"] = 4
+					hm["FIS"] = 3
+					hm["SCI"] = 3
+					hm["ART"] = 2
+					hm["INF"] = 2
+					hm["EDF"] = 2
+					hm["DIR"] = 1
+					hm["REL"] = 1
 				}
 			case "Scienze Applicate":
 				if yr <= 2 {
-					hm["ITA"] = 4; hm["STO"] = 3; hm["ING"] = 3; hm["MAT"] = 5; hm["FIS"] = 2
-					hm["SCI"] = 3; hm["INF"] = 2; hm["ART"] = 2; hm["EDF"] = 2; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 3
+					hm["ING"] = 3
+					hm["MAT"] = 5
+					hm["FIS"] = 2
+					hm["SCI"] = 3
+					hm["INF"] = 2
+					hm["ART"] = 2
+					hm["EDF"] = 2
+					hm["REL"] = 1
 				} else {
-					hm["ITA"] = 4; hm["STO"] = 2; hm["FIL"] = 2; hm["ING"] = 3; hm["MAT"] = 4
-					hm["FIS"] = 3; hm["SCI"] = 4; hm["INF"] = 3; hm["ART"] = 2; hm["EDF"] = 2; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 2
+					hm["FIL"] = 2
+					hm["ING"] = 3
+					hm["MAT"] = 4
+					hm["FIS"] = 3
+					hm["SCI"] = 4
+					hm["INF"] = 3
+					hm["ART"] = 2
+					hm["EDF"] = 2
+					hm["REL"] = 1
 				}
 			case "Liceo Linguistico":
 				if yr <= 2 {
-					hm["ITA"] = 4; hm["STO"] = 3; hm["ING"] = 4; hm["SPA"] = 3; hm["MAT"] = 3
-					hm["FIS"] = 2; hm["SCI"] = 2; hm["ART"] = 2; hm["EDF"] = 2; hm["REL"] = 1; hm["DIR"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 3
+					hm["ING"] = 4
+					hm["SPA"] = 3
+					hm["MAT"] = 3
+					hm["FIS"] = 2
+					hm["SCI"] = 2
+					hm["ART"] = 2
+					hm["EDF"] = 2
+					hm["REL"] = 1
+					hm["DIR"] = 1
 				} else {
-					hm["ITA"] = 4; hm["STO"] = 2; hm["FIL"] = 2; hm["ING"] = 4; hm["SPA"] = 4
-					hm["MAT"] = 3; hm["FIS"] = 2; hm["SCI"] = 2; hm["ART"] = 2; hm["EDF"] = 2; hm["DIR"] = 2; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 2
+					hm["FIL"] = 2
+					hm["ING"] = 4
+					hm["SPA"] = 4
+					hm["MAT"] = 3
+					hm["FIS"] = 2
+					hm["SCI"] = 2
+					hm["ART"] = 2
+					hm["EDF"] = 2
+					hm["DIR"] = 2
+					hm["REL"] = 1
 				}
 			case "Tecnico Informatico":
 				if yr <= 2 {
-					hm["ITA"] = 4; hm["STO"] = 2; hm["ING"] = 3; hm["MAT"] = 4; hm["SCI"] = 3
-					hm["INF"] = 4; hm["DIR"] = 2; hm["ART"] = 2; hm["EDF"] = 2; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 2
+					hm["ING"] = 3
+					hm["MAT"] = 4
+					hm["SCI"] = 3
+					hm["INF"] = 4
+					hm["DIR"] = 2
+					hm["ART"] = 2
+					hm["EDF"] = 2
+					hm["REL"] = 1
 				} else {
-					hm["ITA"] = 4; hm["STO"] = 2; hm["ING"] = 3; hm["MAT"] = 4; hm["INF"] = 6
-					hm["FIS"] = 3; hm["SCI"] = 2; hm["DIR"] = 2; hm["EDF"] = 2; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 2
+					hm["ING"] = 3
+					hm["MAT"] = 4
+					hm["INF"] = 6
+					hm["FIS"] = 3
+					hm["SCI"] = 2
+					hm["DIR"] = 2
+					hm["EDF"] = 2
+					hm["REL"] = 1
 				}
 			case "Tecnico Elettronico":
 				if yr <= 2 {
-					hm["ITA"] = 4; hm["STO"] = 2; hm["ING"] = 3; hm["MAT"] = 4; hm["FIS"] = 3
-					hm["SCI"] = 3; hm["INF"] = 2; hm["DIR"] = 2; hm["EDF"] = 2; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 2
+					hm["ING"] = 3
+					hm["MAT"] = 4
+					hm["FIS"] = 3
+					hm["SCI"] = 3
+					hm["INF"] = 2
+					hm["DIR"] = 2
+					hm["EDF"] = 2
+					hm["REL"] = 1
 				} else {
-					hm["ITA"] = 4; hm["STO"] = 2; hm["ING"] = 3; hm["MAT"] = 4; hm["FIS"] = 5
-					hm["INF"] = 4; hm["DIR"] = 2; hm["ART"] = 2; hm["EDF"] = 2; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 2
+					hm["ING"] = 3
+					hm["MAT"] = 4
+					hm["FIS"] = 5
+					hm["INF"] = 4
+					hm["DIR"] = 2
+					hm["ART"] = 2
+					hm["EDF"] = 2
+					hm["REL"] = 1
 				}
 			case "Tecnico Economico AFM":
 				if yr <= 2 {
-					hm["ITA"] = 4; hm["STO"] = 2; hm["ING"] = 3; hm["SPA"] = 3; hm["MAT"] = 4
-					hm["DIR"] = 3; hm["SCI"] = 2; hm["INF"] = 2; hm["EDF"] = 2; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 2
+					hm["ING"] = 3
+					hm["SPA"] = 3
+					hm["MAT"] = 4
+					hm["DIR"] = 3
+					hm["SCI"] = 2
+					hm["INF"] = 2
+					hm["EDF"] = 2
+					hm["REL"] = 1
 				} else {
-					hm["ITA"] = 4; hm["STO"] = 2; hm["ING"] = 3; hm["SPA"] = 3; hm["MAT"] = 3
-					hm["DIR"] = 5; hm["INF"] = 3; hm["ART"] = 2; hm["EDF"] = 2; hm["REL"] = 1
+					hm["ITA"] = 4
+					hm["STO"] = 2
+					hm["ING"] = 3
+					hm["SPA"] = 3
+					hm["MAT"] = 3
+					hm["DIR"] = 5
+					hm["INF"] = 3
+					hm["ART"] = 2
+					hm["EDF"] = 2
+					hm["REL"] = 1
 				}
 			}
 			totH := 0
@@ -404,10 +507,10 @@ func SeedOrarioTest(ctx context.Context, dbConn *sql.DB) error {
 				uuid.New().String(), tProfID, subID)
 		}
 		tObj := &teacherInfo{
-			UserID:       uID,
+			UserID:        uID,
 			TeacherProfID: tProfID,
-			FullName:     fmt.Sprintf("%s %s", rt.First, rt.Last),
-			SubjectCode:  rt.SubjectCode,
+			FullName:      fmt.Sprintf("%s %s", rt.First, rt.Last),
+			SubjectCode:   rt.SubjectCode,
 		}
 		teachersBySubject[rt.SubjectCode] = append(teachersBySubject[rt.SubjectCode], tObj)
 		allCreatedTeachers = append(allCreatedTeachers, tObj)
@@ -603,12 +706,18 @@ func SeedOrarioTest(ctx context.Context, dbConn *sql.DB) error {
 	// Statistiche finali
 	minHh, maxHh, totalHh := 999, 0, 0
 	for _, t := range allCreatedTeachers {
-		if t.CurrentHours < minHh { minHh = t.CurrentHours }
-		if t.CurrentHours > maxHh { maxHh = t.CurrentHours }
+		if t.CurrentHours < minHh {
+			minHh = t.CurrentHours
+		}
+		if t.CurrentHours > maxHh {
+			maxHh = t.CurrentHours
+		}
 		totalHh += t.CurrentHours
 	}
 	avgHh := 0
-	if len(allCreatedTeachers) > 0 { avgHh = totalHh / len(allCreatedTeachers) }
+	if len(allCreatedTeachers) > 0 {
+		avgHh = totalHh / len(allCreatedTeachers)
+	}
 
 	log.Println("==================================================================")
 	log.Printf("SEEDING COMPLETATO: %s", schoolName)

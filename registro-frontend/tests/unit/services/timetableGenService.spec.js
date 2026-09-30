@@ -28,9 +28,20 @@ describe('timetableGenService', () => {
       expect(api.get).toHaveBeenCalledWith('/timetable/generate/job-123')
     })
 
-    it('publishSchedule calls POST /timetable/generate/:jobId/publish', () => {
+    it('publishSchedule calls POST /timetable/generate/:jobId/publish without body when empty', () => {
       timetableGenService.publishSchedule('job-123')
       expect(api.post).toHaveBeenCalledWith('/timetable/generate/job-123/publish')
+    })
+
+    it('publishSchedule with alternative_id calls POST /timetable/generate/:jobId/publish with body', () => {
+      timetableGenService.publishSchedule('job-123', { alternative_id: 2 })
+      expect(api.post).toHaveBeenCalledWith('/timetable/generate/job-123/publish', { alternative_id: 2 })
+    })
+
+    it('publishSchedule with custom slots calls POST /timetable/generate/:jobId/publish with body', () => {
+      const customSlots = [{ class_id: 'c-1', day_of_week: 1, hour_index: 2 }]
+      timetableGenService.publishSchedule('job-123', { slots: customSlots })
+      expect(api.post).toHaveBeenCalledWith('/timetable/generate/job-123/publish', { slots: customSlots })
     })
   })
 

@@ -8,7 +8,10 @@ export const timetableGenService = {
   getJobStatus(jobId) {
     return api.get(`/timetable/generate/${jobId}`);
   },
-  publishSchedule(jobId) {
+  publishSchedule(jobId, data) {
+    if (data && Object.keys(data).length > 0) {
+      return api.post(`/timetable/generate/${jobId}/publish`, data);
+    }
     return api.post(`/timetable/generate/${jobId}/publish`);
   },
 

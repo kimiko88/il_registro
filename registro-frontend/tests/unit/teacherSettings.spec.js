@@ -33,7 +33,7 @@ describe('Teacher Settings & School Year Logic', () => {
 
   it('includes Impostazioni in teacher menu items', () => {
     const items = useMenuItems('teacher')
-    const comCat = items.find(cat => cat.category === 'Comunicazioni & Atti')
+    const comCat = items.find(cat => cat.category && cat.category.includes('Comunicazioni'))
     expect(comCat).toBeDefined()
     const settingsItem = comCat.children.find(child => child.path === '/teacher/settings')
     expect(settingsItem).toBeDefined()

@@ -30,25 +30,73 @@
 
         <q-space />
         
-        <!-- School Year Selector for Teachers (Desktop / Tablet) -->
-        <div v-if="isTeacherRole" class="gt-sm q-mr-sm row items-center" key="school-year-container">
-          <q-select
-            v-model="schoolYearStore.selectedSchoolYear"
-            :options="schoolYearStore.availableSchoolYears"
+        <!-- School Year Selector (Desktop/Tablet: q-select, Mobile: chip + dialog) -->
+        <template v-if="isSchoolDataRole">
+          <!-- Desktop / Tablet -->
+          <div class="gt-xs q-mr-sm row items-center" key="school-year-container-desk">
+            <q-select
+              v-model="schoolYearStore.selectedSchoolYear"
+              :options="schoolYearStore.availableSchoolYears"
+              dense
+              outlined
+              options-dense
+              :bg-color="$q.dark.isActive ? 'dark' : 'white'"
+              style="min-width: 140px"
+              :label="t('layout.schoolYear') || 'Anno Scolastico'"
+              key="school-year-select-desk"
+              :aria-label="t('layout.schoolYearSelect') || 'Seleziona anno scolastico'"
+            >
+              <template v-slot:prepend>
+                <q-icon name="event" color="primary" size="18px" />
+              </template>
+            </q-select>
+          </div>
+          <!-- Mobile: compact chip opens a dialog -->
+          <q-chip
+            class="lt-sm q-mr-xs cursor-pointer"
+            key="school-year-chip-mobile"
+            clickable
+            outline
+            color="primary"
+            icon="event"
+            :label="schoolYearStore.selectedSchoolYear"
+            @click="showSchoolYearDialog = true"
             dense
-            outlined
-            options-dense
-            :bg-color="$q.dark.isActive ? 'dark' : 'white'"
-            style="min-width: 140px"
-            :label="t('layout.schoolYear')"
-            key="school-year-select"
-            :aria-label="t('layout.schoolYearSelect')"
-          >
-            <template v-slot:prepend>
-              <q-icon name="event" color="primary" size="18px" />
-            </template>
-          </q-select>
-        </div>
+            :aria-label="'Anno: ' + schoolYearStore.selectedSchoolYear"
+          />
+        </template>
+        <!-- Mobile school year dialog (bottom sheet) -->
+        <q-dialog v-if="isSchoolDataRole" v-model="showSchoolYearDialog" position="bottom">
+          <q-card style="min-width: 280px; border-radius: 16px 16px 0 0">
+            <q-card-section class="row items-center q-pb-none">
+              <q-icon name="event" color="primary" class="q-mr-sm" />
+              <span class="text-subtitle1 text-weight-bold">{{ t('layout.schoolYear') || 'Anno Scolastico' }}</span>
+              <q-space />
+              <q-btn icon="close" flat round dense v-close-popup />
+            </q-card-section>
+            <q-card-section class="q-pt-sm">
+              <q-list separator>
+                <q-item
+                  v-for="yr in schoolYearStore.availableSchoolYears"
+                  :key="yr"
+                  clickable
+                  v-close-popup
+                  :active="schoolYearStore.selectedSchoolYear === yr"
+                  active-class="text-primary text-weight-bold"
+                  @click="schoolYearStore.setSchoolYear(yr)"
+                >
+                  <q-item-section avatar>
+                    <q-icon
+                      :name="schoolYearStore.selectedSchoolYear === yr ? 'check_circle' : 'radio_button_unchecked'"
+                      :color="schoolYearStore.selectedSchoolYear === yr ? 'primary' : 'grey-5'"
+                    />
+                  </q-item-section>
+                  <q-item-section>{{ yr }}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-card-section>
+          </q-card>
+        </q-dialog>
 
         <!-- Theme Selector Menu (Desktop / Tablet) -->
         <q-btn-dropdown
@@ -435,8 +483,8 @@
           <q-tooltip>{{ t('nav.profile') || 'Impostazioni Profilo' }}</q-tooltip>
         </div>
 
-        <!-- School Year Selector for Teachers on Mobile Drawer -->
-        <div v-if="isTeacherRole" class="lt-md q-pa-sm bg-slate-50 border-b border-slate-100">
+        <!-- School Year Selector on Mobile Drawer -->
+        <div v-if="isSchoolDataRole" class="lt-md q-pa-sm bg-slate-50 border-b border-slate-100">
           <q-select
             v-model="schoolYearStore.selectedSchoolYear"
             :options="schoolYearStore.availableSchoolYears"
@@ -456,10 +504,46 @@
         <!-- Menu Items -->
         <q-scroll-area class="col">
           <div class="q-pa-sm">
+
+            <!-- ── Accesso Rapido (voci quickAccess, sempre visibili) ───────── -->
+            <template v-if="quickAccessItems.length > 0">
+              <div class="text-overline text-grey-5 q-px-sm q-mb-xs q-mt-xs letter-spacing-2" aria-hidden="true">⚡ Accesso Rapido</div>
+              <q-list dense class="q-gutter-y-xs q-mb-sm" role="menu" :aria-label="'Accesso Rapido'">
+                <q-item
+                  v-for="item in quickAccessItems"
+                  :key="item.path"
+                  clickable
+                  :to="item.path"
+                  :exact="item.exact !== undefined ? item.exact : false"
+                  active-class="active-menu-item"
+                  class="rounded-lg transition-all quick-access-item"
+                  :aria-label="translateMenuLabel(item.label)"
+                  role="menuitem"
+                >
+                  <q-item-section avatar min-width="32px">
+                    <q-icon :name="item.icon" size="20px" aria-hidden="true" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold">{{ translateMenuLabel(item.label) }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side v-if="item.badge && getBadge(item.badge)">
+                    <q-badge
+                      :label="getBadge(item.badge) > 99 ? '99+' : String(getBadge(item.badge))"
+                      color="primary"
+                      rounded
+                      style="font-size:10px"
+                    />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+              <q-separator class="q-mb-sm q-mx-sm" />
+            </template>
+
+            <!-- ── Voci di navigazione principali ───────────────────────────── -->
             <div class="text-overline text-grey-5 q-px-sm q-mb-xs letter-spacing-2" aria-hidden="true">{{ t('common.mainMenu') }}</div>
             <q-list dense padding class="q-gutter-y-xs" :aria-label="t('layout.mainNav') || 'Navigazione principale'" role="menu">
-              <template v-for="(item, idx) in menuItems" :key="item.path || item.category || idx">
-                <!-- Group Category with children -->
+              <template v-for="(item, idx) in groupMenuItems" :key="item.path || item.category || idx">
+                <!-- Categoria espandibile con figli -->
                 <q-expansion-item
                   v-if="item.children"
                   group="menu-group"
@@ -470,6 +554,16 @@
                   :default-opened="isCategoryActive(item)"
                   role="menuitem"
                 >
+                  <!-- Badge categoria (somma dei badge dei figli) -->
+                  <template v-slot:header-side>
+                    <q-badge
+                      v-if="getCategoryBadgeTotal(item) > 0"
+                      :label="getCategoryBadgeTotal(item) > 99 ? '99+' : String(getCategoryBadgeTotal(item))"
+                      color="primary"
+                      rounded
+                      style="font-size:10px"
+                    />
+                  </template>
                   <q-list dense class="q-pl-sm q-gutter-y-xs">
                     <q-item
                       v-for="child in item.children"
@@ -488,11 +582,19 @@
                       <q-item-section>
                         <q-item-label class="text-weight-medium">{{ translateMenuLabel(child.label) }}</q-item-label>
                       </q-item-section>
+                      <q-item-section side v-if="child.badge && getBadge(child.badge)">
+                        <q-badge
+                          :label="getBadge(child.badge) > 99 ? '99+' : String(getBadge(child.badge))"
+                          color="primary"
+                          rounded
+                          style="font-size:10px"
+                        />
+                      </q-item-section>
                     </q-item>
                   </q-list>
                 </q-expansion-item>
 
-                <!-- Single Item -->
+                <!-- Voce singola (Dashboard, etc.) -->
                 <q-item
                   v-else
                   clickable
@@ -896,6 +998,7 @@ import { useThemeStore, THEMES, getThemeName, getThemeDescription, getThemeRole 
 import { useSchoolYearStore } from '@/stores/schoolYear'
 import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
+import { useMenuBadges } from '@/composables/useMenuBadges'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
@@ -1074,6 +1177,7 @@ const menuLabelToKeyMap = {
 }
 
 const categoryToKeyMap = {
+  // ── Vecchie chiavi (retrocompatibilità) ──
   'Anagrafiche & Classi': 'anagraficheClassi',
   'Atti & Certificati': 'attiCertificati',
   'Servizi & Report': 'serviziReport',
@@ -1097,7 +1201,29 @@ const categoryToKeyMap = {
   'Servizi di Sede': 'serviziSede',
   'Gestione Servizio & Struttura': 'gestioneServizioStruttura',
   'Gestione Documentale & Archivi': 'gestioneDocumentaleArchivi',
-  'Conservazione Digitale': 'conservazioneDigitale'
+  'Conservazione Digitale': 'conservazioneDigitale',
+  // ── Nuove chiavi (menu semplificato) ──
+  'Gestione Piattaforma': 'gestionePiattaforma',
+  'Analytics & Sicurezza': 'analyticsSicurezza',
+  'Istituto & Personale': 'istitutoPersonale',
+  'Report & Strumenti': 'reportStrumenti',
+  'Anagrafica & Organizzazione': 'anagraficaOrganizzazione',
+  'Registro & Classi': 'registroClassi',
+  'Orario & Agenda': 'orarioAgenda',
+  'Comunicazioni': 'comunicazioni',
+  'Presidenza': 'presidenza',
+  'Didattica (mia)': 'didatticaMia',
+  'Atti & Comunicazioni': 'attiComunicazioni',
+  'Scuola': 'scuola',
+  'Servizi & Profilo': 'serviziProfilo',
+  'Situazione Scolastica': 'situazioneScolastica',
+  'Servizi & Contatti': 'serviziContatti',
+  'Personale & Presenze': 'personalePresenze',
+  'Atti & Amministrazione': 'attiAmministrazione',
+  'Gestione Alunni': 'gestioneAlunni',
+  'Privacy & Sicurezza': 'privacySicurezza',
+  'Scrutinio & Valutazione': 'scrutinioValutazione',
+
 }
 
 function translateMenuLabel(label) {
@@ -1231,11 +1357,26 @@ const roleLabel = computed(() => {
   }
   return userRole.value
 })
+// Roles that see year-filtered class/student data and need the school year selector
+const isSchoolDataRole = computed(() => {
+  const r = (userRole.value || '').toLowerCase()
+  return [
+    'superadmin',
+    'teacher', 'docente', 'coordinator', 'coordinatore_classe',
+    'vice_principal', 'collaboratore_vicario',
+    'secretary', 'principal', 'dirigente_scolastico', 'staff',
+    'admin',
+    'dsga', 'collaboratore_ds',
+    'assistente_amministrativo', 'assistente_alunni', 'assistente_personale',
+  ].includes(r)
+})
 
 const isTeacherRole = computed(() => {
   const r = (userRole.value || '').toLowerCase()
-  return r === 'teacher' || r === 'docente' || r === 'coordinator'
+  return r === 'teacher' || r === 'docente' || r === 'coordinator' || r === 'coordinatore_classe'
 })
+
+const showSchoolYearDialog = ref(false)
 
 const teacherStore = useTeacherStore()
 const classesStore = useClassesStore()
@@ -1272,6 +1413,28 @@ watch([userRole, isTeacherCoordinator, () => classesStore.classes, () => authSto
   }
   menuItems.value = items
 }, { immediate: true })
+
+// Badge dinamici per le voci menu
+const { getBadge } = useMenuBadges(userRole)
+
+// Voci di accesso rapido (sempre visibili, senza espansione)
+const quickAccessItems = computed(() =>
+  menuItems.value.filter(item => item.quickAccess && item.path)
+)
+
+// Voci raggruppate (tutto il resto: Dashboard + categorie)
+const groupMenuItems = computed(() =>
+  menuItems.value.filter(item => !item.quickAccess)
+)
+
+// Somma i badge dei figli di una categoria per il badge header
+function getCategoryBadgeTotal(category) {
+  if (!category?.children) return 0
+  return category.children.reduce((sum, child) => {
+    if (!child.badge) return sum
+    return sum + (getBadge(child.badge) ?? 0)
+  }, 0)
+}
 
 watch(() => authStore.user, (user) => {
   if (user) {
@@ -1322,6 +1485,15 @@ async function handleLogout() {
 
 onMounted(() => {
   themeStore.loadFromCloud()
+})
+
+defineExpose({
+  isTeacherRole,
+  isTeacherCoordinator,
+  navigateToProfile,
+  navigateToNotifications,
+  toggleLeftDrawer,
+  toggleRightDrawer
 })
 </script>
 
@@ -1377,5 +1549,14 @@ onMounted(() => {
   height: 14px;
   top: 2px;
   right: 2px;
+}
+
+/* ── Quick Access section nel drawer ── */
+.quick-access-item {
+  background: rgba(99, 102, 241, 0.04);
+  border-left: 2px solid rgba(99, 102, 241, 0.25);
+}
+.quick-access-item.active-menu-item {
+  border-left-color: var(--q-primary);
 }
 </style>

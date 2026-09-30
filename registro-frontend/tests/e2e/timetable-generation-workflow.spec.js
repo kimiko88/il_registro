@@ -232,7 +232,7 @@ describe('E2E Workflow: Teacher Desiderata, Lab Requirements & Automatic Timetab
     expect(timetableGenService.startGeneration).toHaveBeenCalledWith({ time_limit_seconds: 20 })
     expect(wrapper.vm.generationJobId).toBe('job-xyz-123')
 
-    // 2. Mock job status polling completion
+    // 2. Mock job status polling completion with 3 generated alternatives
     timetableGenService.getJobStatus.mockResolvedValue({
       data: {
         id: 'job-xyz-123',
@@ -241,7 +241,36 @@ describe('E2E Workflow: Teacher Desiderata, Lab Requirements & Automatic Timetab
           total_slots: 30,
           assigned_slots: 30,
           coverage_pct: 100.0,
-          hard_conflicts: 0
+          hard_conflicts: 0,
+          alternatives: [
+            {
+              id: 1,
+              label: 'Proposta 1: Bilanciata',
+              strategy: 'balanced',
+              description: 'Bilanciata',
+              score: 95.0,
+              coverage_pct: 100.0,
+              slots: [{ class_id: 'class-1', subject_id: 'sub-info', day_of_week: 1, hour_index: 1 }]
+            },
+            {
+              id: 2,
+              label: 'Proposta 2: Didattica & Prime Ore',
+              strategy: 'didactic_first',
+              description: 'Didattica al mattino',
+              score: 98.0,
+              coverage_pct: 100.0,
+              slots: [{ class_id: 'class-1', subject_id: 'sub-info', day_of_week: 1, hour_index: 2 }]
+            },
+            {
+              id: 3,
+              label: 'Proposta 3: Compatta / Minimizza Buchi',
+              strategy: 'compact_teacher',
+              description: 'Compatta docenti',
+              score: 92.0,
+              coverage_pct: 100.0,
+              slots: [{ class_id: 'class-1', subject_id: 'sub-info', day_of_week: 2, hour_index: 1 }]
+            }
+          ]
         }
       }
     })
@@ -253,8 +282,14 @@ describe('E2E Workflow: Teacher Desiderata, Lab Requirements & Automatic Timetab
     expect(timetableGenService.getJobStatus).toHaveBeenCalledWith('job-xyz-123')
     expect(wrapper.vm.generationResult).not.toBeNull()
     expect(wrapper.vm.generationResult.coverage_pct).toBe(100)
+    expect(wrapper.vm.generationResult.alternatives).toHaveLength(3)
 
-    // 3. Vice Principal publishes schedule
+    // 3. Vice Principal selects Alternative 2 (Didattica & Prime Ore)
+    wrapper.vm.selectAlternative(2)
+    expect(wrapper.vm.selectedAlternativeId).toBe(2)
+    expect(wrapper.vm.activeAlternative.slots).toEqual(wrapper.vm.generationResult.alternatives[1].slots)
+
+    // 4. Vice Principal publishes schedule with chosen alternative
     timetableGenService.publishSchedule.mockResolvedValue({
       data: { message: 'orario pubblicato' }
     })
@@ -262,7 +297,22 @@ describe('E2E Workflow: Teacher Desiderata, Lab Requirements & Automatic Timetab
     await wrapper.vm.publishGeneratedSchedule()
     await flushPromises()
 
-    expect(timetableGenService.publishSchedule).toHaveBeenCalledWith('job-xyz-123')
+    expect(timetableGenService.publishSchedule).toHaveBeenCalledWith(
+      'job-xyz-123',
+      expect.objectContaining({ alternative_id: 2 })
+    )
+
+    // 5. Vice Principal can also switch to Alternative 3 and publish
+    wrapper.vm.selectAlternative(3)
+    expect(wrapper.vm.selectedAlternativeId).toBe(3)
+    await wrapper.vm.publishGeneratedSchedule()
+    await flushPromises()
+
+    expect(timetableGenService.publishSchedule).toHaveBeenCalledWith(
+      'job-xyz-123',
+      expect.objectContaining({ alternative_id: 3 })
+    )
+
     vi.useRealTimers()
   })
 })
