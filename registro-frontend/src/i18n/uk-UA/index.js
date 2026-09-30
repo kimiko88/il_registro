@@ -151,6 +151,7 @@ export default {
     "selectClass": "Обрати клас / групу",
     "selectClassPrompt": "Оберіть клас для відміток відвідуваності та підпису уроку",
     "classList": "Список класів",
+    "noClassesFound": "Для обраного навчального року класи не знайдені",
     "studentsCount": "{count} Учнів",
     "coordinator": "Координація",
     "classLabel": "Клас {name}",

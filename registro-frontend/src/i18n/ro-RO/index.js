@@ -151,6 +151,7 @@ export default {
     "selectClass": "Selectează Clasa / Grupul",
     "selectClassPrompt": "Selectați o clasă pentru a înregistra prezența și a semna lecția",
     "classList": "Listă Clase",
+    "noClassesFound": "Nicio clasă găsită pentru anul școlar selectat",
     "studentsCount": "{count} Elevi",
     "coordinator": "Diriginte",
     "classLabel": "Clasa {name}",

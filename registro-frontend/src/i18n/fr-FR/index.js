@@ -151,6 +151,7 @@ export default {
     "selectClass": "Sélectionner Classe / Groupe",
     "selectClassPrompt": "Sélectionnez une classe pour faire l'appel et signer le cours",
     "classList": "Liste des Classes",
+    "noClassesFound": "Aucune classe trouvée pour l'année scolaire sélectionnée",
     "studentsCount": "{count} Élèves",
     "coordinator": "Coordination",
     "classLabel": "Classe {name}",

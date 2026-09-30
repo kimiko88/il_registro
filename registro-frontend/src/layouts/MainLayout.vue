@@ -945,7 +945,7 @@
       </div>
       <router-view v-slot="{ Component }">
         <transition name="page-fade" mode="out-in">
-          <component :is="Component" :key="$route.path" />
+          <component :is="Component" :key="pageKey" />
         </transition>
       </router-view>
     </q-page-container>
@@ -1442,11 +1442,44 @@ watch(() => authStore.user, (user) => {
   }
 }, { immediate: true })
 
-watch([userRole, () => schoolYearStore.selectedSchoolYear], ([newRole, newSY]) => {
-  if (newRole === 'teacher') {
-    classesStore.fetchAssignedClasses(newSY)
+const isSchoolYearDependentRoute = computed(() => {
+  const p = route.path
+  if (route.meta?.requiresSchoolYear) return true
+  if (isSchoolDataRole.value) {
+    if (
+      p === '/' ||
+      p.startsWith('/teacher') ||
+      p.startsWith('/secretary') ||
+      p.startsWith('/student') ||
+      p.startsWith('/parent') ||
+      p.startsWith('/ata')
+    ) {
+      return true
+    }
+  }
+  return false
+})
+
+const pageKey = computed(() => {
+  if (isSchoolYearDependentRoute.value && schoolYearStore.selectedSchoolYear) {
+    return `${route.fullPath}_${schoolYearStore.selectedSchoolYear}`
+  }
+  return route.fullPath
+})
+
+watch([userRole, () => schoolYearStore.selectedSchoolYear], async ([newRole, newSY]) => {
+  const r = (newRole || '').toLowerCase()
+  if (['teacher', 'docente', 'coordinator', 'coordinatore_classe', 'vice_principal', 'collaboratore_vicario'].includes(r)) {
+    await classesStore.fetchAssignedClasses(newSY, { force: true })
   }
 }, { immediate: true })
+
+watch(() => schoolYearStore.selectedSchoolYear, (newSY) => {
+  if (newSY) {
+    localStorage.setItem('selected_school_year', newSY)
+    localStorage.setItem('registro_selected_school_year', newSY)
+  }
+})
 
 const isCategoryActive = (category) => {
   if (!category || !category.children) return false

@@ -151,6 +151,7 @@ export default {
     "selectClass": "Select Class / Group",
     "selectClassPrompt": "Select a class to take attendance and sign the lesson",
     "classList": "Class List",
+    "noClassesFound": "No classes found for the selected school year",
     "studentsCount": "{count} Students",
     "coordinator": "Coordinator",
     "classLabel": "Class {name}",
@@ -3045,12 +3046,12 @@ export default {
     "communications": "Communications",
     "reports": "Reports & Statistics",
     "pcto": "Internships / PCTO",
-    "scrutiny": "Scrutiny & Minutes",
+    "scrutiny": "Scrutiny",
     "myClasses": "My Classes",
     "classRegister": "Class Register",
     "uda": "Didactic UdA Planning",
     "competencies": "Competencies Assessment",
-    "grades": "Grades & Evaluation",
+    "grades": "Grades",
     "attendance": "Attendance Register",
     "didactics": "Teaching Materials",
     "pdp": "PDP / PEI Plans",
@@ -4738,6 +4739,13 @@ export default {
     "cardElearningTitle": "Labs & E-Learning",
     "cardElearningDesc": "Computer labs, Google Workspace, Microsoft Teams and didactic devices",
     "cardElearningAction": "Access Labs"
+  },
+  "ataPage": {
+    "attendance": "Staff Attendance",
+    "strike": "Strike Management",
+    "timecard": "Timecard & Leaves",
+    "visitors": "Visitor Registry",
+    "desk": "Personnel Desk"
   },
   "staffAttendance": {
     "badgeStaffDocenti": "STAFF & TEACHERS",

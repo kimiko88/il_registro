@@ -15,7 +15,7 @@ export function useMenuItems(role, assignments = []) {
         return []
     }
 
-    // â”€â”€â”€ SUPERADMIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // SUPERADMIN
     const superadminMenu = [
         { label: 'Dashboard', icon: 'dashboard', path: '/', exact: true },
         {
@@ -40,7 +40,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ ADMIN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ADMIN
     const adminMenu = [
         { label: 'Dashboard',       icon: 'dashboard', path: '/',                    exact: true, quickAccess: true },
         { label: 'Gestione Utenti', icon: 'people',    path: '/admin/users',         quickAccess: true },
@@ -71,7 +71,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ SECRETARY / PRINCIPAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // SECRETARY / PRINCIPAL 
     const secretaryMenu = [
         { label: 'Dashboard',           icon: 'dashboard',  path: '/',                        exact: true },
         { label: 'Studenti & Famiglie', icon: 'school',     path: '/secretary/students',      quickAccess: true },
@@ -114,7 +114,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ TEACHER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // TEACHER
     const teacherMenu = [
         { label: 'Dashboard', icon: 'dashboard',  path: '/',                   exact: true },
         { label: 'Registro',  icon: 'menu_book',  path: '/teacher/lessons',    quickAccess: true },
@@ -167,7 +167,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ VICE_PRINCIPAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // VICE_PRINCIPAL
     const vicePrincipalMenu = [
         { label: 'Dashboard Vicario', icon: 'dashboard',  path: '/teacher',                   exact: true },
         { label: 'Sostituzioni',      icon: 'swap_horiz', path: '/secretary/substitutions',   quickAccess: true, badge: 'pendingSubstitutions' },
@@ -192,7 +192,7 @@ export function useMenuItems(role, assignments = []) {
             children: [
                 { label: 'Le Mie Classi',    icon: 'class',             path: '/teacher/classes' },
                 { label: 'Voti',             icon: 'grade',             path: '/teacher/grades',  badge: 'pendingGrades' },
-                { label: 'Voti & Scrutinio', icon: 'grade',             path: '/teacher/grades' },
+                { label: 'Scrutinio',        icon: 'analytics',         path: '/teacher/scrutiny' },
                 { label: 'PDP/PEI',         icon: 'accessibility_new', path: '/teacher/pdp' },
                 { label: 'Agenda & Colloqui', icon: 'edit_calendar',    path: '/teacher/agenda' },
             ]
@@ -210,7 +210,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ STUDENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // STUDENT
     const studentMenu = [
         { label: 'Dashboard',     icon: 'dashboard',  path: '/',                  exact: true },
         { label: 'I Miei Voti',   icon: 'grade',      path: '/student/grades',    quickAccess: true },
@@ -240,7 +240,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ PARENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // PARENT
     const parentMenu = [
         { label: 'Dashboard',    icon: 'dashboard',       path: '/parent',               exact: true },
         { label: 'I Miei Figli', icon: 'family_restroom', path: '/parent/children',       quickAccess: true },
@@ -271,7 +271,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ DSGA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // DSGA
     const dsgaMenu = [
         { label: 'Dashboard ATA',      icon: 'dashboard',  path: '/ata',                     exact: true },
         { label: 'Presenze Personale', icon: 'co_present', path: '/ata/attendance',           quickAccess: true, badge: 'absentStaff' },
@@ -301,7 +301,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ ASSISTENTE AMMINISTRATIVO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ASSISTENTE AMMINISTRATIVO 
     const assistenteAmministrativoMenu = [
         { label: 'Dashboard ATA',      icon: 'dashboard',  path: '/ata',            exact: true },
         { label: 'Presenze Personale', icon: 'co_present', path: '/ata/attendance', quickAccess: true, badge: 'absentStaff' },
@@ -331,7 +331,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ ASSISTENTE ALUNNI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ASSISTENTE ALUNNI
     const assistenteAlunniMenu = [
         { label: 'Dashboard ATA',       icon: 'dashboard',         path: '/ata',                    exact: true },
         { label: 'Studenti & Fascicoli', icon: 'school',           path: '/secretary/students',     quickAccess: true },
@@ -350,7 +350,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ ASSISTENTE PERSONALE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ASSISTENTE PERSONALE 
     const assistentePersonaleMenu = [
         { label: 'Dashboard ATA',      icon: 'dashboard',  path: '/ata',            exact: true },
         { label: 'Presenze Personale', icon: 'co_present', path: '/ata/attendance', quickAccess: true, badge: 'absentStaff' },
@@ -369,7 +369,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ ASSISTENTE CONTABILITA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ASSISTENTE CONTABILITA 
     const assistenteContabilitaMenu = [
         { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
         {
@@ -385,7 +385,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ ASSISTENTE PROTOCOLLO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ASSISTENTE PROTOCOLLO 
     const assistenteProtocolloMenu = [
         { label: 'Dashboard ATA',       icon: 'dashboard',  path: '/ata',                 exact: true },
         { label: 'Registro Protocollo', icon: 'description', path: '/secretary/documents', quickAccess: true },
@@ -402,7 +402,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ ASSISTENTE SPORTELLO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ASSISTENTE SPORTELLO 
     const assistenteSportelloMenu = [
         { label: 'Dashboard ATA',      icon: 'dashboard',         path: '/ata',                     exact: true },
         { label: 'Sportello Utenza',   icon: 'forward_to_inbox',  path: '/ata/personnel-desk',      quickAccess: true },
@@ -420,7 +420,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ ASSISTENTE TECNICO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ASSISTENTE TECNICO
     const assistenteTecnicoMenu = [
         { label: 'Dashboard ATA',      icon: 'dashboard',      path: '/ata',           exact: true },
         { label: 'Cartellino Presenze', icon: 'calendar_month', path: '/ata/timecard',  quickAccess: true },
@@ -437,7 +437,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ COLLABORATORE DS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // COLLABORATORE DS
     const collaboratoreDsMenu = [
         { label: 'Dashboard ATA',    icon: 'dashboard',  path: '/ata',                          exact: true },
         { label: 'Emergenza Sost.',  icon: 'bolt',       path: '/ata/emergency-substitutions',  quickAccess: true, badge: 'pendingSubstitutions' },
@@ -468,15 +468,15 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ COLLABORATORE SCOLASTICO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // COLLABORATORE SCOLASTICO 
     const collaboratoreScolasticoMenu = [
-        { label: 'Dashboard ATA',      icon: 'dashboard',      path: '/ata',           exact: true },
-        { label: 'Cartellino & Ferie', icon: 'calendar_month', path: '/ata/timecard',  quickAccess: true },
+        { label: 'Dashboard ATA',       icon: 'dashboard',      path: '/ata',                  exact: true },
+        { label: 'Registro Visitatori', icon: 'door_front',     path: '/ata/visitor-registry', quickAccess: true },
+        { label: 'Cartellino & Ferie',  icon: 'calendar_month', path: '/ata/timecard',         quickAccess: true },
         {
-            category: 'Servizi di Sede',
-            icon: 'co_present',
+            category: 'Servizi di Sede & Vigilanza',
+            icon: 'security',
             children: [
-                { label: 'Presenze Personale',        icon: 'co_present',       path: '/ata/attendance' },
                 { label: 'Registro Visitatori',       icon: 'door_front',       path: '/ata/visitor-registry' },
                 { label: 'Cartellino & Ferie',        icon: 'calendar_month',   path: '/ata/timecard' },
                 { label: 'Sportello Personale',       icon: 'forward_to_inbox', path: '/ata/personnel-desk' },
@@ -486,7 +486,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ RESPONSABILE SERVIZIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // RESPONSABILE SERVIZIO 
     const responsabileServizioMenu = [
         { label: 'Dashboard ATA', icon: 'dashboard', path: '/ata', exact: true },
         {
@@ -502,7 +502,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ RESPONSABILE GESTIONE DOCUMENTALE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // RESPONSABILE GESTIONE DOCUMENTALE 
     const responsabileDocumentaleMenu = [
         { label: 'Dashboard', icon: 'dashboard', path: '/secretary/documents', exact: true },
         {
@@ -517,7 +517,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ RESPONSABILE CONSERVAZIONE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // RESPONSABILE CONSERVAZIONE 
     const responsabileConservazioneMenu = [
         { label: 'Dashboard', icon: 'dashboard', path: '/secretary/documents', exact: true },
         {
@@ -532,7 +532,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ DPO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // DPO
     const dpoMenu = [
         { label: 'Dashboard',              icon: 'dashboard', path: '/admin/audit-logs', exact: true },
         { label: 'Audit Logs & Sicurezza', icon: 'history',   path: '/admin/audit-logs', quickAccess: true },
@@ -548,7 +548,7 @@ export function useMenuItems(role, assignments = []) {
         }
     ]
 
-    // â”€â”€â”€ ROUTING PER RUOLO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ROUTING PER RUOLO
 
     if (normRole === 'superadmin' || normRole === 'system_auditor') {
         return superadminMenu
@@ -634,7 +634,7 @@ export function useMenuItems(role, assignments = []) {
         return dpoMenu
     }
 
-    // â”€â”€â”€ TEACHER (con incarichi dinamici) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // TEACHER (con incarichi dinamici) 
     if (normRole === 'teacher' || normRole === 'docente' || normRole === 'coordinator' || normRole === 'coordinatore_classe') {
         const baseTeacherMenu = JSON.parse(JSON.stringify(teacherMenu))
         const activeAssignments = (assignments || []).filter(a => a.is_active !== false)

@@ -151,6 +151,7 @@ export default {
     "selectClass": "Seleziona Classe / Gruppo",
     "selectClassPrompt": "Seleziona una classe per registrare presenze e firmare la lezione",
     "classList": "Elenco Classi",
+    "noClassesFound": "Nessuna classe per l'anno selezionato",
     "studentsCount": "{count} Studenti",
     "coordinator": "Coordinatore",
     "classLabel": "Classe {name}",
@@ -3045,12 +3046,12 @@ export default {
     "communications": "Comunicazioni",
     "reports": "Report & Statistiche",
     "pcto": "PCTO & Stage",
-    "scrutiny": "Scrutini & Verbali",
+    "scrutiny": "Scrutinio",
     "myClasses": "Le Mie Classi",
     "classRegister": "Registro di Classe",
     "uda": "Programmazione UdA",
     "competencies": "Valutazione Competenze",
-    "grades": "Valutazioni & Voti",
+    "grades": "Voti",
     "attendance": "Registro Presenze",
     "didactics": "Materiale Didattico",
     "pdp": "Piani PDP / PEI",
@@ -4738,6 +4739,13 @@ export default {
     "cardElearningTitle": "Laboratori & E-Learning",
     "cardElearningDesc": "Gestione aule informatiche, Google Workspace, Microsoft Teams e laboratori didattici",
     "cardElearningAction": "Accedi ai Laboratori"
+  },
+  "ataPage": {
+    "attendance": "Presenze Personale",
+    "strike": "Gestione Scioperi",
+    "timecard": "Cartellino & Ferie",
+    "visitors": "Registro Visitatori",
+    "desk": "Sportello Personale"
   },
   "staffAttendance": {
     "badgeStaffDocenti": "PERSONALE & DOCENTI",

@@ -69,7 +69,9 @@ describe('useMenuItems — Dynamic Role-Based Menu Generation', () => {
     expect(presidenza.children.some(c => c.path === '/secretary/substitutions')).toBe(true)
     const didattica = vpItems.find(i => i.category === 'Didattica & Le Mie Classi')
     expect(didattica.children.some(c => c.path === '/teacher/classes')).toBe(true)
-    expect(didattica.children.some(c => c.path === '/teacher/grades')).toBe(true)
+    expect(didattica.children.some(c => c.path === '/teacher/grades' && c.label === 'Voti')).toBe(true)
+    expect(didattica.children.some(c => c.path === '/teacher/scrutiny' && c.label === 'Scrutinio')).toBe(true)
+    expect(didattica.children.some(c => c.label === 'Voti & Scrutinio')).toBe(false)
   })
 
   it('handles coordinator role mapped to teacher menu', () => {

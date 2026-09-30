@@ -17,7 +17,7 @@ var (
 
 func IsAdminOrDSGA(role string) bool {
 	switch strings.ToLower(role) {
-	case "dsga", "principal", "vice_principal", "admin", "superadmin", "collaboratore_ds":
+	case "dsga", "principal", "vice_principal", "admin", "superadmin", "collaboratore_ds", "secretary", "assistente_amministrativo", "assistente_personale":
 		return true
 	default:
 		return false
@@ -26,7 +26,7 @@ func IsAdminOrDSGA(role string) bool {
 
 func CanCreateStrikeNotice(role string) bool {
 	switch strings.ToLower(role) {
-	case "dsga", "principal", "vice_principal", "admin", "superadmin":
+	case "dsga", "principal", "vice_principal", "admin", "superadmin", "collaboratore_ds", "secretary", "assistente_amministrativo", "assistente_personale":
 		return true
 	default:
 		return false

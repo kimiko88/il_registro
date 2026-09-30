@@ -151,6 +151,7 @@ export default {
     "selectClass": "Zgjidhni Klasën / Grupin",
     "selectClassPrompt": "Zgjidhni një klasë për të shënuar pjesëmarrjen dhe nënshkruar mësimin",
     "classList": "Lista e Klasave",
+    "noClassesFound": "Nuk u gjet asnjë klasë për vitin shkollor të zgjedhur",
     "studentsCount": "{count} Nxënës",
     "coordinator": "Kujdestar Klasë",
     "classLabel": "Klasa {name}",

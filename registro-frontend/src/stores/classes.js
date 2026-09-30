@@ -59,6 +59,7 @@ export const useClassesStore = defineStore('classes', {
         error: null,
         _lastFetchClasses: 0,
         _lastFetchAssigned: 0,
+        _lastFetchAssignedYear: null,
         _lastFetchAll: 0,
     }),
 
@@ -87,6 +88,7 @@ export const useClassesStore = defineStore('classes', {
         invalidateCache() {
             this._lastFetchClasses = 0;
             this._lastFetchAssigned = 0;
+            this._lastFetchAssignedYear = null;
             this._lastFetchAll = 0;
         },
 
@@ -135,19 +137,46 @@ export const useClassesStore = defineStore('classes', {
             }
         },
 
-        async fetchAssignedClasses(options = {}) {
-            const isFresh = !options.force && this.classes.length > 0 && (Date.now() - this._lastFetchAssigned < CLASSES_CACHE_TTL);
+        async fetchAssignedClasses(schoolYearOrOptions = null, maybeOptions = {}) {
+            let schoolYear = null;
+            let options = {};
+            if (typeof schoolYearOrOptions === 'string') {
+                schoolYear = schoolYearOrOptions;
+                options = maybeOptions || {};
+            } else if (schoolYearOrOptions && typeof schoolYearOrOptions === 'object') {
+                options = schoolYearOrOptions;
+                schoolYear = options.schoolYear || options.academic_year || options.school_year || null;
+            }
+
+            if (!schoolYear && typeof localStorage !== 'undefined') {
+                schoolYear = localStorage.getItem('selected_school_year') || localStorage.getItem('registro_selected_school_year') || null;
+            }
+
+            const yearChanged = schoolYear && this._lastFetchAssignedYear && this._lastFetchAssignedYear !== schoolYear;
+            const isFresh = !options.force && !yearChanged && this.classes.length > 0 && (Date.now() - this._lastFetchAssigned < CLASSES_CACHE_TTL);
             if (isFresh) {
                 return this.classes;
             }
 
             this.loading = true;
             try {
-                const response = await api.get('/teacher/classes');
-                const raw = response.data || [];
+                const params = {};
+                if (schoolYear) {
+                    params.school_year = schoolYear;
+                    params.academic_year = schoolYear;
+                }
+                const requestConfig = Object.keys(params).length > 0 ? { params } : undefined;
+                const response = requestConfig ? await api.get('/teacher/classes', requestConfig) : await api.get('/teacher/classes');
+                let raw = response.data || [];
+                if (schoolYear) {
+                    const norm = schoolYear.replace('-', '/').trim();
+                    raw = raw.filter(c => !c.academic_year || c.academic_year.replace('-', '/').trim() === norm);
+                }
                 this.classes = raw.map(formatClassItem);
                 this._lastFetchAssigned = Date.now();
-                saveCachedClasses(this.classes, ASSIGNED_CLASSES_STORAGE_KEY);
+                this._lastFetchAssignedYear = schoolYear || null;
+                const cacheKey = schoolYear ? `${ASSIGNED_CLASSES_STORAGE_KEY}_${schoolYear}` : ASSIGNED_CLASSES_STORAGE_KEY;
+                saveCachedClasses(this.classes, cacheKey);
                 return this.classes;
             } catch (err) {
                 this.error = 'Failed to fetch assigned classes';
@@ -156,7 +185,11 @@ export const useClassesStore = defineStore('classes', {
                     return this.classes;
                 }
                 if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-                    const cached = loadCachedClasses(ASSIGNED_CLASSES_STORAGE_KEY);
+                    const cacheKey = schoolYear ? `${ASSIGNED_CLASSES_STORAGE_KEY}_${schoolYear}` : ASSIGNED_CLASSES_STORAGE_KEY;
+                    let cached = loadCachedClasses(cacheKey);
+                    if (cached.length === 0) {
+                        cached = loadCachedClasses(ASSIGNED_CLASSES_STORAGE_KEY);
+                    }
                     if (cached.length > 0) {
                         this.classes = cached;
                         return this.classes;

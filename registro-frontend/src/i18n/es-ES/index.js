@@ -151,6 +151,7 @@ export default {
     "selectClass": "Seleccionar Clase / Grupo",
     "selectClassPrompt": "Seleccione una clase para pasar lista y firmar la lección",
     "classList": "Lista de Clases",
+    "noClassesFound": "No se encontraron clases para el año escolar seleccionado",
     "studentsCount": "{count} Estudiantes",
     "coordinator": "Coordinación",
     "classLabel": "Clase {name}",

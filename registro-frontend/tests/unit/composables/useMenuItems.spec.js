@@ -87,7 +87,9 @@ describe('useMenuItems', () => {
         it('should return correct menu items for collaboratore_scolastico', () => {
             const flatItems = getFlatItems('collaboratore_scolastico')
             expect(flatItems.map(i => i.path)).toContain('/ata')
-            expect(flatItems.map(i => i.path)).toContain('/ata/attendance')
+            expect(flatItems.map(i => i.path)).toContain('/ata/visitor-registry')
+            expect(flatItems.map(i => i.path)).toContain('/ata/timecard')
+            expect(flatItems.map(i => i.path)).not.toContain('/ata/attendance')
         })
     })
 

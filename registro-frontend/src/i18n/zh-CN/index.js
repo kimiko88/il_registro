@@ -151,6 +151,7 @@ export default {
     "selectClass": "选择班级 / 分组",
     "selectClassPrompt": "选择一个班级以记录考勤并签署课程",
     "classList": "班级列表",
+    "noClassesFound": "未找到所选学年的班级",
     "studentsCount": "{count} 名学生",
     "coordinator": "班主任",
     "classLabel": "{name} 班",

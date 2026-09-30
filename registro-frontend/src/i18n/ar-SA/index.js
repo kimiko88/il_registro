@@ -151,6 +151,7 @@ export default {
     "selectClass": "اختر الفصل / المجموعة",
     "selectClassPrompt": "اختر فصلاً لتسجيل الحضور وتوقيع الدرس",
     "classList": "قائمة الفصول",
+    "noClassesFound": "لم يتم العثور على فصول للعام الدراسي المحدد",
     "studentsCount": "{count} طلاب",
     "coordinator": "التنسيق",
     "classLabel": "الفصل {name}",

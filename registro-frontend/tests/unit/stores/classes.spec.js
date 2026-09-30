@@ -121,4 +121,22 @@ describe('Classes Store', () => {
         await store.fetchClasses()
         expect(api.get).toHaveBeenCalledTimes(2)
     })
+
+    it('fetches assigned classes with school_year parameter and filters properly', async () => {
+        const mockClasses = [
+            { id: '1', name: '1A', academic_year: '2025/2026' },
+            { id: '2', name: '2B', academic_year: '2024/2025' }
+        ]
+        api.get.mockResolvedValue({ data: mockClasses })
+
+        const res = await store.fetchAssignedClasses('2025/2026', { force: true })
+
+        expect(api.get).toHaveBeenCalledWith('/teacher/classes', {
+            params: { school_year: '2025/2026', academic_year: '2025/2026' }
+        })
+        expect(res).toHaveLength(1)
+        expect(store.classes).toHaveLength(1)
+        expect(store.classes[0].id).toBe('1')
+        expect(store.classes[0].name).toBe('1A')
+    })
 })

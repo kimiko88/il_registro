@@ -151,6 +151,7 @@ export default {
     "selectClass": "Klasse / Gruppe wählen",
     "selectClassPrompt": "Wählen Sie eine Klasse aus, um die Anwesenheit zu erfassen und die Stunde zu signieren",
     "classList": "Klassenliste",
+    "noClassesFound": "Keine Klassen für das ausgewählte Schuljahr gefunden",
     "studentsCount": "{count} Schüler",
     "coordinator": "Koordinierung",
     "classLabel": "Klasse {name}",

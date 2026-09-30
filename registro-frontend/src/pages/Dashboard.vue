@@ -804,7 +804,7 @@ const actions = computed(() => {
       { key: 'substitutions', label: t('dashboardPage.newSubstitution') || 'Nuova Sostituzione', icon: 'swap_horiz', color: 'warning', alertOnBadge: true, route: '/secretary/substitutions', path: '/secretary/substitutions', badge: getBadge('pendingSubstitutions') },
       { key: 'timetable', label: t('timetablePage.title') || 'Orario Scuola', icon: 'schedule', color: 'teal', route: '/secretary/timetable', path: '/secretary/timetable' },
       { key: 'lessons', label: t('dashboardPage.openRegister') || 'Registro (Mio)', icon: 'edit_calendar', color: 'indigo', route: '/teacher/lessons', path: '/teacher/lessons' },
-      { key: 'grades', label: t('dashboardPage.actionGrades') || 'Voti & Scrutinio', icon: 'grade', color: 'primary', route: '/teacher/grades', path: '/teacher/grades', badge: getBadge('pendingGrades') },
+      { key: 'grades', label: t('dashboardPage.actionGrades') || 'Voti', icon: 'grade', color: 'primary', route: '/teacher/grades', path: '/teacher/grades', badge: getBadge('pendingGrades') },
       { key: 'attendance', label: t('ataPage.attendance') || 'Presenze Personale', icon: 'co_present', color: 'positive', route: '/ata/attendance', path: '/ata/attendance', badge: getBadge('absentStaff') },
       { key: 'communications', label: t('communicationsPage.title') || 'Comunicazioni Istituto', icon: 'email', color: 'secondary', route: '/secretary/communications', path: '/secretary/communications', badge: getBadge('unreadMessages') }
     ]
@@ -858,19 +858,30 @@ const actions = computed(() => {
     ]
   }
 
+  // COLLABORATORE SCOLASTICO
+  if (role === 'collaboratore_scolastico') {
+    return [
+      { key: 'visitors', label: t('ataPage.visitors') || 'Registro Visitatori', icon: 'door_front', color: 'teal', route: '/ata/visitor-registry', path: '/ata/visitor-registry' },
+      { key: 'timecard', label: t('ataPage.timecard') || 'Cartellino & Ferie', icon: 'calendar_month', color: 'positive', route: '/ata/timecard', path: '/ata/timecard' },
+      { key: 'desk', label: t('ataPage.desk') || 'Sportello Personale', icon: 'forward_to_inbox', color: 'primary', route: '/ata/personnel-desk', path: '/ata/personnel-desk' },
+      { key: 'communications', label: t('nav.communications') || 'Comunicazioni', icon: 'email', color: 'indigo', route: '/secretary/communications', path: '/secretary/communications', badge: getBadge('unreadMessages') },
+      { key: 'settings', label: t('settings.title') || 'Impostazioni', icon: 'settings', color: 'secondary', route: '/ata/settings', path: '/ata/settings' }
+    ]
+  }
+
   // ATA / SPECIALIST
   const ataRoles = [
-    'dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico',
+    'dsga', 'assistente_amministrativo', 'collaboratore_ds',
     'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo',
     'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio'
   ]
   if (ataRoles.includes(role)) {
     return [
       { key: 'attendance', label: t('ataPage.attendance') || 'Timbrature & Presenze', icon: 'fingerprint', color: 'positive', route: '/ata/attendance', path: '/ata/attendance' },
-      { key: 'substitutions', label: t('nav.substitutions') || 'Sostituzioni Attive', icon: 'swap_horiz', color: 'warning', alertOnBadge: true, route: '/ata/substitutions', path: '/ata/substitutions', badge: getBadge('pendingSubstitutions') },
+      { key: 'substitutions', label: t('nav.substitutions') || 'Sostituzioni Attive', icon: 'swap_horiz', color: 'warning', alertOnBadge: true, route: '/secretary/substitutions', path: '/secretary/substitutions', badge: getBadge('pendingSubstitutions') },
       { key: 'strike', label: t('ataPage.strike') || 'Gestione Scioperi', icon: 'campaign', color: 'amber', route: '/ata/strike', path: '/ata/strike' },
-      { key: 'communications', label: t('nav.communications') || 'Comunicazioni', icon: 'email', color: 'indigo', route: '/ata/communications', path: '/ata/communications', badge: getBadge('unreadMessages') },
-      { key: 'visitors', label: t('nav.visitorRegistry') || 'Registro Visitatori', icon: 'badge', color: 'teal', route: '/ata/visitors', path: '/ata/visitors' },
+      { key: 'communications', label: t('nav.communications') || 'Comunicazioni', icon: 'email', color: 'indigo', route: '/secretary/communications', path: '/secretary/communications', badge: getBadge('unreadMessages') },
+      { key: 'visitors', label: t('ataPage.visitors') || 'Registro Visitatori', icon: 'door_front', color: 'teal', route: '/ata/visitor-registry', path: '/ata/visitor-registry' },
       { key: 'settings', label: t('settings.title') || 'Impostazioni', icon: 'settings', color: 'secondary', route: '/ata/settings', path: '/ata/settings' }
     ]
   }
