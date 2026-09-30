@@ -4740,6 +4740,13 @@ export default {
     "cardElearningDesc": "Computerräume, Google Workspace, Microsoft Teams und didaktische Geräte",
     "cardElearningAction": "Labore aufrufen"
   },
+  "ataPage": {
+    "attendance": "Personal-Anwesenheit",
+    "strike": "Streikverwaltung",
+    "timecard": "Stempelkarte & Urlaub",
+    "visitors": "Besucherregister",
+    "desk": "Personal-Schalter"
+  },
   "staffAttendance": {
     "badgeStaffDocenti": "PERSONAL & LEHRKRÄFTE",
     "strikeModeActive": "STREIKERFASSUNG AKTIV",

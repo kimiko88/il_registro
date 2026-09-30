@@ -4885,6 +4885,13 @@ export default {
     "cardElearningDesc": "Sallat e informatikës, Google Workspace, Microsoft Teams dhe pajisjet didaktike",
     "cardElearningAction": "Hyr në Laboratorë"
   },
+  "ataPage": {
+    "attendance": "Prezenca e personelit",
+    "strike": "Menaxhimi i grevave",
+    "timecard": "Karta e orarit & Lejet",
+    "visitors": "Regjistri i vizitorëve",
+    "desk": "Sporteli i personelit"
+  },
   "staffAttendance": {
     "badgeStaffDocenti": "STAFI DHE MËSUESIT",
     "strikeModeActive": "MONITORIMI I GREVËS AKTIV",

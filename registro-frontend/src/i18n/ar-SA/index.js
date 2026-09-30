@@ -4885,6 +4885,13 @@ export default {
     "cardElearningDesc": "مختبرات الحاسوب وGoogle Workspace وMicrosoft Teams والأجهزة التعليمية",
     "cardElearningAction": "دخول المختبرات"
   },
+  "ataPage": {
+    "attendance": "حضور الموظفين",
+    "strike": "إدارة الإضرابات",
+    "timecard": "بطاقة الدوام والإجازات",
+    "visitors": "سجل الزوار",
+    "desk": "مكتب شؤون الموظفين"
+  },
   "staffAttendance": {
     "badgeStaffDocenti": "الموظفون والمعلمون",
     "strikeModeActive": "رصد الإضراب مفعل",

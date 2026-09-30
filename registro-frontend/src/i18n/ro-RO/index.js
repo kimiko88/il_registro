@@ -4740,6 +4740,13 @@ export default {
     "cardElearningDesc": "Săli de informatică, Google Workspace, Microsoft Teams și dispozitive didactice",
     "cardElearningAction": "Accesează Laboratoarele"
   },
+  "ataPage": {
+    "attendance": "Prezență personal",
+    "strike": "Gestionare greve",
+    "timecard": "Pontaj și Concedii",
+    "visitors": "Registru vizitatori",
+    "desk": "Ghișeu personal"
+  },
   "staffAttendance": {
     "badgeStaffDocenti": "PERSONAL ȘI PROFESORI",
     "strikeModeActive": "MONITORIZARE GREVĂ ACTIVĂ",

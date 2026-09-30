@@ -4740,6 +4740,13 @@ export default {
     "cardElearningDesc": "Компьютерные классы, Google Workspace, Microsoft Teams и учебное оборудование",
     "cardElearningAction": "Перейти в Лаборатории"
   },
+  "ataPage": {
+    "attendance": "Посещаемость персонала",
+    "strike": "Управление забастовками",
+    "timecard": "Табель и отпуска",
+    "visitors": "Журнал посетителей",
+    "desk": "Стол кадров"
+  },
   "staffAttendance": {
     "badgeStaffDocenti": "ПЕРСОНАЛ И ПЕДАГОГИ",
     "strikeModeActive": "МОНИТОРИНГ ЗАБАСТОВКИ АКТИВЕН",

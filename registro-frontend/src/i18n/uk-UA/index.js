@@ -4740,6 +4740,13 @@ export default {
     "cardElearningDesc": "Компʼютерні класи, Google Workspace, Microsoft Teams та навчальні пристрої",
     "cardElearningAction": "Перейти до Лабораторій"
   },
+  "ataPage": {
+    "attendance": "Відвідуваність персоналу",
+    "strike": "Управління страйками",
+    "timecard": "Табель та відпустки",
+    "visitors": "Журнал відвідувачів",
+    "desk": "Стіл кадрів"
+  },
   "staffAttendance": {
     "badgeStaffDocenti": "ПЕРСОНАЛ ТА ВЧИТЕЛІ",
     "strikeModeActive": "МОНІТОРИНГ СТРАЙКУ АКТИВНИЙ",

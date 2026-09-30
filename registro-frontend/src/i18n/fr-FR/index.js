@@ -4740,6 +4740,13 @@ export default {
     "cardElearningDesc": "Salles informatiques, Google Workspace, Microsoft Teams et appareils pédagogiques",
     "cardElearningAction": "Accéder aux Laboratoires"
   },
+  "ataPage": {
+    "attendance": "Présence du personnel",
+    "strike": "Gestion des grèves",
+    "timecard": "Pointage & Congés",
+    "visitors": "Registre des visiteurs",
+    "desk": "Guichet du personnel"
+  },
   "staffAttendance": {
     "badgeStaffDocenti": "PERSONNEL ET ENSEIGNANTS",
     "strikeModeActive": "SURVEILLANCE DE GRÈVE ACTIVE",

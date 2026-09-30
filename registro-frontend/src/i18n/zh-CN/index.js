@@ -4765,6 +4765,13 @@ export default {
     "cardElearningDesc": "计算机室、Google Workspace、Microsoft Teams及教学设备管理",
     "cardElearningAction": "进入实验室"
   },
+  "ataPage": {
+    "attendance": "教职员工考勤",
+    "strike": "罢工管理",
+    "timecard": "打卡记录与请假",
+    "visitors": "访客登记",
+    "desk": "教职工办事大厅"
+  },
   "staffAttendance": {
     "badgeStaffDocenti": "教职工与专任教师",
     "strikeModeActive": "罢工状态监控中",

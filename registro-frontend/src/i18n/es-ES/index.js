@@ -4740,6 +4740,13 @@ export default {
     "cardElearningDesc": "Aulas de informática, Google Workspace, Microsoft Teams y dispositivos didácticos",
     "cardElearningAction": "Acceder a Laboratorios"
   },
+  "ataPage": {
+    "attendance": "Asistencia del personal",
+    "strike": "Gestión de huelgas",
+    "timecard": "Fichaje y Permisos",
+    "visitors": "Registro de visitantes",
+    "desk": "Ventanilla del personal"
+  },
   "staffAttendance": {
     "badgeStaffDocenti": "PERSONAL Y DOCENTES",
     "strikeModeActive": "SEGUIMIENTO DE HUELGA ACTIVO",
