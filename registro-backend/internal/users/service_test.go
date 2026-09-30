@@ -298,6 +298,23 @@ func TestService_ListUsers(t *testing.T) {
 			mockSetup: func() {},
 			wantErr:   true,
 		},
+		{
+			name:      "Collaboratore scolastico can list students (allowed for portineria early exits)",
+			actorRole: "collaboratore_scolastico",
+			filter:    UserFilter{Role: "student"},
+			mockSetup: func() {
+				mockRepo.On("List", mock.Anything, mock.AnythingOfType("users.UserFilter")).
+					Return([]User{}, 0, nil)
+			},
+			wantErr: false,
+		},
+		{
+			name:      "Collaboratore scolastico cannot list all users without role filter (unauthorized)",
+			actorRole: "collaboratore_scolastico",
+			filter:    UserFilter{},
+			mockSetup: func() {},
+			wantErr:   true,
+		},
 	}
 
 	for _, tt := range tests {

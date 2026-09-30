@@ -193,6 +193,8 @@ func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string
 	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
 		if (actorRole == "parent" || actorRole == "student") && filter.Role == "teacher" {
 			// Allowed to query teachers in their school for booking colloqui or communications
+		} else if (actorRole == "collaboratore_scolastico" || actorRole == "responsabile_servizio") && (filter.Role == "student" || filter.Role == "teacher") {
+			// Allowed to query students (for visitor registry, early exits) or teachers in their school
 		} else {
 			return nil, 0, ErrUnauthorized
 		}
@@ -205,7 +207,7 @@ func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string
 
 // GetUser returns a single user by ID.
 func (s *Service) GetUser(ctx context.Context, actorRole, actorSchoolID string, id string) (*User, error) {
-	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
+	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" && actorRole != "collaboratore_scolastico" && actorRole != "responsabile_servizio" {
 		return nil, ErrUnauthorized
 	}
 	user, err := s.repo.GetByID(ctx, id)

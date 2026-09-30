@@ -12,14 +12,14 @@
         </p>
       </div>
 
-      <div class="row items-center gap-3">
+      <div class="row items-center q-gutter-x-md q-gutter-y-sm" style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
         <q-btn-toggle
           v-model="viewMode"
           toggle-color="primary"
           flat
           dense
           no-caps
-          class="rounded-xl q-pa-xs shadow-xs"
+          class="rounded-xl q-pa-xs shadow-xs q-mr-xs"
           :class="$q.dark.isActive ? 'bg-grey-9 border border-grey-7 text-white' : 'bg-slate-200 border border-slate-300'"
           :options="[
             { label: t('timetablePage.classSchedule') || 'Orario per Classe', value: 'class', icon: 'groups' },
@@ -35,7 +35,7 @@
           :color="isEditing ? 'secondary' : 'primary'"
           unelevated
           no-caps
-          class="rounded-xl q-px-md shadow-xs font-bold"
+          class="rounded-xl q-px-md q-py-xs shadow-xs font-bold"
           @click="isEditing = !isEditing"
         />
 
@@ -46,7 +46,7 @@
           :color="isTeacherEditing ? 'secondary' : 'positive'"
           unelevated
           no-caps
-          class="rounded-xl q-px-md shadow-xs font-bold"
+          class="rounded-xl q-px-md q-py-xs shadow-xs font-bold"
           @click="isTeacherEditing = !isTeacherEditing"
         />
 
@@ -57,7 +57,7 @@
           color="deep-purple-7"
           unelevated
           no-caps
-          class="rounded-xl q-px-md font-bold shadow-xs text-white"
+          class="rounded-xl q-px-md q-py-xs font-bold shadow-xs text-white"
           @click="openGenerateDialog"
         />
 
@@ -68,7 +68,7 @@
           color="indigo-7"
           outline
           no-caps
-          class="rounded-xl q-px-md shadow-xs"
+          class="rounded-xl q-px-md q-py-xs shadow-xs font-medium"
           @click="openSubjectsDialog"
         />
       </div>
@@ -350,7 +350,7 @@
 
     <!-- Modal: Generazione Automatica Orario -->
     <q-dialog v-model="showGenerateDialog" persistent>
-      <q-card style="min-width: 550px; max-width: 700px;" class="rounded-2xl q-pa-sm">
+      <q-card style="min-width: 580px; max-width: 840px;" class="rounded-2xl q-pa-sm">
         <q-card-section class="row items-center justify-between">
           <div class="text-h6 text-weight-bold row items-center gap-2">
             <q-icon name="auto_awesome" color="deep-purple-7" />
@@ -407,14 +407,73 @@
 
           <!-- Generation Result -->
           <div v-else-if="generationResult" class="q-gutter-sm">
+            <!-- 3 Alternative Schedules Selector -->
+            <div v-if="generationResult.alternatives && generationResult.alternatives.length > 0" class="q-mb-md">
+              <div class="row items-center justify-between q-mb-xs">
+                <div class="text-subtitle2 font-bold text-slate-800 row items-center gap-1">
+                  <q-icon name="view_carousel" color="deep-purple-7" size="20px" />
+                  <span>{{ generationResult.alternatives.length }} Orari Alternativi Generati</span>
+                </div>
+                <span class="text-caption text-slate-500">Seleziona la proposta da esaminare o pubblicare</span>
+              </div>
+
+              <div class="row q-col-gutter-sm">
+                <div
+                  v-for="alt in generationResult.alternatives"
+                  :key="alt.id"
+                  class="col-12 col-md-4"
+                >
+                  <q-card
+                    flat
+                    bordered
+                    class="cursor-pointer transition-all rounded-xl p-3 h-full column justify-between relative-position"
+                    :class="selectedAlternativeId === alt.id ? 'border-purple-600 bg-purple-50 shadow-sm ring-2 ring-purple-400' : 'border-slate-200 bg-white hover:border-purple-300 hover:bg-slate-50'"
+                    @click="selectAlternative(alt)"
+                  >
+                    <div>
+                      <div class="row items-center justify-between no-wrap q-mb-xs">
+                        <div class="row items-center no-wrap gap-1">
+                          <q-icon
+                            :name="selectedAlternativeId === alt.id ? 'check_circle' : 'radio_button_unchecked'"
+                            :color="selectedAlternativeId === alt.id ? 'deep-purple-7' : 'grey-5'"
+                            size="18px"
+                          />
+                          <span class="text-weight-bold text-slate-800 text-xs ellipsis">{{ alt.label }}</span>
+                        </div>
+                        <q-badge
+                          v-if="selectedAlternativeId === alt.id"
+                          color="deep-purple-7"
+                          label="Scelta"
+                          rounded
+                          class="text-xxs q-px-xs"
+                        />
+                      </div>
+                      <p class="text-caption text-slate-500 q-mb-sm leading-tight" style="font-size: 11px;">
+                        {{ alt.description }}
+                      </p>
+                    </div>
+
+                    <div class="q-pt-xs border-t border-slate-100 row items-center justify-between text-xs">
+                      <span class="text-purple-9 font-bold">{{ alt.coverage_pct?.toFixed(1) }}% ore</span>
+                      <span class="text-slate-600 font-medium">{{ alt.assigned_slots }}/{{ alt.total_slots }}</span>
+                      <span :class="alt.hard_conflicts?.length ? 'text-negative font-bold' : 'text-positive font-bold'">
+                        {{ alt.hard_conflicts?.length || 0 }} conflitti
+                      </span>
+                    </div>
+                  </q-card>
+                </div>
+              </div>
+            </div>
+
+            <!-- Summary Stats for Currently Selected Alternative -->
             <div class="row q-col-gutter-sm">
               <div class="col-4 text-center p-3 rounded-xl bg-purple-50 border border-purple-200">
                 <div class="text-caption text-purple-9 font-bold">Copertura Orario</div>
-                <div class="text-h5 text-weight-bolder text-purple-9">{{ generationResult.coverage_pct?.toFixed(1) }}%</div>
+                <div class="text-h5 text-weight-bolder text-purple-9">{{ activeAlternativeStats.coverage_pct?.toFixed(1) }}%</div>
               </div>
               <div class="col-4 text-center p-3 rounded-xl bg-emerald-50 border border-emerald-200">
                 <div class="text-caption text-emerald-9 font-bold">Ore Assegnate</div>
-                <div class="text-h5 text-weight-bolder text-emerald-9">{{ generationResult.assigned_slots }} / {{ generationResult.total_slots }}</div>
+                <div class="text-h5 text-weight-bolder text-emerald-9">{{ activeAlternativeStats.assigned_slots }} / {{ activeAlternativeStats.total_slots }}</div>
               </div>
               <div class="col-4 text-center p-3 rounded-xl bg-blue-50 border border-blue-200">
                 <div class="text-caption text-blue-9 font-bold">Tempo Calcolo</div>
@@ -422,10 +481,10 @@
               </div>
             </div>
 
-            <div v-if="generationResult.unassigned && generationResult.unassigned.length > 0" class="q-mt-sm">
+            <div v-if="activeAlternativeStats.unassigned && activeAlternativeStats.unassigned.length > 0" class="q-mt-sm">
               <div class="text-caption text-negative font-bold q-mb-xs">Ore non assegnabili (conflitti non risolvibili):</div>
               <div class="max-h-36 overflow-y-auto border border-rose-200 rounded-lg p-2 text-xs bg-rose-50 text-rose-900">
-                <div v-for="(u, idx) in generationResult.unassigned" :key="idx" class="q-mb-xs">
+                <div v-for="(u, idx) in activeAlternativeStats.unassigned" :key="idx" class="q-mb-xs">
                   • <strong>{{ u.class_name }}</strong> - {{ u.subject_name }} ({{ u.teacher_name }}): {{ u.reason }}
                 </div>
               </div>
@@ -977,9 +1036,34 @@ const removeAssignment = async (assignmentId) => {
   }
 }
 
+const selectedAlternativeId = ref(1)
+
+const activeAlternative = computed(() => {
+  if (!generationResult.value) return null
+  if (generationResult.value.alternatives && generationResult.value.alternatives.length > 0) {
+    return generationResult.value.alternatives.find(a => a.id === selectedAlternativeId.value) || generationResult.value.alternatives[0]
+  }
+  return generationResult.value
+})
+
+const activeAlternativeStats = computed(() => {
+  return activeAlternative.value || generationResult.value || {}
+})
+
+function selectAlternative(altOrId) {
+  const id = typeof altOrId === 'object' && altOrId !== null ? altOrId.id : altOrId
+  selectedAlternativeId.value = id
+  const alt = generationResult.value?.alternatives?.find(a => a.id === id) || (typeof altOrId === 'object' ? altOrId : null)
+  if (alt && alt.slots) {
+    workingSlots.value = JSON.parse(JSON.stringify(alt.slots))
+    adjustHardConflicts.value = JSON.parse(JSON.stringify(alt.hard_conflicts || []))
+  }
+}
+
 const openGenerateDialog = () => {
   generationResult.value = null
   generationJobId.value = null
+  selectedAlternativeId.value = 1
   elapsedSeconds.value = 0
   showGenerateDialog.value = true
 }
@@ -1016,7 +1100,12 @@ const pollJobStatus = (jobId) => {
         generating.value = false
         const summary = typeof job.result_summary === 'string' ? JSON.parse(job.result_summary) : job.result_summary
         generationResult.value = summary
-        $q.notify({ type: 'positive', message: 'Calcolo orario completato con successo!' })
+        if (summary.alternatives && summary.alternatives.length > 0) {
+          selectedAlternativeId.value = summary.alternatives[0].id
+          workingSlots.value = JSON.parse(JSON.stringify(summary.alternatives[0].slots || []))
+          adjustHardConflicts.value = JSON.parse(JSON.stringify(summary.alternatives[0].hard_conflicts || []))
+        }
+        $q.notify({ type: 'positive', message: 'Calcolo orario completato con 3 orari alternativi disponibili!' })
       } else if (job.status === 'failed') {
         clearInterval(pollTimer)
         if (timerInterval) clearInterval(timerInterval)
@@ -1033,9 +1122,9 @@ const pollJobStatus = (jobId) => {
 }
 
 const openAdjustModal = () => {
-  if (!generationResult.value) return
-  workingSlots.value = JSON.parse(JSON.stringify(generationResult.value.slots || []))
-  adjustHardConflicts.value = JSON.parse(JSON.stringify(generationResult.value.hard_conflicts || []))
+  if (!activeAlternative.value) return
+  workingSlots.value = JSON.parse(JSON.stringify(activeAlternative.value.slots || []))
+  adjustHardConflicts.value = JSON.parse(JSON.stringify(activeAlternative.value.hard_conflicts || []))
   selectedSlotToMove.value = null
   if (adjustClassOptions.value.length > 0) {
     adjustSelectedClassId.value = adjustClassOptions.value[0].id
@@ -1044,11 +1133,11 @@ const openAdjustModal = () => {
 }
 
 const resetWorkingSlots = () => {
-  if (!generationResult.value) return
-  workingSlots.value = JSON.parse(JSON.stringify(generationResult.value.slots || []))
-  adjustHardConflicts.value = JSON.parse(JSON.stringify(generationResult.value.hard_conflicts || []))
+  if (!activeAlternative.value) return
+  workingSlots.value = JSON.parse(JSON.stringify(activeAlternative.value.slots || []))
+  adjustHardConflicts.value = JSON.parse(JSON.stringify(activeAlternative.value.hard_conflicts || []))
   selectedSlotToMove.value = null
-  $q.notify({ type: 'info', message: 'Orario ripristinato alla versione originaria calcolata' })
+  $q.notify({ type: 'info', message: 'Orario ripristinato alla proposta selezionata' })
 }
 
 const getSlotAt = (day, hour) => {
@@ -1129,16 +1218,20 @@ const publishFromAdjustModal = async () => {
 
 const publishGeneratedSchedule = async () => {
   if (!generationJobId.value) return
+  const currentAltLabel = activeAlternative.value?.label || 'orario generato'
   $q.dialog({
     title: 'Conferma Pubblicazione',
-    message: 'Sei sicuro di voler pubblicare il nuovo orario generato? Sovrascriverà l\'orario corrente delle classi.',
+    message: `Sei sicuro di voler pubblicare "${currentAltLabel}"? Sovrascriverà l'orario corrente delle classi.`,
     cancel: true,
     persistent: true
   }).onOk(async () => {
     publishing.value = true
     try {
-      await timetableGenService.publishSchedule(generationJobId.value)
-      $q.notify({ type: 'positive', message: 'Orario scolastico pubblicato con successo nel registro!' })
+      await timetableGenService.publishSchedule(generationJobId.value, {
+        alternative_id: selectedAlternativeId.value,
+        slots: workingSlots.value?.length ? workingSlots.value : undefined
+      })
+      $q.notify({ type: 'positive', message: `"${currentAltLabel}" pubblicato con successo nel registro!` })
       showGenerateDialog.value = false
       if (viewMode.value === 'class' && selectedClass.value) {
         fetchClassSchedule()
@@ -1152,6 +1245,18 @@ const publishGeneratedSchedule = async () => {
     }
   })
 }
+
+defineExpose({
+  canGenerate,
+  openGenerateDialog,
+  runGeneration,
+  generationJobId,
+  generationResult,
+  selectedAlternativeId,
+  activeAlternative,
+  selectAlternative,
+  publishGeneratedSchedule
+})
 </script>
 
 <style scoped>

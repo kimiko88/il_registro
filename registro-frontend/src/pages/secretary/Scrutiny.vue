@@ -8,21 +8,11 @@
           Supervisione Scrutini
         </h1>
         <p class="text-subtitle1 text-slate-500 q-mt-xs q-mb-none">
-          Panoramica dello stato degli scrutini finali di tutte le classi
+          Panoramica dello stato degli scrutini finali di tutte le classi — A.S. {{ schoolYearStore.selectedSchoolYear }}
         </p>
       </div>
 
       <div class="row items-center q-gutter-md">
-        <q-select
-          v-model="selectedSchoolYear"
-          :options="['2025/2026', '2024/2025']"
-          label="Anno Scolastico"
-          outlined
-          dense
-          class="bg-white"
-          style="min-width: 160px"
-        />
-
         <q-btn
           color="primary"
           unelevated
@@ -212,16 +202,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useScrutinyStore } from '@/stores/scrutiny'
+import { useSchoolYearStore } from '@/stores/schoolYear'
 
 const $q = useQuasar()
 const { t } = useI18n()
 const scrutinyStore = useScrutinyStore()
+const schoolYearStore = useSchoolYearStore()
 
-const selectedSchoolYear = ref('2025/2026')
 const filterText = ref('')
 
 const detailDialog = ref(false)
@@ -248,6 +239,10 @@ const filteredOverview = computed(() => {
 })
 
 onMounted(() => {
+  scrutinyStore.fetchOverview()
+})
+
+watch(() => schoolYearStore.selectedSchoolYear, () => {
   scrutinyStore.fetchOverview()
 })
 

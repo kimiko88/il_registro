@@ -1090,4 +1090,20 @@ body {
     }
 }
 
+/* Flex Gap Utility Classes */
+.gap-1 { gap: 4px; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.gap-6 { gap: 24px; }
+.gap-8 { gap: 32px; }
+.gap-x-1 { column-gap: 4px; }
+.gap-x-2 { column-gap: 8px; }
+.gap-x-3 { column-gap: 12px; }
+.gap-x-4 { column-gap: 16px; }
+.gap-y-1 { row-gap: 4px; }
+.gap-y-2 { row-gap: 8px; }
+.gap-y-3 { row-gap: 12px; }
+.gap-y-4 { row-gap: 16px; }
+
 

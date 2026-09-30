@@ -1,6 +1,7 @@
 package timetablegen
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -116,7 +117,18 @@ func (h *Handler) PublishSchedule(c *gin.Context) {
 	userID := c.GetString("user_id")
 	jobID := c.Param("jobID")
 
-	if err := h.service.PublishSchedule(c.Request.Context(), schoolID, userID, jobID); err != nil {
+	var req PublishScheduleRequest
+	_ = c.ShouldBindJSON(&req)
+
+	if err := h.service.PublishSchedule(c.Request.Context(), schoolID, userID, jobID, req); err != nil {
+		if errors.Is(err, ErrForbidden) {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if errors.Is(err, ErrJobNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

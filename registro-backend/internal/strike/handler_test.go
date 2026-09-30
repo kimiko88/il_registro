@@ -381,3 +381,29 @@ func TestStrikeHandler_GetNoticeSummary_Success_DSGA(t *testing.T) {
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 }
+
+func TestStrikeHandler_GetNoticeSummary_Success_Secretary(t *testing.T) {
+	h, repo := newStrikeHandlerAndRepo()
+	repo.notices["n-sum"] = &StrikeNotice{
+		ID: "n-sum", SchoolID: "school-1", Title: "Sciopero Riepilogo",
+		DeclarationDeadline: time.Now().Add(24 * time.Hour),
+	}
+	r := setupStrikeRouter(h, "sec-1", "secretary", "school-1")
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/strike-notices/n-sum/summary", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestStrikeHandler_GetNoticeSummary_Success_AssistenteAmministrativo(t *testing.T) {
+	h, repo := newStrikeHandlerAndRepo()
+	repo.notices["n-sum"] = &StrikeNotice{
+		ID: "n-sum", SchoolID: "school-1", Title: "Sciopero Riepilogo",
+		DeclarationDeadline: time.Now().Add(24 * time.Hour),
+	}
+	r := setupStrikeRouter(h, "aa-1", "assistente_amministrativo", "school-1")
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/strike-notices/n-sum/summary", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}

@@ -321,3 +321,262 @@ func TestGenerator_ClassFullCoverage(t *testing.T) {
 		classSlots[key] = s.SubjectName
 	}
 }
+
+// TestGenerator_ThreeAlternatives_Comprehensive tests that 3 distinct alternatives are generated,
+// with proper metadata, IDs, descriptions, valid slots, and composite scores.
+func TestGenerator_ThreeAlternatives_Comprehensive(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.MaxIterations = 200
+	cfg.TimeLimitSeconds = 5
+	gen := NewGenerator(cfg)
+	ctx := context.Background()
+
+	assignments := []AssignmentData{
+		{
+			ClassID:      "class-1a",
+			ClassName:    "1A",
+			SubjectID:    "sub-mat",
+			SubjectName:  "Matematica",
+			TeacherID:    "teacher-mat",
+			TeacherName:  "Prof Matematica",
+			HoursPerWeek: 4,
+		},
+		{
+			ClassID:      "class-1a",
+			ClassName:    "1A",
+			SubjectID:    "sub-ita",
+			SubjectName:  "Italiano",
+			TeacherID:    "teacher-ita",
+			TeacherName:  "Prof Italiano",
+			HoursPerWeek: 5,
+		},
+		{
+			ClassID:      "class-1a",
+			ClassName:    "1A",
+			SubjectID:    "sub-ing",
+			SubjectName:  "Inglese",
+			TeacherID:    "teacher-ing",
+			TeacherName:  "Prof Inglese",
+			HoursPerWeek: 3,
+		},
+		{
+			ClassID:      "class-1a",
+			ClassName:    "1A",
+			SubjectID:    "sub-mot",
+			SubjectName:  "Scienze Motorie",
+			TeacherID:    "teacher-mot",
+			TeacherName:  "Prof Motoria",
+			HoursPerWeek: 2,
+		},
+		{
+			ClassID:      "class-1b",
+			ClassName:    "1B",
+			SubjectID:    "sub-mat",
+			SubjectName:  "Matematica",
+			TeacherID:    "teacher-mat",
+			TeacherName:  "Prof Matematica",
+			HoursPerWeek: 4,
+		},
+		{
+			ClassID:      "class-1b",
+			ClassName:    "1B",
+			SubjectID:    "sub-ita",
+			SubjectName:  "Italiano",
+			TeacherID:    "teacher-ita",
+			TeacherName:  "Prof Italiano",
+			HoursPerWeek: 5,
+		},
+	}
+
+	result, err := gen.Generate(ctx, assignments, nil, nil, nil, nil)
+	if err != nil {
+		t.Fatalf("generation failed: %v", err)
+	}
+
+	// 1. Verify that exactly 3 alternatives are returned
+	if len(result.Alternatives) != 3 {
+		t.Fatalf("expected 3 alternatives, got %d", len(result.Alternatives))
+	}
+
+	expectedStrategies := map[int]string{
+		1: "balanced",
+		2: "didactic_first",
+		3: "compact_teacher",
+	}
+
+	for _, alt := range result.Alternatives {
+		expectedStrategy, ok := expectedStrategies[alt.ID]
+		if !ok {
+			t.Errorf("unexpected alternative ID: %d", alt.ID)
+		}
+		if alt.Strategy != expectedStrategy {
+			t.Errorf("alt %d: expected strategy %s, got %s", alt.ID, expectedStrategy, alt.Strategy)
+		}
+		if alt.Description == "" {
+			t.Errorf("alt %d: expected non-empty description", alt.ID)
+		}
+		if len(alt.Slots) != result.AssignedSlots {
+			t.Errorf("alt %d: expected %d slots, got %d", alt.ID, result.AssignedSlots, len(alt.Slots))
+		}
+		if alt.Score <= 0 {
+			t.Errorf("alt %d: expected positive pedagogical score, got %f", alt.ID, alt.Score)
+		}
+		if alt.CoveragePct <= 0 {
+			t.Errorf("alt %d: expected positive coverage pct, got %f", alt.ID, alt.CoveragePct)
+		}
+
+		// Ensure no two assignments collide for the same class in this alternative
+		type dayHourKey struct {
+			class string
+			day   int
+			hour  int
+		}
+		seen := make(map[dayHourKey]bool)
+		for _, s := range alt.Slots {
+			k := dayHourKey{class: s.ClassID, day: s.DayOfWeek, hour: s.HourIndex}
+			if seen[k] {
+				t.Errorf("alt %d: collision for class %s at day %d hour %d", alt.ID, s.ClassID, s.DayOfWeek, s.HourIndex)
+			}
+			seen[k] = true
+		}
+	}
+}
+
+// TestGenerator_HelperFunctions tests helper logic such as isHeavySubject,
+// isTeacherAdjacent, calculateTeacherGaps, and calculateAlternativeScore.
+func TestGenerator_HelperFunctions(t *testing.T) {
+	// 1. isHeavySubject
+	heavyList := []string{
+		"Matematica", "matematica", "MATEMATICA APPLICATA",
+		"Italiano", "italiano e latino", "Lingua e Letteratura Italiana",
+		"Fisica", "Fisica applicata",
+		"Scienze", "Scienze Naturali", "Chimica", "Biologia",
+		"Latino", "Greco", "Diritto", "Economia Politica",
+	}
+	for _, name := range heavyList {
+		if !isHeavySubject(name) {
+			t.Errorf("expected isHeavySubject(%q) to be true", name)
+		}
+	}
+
+	lightList := []string{
+		"Scienze Motorie", "Educazione Fisica", "Arte e Immagine",
+		"Musica", "Religione Cattolica", "Laboratorio",
+	}
+	for _, name := range lightList {
+		if isHeavySubject(name) {
+			t.Errorf("expected isHeavySubject(%q) to be false", name)
+		}
+	}
+
+	// 2. isTeacherAdjacent
+	busyMap := make(map[string]map[int]map[int]bool)
+	tID := "teacher-test-adj"
+	setBusy(busyMap, tID, 1, 2) // Day 1, Hour 2
+
+	// Adjacent to hour 2 are hour 1 and hour 3
+	if !isTeacherAdjacent(busyMap, tID, 1, 1) {
+		t.Errorf("expected hour 1 to be adjacent to hour 2 on day 1")
+	}
+	if !isTeacherAdjacent(busyMap, tID, 1, 3) {
+		t.Errorf("expected hour 3 to be adjacent to hour 2 on day 1")
+	}
+	if isTeacherAdjacent(busyMap, tID, 1, 5) {
+		t.Errorf("hour 5 should not be adjacent to hour 2")
+	}
+	if isTeacherAdjacent(busyMap, tID, 2, 2) {
+		t.Errorf("different day should not be adjacent")
+	}
+
+	// 3. calculateTeacherGaps
+	teacherT1 := "t1"
+	slots := []GeneratedSlot{
+		{TeacherID: &teacherT1, DayOfWeek: 1, HourIndex: 1},
+		{TeacherID: &teacherT1, DayOfWeek: 1, HourIndex: 2},
+		{TeacherID: &teacherT1, DayOfWeek: 1, HourIndex: 4}, // gap at hour 3!
+		{TeacherID: &teacherT1, DayOfWeek: 1, HourIndex: 5},
+	}
+	gaps := calculateTeacherGaps(slots)
+	if gaps != 1 {
+		t.Errorf("expected exactly 1 gap, got %d", gaps)
+	}
+
+	// Consecutive slots: 0 gaps
+	consecutiveSlots := []GeneratedSlot{
+		{TeacherID: &teacherT1, DayOfWeek: 2, HourIndex: 1},
+		{TeacherID: &teacherT1, DayOfWeek: 2, HourIndex: 2},
+		{TeacherID: &teacherT1, DayOfWeek: 2, HourIndex: 3},
+	}
+	if g := calculateTeacherGaps(consecutiveSlots); g != 0 {
+		t.Errorf("expected 0 gaps for consecutive slots, got %d", g)
+	}
+
+	// 4. calculateAlternativeScore
+	res := TimetableGenerationResult{
+		AssignedSlots: 20,
+		CoveragePct:   100.0,
+		Slots:         consecutiveSlots,
+	}
+	score := calculateAlternativeScore(&res)
+	if score <= 0 || score > 1000 {
+		t.Errorf("expected score between 0 and 1000, got %f", score)
+	}
+}
+
+// TestGenerator_DidacticFirstStrategy verifies that didactic_first favors morning hours for heavy subjects.
+func TestGenerator_DidacticFirstStrategy(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.MaxIterations = 300
+	cfg.TimeLimitSeconds = 5
+	gen := NewGenerator(cfg)
+	ctx := context.Background()
+
+	assignments := []AssignmentData{
+		{
+			ClassID:      "class-1c",
+			ClassName:    "1C",
+			SubjectID:    "sub-mat",
+			SubjectName:  "Matematica",
+			TeacherID:    "teacher-mat",
+			TeacherName:  "Prof Matematica",
+			HoursPerWeek: 4,
+		},
+		{
+			ClassID:      "class-1c",
+			ClassName:    "1C",
+			SubjectID:    "sub-mot",
+			SubjectName:  "Scienze Motorie",
+			TeacherID:    "teacher-mot",
+			TeacherName:  "Prof Motoria",
+			HoursPerWeek: 2,
+		},
+	}
+
+	result, err := gen.Generate(ctx, assignments, nil, nil, nil, nil)
+	if err != nil {
+		t.Fatalf("generation failed: %v", err)
+	}
+
+	var didacticAlt *TimetableAlternative
+	for i := range result.Alternatives {
+		if result.Alternatives[i].Strategy == "didactic_first" {
+			didacticAlt = &result.Alternatives[i]
+			break
+		}
+	}
+
+	if didacticAlt == nil {
+		t.Fatalf("didactic_first alternative not found")
+	}
+
+	// Check that Matematica slots exist and are scheduled
+	matCount := 0
+	for _, s := range didacticAlt.Slots {
+		if s.SubjectName == "Matematica" {
+			matCount++
+		}
+	}
+	if matCount != 4 {
+		t.Errorf("expected 4 Matematica slots, got %d", matCount)
+	}
+}

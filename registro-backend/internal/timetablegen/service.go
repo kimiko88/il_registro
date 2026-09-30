@@ -40,7 +40,7 @@ type Service interface {
 	// Generation Jobs
 	StartGeneration(ctx context.Context, schoolID, userID string, req GenerateTimetableRequest) (string, error)
 	GetJobStatus(ctx context.Context, schoolID, jobID string) (*TimetableJob, error)
-	PublishSchedule(ctx context.Context, schoolID, userID, jobID string) error
+	PublishSchedule(ctx context.Context, schoolID, userID, jobID string, req ...PublishScheduleRequest) error
 	AdjustJobSlots(ctx context.Context, schoolID, userID, jobID string, req AdjustTimetableRequest) (*TimetableGenerationResult, error)
 
 	// Academic Years, Curriculum Plans & Class Daily Limits
@@ -254,7 +254,7 @@ func (s *service) GetJobStatus(ctx context.Context, schoolID, jobID string) (*Ti
 	return job, nil
 }
 
-func (s *service) PublishSchedule(ctx context.Context, schoolID, userID, jobID string) error {
+func (s *service) PublishSchedule(ctx context.Context, schoolID, userID, jobID string, req ...PublishScheduleRequest) error {
 	job, err := s.repo.GetJob(ctx, jobID)
 	if err != nil {
 		return ErrJobNotFound
@@ -271,11 +271,31 @@ func (s *service) PublishSchedule(ctx context.Context, schoolID, userID, jobID s
 		return fmt.Errorf("failed to parse job result summary: %w", err)
 	}
 
-	if len(result.Slots) == 0 {
+	slotsToPublish := result.Slots
+	if len(req) > 0 {
+		r := req[0]
+		if len(r.Slots) > 0 {
+			slotsToPublish = r.Slots
+		} else if r.AlternativeID != nil {
+			found := false
+			for _, alt := range result.Alternatives {
+				if alt.ID == *r.AlternativeID {
+					slotsToPublish = alt.Slots
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("alternativa orario %d non trovata nel job", *r.AlternativeID)
+			}
+		}
+	}
+
+	if len(slotsToPublish) == 0 {
 		return ErrEmptySlots
 	}
 
-	return s.repo.PublishGeneratedSchedule(ctx, schoolID, result.Slots)
+	return s.repo.PublishGeneratedSchedule(ctx, schoolID, slotsToPublish)
 }
 
 func (s *service) AdjustJobSlots(ctx context.Context, schoolID, userID, jobID string, req AdjustTimetableRequest) (*TimetableGenerationResult, error) {

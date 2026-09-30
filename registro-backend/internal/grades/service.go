@@ -231,9 +231,16 @@ func (s *service) GetClassGrades(ctx context.Context, actorID string, actorRole 
 		}
 	}
 
-	grades, err := s.repo.FindByClassAndSubject(ctx, classID, filter.SubjectID, filter.Semester)
-	if err != nil {
-		return nil, err
+	var grades []Grade
+	var gradesErr error
+	if filter.SubjectID == "" {
+		// No subject filter: fetch all grades for the class
+		grades, gradesErr = s.repo.FindByClass(ctx, classID, filter.Semester)
+	} else {
+		grades, gradesErr = s.repo.FindByClassAndSubject(ctx, classID, filter.SubjectID, filter.Semester)
+	}
+	if gradesErr != nil {
+		return nil, gradesErr
 	}
 
 	// Group by student

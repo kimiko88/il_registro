@@ -62,6 +62,107 @@ func (g *TimetableGenerator) Generate(
 	constraints []TimetableConstraint,
 ) (*TimetableGenerationResult, error) {
 	startTime := time.Now()
+	baseSeed := time.Now().UnixNano()
+
+	// 1. Generate Alternative 1: Bilanciata
+	res1, err := g.generateWithStrategy(ctx, assignments, rooms, roomReqs, preferences, constraints, "balanced", baseSeed)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Generate Alternative 2: Didattica & Prime Ore
+	res2, err := g.generateWithStrategy(ctx, assignments, rooms, roomReqs, preferences, constraints, "didactic_first", baseSeed+10007)
+	if err != nil {
+		res2 = res1
+	}
+
+	// 3. Generate Alternative 3: Compatta / Minimizza Buchi Docenti
+	res3, err := g.generateWithStrategy(ctx, assignments, rooms, roomReqs, preferences, constraints, "compact_teacher", baseSeed+20011)
+	if err != nil {
+		res3 = res1
+	}
+
+	alts := []TimetableAlternative{
+		{
+			ID:             1,
+			Label:          "Proposta 1: Bilanciata",
+			Strategy:       "balanced",
+			Description:    "Equilibrio ottimale tra criteri didattici, desiderata docenti e aule.",
+			CoveragePct:    res1.CoveragePct,
+			AssignedSlots:  res1.AssignedSlots,
+			TotalSlots:     res1.TotalSlots,
+			Slots:          res1.Slots,
+			HardConflicts:  res1.HardConflicts,
+			SoftViolations: res1.SoftViolations,
+			Warnings:       res1.Warnings,
+			Unassigned:     res1.Unassigned,
+			Score:          calculateAlternativeScore(res1),
+		},
+		{
+			ID:             2,
+			Label:          "Proposta 2: Didattica & Prime Ore",
+			Strategy:       "didactic_first",
+			Description:    "Priorità all'apprendimento: concentra le materie impegnative nelle prime 3 ore e garantisce distribuzione uniforme.",
+			CoveragePct:    res2.CoveragePct,
+			AssignedSlots:  res2.AssignedSlots,
+			TotalSlots:     res2.TotalSlots,
+			Slots:          res2.Slots,
+			HardConflicts:  res2.HardConflicts,
+			SoftViolations: res2.SoftViolations,
+			Warnings:       res2.Warnings,
+			Unassigned:     res2.Unassigned,
+			Score:          calculateAlternativeScore(res2),
+		},
+		{
+			ID:             3,
+			Label:          "Proposta 3: Compatta / Minimizza Buchi",
+			Strategy:       "compact_teacher",
+			Description:    "Continuità didattica: raggruppa le ore dei docenti in blocchi consecutivi riducendo al minimo le ore vuote e buche.",
+			CoveragePct:    res3.CoveragePct,
+			AssignedSlots:  res3.AssignedSlots,
+			TotalSlots:     res3.TotalSlots,
+			Slots:          res3.Slots,
+			HardConflicts:  res3.HardConflicts,
+			SoftViolations: res3.SoftViolations,
+			Warnings:       res3.Warnings,
+			Unassigned:     res3.Unassigned,
+			Score:          calculateAlternativeScore(res3),
+		},
+	}
+
+	bestRes := res1
+	if res2.CoveragePct > bestRes.CoveragePct && len(res2.HardConflicts) <= len(bestRes.HardConflicts) {
+		bestRes = res2
+	}
+	if res3.CoveragePct > bestRes.CoveragePct && len(res3.HardConflicts) <= len(bestRes.HardConflicts) {
+		bestRes = res3
+	}
+
+	return &TimetableGenerationResult{
+		TotalSlots:     bestRes.TotalSlots,
+		AssignedSlots:  bestRes.AssignedSlots,
+		CoveragePct:    bestRes.CoveragePct,
+		Slots:          bestRes.Slots,
+		HardConflicts:  bestRes.HardConflicts,
+		SoftViolations: bestRes.SoftViolations,
+		Warnings:       bestRes.Warnings,
+		Unassigned:     bestRes.Unassigned,
+		DurationMs:     time.Since(startTime).Milliseconds(),
+		Alternatives:   alts,
+	}, nil
+}
+
+func (g *TimetableGenerator) generateWithStrategy(
+	ctx context.Context,
+	assignments []AssignmentData,
+	rooms []RoomData,
+	roomReqs map[string]SubjectRoomRequirement,
+	preferences []TeacherPreference,
+	constraints []TimetableConstraint,
+	strategy string,
+	seed int64,
+) (*TimetableGenerationResult, error) {
+	startTime := time.Now()
 
 	// Group rooms by roomType and buildingID
 	roomsByTypeAndBuilding := make(map[string]map[string][]RoomData) // roomType -> buildingID -> []rooms
@@ -335,6 +436,21 @@ func (g *TimetableGenerator) Generate(
 						}
 					}
 
+					switch strategy {
+					case "didactic_first":
+						if isHeavySubject(lead.SubjectName) {
+							if hour <= 3 {
+								score += 22.0
+							} else if hour >= 5 {
+								score -= 18.0
+							}
+						}
+					case "compact_teacher":
+						if lead.TeacherID != "" && isTeacherAdjacent(teacherBusy, lead.TeacherID, day, hour) {
+							score += 24.0
+						}
+					}
+
 					candidates = append(candidates, GroupCandidate{
 						Day:      day,
 						Hour:     hour,
@@ -578,6 +694,27 @@ func (g *TimetableGenerator) Generate(
 						}
 					}
 
+					switch strategy {
+					case "didactic_first":
+						if isHeavySubject(a.SubjectName) {
+							if hour <= 3 {
+								score += 22.0
+							} else if hour >= 5 {
+								score -= 18.0
+							}
+						}
+						if curDayCount >= 1 && !isLabHour {
+							score -= 20.0
+						}
+					case "compact_teacher":
+						if a.TeacherID != "" && isTeacherAdjacent(teacherBusy, a.TeacherID, day, hour) {
+							score += 24.0
+						}
+						if getTeacherDayOffHours(teacherDayOffMap, a.TeacherID, a.TeacherUserID, day) >= 3 {
+							score -= 45.0
+						}
+					}
+
 					candidates = append(candidates, Candidate{
 						Day:      day,
 						Hour:     hour,
@@ -733,7 +870,7 @@ func (g *TimetableGenerator) Generate(
 
 	// ---------------- Phase 2: Local Search / Pedagogical & Preference Balancing ----------------
 	timeBudget := time.Duration(g.config.TimeLimitSeconds) * time.Second
-	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	rng := rand.New(rand.NewSource(seed))
 
 	if len(generatedSlots) > 1 {
 		iterations := g.config.MaxIterations
@@ -792,6 +929,28 @@ func (g *TimetableGenerator) Generate(
 				cand2.HourIndex = s1.HourIndex
 
 				newScore := evalTotalSlotScore(cand1, teacherPrefMap, teacherDayOffMap) + evalTotalSlotScore(cand2, teacherPrefMap, teacherDayOffMap)
+				switch strategy {
+				case "didactic_first":
+					if isHeavySubject(cand1.SubjectName) && cand1.HourIndex <= 3 {
+						newScore += 12.0
+					}
+					if isHeavySubject(cand2.SubjectName) && cand2.HourIndex <= 3 {
+						newScore += 12.0
+					}
+					if isHeavySubject(s1.SubjectName) && s1.HourIndex <= 3 {
+						currentScore += 12.0
+					}
+					if isHeavySubject(s2.SubjectName) && s2.HourIndex <= 3 {
+						currentScore += 12.0
+					}
+				case "compact_teacher":
+					if t1 != "" && isTeacherAdjacent(teacherBusy, t1, cand1.DayOfWeek, cand1.HourIndex) {
+						newScore += 12.0
+					}
+					if t2 != "" && isTeacherAdjacent(teacherBusy, t2, cand2.DayOfWeek, cand2.HourIndex) {
+						newScore += 12.0
+					}
+				}
 
 				if newScore > currentScore {
 					unsetBusy(teacherBusy, t1, s1.DayOfWeek, s1.HourIndex)
@@ -997,10 +1156,20 @@ func findAvailableRoom(roomType, buildingID string, day, hour int, roomsByTypeAn
 
 func isHeavySubject(name string) bool {
 	n := strings.ToLower(name)
+	if strings.Contains(n, "motori") || strings.Contains(n, "educazione fisica") || strings.Contains(n, "religione") || strings.Contains(n, "arte") || strings.Contains(n, "musica") {
+		return false
+	}
 	return strings.Contains(n, "matematica") ||
 		strings.Contains(n, "fisica") ||
 		strings.Contains(n, "latino") ||
-		strings.Contains(n, "chimica")
+		strings.Contains(n, "greco") ||
+		strings.Contains(n, "chimica") ||
+		strings.Contains(n, "biologia") ||
+		strings.Contains(n, "italian") ||
+		strings.Contains(n, "letter") ||
+		strings.Contains(n, "scienze") ||
+		strings.Contains(n, "diritto") ||
+		strings.Contains(n, "economia")
 }
 
 func evalPedagogicalScore(s GeneratedSlot) float64 {
@@ -1081,4 +1250,63 @@ func dayName(d int) string {
 	default:
 		return fmt.Sprintf("Giorno %d", d)
 	}
+}
+
+func isTeacherAdjacent(teacherBusy map[string]map[int]map[int]bool, teacherID string, day, hour int) bool {
+	if teacherBusy[teacherID] == nil || teacherBusy[teacherID][day] == nil {
+		return false
+	}
+	if hour > 1 && teacherBusy[teacherID][day][hour-1] {
+		return true
+	}
+	if hour < 12 && teacherBusy[teacherID][day][hour+1] {
+		return true
+	}
+	return false
+}
+
+func calculateAlternativeScore(res *TimetableGenerationResult) float64 {
+	if res == nil {
+		return 0
+	}
+	score := res.CoveragePct * 10.0
+	score -= float64(len(res.HardConflicts)) * 50.0
+	score -= float64(len(res.SoftViolations)) * 2.0
+	score -= float64(len(res.Unassigned)) * 25.0
+	if score < 0 {
+		score = 0
+	}
+	return score
+}
+
+func calculateTeacherGaps(slots []GeneratedSlot) int {
+	teacherDayHours := make(map[string]map[int][]int)
+	for _, s := range slots {
+		if s.TeacherID == nil || *s.TeacherID == "" {
+			continue
+		}
+		tID := *s.TeacherID
+		if teacherDayHours[tID] == nil {
+			teacherDayHours[tID] = make(map[int][]int)
+		}
+		teacherDayHours[tID][s.DayOfWeek] = append(teacherDayHours[tID][s.DayOfWeek], s.HourIndex)
+	}
+
+	totalGaps := 0
+	for _, dayMap := range teacherDayHours {
+		for _, hours := range dayMap {
+			if len(hours) <= 1 {
+				continue
+			}
+			sort.Ints(hours)
+			minH := hours[0]
+			maxH := hours[len(hours)-1]
+			span := maxH - minH + 1
+			gaps := span - len(hours)
+			if gaps > 0 {
+				totalGaps += gaps
+			}
+		}
+	}
+	return totalGaps
 }

@@ -930,6 +930,7 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - Linter & Build: `npm run lint` (0 errori), `npm run build` (successo in 3.07s).
 
 Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le preferenze dei vari docenti e impostare eventuali spezzoni orari non ancora assegnati ai docenti, che possono esserci in ogni classe
+
 - **Implementazione completata (Gruppi Linguistici, Desiderata Docenti con Finestra Temporale, Modifiche/Aggiustamenti Orario & Algoritmo Scalabile 5-10 min)**:
   - **1. Risoluzione errore SchoolID e potenziamento Gruppi Linguistici / Articolati (`Groups.vue`)**:
     - `registro-backend/internal/groups/model.go`: Rimosso il tag `binding:"required"` da `CreateGroupRequest.SchoolID`. Il backend estrae ora `school_id` direttamente dal token JWT/contesto Gin quando non inviato dal client.
@@ -1028,6 +1029,3 @@ Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le pr
   - **4. Test & Qualità**:
     - Backend: unit test `TestTeacherQuickPreferences` e suite `timetablegen` passati al 100% (8/8); integration test completato senza errori; compilazione `server.exe` pulita con 0 errori.
     - Frontend: `TimetableConstraints.spec.js` passato con 8/8 test (100%); `SchedulePreferences.spec.js` (3/3); `timetable-generation-workflow.spec.js` (3/3); ESLint passato con 0 errori.
-
-
-

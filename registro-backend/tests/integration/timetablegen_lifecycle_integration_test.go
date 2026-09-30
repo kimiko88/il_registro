@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 )
 
 type mockIntegrationTimetableRepo struct {
+	mu               sync.RWMutex
 	preferences      []timetablegen.TeacherPreference
 	reqs             []timetablegen.SubjectRoomRequirement
 	constraints      []timetablegen.TimetableConstraint
@@ -155,11 +157,15 @@ func (m *mockIntegrationTimetableRepo) CreateJob(ctx context.Context, job *timet
 		job.ID = uuid.New().String()
 	}
 	job.CreatedAt = time.Now()
+	m.mu.Lock()
 	m.jobs[job.ID] = job
+	m.mu.Unlock()
 	return job, nil
 }
 
 func (m *mockIntegrationTimetableRepo) UpdateJob(ctx context.Context, job *timetablegen.TimetableJob) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	existing, ok := m.jobs[job.ID]
 	if ok {
 		if job.Status != "" {
@@ -184,6 +190,8 @@ func (m *mockIntegrationTimetableRepo) UpdateJob(ctx context.Context, job *timet
 }
 
 func (m *mockIntegrationTimetableRepo) GetJob(ctx context.Context, id string) (*timetablegen.TimetableJob, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	job, ok := m.jobs[id]
 	if !ok {
 		return nil, fmt.Errorf("job not found")
@@ -212,7 +220,7 @@ func (m *mockIntegrationTimetableRepo) LoadAssociatedGroups(ctx context.Context,
 }
 
 func (m *mockIntegrationTimetableRepo) PublishGeneratedSchedule(ctx context.Context, schoolID string, slots []timetablegen.GeneratedSlot) error {
-	m.published = append(m.published, slots...)
+	m.published = slots
 	return nil
 }
 
@@ -453,6 +461,15 @@ func TestIntegration_TimetableGenerationLifecycle(t *testing.T) {
 	assert.Equal(t, 4, result.AssignedSlots)
 	assert.Equal(t, 100.0, result.CoveragePct)
 
+	// Verify that 3 distinct alternatives were generated
+	assert.Len(t, result.Alternatives, 3)
+	assert.Equal(t, 1, result.Alternatives[0].ID)
+	assert.Equal(t, "balanced", result.Alternatives[0].Strategy)
+	assert.Equal(t, 2, result.Alternatives[1].ID)
+	assert.Equal(t, "didactic_first", result.Alternatives[1].Strategy)
+	assert.Equal(t, 3, result.Alternatives[2].ID)
+	assert.Equal(t, "compact_teacher", result.Alternatives[2].Strategy)
+
 	// Verify that Informatics got the lab room assigned in matching building
 	var infoSlotsAssignedLab int
 	for _, slot := range result.Slots {
@@ -464,11 +481,25 @@ func TestIntegration_TimetableGenerationLifecycle(t *testing.T) {
 	}
 	assert.Equal(t, 2, infoSlotsAssignedLab)
 
-	// 6. Vice-Principal publishes the schedule into class_schedules
-	publishReq := httptest.NewRequest(http.MethodPost, "/timetable/generate/"+jobID+"/publish", nil)
+	// 6. Vice-Principal publishes Alternative 2 specifically
+	alt2ID := 2
+	pubBody, _ := json.Marshal(timetablegen.PublishScheduleRequest{AlternativeID: &alt2ID})
+	publishReq := httptest.NewRequest(http.MethodPost, "/timetable/generate/"+jobID+"/publish", bytes.NewBuffer(pubBody))
+	publishReq.Header.Set("Content-Type", "application/json")
 	w = httptest.NewRecorder()
 	routerVP.ServeHTTP(w, publishReq)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Len(t, repo.published, 4)
+	assert.Len(t, repo.published, len(result.Alternatives[1].Slots))
+
+	// 7. Vice-Principal can also publish Alternative 3
+	alt3ID := 3
+	pubBody3, _ := json.Marshal(timetablegen.PublishScheduleRequest{AlternativeID: &alt3ID})
+	publishReq3 := httptest.NewRequest(http.MethodPost, "/timetable/generate/"+jobID+"/publish", bytes.NewBuffer(pubBody3))
+	publishReq3.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	routerVP.ServeHTTP(w, publishReq3)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Len(t, repo.published, len(result.Alternatives[2].Slots))
 }

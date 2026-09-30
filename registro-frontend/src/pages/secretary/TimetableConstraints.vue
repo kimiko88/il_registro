@@ -900,21 +900,9 @@
 
         <q-separator :class="$q.dark.isActive ? 'border-grey-8' : 'border-slate-100'" />
 
-        <!-- Filters: Academic Year & Class -->
+        <!-- Filter: Class (Academic Year managed globally in header) -->
         <q-card-section class="bg-slate-50 border-b border-slate-100 row items-center gap-4 q-py-md" :class="$q.dark.isActive ? 'bg-grey-9 border-grey-8' : 'bg-slate-50'">
-          <div class="col-12 col-sm-3">
-            <q-select
-              v-model="selectedAcademicYear"
-              :options="academicYears"
-              outlined
-              dense
-              label="Anno Scolastico"
-              class="bg-white rounded-lg"
-              :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'"
-              @update:model-value="fetchClassesPlans"
-            />
-          </div>
-          <div class="col-12 col-sm-4">
+          <div class="col-12 col-sm-6 col-md-5">
             <q-select
               v-model="selectedClassId"
               :options="classPlanOptions"
@@ -1478,15 +1466,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
+import { useSchoolYearStore } from '@/stores/schoolYear';
 import timetableGenService from '@/services/timetableGenService';
 import adminService from '@/services/adminService';
 import api from '@/services/api';
 
 const { t } = useI18n();
 const $q = useQuasar();
+const schoolYearStore = useSchoolYearStore();
 
 const currentTab = ref('rooms');
 
@@ -2180,8 +2170,9 @@ async function fetchClassesPlans() {
   loadingPlans.value = true;
   try {
     const params = {};
-    if (selectedAcademicYear.value) {
-      params.academic_year = selectedAcademicYear.value;
+    const yearToUse = schoolYearStore.selectedSchoolYear || selectedAcademicYear.value;
+    if (yearToUse) {
+      params.academic_year = yearToUse;
     }
     const res = await timetableGenService.getClassesCurriculumPlans(params);
     classesCurriculumPlans.value = res.data || [];
@@ -2200,6 +2191,10 @@ async function fetchClassesPlans() {
     loadingPlans.value = false;
   }
 }
+
+watch(() => schoolYearStore.selectedSchoolYear, () => {
+  fetchClassesPlans();
+});
 
 function onClassPlanSelected(classId) {
   selectedClassId.value = classId;

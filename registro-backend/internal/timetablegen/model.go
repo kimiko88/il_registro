@@ -182,17 +182,39 @@ type UnassignedSlot struct {
 	Reason      string `json:"reason"`
 }
 
-type TimetableGenerationResult struct {
-	JobID          string           `json:"job_id"`
-	TotalSlots     int              `json:"total_slots"`
-	AssignedSlots  int              `json:"assigned_slots"`
+type TimetableAlternative struct {
+	ID             int              `json:"id"`
+	Label          string           `json:"label"`
+	Strategy       string           `json:"strategy,omitempty"`
+	Description    string           `json:"description"`
 	CoveragePct    float64          `json:"coverage_pct"`
+	AssignedSlots  int              `json:"assigned_slots"`
+	TotalSlots     int              `json:"total_slots"`
 	Slots          []GeneratedSlot  `json:"slots"`
 	HardConflicts  []HardConflict   `json:"hard_conflicts"`
 	SoftViolations []SoftViolation  `json:"soft_violations"`
 	Warnings       []string         `json:"warnings"`
 	Unassigned     []UnassignedSlot `json:"unassigned"`
-	DurationMs     int64            `json:"duration_ms"`
+	Score          float64          `json:"score"`
+}
+
+type TimetableGenerationResult struct {
+	JobID          string                 `json:"job_id"`
+	TotalSlots     int                    `json:"total_slots"`
+	AssignedSlots  int                    `json:"assigned_slots"`
+	CoveragePct    float64                `json:"coverage_pct"`
+	Slots          []GeneratedSlot        `json:"slots"`
+	HardConflicts  []HardConflict         `json:"hard_conflicts"`
+	SoftViolations []SoftViolation        `json:"soft_violations"`
+	Warnings       []string               `json:"warnings"`
+	Unassigned     []UnassignedSlot       `json:"unassigned"`
+	DurationMs     int64                  `json:"duration_ms"`
+	Alternatives   []TimetableAlternative `json:"alternatives,omitempty"`
+}
+
+type PublishScheduleRequest struct {
+	AlternativeID *int            `json:"alternative_id,omitempty"`
+	Slots         []GeneratedSlot `json:"slots,omitempty"`
 }
 
 // Input data loaded for generation

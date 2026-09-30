@@ -100,14 +100,6 @@
                     <q-tab name="users" label="Utenti" />
                 </q-tabs>
                 <div v-if="tab === 'classes'" class="row items-center q-gutter-sm">
-                    <q-select
-                        v-model="selectedAcademicYear"
-                        :options="academicYearOptions"
-                        label="Anno Scolastico"
-                        outlined
-                        dense
-                        style="min-width: 160px"
-                    />
                     <q-btn 
                         color="primary" 
                         icon="add" 
@@ -307,36 +299,17 @@ import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { useSchoolYearStore } from '@/stores/schoolYear'
 import adminService from '@/services/adminService'
 
 const route = useRoute()
 const $q = useQuasar()
 const { t } = useI18n()
+const schoolYearStore = useSchoolYearStore()
 
 const school = ref(null)
 const loading = ref(true)
 const tab = ref('classes')
-
-const getCurrentAcademicYear = () => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth() + 1
-  if (month >= 9) {
-    return `${year}/${year + 1}`
-  } else {
-    return `${year - 1}/${year}`
-  }
-}
-
-const currentYearStr = getCurrentAcademicYear()
-const selectedAcademicYear = ref(currentYearStr)
-const currentStart = parseInt(currentYearStr.split('/')[0])
-const academicYearOptions = [
-  'Tutti gli anni',
-  `${currentStart - 1}/${currentStart}`,
-  currentYearStr,
-  `${currentStart + 1}/${currentStart + 2}`
-]
 
 // Classes Data
 const classes = ref([])
@@ -354,7 +327,7 @@ const classForm = ref({ name: '', section: '', academic_year: '' })
 
 const openClassDialog = () => {
     editingClass.value = null
-    classForm.value = { name: '', section: '', academic_year: '2024/2025', school_id: school.value.id }
+    classForm.value = { name: '', section: '', academic_year: schoolYearStore.selectedSchoolYear || '2025/2026', school_id: school.value.id }
     showClassDialog.value = true
 }
 
@@ -492,7 +465,7 @@ const fetchClasses = async (schoolId) => {
     loadingClasses.value = true
     try {
         const id = schoolId && typeof schoolId === 'string' ? schoolId : school.value?.id
-        const yearParam = (!selectedAcademicYear.value || selectedAcademicYear.value === 'Tutti gli anni') ? null : selectedAcademicYear.value
+        const yearParam = schoolYearStore.selectedSchoolYear || null
         const response = await adminService.getSchoolClasses(id, yearParam)
         classes.value = response.data || []
     } catch (e) {
@@ -521,7 +494,7 @@ watch(userRoleFilter, () => {
     if (school.value) fetchUsers(school.value.id)
 })
 
-watch(selectedAcademicYear, () => {
+watch(() => schoolYearStore.selectedSchoolYear, () => {
     if (school.value) fetchClasses(school.value.id)
 })
 
