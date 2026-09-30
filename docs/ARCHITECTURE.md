@@ -173,7 +173,9 @@ Middleware Go:
 | **Statutory Absence Forecasting** | Frontend, `AbsenceLimitWidget` | Monitoraggio e calcolo predittivo della soglia 25% assenze per la validità dell'anno (Art. 14 DPR 122/2009) |
 | **Idempotency-Key Injection**     | Frontend, `useIdempotency.js`  | Prevenzione duplicazioni su richieste mutative critiche con header HTTP `Idempotency-Key` automatico |
 | **Strict Role Validation & Domain Guard** | Backend, `internal/users` | Validazione server-side dei 25 ruoli istituzionali supportati con respinta `HTTP 400 Bad Request` |
+| **Granular ATA Permission Scope** | Backend & Frontend (`users`, `strike`, `useMenuItems`) | Separazione netta dei permessi: Collaboratore Scolastico ristretto a Registro Visitatori, Segnalazione Guasti e Cartellino; Segreteria/DSGA/Dirigenza con accesso a presenze globali e riepiloghi sciopero |
 | **Hierarchical Role Resolver & Adaptive Tour/Help** | Frontend, `Common/` (Tour & Help) | Mappatura coerente dei ruoli su profili canonici con Onboarding Tour e Help Center dedicati per ruolo |
+| **Interactive Tour Direct Section Linking** | Frontend, `OnboardingTour.vue` | Associazione di rotte dirette ad ogni passaggio del tour con pulsante di atterraggio rapido `goToSection` |
 | **Multi-Building Bookable Room Engine** | Backend, `internal/rooms` | Gestione aule e laboratori multi-plesso con controllo atomico sovrapposizioni e ricorrenze settimanali |
 | **CSP Timetable Solver & Seniority Priority** | Backend, `internal/timetablegen` | Generatore orario vincolato (CSP) con allocazione aule/plessi e soddisfazione desiderata ponderata sull'anzianità di servizio (`hiring_date`) |
 
@@ -190,6 +192,17 @@ Il backend (`internal/users/service.go`) convalida rigidamente i 25 ruoli previs
 - **Personale Docente & Incarichi**: `teacher`, `coordinator`, `referente_inclusione`, `referente_progetto`, `segretario_consiglio`, `responsabile_dipartimento`, `tutor_orientatore`, `animatore_digitale`
 - **Utenza Famiglie & Studenti**: `student`, `parent`
 
+### Matrice e Modello di Permessi Granulari ATA
+Per garantire la conformità contrattuale CCNL e la protezione della privacy dei dipendenti:
+1. **Collaboratore Scolastico (`collaboratore_scolastico`)**:
+   - Accesso esclusivo ai servizi di plesso: Registro Visitatori e Uscite Anticipate (`/ata/visitor-registry`), Cartellino & Piano Ferie personale (`/ata/timecard`), Segnalazione Guasti (`/ata/maintenance`), Sportello Personale (`/ata/personnel-desk`) e Comunicazioni Ricevute (`/secretary/communications`).
+   - Nel backend, è abilitato all'interrogazione mirata `GET /api/v1/users?role=student` per consentire la verifica dell'anagrafica studenti e delle deleghe al ritiro, con blocco preventivo su tutti gli altri ruoli.
+   - Non ha accesso al modulo Presenze Personale d'Istituto (`/ata/attendance`).
+2. **Segreteria & Personale Amministrativo (`secretary`, `assistente_amministrativo`, `assistente_personale`, `dsga`)**:
+   - Monitoraggio delle presenze dell'intero plesso/istituto (`/ata/attendance`).
+   - Accesso completo alla rilevazione e al sommario statistico adesione scioperi (`/api/v1/strike-notices/:id/summary`).
+   - Gestione delle classi, nomina coordinatori e pianificazione orario/sostituzioni.
+
 ### Risoluzione Canonica Frontend (Tour & Centro Assistenza)
 Nei componenti `OnboardingTour.vue`, `HelpDrawer.vue` e `HelpCenterPanel.vue`, ogni ruolo è risolto in una delle 10 categorie canoniche senza fallire su `student`:
 1. `principal`: include il Dirigente Scolastico e il Collaboratore Vicario.
@@ -204,7 +217,7 @@ Nei componenti `OnboardingTour.vue`, `HelpDrawer.vue` e `HelpCenterPanel.vue`, o
 10. `student`: studenti iscritti.
 
 ### Onboarding Tour & Centro Guide Adattivo
-- **`OnboardingTour.vue`**: Presentazione guidata interattiva a schede con scorciatoie da tastiera (`←`, `→`, `ESC`), avanzamento visivo, anteprima a chip e completamento persistito (`onboarding_done_${userRole.value}`).
+- **`OnboardingTour.vue`**: Presentazione guidata interattiva a schede con scorciatoie da tastiera (`←`, `→`, `ESC`), avanzamento visivo, anteprima a chip, pulsante di atterraggio rapido alla sezione associata (`onboardingExtra.goToSection`) e completamento persistito (`onboarding_done_${userRole.value}`).
 - **`HelpDrawer.vue`**: Pannello a scomparsa laterale destra con motore di ricerca istantaneo, filtri per categoria di ruolo, domande frequenti espanse ed accesso al tour.
 - **`HelpCenterPanel.vue`**: Centro assistenza completo a schermo con catalogo guide tematiche, tempi di lettura stimati, procedure passo-passo e blocco FAQ correlate.
 - **Integrità i18n**: Tutte le chiavi di Onboarding e Help sono verificate e sincronizzate al 100% su tutte le 11 lingue supportate (`i18nKeys.test.js`).

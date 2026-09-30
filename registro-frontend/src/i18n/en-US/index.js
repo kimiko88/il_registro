@@ -2447,7 +2447,7 @@ export default {
       "step1_title": "Class Register & Attendance",
       "step1_desc": "Take daily attendance and sign lessons quickly.",
       "step2_title": "Grades Management",
-      "step2_desc": "Insert grades, view averages, and run grade simulations.",
+      "step2_desc": "From the \"My Classes\" section, access class registers, filter by academic year, check coordinator status, and manage lessons.",
       "step3_title": "Teaching Planning (UdA)",
       "step3_desc": "Design learning units and evaluate competencies.",
       "step4_title": "Class Agenda & Calendar",
@@ -2489,11 +2489,11 @@ export default {
       "step1_title": "Dashboard Segreteria",
       "step1_desc": "La dashboard mostra un riepilogo delle attività pendenti, le ultime richieste e le statistiche principali dell'istituto.",
       "step2_title": "Gestione Classi e Studenti",
-      "step2_desc": "Nella sezione \"Classi\" puoi visualizzare e gestire tutte le classi dell'istituto. In \"Studenti\" trovi l'anagrafica completa con ricerca avanzata.",
+      "step2_desc": "In the \"Classes\" section, manage school classes, assign class coordinators, and filter by academic year. In \"Students\", find full student records with advanced search.",
       "step3_title": "Certificati e Documenti",
       "step3_desc": "Genera e stampa certificati di iscrizione, frequenza e altri documenti ufficiali. Gestisci l'archivio documentale digitale.",
       "step4_title": "Gestione Orari",
-      "step4_desc": "Configura l'orario scolastico, gestisci le sostituzioni dei docenti assenti e pianifica le attività extra-curriculari.",
+      "step4_desc": "Configure school timetables with the automated generator, manage constraints and teacher preferences, organize substitutions, and monitor strike participation.",
       "step5_title": "Report e Statistiche",
       "step5_desc": "Genera report personalizzati su presenze, voti, iscrizioni e altri parametri per uso interno o per l'invio agli enti.",
       "step6_title": "Utenti e Comunicazioni",
@@ -2605,10 +2605,10 @@ export default {
         "Riepilogo classe"
       ],
       "step2_bullets": [
-        "Registro presenze",
-        "Argomenti lezione",
-        "Firma digitale",
-        "Gestione assenze"
+        "Attendance register",
+        "Lesson topics",
+        "Academic year filter",
+        "Coordinator badge"
       ],
       "step3_bullets": [
         "Voti orali e scritti",
@@ -2767,10 +2767,10 @@ export default {
         "Alert sistema"
       ],
       "step2_bullets": [
-        "Elenco classi",
-        "Assegnazione docenti",
-        "Orario settimanale",
-        "Storico modifiche"
+        "Class list & sections",
+        "Class coordinators",
+        "Academic year filter",
+        "Student registry"
       ],
       "step3_bullets": [
         "Certificato iscrizione",
@@ -2779,10 +2779,10 @@ export default {
         "Firma digitale"
       ],
       "step4_bullets": [
-        "Orario scolastico",
-        "Gestione sostituzioni",
-        "Attività extra",
-        "Avvisi docenti"
+        "Automated timetable generator",
+        "Teacher preferences & constraints",
+        "Substitution management",
+        "Strike monitoring"
       ],
       "step5_bullets": [
         "Report presenze",
@@ -2920,7 +2920,7 @@ export default {
         "Touch layout for mobile/tablet",
         "Safety & floor duty alerts",
         "Shift schedule & rotations",
-        "Building attendance overview"
+        "Quick access to Visitor Registry and Timecard"
       ],
       "step2_bullets": [
         "ID document recording",
@@ -3016,7 +3016,8 @@ export default {
         "Dropout risk alerts",
         "Institutional KPIs"
       ]
-    }
+    },
+    "goToSection": "Go to section"
   },
   "nav": {
     "sidi": "SIDI Data Flows",

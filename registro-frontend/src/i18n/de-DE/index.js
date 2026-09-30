@@ -1556,7 +1556,7 @@ export default {
       "step1_title": "Lehrer-Dashboard",
       "step1_desc": "Ihr persönliches Dashboard zeigt eine Zusammenfassung der heutigen Stunden, aktuelle Benachrichtigungen und Schnellzugriff auf die meistgenutzten Funktionen.",
       "step2_title": "Klassenbuch & Anwesenheit",
-      "step2_desc": "Im Bereich \"Meine Klassen\" können Sie auf das Klassenbuch zugreifen, Anwesenheiten und Abwesenheiten erfassen und Unterrichtsthemen eintragen.",
+      "step2_desc": "Im Bereich \"Meine Klassen\" greifen Sie auf das Klassenbuch zu, filtern nach Schuljahr, prüfen Ihren Koordinatorenstatus und verwalten den Unterricht.",
       "step3_title": "Notenverwaltung",
       "step3_desc": "Im Bereich \"Noten\" können Sie mündliche und schriftliche Noten eingeben, Klassendurchschnitte und Notenverteilung anzeigen.",
       "step4_title": "Agenda & Kommunikation",
@@ -1598,11 +1598,11 @@ export default {
       "step1_title": "Sekretariat-Dashboard",
       "step1_desc": "Das Dashboard zeigt ausstehende Aktivitäten, aktuelle Anfragen und Hauptstatistiken der Schule.",
       "step2_title": "Klassen- & Schülerverwaltung",
-      "step2_desc": "Im Bereich \"Klassen\" verwalten Sie alle Schulklassen. In \"Schüler\" finden Sie das vollständige Register mit erweiterter Suche.",
+      "step2_desc": "Im Bereich \"Klassen\" verwalten Sie Schulklassen, weisen Klassenkoordinatoren zu und filtern nach Schuljahr. In \"Schüler\" finden Sie das vollständige Register mit erweiterter Suche.",
       "step3_title": "Zertifikate & Dokumente",
       "step3_desc": "Erstellen und drucken Sie Einschreibungs- und Anwesenheitsbescheinigungen. Verwalten Sie das digitale Dokumentenarchiv.",
       "step4_title": "Stundenplanverwaltung",
-      "step4_desc": "Konfigurieren Sie den Stundenplan, verwalten Sie Vertretungen und planen Sie Aktivitäten.",
+      "step4_desc": "Konfigurieren Sie den Stundenplan mit dem automatischen Generator, verwalten Sie Einschränkungen und Lehrerwünsche, organisieren Sie Vertretungen und überwachen Sie Streikbeteiligungen.",
       "step5_title": "Berichte & Statistiken",
       "step5_desc": "Erstellen Sie benutzerdefinierte Berichte zu Anwesenheit, Noten und Einschreibungen.",
       "step6_title": "Benutzer & Kommunikation",
@@ -1991,8 +1991,8 @@ export default {
       "step2_bullets": [
         "Anwesenheitsregister",
         "Unterrichtsthemen",
-        "Digitale Unterschrift",
-        "Abwesenheitsverwaltung"
+        "Schuljahr-Filter",
+        "Koordinator-Badge"
       ],
       "step3_bullets": [
         "Mündliche & schriftliche Noten",
@@ -2151,10 +2151,10 @@ export default {
         "Systemwarnungen"
       ],
       "step2_bullets": [
-        "Klassenliste",
-        "Lehrerzuweisungen",
-        "Wochenstundenplan",
-        "Änderungshistorie"
+        "Klassenliste & Sektionen",
+        "Klassenkoordinatoren",
+        "Schuljahr-Filter",
+        "Schülerregister"
       ],
       "step3_bullets": [
         "Einschreibebescheinigungen",
@@ -2163,10 +2163,10 @@ export default {
         "Digitales Siegel"
       ],
       "step4_bullets": [
-        "Schulplan",
-        "Lehrervertretungen",
-        "Extracurriculare",
-        "Personalmitteilungen"
+        "Automatischer Stundenplangenerator",
+        "Lehrerwünsche & Einschränkungen",
+        "Vertretungsverwaltung",
+        "Streiküberwachung"
       ],
       "step5_bullets": [
         "Anwesenheitsberichte",
@@ -2304,7 +2304,7 @@ export default {
         "Touch-Bedienung für Tablet/Smartphone",
         "Sicherheits- & Gebäudehinweise",
         "Schichtpläne & Sonderzeiten",
-        "Anwesenheitsüberblick im Gebäude"
+        "Schnellzugriff auf Besucherregister und Stempelkarte"
       ],
       "step2_bullets": [
         "Erfassung von Ausweisdaten",
@@ -2400,7 +2400,8 @@ export default {
         "Schulabbruchrisiko",
         "Qualitätsindikatoren"
       ]
-    }
+    },
+    "goToSection": "Zum Bereich"
   },
   "guideCenter": {
     "title": "Hilfe- & Wissenszentrum",

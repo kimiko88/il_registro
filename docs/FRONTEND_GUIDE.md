@@ -85,7 +85,7 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
 
 ## Internazionalizzazione & Accessibilità (a11y - AgID / WCAG 2.2)
 
-1. **i18n Multi-Lingua**: i file `src/i18n/` coprono 9 lingue distinte (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`) basati su `vue-i18n` v11.
+1. **i18n Multi-Lingua**: i file `src/i18n/` coprono 11 lingue distinte (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`) basati su `vue-i18n` v11 con suite di verifica automatizzata (`i18nKeys.test.js`).
 2. **Suite di Accessibilità & Supporto DSA**:
    - **Sintesi Vocale (TTS)**: Composable `useSpeechSynthesis` con Web Speech API nativa e pulsante `TextToSpeechButton.vue`.
    - **Righello di Lettura / Focus Mask**: `ReadingRuler.vue` con tracciamento mouse o navigazione `Alt + ↑/↓`.
@@ -116,7 +116,12 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
 Il frontend integra un sistema multilivello di assistenza e onboarding guidato per gli utenti di ogni ruolo:
 
 1. **Onboarding Tour Interattivo (`OnboardingTour.vue`)**:
-   - Tutorial a 8 passaggi specifico per ruolo (`teacher`, `student`, `parent`, `secretary`, `admin`).
+   - Tutorial guidato specifico per tutti i 10 ruoli canonici (`principal`, `teacher`, `student`, `parent`, `secretary`, `admin`, `assistente_amministrativo`, `collaboratore_ds`, `collaboratore_scolastico`, `dsga`).
+   - **Navigazione Diretta alle Sezioni**: ogni step associa la rotta applicativa corrispondente (es. `/ata/visitor-registry`, `/secretary/timetable`, `/teacher/classes`) e mette a disposizione dell'utente il pulsante interattivo `onboardingExtra.goToSection` ("Vai alla sezione") per completare il tour e recarsi direttamente alla funzionalità.
+   - Allineamento completo dei permessi e flussi:
+     - **Collaboratore Scolastico**: accesso rapido al Registro Visitatori (`/ata/visitor-registry`), Cartellino CCNL (`/ata/timecard`), Segnalazione Guasti (`/ata/maintenance`) e Sportello Personale (`/ata/personnel-desk`), escludendo presenze d'istituto riservate al DSGA/segreteria.
+     - **Segreteria**: evidenziazione del generatore automatico orario (`/secretary/timetable`), vincoli e desiderata docenti (`/secretary/timetable-constraints`, `/secretary/schedule-preferences`), sostituzioni e monitoraggio scioperi (`/ata/strike`), oltre alla gestione classi con assegnazione coordinatori e filtro per anno scolastico.
+     - **Docente**: gestione classi con badge coordinatore, conteggio studenti e filtro per anno scolastico attivo.
    - Card grafiche con pillole di funzionalità, badge di categoria, suggerimenti pratici e lista puntata.
    - Tracciamento completamento automatizzato in `localStorage` (`onboarding_done_{role}`).
 2. **Pannello Help Center Full-Screen (`HelpCenterPanel.vue`)**:

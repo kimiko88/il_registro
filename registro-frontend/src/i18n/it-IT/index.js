@@ -1556,7 +1556,7 @@ export default {
       "step1_title": "Dashboard Docente",
       "step1_desc": "La tua dashboard personale mostra un riepilogo delle lezioni di oggi, le notifiche recenti e l'accesso rapido alle funzionalità più usate.",
       "step2_title": "Registro Classe e Presenze",
-      "step2_desc": "Dalla sezione \"Le Mie Classi\" puoi accedere al registro, registrare presenze e assenze, inserire argomenti delle lezioni e attività svolte.",
+      "step2_desc": "Dalla sezione \"Le Mie Classi\" puoi accedere al registro, filtrare per anno scolastico, verificare il ruolo di coordinatore e gestire le lezioni.",
       "step3_title": "Gestione Voti",
       "step3_desc": "Nella sezione \"Voti\" puoi inserire voti orali e scritti, visualizzare la media della classe e la distribuzione dei voti per ogni studente.",
       "step4_title": "Agenda e Comunicazioni",
@@ -1598,11 +1598,11 @@ export default {
       "step1_title": "Dashboard Segreteria",
       "step1_desc": "La dashboard mostra un riepilogo delle attività pendenti, le ultime richieste e le statistiche principali dell'istituto.",
       "step2_title": "Gestione Classi e Studenti",
-      "step2_desc": "Nella sezione \"Classi\" puoi visualizzare e gestire tutte le classi dell'istituto. In \"Studenti\" trovi l'anagrafica completa con ricerca avanzata.",
+      "step2_desc": "Nella sezione \"Classi\" puoi visualizzare e gestire tutte le classi dell'istituto, nominare i coordinatori e filtrare per anno scolastico. In \"Studenti\" trovi l'anagrafica completa con ricerca avanzata.",
       "step3_title": "Certificati e Documenti",
       "step3_desc": "Genera e stampa certificati di iscrizione, frequenza e altri documenti ufficiali. Gestisci l'archivio documentale digitale.",
       "step4_title": "Gestione Orari",
-      "step4_desc": "Configura l'orario scolastico, gestisci le sostituzioni dei docenti assenti e pianifica le attività extra-curriculari.",
+      "step4_desc": "Configura l'orario scolastico con il generatore automatico, gestisci vincoli e desiderata docenti, organizza le sostituzioni e monitora le adesioni allo sciopero.",
       "step5_title": "Report e Statistiche",
       "step5_desc": "Genera report personalizzati su presenze, voti, iscrizioni e altri parametri per uso interno o per l'invio agli enti.",
       "step6_title": "Utenti e Comunicazioni",
@@ -1991,8 +1991,8 @@ export default {
       "step2_bullets": [
         "Registro presenze",
         "Argomenti lezione",
-        "Firma digitale",
-        "Gestione assenze"
+        "Filtro anno scolastico",
+        "Badge coordinatore"
       ],
       "step3_bullets": [
         "Voti orali e scritti",
@@ -2151,10 +2151,10 @@ export default {
         "Alert sistema"
       ],
       "step2_bullets": [
-        "Elenco classi",
-        "Assegnazione docenti",
-        "Orario settimanale",
-        "Storico modifiche"
+        "Elenco classi e sezioni",
+        "Coordinatori di classe",
+        "Filtro anno scolastico",
+        "Anagrafica studenti"
       ],
       "step3_bullets": [
         "Certificato iscrizione",
@@ -2163,10 +2163,10 @@ export default {
         "Firma digitale"
       ],
       "step4_bullets": [
-        "Orario scolastico",
+        "Generatore orario automatico",
+        "Desiderata docenti e vincoli",
         "Gestione sostituzioni",
-        "Attività extra",
-        "Avvisi docenti"
+        "Rilevazione scioperi"
       ],
       "step5_bullets": [
         "Report presenze",
@@ -2304,7 +2304,7 @@ export default {
         "Interfaccia touch per smartphone/tablet",
         "Avvisi di sicurezza e piano",
         "Orari straordinari e turnazioni",
-        "Riepilogo presenze nel plesso"
+        "Accesso rapido a Registro Visitatori e Cartellino"
       ],
       "step2_bullets": [
         "Registrazione documento d'identità",
@@ -2400,7 +2400,8 @@ export default {
         "Rischio dispersione",
         "Indicatori RAV e PTOF"
       ]
-    }
+    },
+    "goToSection": "Vai alla sezione"
   },
   "guideCenter": {
     "title": "Guide per Sezione",

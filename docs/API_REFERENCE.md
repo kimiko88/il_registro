@@ -22,6 +22,7 @@ Questo documento descrive gli endpoint REST e le connessioni WebSocket del backe
 - [Plessi e Aule Prenotabili](#plessi-e-aule-prenotabili)
 - [Generatore Orario Scolastico & Desiderata Docenti](#generatore-orario-scolastico--desiderata-docenti)
 - [Sostituzioni Docenti](#sostituzioni-docenti)
+- [Rilevazione Scioperi (Strike Notices & Summary)](#rilevazione-scioperi-strike-notices--summary)
 - [Colloqui e Ricevimento Famiglie](#colloqui-e-ricevimento-famiglie)
 - [Voti, Rubriche ed Educazione Civica](#voti-rubriche-ed-educazione-civica)
 - [Piani Didattici Personalizzati (PDP / PEI)](#piani-didattici-personalizzati-pdp--pei)
@@ -158,6 +159,16 @@ Aggiorna le informazioni anagrafiche e/o il ruolo primario dell'utente.
 Assegna incarichi o ruoli multipli secondari all'utente (es. coordinatore di classe, referente inclusione, tutor orientatore).
 - **Autorizzazione**: `superadmin`, `admin`, `principal`, `secretary`.
 - **Validazione Ruoli**: Restituisce `HTTP 400 Bad Request` se uno qualsiasi dei ruoli forniti non è valido.
+
+### `GET /api/v1/users`
+Recupera l'elenco degli utenti con filtri anagrafici e di ruolo.
+- **Autorizzazione Standard**: `superadmin`, `admin`, `secretary`, `principal`, `vice_principal`, `dsga`, `assistente_amministrativo`, `assistente_personale`.
+- **Autorizzazione Speciale Collaboratore Scolastico**: Il ruolo `collaboratore_scolastico` è autorizzato ad interrogare questo endpoint **esclusivamente** con parametro `role=student` (es. `GET /api/v1/users?role=student&search=Rossi`), per consentire l'identificazione tempestiva dell'alunno e la verifica dei tutori delegati al ritiro anticipato nel Registro Visitatori (`/ata/visitor-registry`). Qualsiasi richiesta effettuata da un collaboratore scolastico senza specificare `role=student` viene respinta con `HTTP 403 Forbidden`.
+- **Query Parameters**:
+  - `role`: filtro per ruolo istituzionale (es. `student`, `teacher`, `parent`).
+  - `school_id`: filtro per scuola (per ruoli multi-tenant).
+  - `search`: stringa di ricerca per nome, cognome o codice fiscale.
+  - `page`, `limit`: paginazione dei risultati.
 
 ### `GET /api/v1/students/:id/fascicolo`
 Restituisce lo storico completo dello studente (valutazioni, presenze, note, PDP, attestati PCTO).
@@ -362,6 +373,52 @@ Lista le sostituzioni docenti programmate per la scuola o per il docente.
 ### `POST /api/v1/substitutions`
 Crea una nuova richiesta di sostituzione per un docente assente.
 **Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `principal`
+
+---
+
+## Rilevazione Scioperi (Strike Notices & Summary)
+
+Modulo per la gestione delle comunicazioni di sciopero, delle dichiarazioni volontarie del personale e del calcolo dei contingenti minimi essenziali (L. 146/90).
+
+### `POST /api/v1/strike-notices`
+Crea una nuova comunicazione di sciopero per l'istituto scolastico.
+- **Ruoli ammessi**: `principal`, `vice_principal`, `dsga`, `admin`, `superadmin`, `collaboratore_ds`, `secretary`, `assistente_amministrativo`, `assistente_personale`.
+- **Request Body**:
+```json
+{
+  "title": "Sciopero Generale Comparto Istruzione",
+  "start_date": "2026-10-15T00:00:00Z",
+  "end_date": "2026-10-15T23:59:59Z",
+  "organization": "Sigla Sindacale",
+  "essential_services": "Sorveglianza ingressi plesso centrale",
+  "notes": "Circolare informativa preventiva alle famiglie"
+}
+```
+
+### `GET /api/v1/strike-notices`
+Elenco di tutte le comunicazioni di sciopero attive per l'istituto dell'utente autenticato.
+
+### `GET /api/v1/strike-notices/:id`
+Dettaglio della singola comunicazione di sciopero.
+
+### `DELETE /api/v1/strike-notices/:id`
+Elimina la comunicazione di sciopero specificata.
+- **Ruoli ammessi**: `principal`, `vice_principal`, `dsga`, `admin`, `superadmin`.
+
+### `POST /api/v1/strike-notices/:id/declare`
+Invio della dichiarazione preventiva individuale e volontaria da parte del dipendente (docente o ATA).
+- **Ruoli ammessi**: qualsiasi dipendente della scuola (`teacher`, `collaboratore_scolastico`, `assistente_amministrativo`, `dsga`, ecc.).
+- **Request Body**:
+```json
+{
+  "status": "adhere"
+}
+```
+Valori supportati per `status`: `"adhere"` (aderisce), `"not_adhere"` (non aderisce), `"undecided"` (non si pronuncia).
+
+### `GET /api/v1/strike-notices/:id/summary`
+Restituisce il riepilogo statistico e aggregato delle dichiarazioni pervenute, con conteggio delle adesioni distinte per docenti e personale ATA e monitoraggio dei contingenti minimi essenziali.
+- **Ruoli ammessi**: `principal`, `vice_principal`, `dsga`, `admin`, `superadmin`, `collaboratore_ds`, `secretary`, `assistente_amministrativo`, `assistente_personale`.
 
 ---
 

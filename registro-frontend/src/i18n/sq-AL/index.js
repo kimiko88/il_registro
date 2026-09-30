@@ -1556,7 +1556,7 @@ export default {
       "step1_title": "Paneli i Mësuesit",
       "step1_desc": "Paneli juaj personal shfaq përmbledhjen e mësimeve të sotme, njoftimet e fundit dhe aksesin e shpejtë.",
       "step2_title": "Regjistri i Klasës dhe Pjesëmarrja",
-      "step2_desc": "Nga \"Klasat e Mia\" hyni në regjistër, shënoni pjesëmarrjen dhe mungesat, temat dhe aktivitetet.",
+      "step2_desc": "Nga seksioni \"Klasat e Mia\", hyni në regjistër, filtroni sipas vitit shkollor, kontrolloni rolin e koordinatorit dhe menaxhoni mësimet.",
       "step3_title": "Menaxhimi i Notave",
       "step3_desc": "Në seksionin \"Notat\" vendosni vlerësime me gojë dhe me shkrim, shikoni mesataren e klasës.",
       "step4_title": "Agenda dhe Komunikimet",
@@ -1598,11 +1598,11 @@ export default {
       "step1_title": "Paneli i Sekretarisë",
       "step1_desc": "Paneli tregon aktivitetet pezull, kërkesat e fundit dhe statistikat kryesore të shkollës.",
       "step2_title": "Menaxhimi i Klasave dhe Nxënësve",
-      "step2_desc": "Në \"Klasat\" menaxhoni klasat. Në \"Nxënësit\" gjeni regjistrin e plotë të të dhënave.",
+      "step2_desc": "Në seksionin \"Klasat\", menaxhoni klasat e shkollës, caktoni koordinatorët dhe filtroni sipas vitit shkollor. Në \"Nxënësit\", gjeni regjistrin e plotë me kërkim të avancuar.",
       "step3_title": "Vërtetime dhe Dokumente",
       "step3_desc": "Gjeneroni dhe printoni vërtetime regjistrimi, pjesëmarrjeje dhe dokumente të tjera zyrtare.",
       "step4_title": "Menaxhimi i Orareve",
-      "step4_desc": "Konfiguroni orarin shkollor, menaxhoni zëvendësimet e mësuesve dhe aktivitetet.",
+      "step4_desc": "Konfiguroni orarin shkollor me gjeneruesin automat, menaxhoni kufizimet dhe dëshirat e mësuesve, organizoni zëvendësimet dhe monitoroni grevat.",
       "step5_title": "Raporte dhe Statistika",
       "step5_desc": "Gjeneroni raporte të personalizuara për pjesëmarrjen, notat dhe regjistrimet.",
       "step6_title": "Përdoruesit dhe Njoftimet",
@@ -2111,8 +2111,8 @@ export default {
       "step2_bullets": [
         "Regjistri i pjesëmarrjes",
         "Temat e mësimit",
-        "Nënshkrim dixhital",
-        "Menaxhimi i mungesave"
+        "Filtri i vitit shkollor",
+        "Distinktivi i koordinatorit"
       ],
       "step3_bullets": [
         "Nota me gojë e me shkrim",
@@ -2271,10 +2271,10 @@ export default {
         "Alerte sistemi"
       ],
       "step2_bullets": [
-        "Lista e klasave",
-        "Caktimi i mësuesve",
-        "Orari javor",
-        "Historiku i ndryshimeve"
+        "Lista e klasave dhe sekcioneve",
+        "Koordinatorët e klasave",
+        "Filtri i vitit shkollor",
+        "Regjistri i nxënësve"
       ],
       "step3_bullets": [
         "Vërtetim regjistrimi",
@@ -2283,10 +2283,10 @@ export default {
         "Nënshkrim dixhital"
       ],
       "step4_bullets": [
-        "Orari shkollor",
+        "Gjenerues automat i orarit",
+        "Dëshirat e mësuesve dhe kufizimet",
         "Menaxhimi i zëvendësimeve",
-        "Aktivitete extra",
-        "Njoftime stafi"
+        "Monitorimi i grevave"
       ],
       "step5_bullets": [
         "Raporte pjesëmarrjeje",
@@ -2424,7 +2424,7 @@ export default {
         "Përdorim me prekje për tablet/telefon",
         "Udhëzime sigurie dhe shërbimi",
         "Orare pune dhe turne",
-        "Pasqyrë e pranisë në godinë"
+        "Qasje e shpejtë te Regjistri i Vizitorëve dhe Kartela"
       ],
       "step2_bullets": [
         "Regjistrimi i kartës së identitetit",
@@ -2520,7 +2520,8 @@ export default {
         "Dropout risk alerts",
         "Institutional KPIs"
       ]
-    }
+    },
+    "goToSection": "Shko te seksioni"
   },
   "guideCenter": {
     "title": "Help & Knowledge Center",

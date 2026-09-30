@@ -1556,7 +1556,7 @@ export default {
       "step1_title": "Panel del Profesor",
       "step1_desc": "Tu panel personal muestra un resumen de las clases de hoy, notificaciones recientes y acceso rápido a las funciones más utilizadas.",
       "step2_title": "Registro de clase & Asistencia",
-      "step2_desc": "En \"Mis Clases\" puedes acceder al registro, registrar asistencia y ausencias, e insertar temas de clase.",
+      "step2_desc": "En la sección \"Mis Clases\", accede al registro, filtra por curso escolar, revisa tu rol de coordinador y gestiona las clases.",
       "step3_title": "Gestión de notas",
       "step3_desc": "En \"Notas\" puedes insertar calificaciones orales y escritas, ver medias de clase y distribución de notas.",
       "step4_title": "Agenda & Comunicaciones",
@@ -1598,11 +1598,11 @@ export default {
       "step1_title": "Panel de Secretaría",
       "step1_desc": "El panel muestra actividades pendientes, últimas solicitudes y estadísticas principales del centro.",
       "step2_title": "Gestión de clases & alumnos",
-      "step2_desc": "En \"Clases\" gestionas todas las clases del centro. En \"Alumnos\" encuentras el registro completo con búsqueda avanzada.",
+      "step2_desc": "En la sección \"Clases\", gestiona las clases del centro, asigna coordinadores y filtra por curso escolar. En \"Alumnos\", consulta el registro completo con búsqueda avanzada.",
       "step3_title": "Certificados & Documentos",
       "step3_desc": "Genera e imprime certificados de matrícula y asistencia. Gestiona el archivo documental digital.",
       "step4_title": "Gestión de horarios",
-      "step4_desc": "Configura el horario escolar, gestiona sustituciones y planifica actividades.",
+      "step4_desc": "Configura el horario escolar con el generador automático, gestiona restricciones y preferencias docentes, organiza sustituciones y supervisa huelgas.",
       "step5_title": "Informes & Estadísticas",
       "step5_desc": "Genera informes personalizados sobre asistencia, notas y matrículas.",
       "step6_title": "Usuarios & Comunicaciones",
@@ -1990,9 +1990,9 @@ export default {
       ],
       "step2_bullets": [
         "Registro de asistencia",
-        "Temas de la lección",
-        "Firma digital",
-        "Gestión de faltas"
+        "Temas de clase",
+        "Filtro año escolar",
+        "Insignia coordinador"
       ],
       "step3_bullets": [
         "Notas orales y escritas",
@@ -2151,10 +2151,10 @@ export default {
         "Alertas del sistema"
       ],
       "step2_bullets": [
-        "Listado de grupos",
-        "Asignación docente",
-        "Horario semanal",
-        "Historial de cambios"
+        "Lista de clases y secciones",
+        "Coordinadores de grupo",
+        "Filtro año escolar",
+        "Registro de alumnos"
       ],
       "step3_bullets": [
         "Certificado de matrícula",
@@ -2163,10 +2163,10 @@ export default {
         "Sello digital"
       ],
       "step4_bullets": [
-        "Horario escolar",
+        "Generador automático de horarios",
+        "Preferencias docentes y restricciones",
         "Gestión de sustituciones",
-        "Actividades extra",
-        "Avisos al profesorado"
+        "Control de huelgas"
       ],
       "step5_bullets": [
         "Informes de asistencia",
@@ -2304,7 +2304,7 @@ export default {
         "Diseño táctil para tablet y móvil",
         "Alertas de seguridad y de planta",
         "Horarios especiales y turnos",
-        "Control de presencia en el edificio"
+        "Acceso rápido al Registro de Visitantes y Fichaje"
       ],
       "step2_bullets": [
         "Registro de documento de identidad",
@@ -2400,7 +2400,8 @@ export default {
         "Dropout risk alerts",
         "Institutional KPIs"
       ]
-    }
+    },
+    "goToSection": "Ir a la sección"
   },
   "guideCenter": {
     "title": "Centro de Ayuda y Conocimiento",

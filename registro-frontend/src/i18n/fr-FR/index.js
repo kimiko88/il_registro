@@ -1556,7 +1556,7 @@ export default {
       "step1_title": "Tableau de bord Professeur",
       "step1_desc": "Votre tableau de bord personnel affiche un résumé des cours du jour, les notifications récentes et un accès rapide aux fonctions les plus utilisées.",
       "step2_title": "Registre de classe & Présences",
-      "step2_desc": "Dans \"Mes Classes\" vous pouvez accéder au registre, enregistrer les présences et absences, saisir les sujets de cours.",
+      "step2_desc": "Dans la section \"Mes Classes\", accédez au registre, filtrez par année scolaire, vérifiez votre statut de coordinateur et gérez vos cours.",
       "step3_title": "Gestion des notes",
       "step3_desc": "Dans \"Notes\" vous pouvez saisir des notes orales et écrites, voir les moyennes de classe et la distribution des notes.",
       "step4_title": "Agenda & Communications",
@@ -1598,11 +1598,11 @@ export default {
       "step1_title": "Tableau de bord Secrétariat",
       "step1_desc": "Le tableau de bord affiche les activités en attente, les dernières demandes et les statistiques principales de l'établissement.",
       "step2_title": "Gestion classes & élèves",
-      "step2_desc": "Dans \"Classes\" vous gérez toutes les classes. Dans \"Élèves\" vous trouvez le registre complet avec recherche avancée.",
+      "step2_desc": "Dans la section \"Classes\", gérez les classes de l'établissement, nommez les coordinateurs et filtrez par année scolaire. Dans \"Élèves\", trouvez le registre complet avec recherche avancée.",
       "step3_title": "Certificats & Documents",
       "step3_desc": "Générez et imprimez des certificats de scolarité et de présence. Gérez l'archive documentaire numérique.",
       "step4_title": "Gestion des horaires",
-      "step4_desc": "Configurez l'emploi du temps scolaire, gérez les remplacements et planifiez les activités.",
+      "step4_desc": "Configurez l'emploi du temps avec le générateur automatique, gérez les contraintes et souhaits des enseignants, organisez les remplacements et suivez les grèves.",
       "step5_title": "Rapports & Statistiques",
       "step5_desc": "Générez des rapports personnalisés sur les présences, notes et inscriptions.",
       "step6_title": "Utilisateurs & Communications",
@@ -1991,8 +1991,8 @@ export default {
       "step2_bullets": [
         "Registre des présences",
         "Sujets de cours",
-        "Signature numérique",
-        "Gestion des absences"
+        "Filtre année scolaire",
+        "Badge coordinateur"
       ],
       "step3_bullets": [
         "Notes orales & écrites",
@@ -2151,10 +2151,10 @@ export default {
         "Alertes système"
       ],
       "step2_bullets": [
-        "Liste des classes",
-        "Affectations des enseignants",
-        "Emploi du temps hebdomadaire",
-        "Historique des révisions"
+        "Liste des classes et sections",
+        "Coordinateurs de classe",
+        "Filtre année scolaire",
+        "Registre des élèves"
       ],
       "step3_bullets": [
         "Certificats d'inscription",
@@ -2163,10 +2163,10 @@ export default {
         "Cachet numérique"
       ],
       "step4_bullets": [
-        "Emploi du temps scolaire",
-        "Remplacements d'enseignants",
-        "Activités parascolaires",
-        "Avis au personnel"
+        "Générateur d'emploi du temps",
+        "Souhaits enseignants et contraintes",
+        "Gestion des remplacements",
+        "Suivi des grèves"
       ],
       "step5_bullets": [
         "Rapports de présence",
@@ -2304,7 +2304,7 @@ export default {
         "Interface tactile pour tablette et mobile",
         "Consignes de sécurité et d'étage",
         "Horaires d'ouverture et roulements",
-        "Aperçu des présences dans l'enceinte"
+        "Accès rapide au Registre des Visiteurs et Pointage"
       ],
       "step2_bullets": [
         "Saisie de la pièce d'identité",
@@ -2400,7 +2400,8 @@ export default {
         "Dropout risk alerts",
         "Institutional KPIs"
       ]
-    }
+    },
+    "goToSection": "Accéder à la section"
   },
   "guideCenter": {
     "title": "Centre d'Aide & Connaissances",

@@ -1053,3 +1053,24 @@ Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le pr
   - **3. Verifica Suite Completa**:
     - `go test -count=1 ./tests/... ./internal/...` passato al 100% su tutti i package (integration, unit, auth, timetablegen, ws, ecc.).
 
+- [x] **Aggiornamento Tour Guidato (Onboarding), Sincronizzazione 11 Lingue i18n & Documentazione Tecnica**:
+  - **1. Onboarding Tour Interattivo (`OnboardingTour.vue`)**:
+    - *Navigazione Diretta alle Sezioni*: aggiunta la proprietà `route` a tutti i passaggi in `STEP_DEFS` per ciascuno dei 10 ruoli canonici (`principal`, `teacher`, `student`, `parent`, `secretary`, `admin`, `assistente_amministrativo`, `collaboratore_ds`, `collaboratore_scolastico`, `dsga`).
+    - *Pulsante di Atterraggio Rapido*: inserito il bottone `goToSection` ("Vai alla sezione") con icona `open_in_new` all'interno della card dello step, che completa il tour e reindirizza istantaneamente alla pagina della funzionalità (`navigateTo`).
+    - *Aggiornamento Step Collaboratore Scolastico*: corretto il quarto bullet dello step 1 per rimuovere il riferimento alle presenze di plesso (riservate a DSGA/segreteria) e valorizzare l'accesso rapido al Registro Visitatori e al Cartellino CCNL personale.
+    - *Aggiornamento Step Segreteria*: valorizzati la generazione automatica orario, i vincoli e desiderata docenti, la gestione sostituzioni, la rilevazione scioperi, la nomina coordinatori e il filtro anno scolastico in `Classes.vue`.
+    - *Aggiornamento Step Docente*: valorizzati l'accesso alle classi con badge coordinatore, conteggio studenti e filtro per anno scolastico attivo.
+  - **2. Sincronizzazione Rigorosa di Tutte le 11 Lingue Supportate**:
+    - Aggiornati i file dizionario `src/i18n/<locale>/index.js` e i moduli `scripts/translations/*.cjs` per: `it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`.
+    - Aggiunta la chiave `onboardingExtra.goToSection` in tutte le 11 lingue.
+    - Aggiornati `collaboratore_scolastico.step1_bullets[3]`, `secretary.step2_desc`, `secretary.step4_desc`, `secretary.step2_bullets`, `secretary.step4_bullets`, `teacher.step2_desc` e `teacher.step2_bullets` in tutte le 11 lingue.
+    - Verificata l'integrità dizionari al 100% con `scripts/verify_ata_translations.cjs` e `tests/unit/i18n/i18nKeys.test.js` (231/231 test passati).
+  - **3. Allineamento Documentazione Tecnica (`docs/`)**:
+    - `FRONTEND_GUIDE.md`: documentato il supporto a 11 lingue, il meccanismo di navigazione diretta dell'Onboarding Tour e i flussi aggiornati per Collaboratore Scolastico, Segreteria e Docente.
+    - `ARCHITECTURE.md`: documentata la matrice di permessi granulari ATA, la query `role=student` per `collaboratore_scolastico` e l'architettura di navigazione diretta nel Tour.
+    - `API_REFERENCE.md`: documentata la specifica di autorizzazione di `GET /api/v1/users` per `collaboratore_scolastico` e aggiunta la sezione completa degli endpoint di Rilevazione Scioperi (`/strike-notices` e `/summary`).
+  - **4. Verifica Qualità & Test Suite**:
+    - Frontend: `vitest` passato al 100% su `HelpAndOnboarding.spec.js` (10/10) e `i18nKeys.test.js` (231/231).
+    - Frontend: `npm run lint` passato con 0 errori.
+
+

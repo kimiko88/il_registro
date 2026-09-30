@@ -1556,7 +1556,7 @@ export default {
       "step1_title": "Panou Profesor",
       "step1_desc": "Panoul personal arată rezumatul lecțiilor de azi, notificările recente și accesul rapid la funcții.",
       "step2_title": "Catalog Clasă și Prezențe",
-      "step2_desc": "Din secțiunea \"Clasele Mele\" accesați catalogul, înregistrați prezențe și absențe, subiecte și activități.",
+      "step2_desc": "Din secțiunea \"Clasele Mele\", accesați catalogul, filtrați după anul școlar, verificați rolul de coordonator și gestionați lecțiile.",
       "step3_title": "Gestiune Note",
       "step3_desc": "În secțiunea \"Note\" introduceți evaluări orale și scrise, vizualizați media clasei și distribuția.",
       "step4_title": "Agendă și Comunicări",
@@ -1598,11 +1598,11 @@ export default {
       "step1_title": "Panou Secretariat",
       "step1_desc": "Panoul afișează activitățile în așteptare, cererile recente și statisticile școlii.",
       "step2_title": "Gestiune Clase și Elevi",
-      "step2_desc": "În \"Clase\" gestionați formațiunile de studiu. În \"Elevi\" găsiți registrul matricol complet.",
+      "step2_desc": "În secțiunea \"Clase\", gestionați clasele școlii, numiți coordonatorii și filtrați după anul școlar. În \"Elevi\", găsiți registrul complet cu căutare avansată.",
       "step3_title": "Adeverințe și Documente",
       "step3_desc": "Generați și tipăriți adeverințe de înscriere, frecvență și alte acte oficiale.",
       "step4_title": "Gestiune Orare",
-      "step4_desc": "Configurați orarul școlar, gestionați suplinirile profesorilor absenți și activitățile extra.",
+      "step4_desc": "Configurați orarul școlar cu generatorul automat, gestionați constrângerile și preferințele profesorilor, organizați suplinirile și monitorizați grevele.",
       "step5_title": "Rapoarte și Statistici",
       "step5_desc": "Generați rapoarte personalizate despre prezențe, note și situații statistice.",
       "step6_title": "Utilizatori și Comunicări",
@@ -1991,8 +1991,8 @@ export default {
       "step2_bullets": [
         "Catalog prezențe",
         "Subiecte lecție",
-        "Semnătură digitală",
-        "Gestiune absențe"
+        "Filtru an școlar",
+        "Insignă coordonator"
       ],
       "step3_bullets": [
         "Note orale și scrise",
@@ -2151,10 +2151,10 @@ export default {
         "Alerte sistem"
       ],
       "step2_bullets": [
-        "Listă clase",
-        "Asignare profesori",
-        "Orar săptămânal",
-        "Istoric modificări"
+        "Listă clase și secțiuni",
+        "Coordonatori de clasă",
+        "Filtru an școlar",
+        "Registru elevi"
       ],
       "step3_bullets": [
         "Adeverință elev",
@@ -2163,10 +2163,10 @@ export default {
         "Semnătură digitală"
       ],
       "step4_bullets": [
-        "Orar școlar",
+        "Generator automat de orar",
+        "Preferințe profesori și constrângeri",
         "Gestiune supliniri",
-        "Activități extra",
-        "Anunțuri cadre"
+        "Monitorizare greve"
       ],
       "step5_bullets": [
         "Rapoarte prezență",
@@ -2304,7 +2304,7 @@ export default {
         "Interfață tactilă pentru telefon/tabletă",
         "Instrucțiuni de securitate și etaj",
         "Orare de funcționare și ture",
-        "Privire generală asupra prezenței în școală"
+        "Acces rapid la Registrul Vizitatorilor și Pontaj"
       ],
       "step2_bullets": [
         "Înregistrare act de identitate",
@@ -2400,7 +2400,8 @@ export default {
         "Dropout risk alerts",
         "Institutional KPIs"
       ]
-    }
+    },
+    "goToSection": "Mergi la secțiune"
   },
   "guideCenter": {
     "title": "Ghiduri pe Secțiuni",

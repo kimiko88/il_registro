@@ -138,6 +138,38 @@ describe('Onboarding & Help Center Components', () => {
         expect(wrapper.vm.userRole).toBe(expected)
       }
     })
+
+    it('provides direct routes for steps and handles collaboratore_scolastico steps correctly', () => {
+      const csPinia = createTestingPinia({
+        createSpy: vi.fn,
+        initialState: {
+          auth: {
+            user: { role: 'collaboratore_scolastico', first_name: 'Luigi', last_name: 'Bianchi' },
+            userRole: 'collaboratore_scolastico',
+            token: 'jwt-token'
+          }
+        }
+      })
+
+      const wrapper = mount(OnboardingTour, {
+        global: {
+          plugins: [csPinia, i18n],
+          stubs: {
+            'q-dialog': true,
+            'q-icon': true,
+            'q-chip': true,
+            'q-btn': true
+          }
+        }
+      })
+
+      expect(wrapper.vm.userRole).toBe('collaboratore_scolastico')
+      expect(wrapper.vm.tourSteps).toHaveLength(5)
+      expect(wrapper.vm.tourSteps[0].route).toBe('/ata')
+      expect(wrapper.vm.tourSteps[1].route).toBe('/ata/visitor-registry')
+      expect(wrapper.vm.tourSteps[3].route).toBe('/ata/maintenance')
+      expect(wrapper.vm.tourSteps[4].route).toBe('/ata/timecard')
+    })
   })
 
   describe('HelpFab.vue', () => {
