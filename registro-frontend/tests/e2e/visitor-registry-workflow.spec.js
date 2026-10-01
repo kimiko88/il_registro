@@ -222,4 +222,92 @@ describe('Visitor Registry Workflow E2E', () => {
       status: 'in_lavorazione'
     })
   })
+
+  it('6. validates and submits student early exit with delegatee details', async () => {
+    visitorService.recordEarlyExit.mockResolvedValue({ data: { id: 'exit-102' } })
+
+    const wrapper = mount(VisitorRegistry, {
+      global: {
+        plugins: [Quasar, pinia],
+        stubs: commonStubs,
+        mocks: { t: (k) => k }
+      }
+    })
+
+    await flushPromises()
+    wrapper.vm.openNewEarlyExitDialog()
+    expect(wrapper.vm.earlyExitDialog).toBe(true)
+
+    // Incomplete submission: missing student_id and delegatee_name
+    await wrapper.vm.submitEarlyExit()
+    expect(visitorService.recordEarlyExit).not.toHaveBeenCalled()
+
+    // Fill valid data
+    wrapper.vm.earlyExitForm.student_id = 's-99'
+    wrapper.vm.earlyExitForm.delegatee_name = 'Anna Bianchi'
+    wrapper.vm.earlyExitForm.delegate_rel = 'Madre'
+    wrapper.vm.earlyExitForm.reason_code = 'motivi_familiari'
+    wrapper.vm.earlyExitForm.notes = 'Ritiro anticipato autorizzato'
+
+    await wrapper.vm.submitEarlyExit()
+    expect(visitorService.recordEarlyExit).toHaveBeenCalledWith(expect.objectContaining({
+      student_id: 's-99',
+      delegatee_name: 'Anna Bianchi',
+      delegate_rel: 'Madre',
+      reason_code: 'motivi_familiari'
+    }))
+    expect(wrapper.vm.earlyExitDialog).toBe(false)
+  })
+
+  it('7. validates and creates new maintenance ticket with priority and location', async () => {
+    visitorService.createMaintenanceReport.mockResolvedValue({ data: { id: 'm-200' } })
+
+    const wrapper = mount(VisitorRegistry, {
+      global: {
+        plugins: [Quasar, pinia],
+        stubs: commonStubs,
+        mocks: { t: (k) => k }
+      }
+    })
+
+    await flushPromises()
+    wrapper.vm.openNewMaintenanceDialog()
+    expect(wrapper.vm.maintenanceDialog).toBe(true)
+
+    // Incomplete submission: missing location and description
+    await wrapper.vm.submitMaintenance()
+    expect(visitorService.createMaintenanceReport).not.toHaveBeenCalled()
+
+    // Fill valid fields
+    wrapper.vm.maintenanceForm.location = 'Laboratorio Informatica 2'
+    wrapper.vm.maintenanceForm.category = 'informatica'
+    wrapper.vm.maintenanceForm.priority = 'urgente'
+    wrapper.vm.maintenanceForm.description = 'LIM non si accende'
+
+    await wrapper.vm.submitMaintenance()
+    expect(visitorService.createMaintenanceReport).toHaveBeenCalledWith(expect.objectContaining({
+      location: 'Laboratorio Informatica 2',
+      category: 'informatica',
+      priority: 'urgente',
+      description: 'LIM non si accende'
+    }))
+    expect(wrapper.vm.maintenanceDialog).toBe(false)
+  })
+
+  it('8. filters maintenance reports by status correctly', async () => {
+    const wrapper = mount(VisitorRegistry, {
+      global: {
+        plugins: [Quasar, pinia],
+        stubs: commonStubs,
+        mocks: { t: (k) => k }
+      }
+    })
+
+    await flushPromises()
+    wrapper.vm.activeTab = 'maintenance'
+    wrapper.vm.maintenanceStatusFilter = 'in_lavorazione'
+
+    await wrapper.vm.loadMaintenance()
+    expect(visitorService.listMaintenanceReports).toHaveBeenCalledWith('in_lavorazione')
+  })
 })

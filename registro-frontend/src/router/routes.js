@@ -37,7 +37,8 @@ export default [
             {
                 path: 'admin/monitoring',
                 component: () => import('@/pages/admin/Monitoring.vue'),
-                meta: { title: 'Monitoraggio Sistema', titleKey: 'routeTitles.systemMonitoring', roles: ['superadmin'] }
+                // dpo needs read access for system monitoring (privacy oversight)
+                meta: { title: 'Monitoraggio Sistema', titleKey: 'routeTitles.systemMonitoring', roles: ['superadmin', 'dpo'] }
             },
             {
                 path: 'admin/users',
@@ -57,7 +58,8 @@ export default [
             {
                 path: 'admin/settings',
                 component: () => import('@/pages/admin/Settings.vue'),
-                meta: { title: 'Impostazioni di Sistema', titleKey: 'routeTitles.systemSettings', roles: ['superadmin', 'admin'] }
+                // dpo needs access for privacy settings management
+                meta: { title: 'Impostazioni di Sistema', titleKey: 'routeTitles.systemSettings', roles: ['superadmin', 'admin', 'dpo'] }
             },
             {
                 path: 'admin/scheduler',
@@ -106,9 +108,9 @@ export default [
             { path: 'secretary/scrutiny', component: () => import('@/pages/secretary/Scrutiny.vue'), meta: { title: 'Scrutini Scolastici', titleKey: 'routeTitles.scrutiny', roles: ['secretary', 'principal', 'vice_principal', 'assistente_alunni'] } },
 
             { path: 'secretary/groups', component: () => import('@/pages/secretary/Groups.vue'), meta: { title: 'Gruppi Linguistici / Articolati', titleKey: 'routeTitles.classes', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
-            { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { title: 'Organizzazione Riunioni', titleKey: 'routeTitles.meetings', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
+            { path: 'secretary/meetings', component: () => import('@/pages/secretary/Meetings.vue'), meta: { title: 'Organizzazione Riunioni', titleKey: 'routeTitles.meetings', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'assistente_protocollo'] } },
             { path: 'secretary/certificates', component: () => import('@/pages/secretary/Certificates.vue'), meta: { title: 'Certificati & Attestati', titleKey: 'routeTitles.certificates', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'assistente_amministrativo', 'assistente_alunni', 'assistente_contabilita', 'assistente_sportello', 'dsga'] } },
-            { path: 'secretary/substitutions', component: () => import('@/pages/secretary/Substitutions.vue'), meta: { title: 'Gestione Sostituzioni Docenti', titleKey: 'routeTitles.substitutions', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'dsga', 'collaboratore_ds'] } },
+            { path: 'secretary/substitutions', component: () => import('@/pages/secretary/Substitutions.vue'), meta: { title: 'Gestione Sostituzioni Docenti', titleKey: 'routeTitles.substitutions', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'dsga', 'collaboratore_ds', 'assistente_personale'] } },
             { path: 'secretary/sidi', component: () => import('@/pages/secretary/SidiExports.vue'), meta: { title: 'Flussi SIDI (MIM)', titleKey: 'routeTitles.sidiExports', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'dsga', 'assistente_amministrativo', 'assistente_alunni'] } },
             { path: 'secretary/verbali', component: () => import('@/pages/secretary/VerbaliManagement.vue'), meta: { title: 'Verbali & Modelli Riunioni', titleKey: 'routeTitles.verbali', roles: ['secretary', 'principal', 'vice_principal', 'admin', 'superadmin', 'dsga', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_protocollo', 'responsabile_gestione_documentale', 'responsabile_conservazione'] } },
             { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { title: 'Fascicolo Studente', titleKey: 'routeTitles.fascicolo', roles: ['secretary', 'principal', 'vice_principal'] } },
@@ -123,7 +125,7 @@ export default [
             { path: 'ata/timecard', component: () => import('@/pages/ata/Timecard.vue'), meta: { title: 'Cartellino & Piano Ferie', titleKey: 'routeTitles.timecard', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'principal', 'vice_principal', 'admin', 'superadmin'] } },
             { path: 'ata/strike', component: () => import('@/pages/ata/StrikeManagement.vue'), meta: { title: 'Rilevazione Preventiva Scioperi', titleKey: 'routeTitles.strikeManagement', roles: ['dsga', 'principal', 'vice_principal', 'admin', 'superadmin', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_personale', 'secretary'] } },
             { path: 'ata/personnel-desk', component: () => import('@/pages/ata/PersonnelDesk.vue'), meta: { title: 'Sportello Digitale Personale', titleKey: 'routeTitles.personnelDesk', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'teacher', 'coordinator', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
-            { path: 'ata/settings', component: () => import('@/pages/ata/Settings.vue'), meta: { title: 'Impostazioni Profilo', titleKey: 'routeTitles.settings', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
+            { path: 'ata/settings', component: () => import('@/pages/ata/Settings.vue'), meta: { title: 'Impostazioni Profilo', titleKey: 'routeTitles.settings', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'responsabile_gestione_documentale', 'responsabile_conservazione', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
 
             // Teacher Routes (Supports 'teacher', 'coordinator', and 'vice_principal')
             { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { title: 'Pannello Docente', titleKey: 'routeTitles.teacherPanel', roles: ['teacher', 'coordinator', 'vice_principal'] } },

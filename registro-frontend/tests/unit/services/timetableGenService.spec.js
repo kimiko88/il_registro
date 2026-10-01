@@ -91,4 +91,83 @@ describe('timetableGenService', () => {
       expect(api.delete).toHaveBeenCalledWith('/timetable/constraints/c-1')
     })
   })
+
+  describe('Desiderata Window & Schedule Adjustment', () => {
+    it('getDesiderataWindow calls GET /timetable/preferences/window', () => {
+      timetableGenService.getDesiderataWindow()
+      expect(api.get).toHaveBeenCalledWith('/timetable/preferences/window')
+    })
+
+    it('setDesiderataWindow calls POST /timetable/preferences/window', () => {
+      timetableGenService.setDesiderataWindow(true)
+      expect(api.post).toHaveBeenCalledWith('/timetable/preferences/window', { is_open: true })
+    })
+
+    it('savePreferences with params calls POST /timetable/preferences with params', () => {
+      const prefs = [{ day_of_week: 2, hour_slot: 1, preference_type: 'unavailable' }]
+      timetableGenService.savePreferences(prefs, { academic_year_id: '2024/2025' })
+      expect(api.post).toHaveBeenCalledWith('/timetable/preferences', prefs, { params: { academic_year_id: '2024/2025' } })
+    })
+
+    it('adjustSchedule calls POST /timetable/generate/:jobId/adjust', () => {
+      const adjustment = { slots: [{ day_of_week: 1, hour_index: 3 }] }
+      timetableGenService.adjustSchedule('job-99', adjustment)
+      expect(api.post).toHaveBeenCalledWith('/timetable/generate/job-99/adjust', adjustment)
+    })
+  })
+
+  describe('Curriculum Plans & Academic Years', () => {
+    it('getAcademicYears calls GET /timetable/academic-years', () => {
+      timetableGenService.getAcademicYears()
+      expect(api.get).toHaveBeenCalledWith('/timetable/academic-years')
+    })
+
+    it('getClassesCurriculumPlans calls GET /timetable/classes-plans with params', () => {
+      timetableGenService.getClassesCurriculumPlans({ academic_year: '2024/2025' })
+      expect(api.get).toHaveBeenCalledWith('/timetable/classes-plans', { params: { academic_year: '2024/2025' } })
+    })
+
+    it('getClassCurriculumPlan calls GET /timetable/classes/:classId/plan', () => {
+      timetableGenService.getClassCurriculumPlan('class-1')
+      expect(api.get).toHaveBeenCalledWith('/timetable/classes/class-1/plan')
+    })
+
+    it('saveClassCurriculumPlan calls PUT /timetable/classes/:classId/plan', () => {
+      const plan = { min_hours_per_day: 4, max_hours_per_day: 6, subjects: [] }
+      timetableGenService.saveClassCurriculumPlan('class-1', plan)
+      expect(api.put).toHaveBeenCalledWith('/timetable/classes/class-1/plan', plan)
+    })
+
+    it('inheritClassCurriculumPlan calls POST /timetable/classes/:classId/inherit', () => {
+      const data = { source_academic_year: '2023/2024' }
+      timetableGenService.inheritClassCurriculumPlan('class-1', data)
+      expect(api.post).toHaveBeenCalledWith('/timetable/classes/class-1/inherit', data)
+    })
+
+    it('inheritAllClassesCurriculumPlans calls POST /timetable/inherit-all-plans', () => {
+      const data = { source_academic_year: '2023/2024' }
+      timetableGenService.inheritAllClassesCurriculumPlans(data)
+      expect(api.post).toHaveBeenCalledWith('/timetable/inherit-all-plans', data)
+    })
+  })
+
+  describe('Teacher Quick Preferences (Tabular Representation)', () => {
+    it('getTeachersQuickPreferences calls GET /timetable/teachers-quick-preferences with params', () => {
+      timetableGenService.getTeachersQuickPreferences({ academic_year_id: '2024/2025' })
+      expect(api.get).toHaveBeenCalledWith('/timetable/teachers-quick-preferences', { params: { academic_year_id: '2024/2025' } })
+    })
+
+    it('saveTeachersQuickPreferences calls POST /timetable/teachers-quick-preferences', () => {
+      const data = { preferences: [{ teacher_id: 't-1', day_off: 1, time_slot_pref: 'early_hours' }] }
+      timetableGenService.saveTeachersQuickPreferences(data)
+      expect(api.post).toHaveBeenCalledWith('/timetable/teachers-quick-preferences', data)
+    })
+
+    it('saveTeacherQuickPreference calls PUT /timetable/teachers-quick-preferences/:teacherId with params', () => {
+      const item = { teacher_id: 't-1', day_off: 3, time_slot_pref: 'late_hours' }
+      timetableGenService.saveTeacherQuickPreference('t-1', item, { academic_year_id: '2024/2025' })
+      expect(api.put).toHaveBeenCalledWith('/timetable/teachers-quick-preferences/t-1', item, { params: { academic_year_id: '2024/2025' } })
+    })
+  })
 })
+

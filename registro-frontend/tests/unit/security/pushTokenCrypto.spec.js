@@ -13,7 +13,7 @@ describe('Security: Push Token Cryptographic Randomness', () => {
         const token = await notificationService.requestPushPermissionAndRegister()
 
         expect(token).toBeDefined()
-        expect(token).toMatch(/^web_push_[a-f0-9\-]{16,36}$/i)
+        expect(token).toMatch(/^web_push_[a-f0-9-]{16,36}$/i)
         expect(registerSpy).toHaveBeenCalledWith(token, 'web')
 
         registerSpy.mockRestore()

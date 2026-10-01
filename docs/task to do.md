@@ -1032,8 +1032,8 @@ Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le pr
 
 - [x] **Risoluzione Permessi ATA (Collaboratore Scolastico & Segreteria) e Integrità i18n Completa**:
   - **1. Collaboratore Scolastico (CS)**:
-    - *Presenze Personale*: rimosso l'accesso alla dashboard presenze d'istituto (`/ata/attendance`) sia da `routes.js`, sia da `useMenuItems.js` sia dalle azioni rapide di `Dashboard.vue`. Il collaboratore scolastico consulta unicamente il proprio cartellino CCNL (`/ata/timecard`).
-    - *Portineria & Uscite Anticipate*: abilitato `collaboratore_scolastico` nel backend (`internal/users/service.go`) alla query `filter.Role == "student"` per permettere la selezione degli alunni nel Registro Visitatori (`/ata/visitor-registry`).
+    - _Presenze Personale_: rimosso l'accesso alla dashboard presenze d'istituto (`/ata/attendance`) sia da `routes.js`, sia da `useMenuItems.js` sia dalle azioni rapide di `Dashboard.vue`. Il collaboratore scolastico consulta unicamente il proprio cartellino CCNL (`/ata/timecard`).
+    - _Portineria & Uscite Anticipate_: abilitato `collaboratore_scolastico` nel backend (`internal/users/service.go`) alla query `filter.Role == "student"` per permettere la selezione degli alunni nel Registro Visitatori (`/ata/visitor-registry`).
   - **2. Segreteria & Scioperi**:
     - Risolto errore 403 Forbidden su `GET /api/v1/strike-notices/:id/summary`: aggiunti ruoli `secretary`, `assistente_amministrativo` e `assistente_personale` a `IsAdminOrDSGA` e `CanCreateStrikeNotice` in `internal/strike/service.go`.
   - **3. Internazionalizzazione (i18n)**:
@@ -1045,21 +1045,21 @@ Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le pr
 
 - [x] **Risoluzione Bug CI Backend (`-race` Data Race & Flaky Timers `timetablegen`)**:
   - **1. Data Race in `internal/auth` (`MockRepository.UpdatePassword` & `TestLogin`)**:
-    - *Causa*: `TestLogin` e `TestHandler_Login_Integration` generavano l'hash password con la stringa grezza anziché `crypto.PrehashPassword`, scatenando inavvertitamente la goroutine di transparent auto-migration `UpdatePassword` in background. Poiché `s, mockRepo` era condiviso tra subtest `t.Run`, mentre la goroutine leggeva `m.ExpectedCalls`, il subtest successivo invocava `mockRepo.On()` modificando lo slice contemporaneamente (data race catturata da `-race`).
-    - *Fix*: Isolati tutti i subtest di `TestLogin`, `TestRegister` e `TestRefreshToken` con un'istanza dedicata di `setupTest(t)`; usato `crypto.PrehashPassword` nei test standard; creato subtest dedicato `LegacyPasswordMigration` sincronizzato deterministicamente tramite canale (`select/migrationDone`); rimosso accesso non protetto a `m.ExpectedCalls` in `UpdatePassword`.
+    - _Causa_: `TestLogin` e `TestHandler_Login_Integration` generavano l'hash password con la stringa grezza anziché `crypto.PrehashPassword`, scatenando inavvertitamente la goroutine di transparent auto-migration `UpdatePassword` in background. Poiché `s, mockRepo` era condiviso tra subtest `t.Run`, mentre la goroutine leggeva `m.ExpectedCalls`, il subtest successivo invocava `mockRepo.On()` modificando lo slice contemporaneamente (data race catturata da `-race`).
+    - _Fix_: Isolati tutti i subtest di `TestLogin`, `TestRegister` e `TestRefreshToken` con un'istanza dedicata di `setupTest(t)`; usato `crypto.PrehashPassword` nei test standard; creato subtest dedicato `LegacyPasswordMigration` sincronizzato deterministicamente tramite canale (`select/migrationDone`); rimosso accesso non protetto a `m.ExpectedCalls` in `UpdatePassword`.
   - **2. Flaky Timing in `internal/timetablegen`**:
-    - *Causa*: `TestTimetableService` e `TestPublishSchedule_WithAlternativeID_And_CustomSlots` utilizzavano `time.Sleep` fisso (150ms / 200ms) per attendere la generazione in background. Sotto carico CI con `-race` attivo, la goroutine impiegava più tempo e `GetJobStatus` falliva restituendo `running` anziché `completed`.
-    - *Fix*: Sostituito lo sleep fisso con un loop di polling resiliente (`for i := 0; i < 50; i++ { time.Sleep(50 * time.Millisecond) ... }` fino a 2.5s con uscita immediata al completamento) sia negli unit test sia nel test di integrazione del ciclo vitale.
+    - _Causa_: `TestTimetableService` e `TestPublishSchedule_WithAlternativeID_And_CustomSlots` utilizzavano `time.Sleep` fisso (150ms / 200ms) per attendere la generazione in background. Sotto carico CI con `-race` attivo, la goroutine impiegava più tempo e `GetJobStatus` falliva restituendo `running` anziché `completed`.
+    - _Fix_: Sostituito lo sleep fisso con un loop di polling resiliente (`for i := 0; i < 50; i++ { time.Sleep(50 * time.Millisecond) ... }` fino a 2.5s con uscita immediata al completamento) sia negli unit test sia nel test di integrazione del ciclo vitale.
   - **3. Verifica Suite Completa**:
     - `go test -count=1 ./tests/... ./internal/...` passato al 100% su tutti i package (integration, unit, auth, timetablegen, ws, ecc.).
 
 - [x] **Aggiornamento Tour Guidato (Onboarding), Sincronizzazione 11 Lingue i18n & Documentazione Tecnica**:
   - **1. Onboarding Tour Interattivo (`OnboardingTour.vue`)**:
-    - *Navigazione Diretta alle Sezioni*: aggiunta la proprietà `route` a tutti i passaggi in `STEP_DEFS` per ciascuno dei 10 ruoli canonici (`principal`, `teacher`, `student`, `parent`, `secretary`, `admin`, `assistente_amministrativo`, `collaboratore_ds`, `collaboratore_scolastico`, `dsga`).
-    - *Pulsante di Atterraggio Rapido*: inserito il bottone `goToSection` ("Vai alla sezione") con icona `open_in_new` all'interno della card dello step, che completa il tour e reindirizza istantaneamente alla pagina della funzionalità (`navigateTo`).
-    - *Aggiornamento Step Collaboratore Scolastico*: corretto il quarto bullet dello step 1 per rimuovere il riferimento alle presenze di plesso (riservate a DSGA/segreteria) e valorizzare l'accesso rapido al Registro Visitatori e al Cartellino CCNL personale.
-    - *Aggiornamento Step Segreteria*: valorizzati la generazione automatica orario, i vincoli e desiderata docenti, la gestione sostituzioni, la rilevazione scioperi, la nomina coordinatori e il filtro anno scolastico in `Classes.vue`.
-    - *Aggiornamento Step Docente*: valorizzati l'accesso alle classi con badge coordinatore, conteggio studenti e filtro per anno scolastico attivo.
+    - _Navigazione Diretta alle Sezioni_: aggiunta la proprietà `route` a tutti i passaggi in `STEP_DEFS` per ciascuno dei 10 ruoli canonici (`principal`, `teacher`, `student`, `parent`, `secretary`, `admin`, `assistente_amministrativo`, `collaboratore_ds`, `collaboratore_scolastico`, `dsga`).
+    - _Pulsante di Atterraggio Rapido_: inserito il bottone `goToSection` ("Vai alla sezione") con icona `open_in_new` all'interno della card dello step, che completa il tour e reindirizza istantaneamente alla pagina della funzionalità (`navigateTo`).
+    - _Aggiornamento Step Collaboratore Scolastico_: corretto il quarto bullet dello step 1 per rimuovere il riferimento alle presenze di plesso (riservate a DSGA/segreteria) e valorizzare l'accesso rapido al Registro Visitatori e al Cartellino CCNL personale.
+    - _Aggiornamento Step Segreteria_: valorizzati la generazione automatica orario, i vincoli e desiderata docenti, la gestione sostituzioni, la rilevazione scioperi, la nomina coordinatori e il filtro anno scolastico in `Classes.vue`.
+    - _Aggiornamento Step Docente_: valorizzati l'accesso alle classi con badge coordinatore, conteggio studenti e filtro per anno scolastico attivo.
   - **2. Sincronizzazione Rigorosa di Tutte le 11 Lingue Supportate**:
     - Aggiornati i file dizionario `src/i18n/<locale>/index.js` e i moduli `scripts/translations/*.cjs` per: `it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`.
     - Aggiunta la chiave `onboardingExtra.goToSection` in tutte le 11 lingue.
@@ -1073,4 +1073,31 @@ Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le pr
     - Frontend: `vitest` passato al 100% su `HelpAndOnboarding.spec.js` (10/10) e `i18nKeys.test.js` (231/231).
     - Frontend: `npm run lint` passato con 0 errori.
 
-
+- [x] **Incremento Test Suite Completa: Unitari, Integrazione & End-to-End (Backend & Frontend)**:
+  - **1. Backend Unit Tests (`tests/unit/`)**:
+    - `teacher_quick_preferences_unit_test.go`: testato il servizio dei desiderata rapidi docenti (validazione range giorno libero `0..6`, preferenza fasce orarie `early_hours` / `late_hours` / `none`, ore massime/giorno), aggregazione statistica dei giorni liberi e rilevamento colli di bottiglia (`bottleneckDay`), salvataggio batch e gestione propagazione errori dal repository.
+    - `strike_management_unit_test.go`: testata la validazione intenzioni (`participates`, `not_participates`, `undecided`, rifiuto valori non ammessi), verifica scadenza preventivi con deadline, calcolo percentuali e arrotondamenti senza divisione per zero con organico nullo, e matrice autorizzativa ruoli di gestione vs ruoli non autorizzati.
+    - `visitors_registry_unit_test.go`: testata la validazione registrazioni visitatori esterni, parsing badge number, logica permessi uscite anticipate e rientri studenti (`visita_medica`, `motivi_familiari`), e gestione ticket manutenzione (priorità, categorie guasti e transizioni stato).
+    - `staff_timecard_ccnl_unit_test.go`: testato `IsATARole` per tutti gli 11 ruoli ATA, granularità permessi `CanWriteAttendance` e `CanReadAttendance`, e calcolo CCNL orario di lavoro settimanale 36 ore con computo straordinari e debiti/crediti orari.
+    - `personnel_desk_workflow_unit_test.go`: testata la macchina a stati a 3 livelli per le richieste dello sportello personale (Draft -> Submitted -> Istruttoria AA -> Visto DSGA -> Approvazione Dirigente con emissione decreto), rami di rigetto a ogni step, controlli di guardia su transizioni non valide e isolamento RBAC.
+  - **2. Backend Integration Tests (`tests/integration/`)**:
+    - `teacher_quick_preferences_integration_test.go`: ciclo di vita HTTP completo su `/api/v1/timetable/teachers-quick-preferences` (blocco 403 per ruoli non autorizzati, GET iniziale, salvataggio batch POST da segreteria, verifica aggiornamento e distribuzione KPI su GET da vicepreside, aggiornamento singolo docente PUT `/teachers-quick-preferences/:teacherID` e validazione bad request su JSON malformato).
+    - `strike_declarations_lifecycle_integration_test.go`: testati edge cases e lifecycle dichiarazioni scioperi (rifiuto dichiarazioni con intenzioni non valide 400, gestione 404 per avvisi inesistenti, aggiornamento intenzione prima della deadline senza duplicazioni, accesso al summary per ruoli ATA abilitati `secretary`, `assistente_amministrativo`, `assistente_personale`, blocco 403 per ruoli non autorizzati e rifiuto 403 `DEADLINE_PASSED` per avvisi scaduti).
+    - `visitors_filtering_and_edge_cases_integration_test.go`: ciclo di vita completo del registro visitatori, uscite anticipate e segnalazioni manutenzione con filtri per data, avanzamento stato guasti ad `in_lavorazione`, isolamento 403 per studenti e validazione payload errati.
+    - `staff_attendance_roles_and_strike_mode_integration_test.go`: testata l'attivazione/disattivazione della modalità sciopero, caricamento massivo timbrature con risposta `{ data: [...], count: N }`, e rigetto RBAC 403 per ruoli non autorizzati (`collaboratore_scolastico`, `teacher`, `student`).
+  - **3. Frontend Unit Tests (`tests/unit/`)**:
+    - `timetableGenService.spec.js`: raddoppiata la copertura (da 13 a 26 test unitari) con la verifica di tutti i metodi REST aggiunti (`getAcademicYears`, `getClassesCurriculumPlans`, `getClassCurriculumPlan`, `saveClassCurriculumPlan`, `inheritClassCurriculumPlan`, `inheritAllClassesCurriculumPlans`, `getTeachersQuickPreferences`, `saveTeachersQuickPreferences`, `saveTeacherQuickPreference`, `getDesiderataWindow`, `setDesiderataWindow`, `adjustSchedule`).
+    - `OnboardingTourExtended.spec.js`: 19 test dedicati a `OnboardingTour.vue` verificando l'integrità delle rotte per tutti i 10 ruoli canonici, la navigazione diretta (`navigateTo`), la progressione step (`nextStep`, `prevStep`, capping `COMPLETION_STEP`), le scorciatoie da tastiera e la risoluzione ruoli canonici.
+    - `staffAttendanceServiceExtended.spec.js`: 16 test unitari completi a copertura di tutti i metodi di `staffAttendanceService.js` (summary giornaliero, lista, modalità sciopero, timbratura badge, assegnazioni personale, cartellino orario, export orari blob, gestione ferie/permessi con patch di approvazione e rigetto).
+    - `pushTokenCrypto.spec.js`: risolto warning e rimosso escape inutile nella regex per compliance ESLint totale.
+  - **4. Frontend End-to-End / Workflow Tests (`tests/e2e/`)**:
+    - `teacher-quick-preferences-workflow.spec.js`: workflow E2E completo per la Rappresentazione Tabellare dei Desiderata Docenti (caricamento tabella e card KPI bilanciamento giorni liberi, filtro interattivo per giorno libero, ricerca testuale per docente e materia, salvataggio singolo e massivo, commutazione fluida tra tabella rapida e matrice oraria del singolo docente).
+    - `onboarding-tour-navigation-workflow.spec.js`: workflow E2E dell'Onboarding Tour interattivo per `collaboratore_scolastico` (con atterraggio diretto su `/ata/visitor-registry`), `secretary` (avanzamento, salto step e completamento) e `teacher` (navigazione con scorciatoie tastiera freccia destra/sinistra ed Escape).
+    - `staff-attendance-workflow.spec.js`: nuovo workflow E2E per `StaffAttendance.vue` (riepilogo KPI e tassi di presenza per docenti e ATA, filtri categoria e stato presenza, navigazione date con `changeDate` e `goToToday`, attivazione/disattivazione modalità sciopero, modifica stato presenza con causale sciopero e note, simulatore hardware timbrature badge RFID/NFC, e isolamento autorizzativo con rimozione colonna azioni e bottoni per docenti/studenti).
+    - `visitor-registry-workflow.spec.js`: estesa la suite E2E a 8 test con la validazione e registrazione del ritiro anticipato studenti con delegato e parentela, creazione ticket di manutenzione con priorità e localizzazione, e filtro reattivo dei guasti per stato.
+  - **5. Risultati & Verifica Qualità**:
+    - Backend Unit Tests: 21 file passati al 100% (`go test ./tests/unit/...`).
+    - Backend Integration Tests: 87 suite passate al 100% (`go test ./tests/integration/...`).
+    - Frontend Unit Tests: 223 file passati al 100% (1.827 test passati).
+    - Frontend E2E Workflows: 81 file passati al 100% (213 test passati).
+    - Frontend Linting: `npm run lint` passato con 0 errori e 0 warning.
