@@ -7,6 +7,8 @@ export const useSchoolStore = defineStore('schools', {
     state: () => ({
         schools: [],
         currentSchool: null,
+        tiers: [],
+        tierFeatures: {},
         loading: false,
         error: null,
         _lastFetch: 0,
@@ -16,6 +18,24 @@ export const useSchoolStore = defineStore('schools', {
             rowsNumber: 0,
         },
     }),
+    getters: {
+        currentSchoolTier: (state) => {
+            const tier = state.currentSchool?.school_level || state.currentSchool?.type;
+            return tier || 'secondaria_secondo_grado';
+        },
+        hasDeferredScrutiny: (state) => {
+            const tier = state.currentSchool?.school_level || state.currentSchool?.type;
+            return tier === 'secondaria_secondo_grado' || tier === 'omnicomprensivo';
+        },
+        hasPrimaryLevels: (state) => {
+            const tier = state.currentSchool?.school_level || state.currentSchool?.type;
+            return tier === 'primaria' || tier === 'comprensivo' || tier === 'omnicomprensivo';
+        },
+        hasCampiEsperienza: (state) => {
+            const tier = state.currentSchool?.school_level || state.currentSchool?.type;
+            return tier === 'infanzia' || tier === 'comprensivo' || tier === 'omnicomprensivo';
+        },
+    },
     actions: {
         invalidateCache() {
             this._lastFetch = 0;
@@ -46,6 +66,26 @@ export const useSchoolStore = defineStore('schools', {
                 this.error = err.message;
             } finally {
                 this.loading = false;
+            }
+        },
+        async fetchTiers() {
+            try {
+                const res = await schoolService.getTiers();
+                this.tiers = res.data.items || [];
+                return this.tiers;
+            } catch (err) {
+                this.error = err.message;
+                return [];
+            }
+        },
+        async fetchTierFeatures(id) {
+            try {
+                const res = await schoolService.getTierFeatures(id);
+                this.tierFeatures[id] = res.data;
+                return res.data;
+            } catch (err) {
+                this.error = err.message;
+                return null;
             }
         },
         async createSchool(data) {

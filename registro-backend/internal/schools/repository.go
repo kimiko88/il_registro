@@ -25,12 +25,20 @@ func (r *PostgresRepository) Create(ctx context.Context, school *School) error {
 	school.CreatedAt = time.Now()
 	school.UpdatedAt = time.Now()
 
+	tier := school.SchoolLevel
+	if tier == "" {
+		tier = school.Type
+	}
+	tier = NormalizeTier(tier)
+	school.SchoolLevel = tier
+	school.Type = tier
+
 	query := `
-		INSERT INTO schools (id, name, code, address, city, phone, email, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO schools (id, name, code, type, address, city, phone, email, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 	_, err := r.db.ExecContext(ctx, query,
-		school.ID, school.Name, school.Code, school.Address, school.City,
+		school.ID, school.Name, school.Code, tier, school.Address, school.City,
 		school.Phone, school.Email, school.CreatedAt, school.UpdatedAt,
 	)
 	return err
@@ -38,14 +46,17 @@ func (r *PostgresRepository) Create(ctx context.Context, school *School) error {
 
 // GetByID retrieves a school by ID
 func (r *PostgresRepository) GetByID(ctx context.Context, id string) (*School, error) {
-	query := `SELECT id, name, COALESCE(code, ''), address, COALESCE(city, ''), phone, email, created_at, updated_at FROM schools WHERE id = $1 AND deleted_at IS NULL`
+	query := `SELECT id, name, COALESCE(code, ''), COALESCE(type, 'secondaria_secondo_grado'), address, COALESCE(city, ''), phone, email, created_at, updated_at FROM schools WHERE id = $1 AND deleted_at IS NULL`
 	school := &School{}
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
-		&school.ID, &school.Name, &school.Code, &school.Address, &school.City,
+		&school.ID, &school.Name, &school.Code, &school.Type, &school.Address, &school.City,
 		&school.Phone, &school.Email, &school.CreatedAt, &school.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
+	}
+	if err == nil {
+		school.SchoolLevel = school.Type
 	}
 	return school, err
 }
@@ -81,7 +92,7 @@ func (r *PostgresRepository) List(ctx context.Context, params *ListParams) ([]*S
 	}
 
 	// List query
-	listQuery := `SELECT id, name, COALESCE(code, ''), COALESCE(address, ''), COALESCE(city, ''), COALESCE(phone, ''), COALESCE(email, ''), created_at, updated_at FROM schools WHERE deleted_at IS NULL`
+	listQuery := `SELECT id, name, COALESCE(code, ''), COALESCE(type, 'secondaria_secondo_grado'), COALESCE(address, ''), COALESCE(city, ''), COALESCE(phone, ''), COALESCE(email, ''), created_at, updated_at FROM schools WHERE deleted_at IS NULL`
 	if params.Search != "" {
 		listQuery += " AND (name ILIKE $1 OR code ILIKE $1)"
 	}
@@ -97,11 +108,12 @@ func (r *PostgresRepository) List(ctx context.Context, params *ListParams) ([]*S
 	for rows.Next() {
 		s := &School{}
 		if err := rows.Scan(
-			&s.ID, &s.Name, &s.Code, &s.Address, &s.City,
+			&s.ID, &s.Name, &s.Code, &s.Type, &s.Address, &s.City,
 			&s.Phone, &s.Email, &s.CreatedAt, &s.UpdatedAt,
 		); err != nil {
 			return nil, 0, err
 		}
+		s.SchoolLevel = s.Type
 		schools = append(schools, s)
 	}
 	if err := rows.Err(); err != nil {
@@ -124,6 +136,16 @@ func (r *PostgresRepository) Update(ctx context.Context, id string, req *UpdateS
 	if req.Code != nil {
 		query += fmt.Sprintf(", code = $%d", argIndex)
 		args = append(args, *req.Code)
+		argIndex++
+	}
+	tierVal := req.SchoolLevel
+	if tierVal == nil {
+		tierVal = req.Type
+	}
+	if tierVal != nil {
+		norm := NormalizeTier(*tierVal)
+		query += fmt.Sprintf(", type = $%d", argIndex)
+		args = append(args, norm)
 		argIndex++
 	}
 	if req.Address != nil {
