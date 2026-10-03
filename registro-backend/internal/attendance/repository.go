@@ -48,6 +48,11 @@ type Repository interface {
 	FindUnjustifiedByStudent(studentID string) ([]Attendance, error)
 	JustifyAbsenceByParent(attendanceID string, studentID string, reason string, notes string) error
 	GetStudentAttendanceStats(studentID string) (*AttendanceStats, error)
+
+	SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error
+	GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error)
+	VerifyPinAndJustifyAbsence(ctx context.Context, attendanceID, parentID, reason, notes string) error
+	GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error)
 }
 
 type repository struct {
@@ -852,4 +857,170 @@ func (r *repository) IsClassInSchool(ctx context.Context, classID, schoolID stri
 		return false, nil
 	}
 	return exists, nil
+}
+
+func (r *repository) SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.PrepareContext(ctx, `
+		UPDATE attendance 
+		SET meal_type = $1, meal_notes = $2, updated_at = NOW()
+		WHERE class_id = $3 AND date = $4 AND student_id = $5
+	`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, m := range meals {
+		if _, err := stmt.ExecContext(ctx, m.MealType, m.MealNotes, classID, date, m.StudentID); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (r *repository) GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error) {
+	query := `
+		SELECT a.class_id, COALESCE(c.name || COALESCE(c.section, ''), 'Classe'),
+		       a.student_id, COALESCE(u.last_name || ' ' || u.first_name, 'Studente'),
+		       a.meal_type, COALESCE(a.meal_notes, '')
+		FROM attendance a
+		JOIN classes c ON c.id = a.class_id
+		JOIN students s ON s.id = a.student_id
+		JOIN users u ON u.id = s.user_id
+		WHERE a.school_id = $1 AND a.date = $2 AND a.meal_type IS NOT NULL AND a.meal_type != 'nessuno'
+		ORDER BY c.name, u.last_name
+	`
+	rows, err := r.db.QueryContext(ctx, query, schoolID, date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	resp := &DailyMealsReportResponse{
+		Date:                date,
+		SchoolID:            schoolID,
+		ClassesBreakdown:    []ClassMealsSummary{},
+		SpecialDietsDetails: []StudentSpecialDietDetail{},
+	}
+
+	classMap := make(map[string]*ClassMealsSummary)
+
+	for rows.Next() {
+		var classID, className, studentID, studentName, mealType, mealNotes string
+		if err := rows.Scan(&classID, &className, &studentID, &studentName, &mealType, &mealNotes); err != nil {
+			return nil, err
+		}
+
+		resp.TotalMeals++
+		switch mealType {
+		case "standard":
+			resp.StandardCount++
+		case "bianco":
+			resp.WhiteCount++
+		case "dieta_sanitaria":
+			resp.HealthDietCount++
+		case "dieta_etico_religiosa":
+			resp.EthicDietCount++
+		}
+
+		if mealType == "dieta_sanitaria" || mealType == "dieta_etico_religiosa" || (mealType == "bianco" && mealNotes != "") {
+			resp.SpecialDietsDetails = append(resp.SpecialDietsDetails, StudentSpecialDietDetail{
+				StudentID:   studentID,
+				StudentName: studentName,
+				ClassName:   className,
+				MealType:    mealType,
+				MealNotes:   mealNotes,
+			})
+		}
+
+		cSummary, exists := classMap[classID]
+		if !exists {
+			cSummary = &ClassMealsSummary{
+				ClassID:   classID,
+				ClassName: className,
+			}
+			classMap[classID] = cSummary
+		}
+		cSummary.TotalMeals++
+		switch mealType {
+		case "standard":
+			cSummary.StandardCount++
+		case "bianco":
+			cSummary.WhiteCount++
+		case "dieta_sanitaria":
+			cSummary.HealthDietCount++
+		case "dieta_etico_religiosa":
+			cSummary.EthicDietCount++
+		}
+	}
+
+	for _, summary := range classMap {
+		resp.ClassesBreakdown = append(resp.ClassesBreakdown, *summary)
+	}
+
+	return resp, rows.Err()
+}
+
+func (r *repository) VerifyPinAndJustifyAbsence(ctx context.Context, attendanceID, parentID, reason, notes string) error {
+	query := `
+		UPDATE attendance
+		SET justified = true,
+		    is_parent_justified = true,
+		    justification_pin = 'PIN_VERIFIED',
+		    justified_by = $2,
+		    justified_at = NOW(),
+		    notes = CASE WHEN $3 <> '' THEN notes || ' | Giustificato: ' || $3 ELSE notes END,
+		    updated_at = NOW()
+		WHERE id = $1
+	`
+	res, err := r.db.ExecContext(ctx, query, attendanceID, parentID, reason)
+	if err != nil {
+		return err
+	}
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func (r *repository) GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error) {
+	query := `
+		SELECT 
+			COUNT(*) as total_hours,
+			COUNT(*) FILTER (WHERE status IN ('Absent', 'Late', 'LeftEarly')) as absent_hours,
+			COUNT(*) FILTER (WHERE notes ILIKE '%deroga%' OR notes ILIKE '%motivi_salute%') as health_derogations
+		FROM attendance
+		WHERE student_id = $1
+	`
+	var total, absent, derogations int
+	err := r.db.QueryRowContext(ctx, query, studentID).Scan(&total, &absent, &derogations)
+	if err != nil {
+		return nil, err
+	}
+
+	rate := 0.0
+	if total > 0 {
+		effectiveAbsent := absent - derogations
+		if effectiveAbsent < 0 {
+			effectiveAbsent = 0
+		}
+		rate = (float64(effectiveAbsent) / float64(total)) * 100.0
+	}
+
+	return &AbsenceLimitStatusResponse{
+		StudentID:         studentID,
+		TotalSchoolHours:  total,
+		AbsentHours:       absent,
+		AbsenceRate:       rate,
+		MaxLimitRate:      25.0, // D.P.R. 122/2009 limit
+		IsExceedingLimit:  rate > 25.0,
+		HealthDerogations: derogations,
+	}, nil
 }

@@ -107,6 +107,13 @@ const classesStore = useClassesStore()
 const selectedStudentId = ref('')
 const selectedSemester = ref(1)
 
+const levelOptions = [
+  { label: 'A', value: 'A_Avanzato' },
+  { label: 'B', value: 'B_Intermedio' },
+  { label: 'C', value: 'C_Base' },
+  { label: 'D', value: 'D_Iniziale' }
+]
+
 const studentOptions = computed(() => {
   const students = classesStore.classStudents || []
   if (students.length > 0) {

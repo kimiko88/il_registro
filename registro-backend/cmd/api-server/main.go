@@ -39,6 +39,7 @@ import (
 	"registro-backend/internal/handler"
 	"registro-backend/internal/lessons"
 	"registro-backend/internal/mailer"
+	"registro-backend/internal/may15"
 	"registro-backend/internal/middleware"
 	"registro-backend/internal/notes"
 	"registro-backend/internal/notifications"
@@ -49,6 +50,7 @@ import (
 	"registro-backend/internal/pdfworker"
 	"registro-backend/internal/pdp"
 	"registro-backend/internal/personnel_desk"
+	"registro-backend/internal/primaryeval"
 
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/recovery"
@@ -630,6 +632,18 @@ func main() {
 
 			// Sportello Digitale Personale
 			deskH.RegisterRoutes(protected)
+
+			// Valutazione Primaria (O.M. 172/2020 — Giudizi Descrittivi & Obiettivi di Apprendimento)
+			primaryEvalRepo := primaryeval.NewRepository(database)
+			primaryEvalSvc := primaryeval.NewService(primaryEvalRepo)
+			primaryEvalH := primaryeval.NewHandler(primaryEvalSvc)
+			primaryEvalH.RegisterRoutes(protected)
+
+			// Documento del 15 Maggio (Art. 17 D.Lgs. 62/2017 - Esami di Stato Classe 5ª)
+			may15Repo := may15.NewRepository(database)
+			may15Svc := may15.NewService(may15Repo)
+			may15H := may15.NewHandler(may15Svc)
+			may15H.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}

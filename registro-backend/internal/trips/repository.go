@@ -102,10 +102,12 @@ func (r *PostgresRepository) SubmitConsent(ctx context.Context, c *TripConsent) 
 	c.SignedAt = time.Now()
 
 	query := `
-		INSERT INTO trip_consents (id, trip_id, student_id, parent_id, status, signed_at, ip_address)
-		VALUES ($1, $2::uuid, $3::uuid, $4::uuid, $5, $6, $7)
+		INSERT INTO trip_consents (id, trip_id, student_id, parent_id, status, signed_at, ip_address, pin_verified, dietary_notes, medical_notes, emergency_phone, payment_status)
+		VALUES ($1, $2::uuid, $3::uuid, $4::uuid, $5, $6, $7, $8, $9, $10, $11, $12)
 		ON CONFLICT (trip_id, student_id) DO UPDATE
-		SET parent_id = EXCLUDED.parent_id, status = EXCLUDED.status, signed_at = EXCLUDED.signed_at, ip_address = EXCLUDED.ip_address
+		SET parent_id = EXCLUDED.parent_id, status = EXCLUDED.status, signed_at = EXCLUDED.signed_at, ip_address = EXCLUDED.ip_address,
+		    pin_verified = EXCLUDED.pin_verified, dietary_notes = EXCLUDED.dietary_notes, medical_notes = EXCLUDED.medical_notes,
+		    emergency_phone = EXCLUDED.emergency_phone, payment_status = EXCLUDED.payment_status
 	`
 	var parentUUID interface{} = nil
 	if c.ParentID != nil && *c.ParentID != "" {
@@ -113,6 +115,7 @@ func (r *PostgresRepository) SubmitConsent(ctx context.Context, c *TripConsent) 
 	}
 	_, err := r.db.ExecContext(ctx, query,
 		c.ID, c.TripID, c.StudentID, parentUUID, c.Status, c.SignedAt, c.IPAddress,
+		c.PinVerified, c.DietaryNotes, c.MedicalNotes, c.EmergencyPhone, c.PaymentStatus,
 	)
 	return err
 }
@@ -121,7 +124,12 @@ func (r *PostgresRepository) ListConsents(ctx context.Context, tripID string) ([
 	query := `
 		SELECT tc.id, tc.trip_id, tc.student_id, tc.parent_id, tc.status, tc.signed_at, COALESCE(tc.ip_address, ''),
 		       COALESCE(su.first_name || ' ' || su.last_name, '') AS student_name,
-		       COALESCE(pu.first_name || ' ' || pu.last_name, '') AS parent_name
+		       COALESCE(pu.first_name || ' ' || pu.last_name, '') AS parent_name,
+		       COALESCE(tc.pin_verified, FALSE),
+		       COALESCE(tc.dietary_notes, ''),
+		       COALESCE(tc.medical_notes, ''),
+		       COALESCE(tc.emergency_phone, ''),
+		       COALESCE(tc.payment_status, 'unpaid')
 		FROM trip_consents tc
 		JOIN users su ON tc.student_id = su.id
 		LEFT JOIN users pu ON tc.parent_id = pu.id
@@ -138,7 +146,11 @@ func (r *PostgresRepository) ListConsents(ctx context.Context, tripID string) ([
 	for rows.Next() {
 		c := &TripConsent{}
 		var parentID sql.NullString
-		if err := rows.Scan(&c.ID, &c.TripID, &c.StudentID, &parentID, &c.Status, &c.SignedAt, &c.IPAddress, &c.StudentName, &c.ParentName); err != nil {
+		if err := rows.Scan(
+			&c.ID, &c.TripID, &c.StudentID, &parentID, &c.Status, &c.SignedAt, &c.IPAddress,
+			&c.StudentName, &c.ParentName,
+			&c.PinVerified, &c.DietaryNotes, &c.MedicalNotes, &c.EmergencyPhone, &c.PaymentStatus,
+		); err != nil {
 			return nil, err
 		}
 		if parentID.Valid {

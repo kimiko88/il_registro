@@ -91,15 +91,41 @@ func (s *service) CreatePeiGoal(ctx context.Context, schoolID string, req Create
 		req.ExpectedTerm = "annuale"
 	}
 
+	dimension := req.MinisterialDimension
+	if dimension == "" {
+		switch req.Axis {
+		case "relazionale":
+			dimension = "dimensione_relazione"
+		case "comunicazionale", "linguistica":
+			dimension = "dimensione_comunicazione"
+		case "cognitiva":
+			dimension = "dimensione_cognitiva"
+		default:
+			dimension = "dimensione_autonomia"
+		}
+	}
+
+	pathway := req.PathwayType
+	if pathway == "" {
+		if req.PeiType == "differenziato" {
+			pathway = "percorso_c_differenziato"
+		} else {
+			pathway = "percorso_b_personalizzato"
+		}
+	}
+
 	goal := &SupportPeiGoal{
-		SchoolID:       schoolID,
-		StudentID:      req.StudentID,
-		PeiType:        req.PeiType,
-		Axis:           req.Axis,
-		Title:          req.Title,
-		Description:    req.Description,
-		ExpectedTerm:   req.ExpectedTerm,
-		ProgressStatus: req.ProgressStatus,
+		SchoolID:             schoolID,
+		StudentID:            req.StudentID,
+		PeiType:              req.PeiType,
+		Axis:                 req.Axis,
+		MinisterialDimension: dimension,
+		PathwayType:          pathway,
+		Title:                req.Title,
+		Description:          req.Description,
+		ExpectedTerm:         req.ExpectedTerm,
+		ProgressStatus:       req.ProgressStatus,
+		GloNotes:             req.GloNotes,
 	}
 
 	if err := s.repo.CreatePeiGoal(ctx, goal); err != nil {

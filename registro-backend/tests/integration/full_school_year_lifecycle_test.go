@@ -103,6 +103,18 @@ func (m *mockAttRepo) JustifyAbsenceByParent(attendanceID string, studentID stri
 func (m *mockAttRepo) GetStudentAttendanceStats(studentID string) (*attendance.AttendanceStats, error) {
 	return nil, nil
 }
+func (m *mockAttRepo) SaveMealsBatch(_ context.Context, _ string, _ string, _ []attendance.StudentMealItem) error {
+	return nil
+}
+func (m *mockAttRepo) GetDailyMealsReport(_ context.Context, _ string, _ string) (*attendance.DailyMealsReportResponse, error) {
+	return &attendance.DailyMealsReportResponse{}, nil
+}
+func (m *mockAttRepo) VerifyPinAndJustifyAbsence(_ context.Context, _, _, _, _ string) error {
+	return nil
+}
+func (m *mockAttRepo) GetAbsenceLimitStatus(_ context.Context, _ string) (*attendance.AbsenceLimitStatusResponse, error) {
+	return &attendance.AbsenceLimitStatusResponse{MaxLimitRate: 25.0}, nil
+}
 
 type mockScrutinyRepo struct {
 	mock.Mock

@@ -158,6 +158,9 @@ export default [
             { path: 'teacher/credits', component: () => import('@/pages/teacher/SchoolCredits.vue'), meta: { title: 'Credito Scolastico Triennio', titleKey: 'routeTitles.credits', roles: ['teacher', 'coordinator', 'vice_principal'] } },
             { path: 'teacher/support', component: () => import('@/pages/teacher/SupportRegister.vue'), meta: { title: 'Registro di Sostegno & PEI', titleKey: 'routeTitles.supportRegister', roles: ['teacher', 'coordinator', 'vice_principal'] } },
             { path: 'teacher/general-meetings', component: () => import('@/pages/teacher/GeneralMeetingLiveQueue.vue'), meta: { title: 'Ricevimento Generale Pomeridiano', titleKey: 'routeTitles.liveQueue', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/primary-eval', component: () => import('@/pages/teacher/PrimaryEval.vue'), meta: { title: 'Valutazione Descrittiva Primaria', titleKey: 'primaryEval.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/trips', component: () => import('@/pages/teacher/TripCompanion.vue'), meta: { title: 'Accompagnatore Viaggi & Uscite', titleKey: 'tripCompanion.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/may15', component: () => import('@/pages/teacher/May15Document.vue'), meta: { title: 'Documento del 15 Maggio', titleKey: 'may15.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { title: 'Pannello Studente', titleKey: 'routeTitles.studentPanel', roles: ['student'] } },

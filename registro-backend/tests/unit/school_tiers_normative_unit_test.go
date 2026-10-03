@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
-	"registro-backend/internal/admin"
-	"registro-backend/internal/schools"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"registro-backend/internal/admin"
+	"registro-backend/internal/schools"
 )
 
 func TestSchoolTiers_Normalization(t *testing.T) {

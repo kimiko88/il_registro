@@ -303,11 +303,25 @@
           <q-input
             v-model="justifyForm.notes"
             type="textarea"
-            rows="3"
+            rows="2"
             label="Note aggiuntive (opzionale)"
             outlined
             dense
           />
+          <q-input
+            v-model="justifyForm.pin"
+            type="password"
+            maxlength="6"
+            label="PIN Dispositivo / Firma Digitale *"
+            placeholder="Inserisci il tuo PIN dispositivo (es. 1234)"
+            outlined
+            dense
+            :rules="[val => !!val || 'PIN obbligatorio per la firma digitale della giustifica']"
+          >
+            <template v-slot:prepend>
+              <q-icon name="pin" color="primary" />
+            </template>
+          </q-input>
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md">
@@ -315,7 +329,8 @@
           <q-btn
             color="primary"
             unelevated
-            label="Conferma Giustifica"
+            icon="verified_user"
+            label="Conferma con PIN"
             :loading="submittingJustify"
             no-caps
             @click="submitJustify"
@@ -331,6 +346,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar, date as qdate } from 'quasar'
 import { useAttendanceStore } from '@/stores/attendance'
+import attendanceService from '@/services/attendanceService'
 import api from '@/services/api'
 import AbsenceLimitWidget from '@/components/Parent/AbsenceLimitWidget.vue'
 
@@ -454,7 +470,7 @@ function getPresenceColorClass(pct) {
 
 function openJustifyModal(att) {
   selectedAttendance.value = att
-  justifyForm.value = { reason: 'Malattia', notes: '' }
+  justifyForm.value = { reason: 'Malattia', notes: '', pin: '' }
   justifyModal.value = true
 }
 
@@ -462,17 +478,29 @@ async function submitJustify() {
   if (!selectedAttendance.value) return
   submittingJustify.value = true
   try {
-    await attendanceStore.justifyAbsence(
-      selectedChildId.value,
-      selectedAttendance.value.id,
-      justifyForm.value.reason,
-      justifyForm.value.notes
-    )
-    $q.notify({ type: 'positive', message: 'Assenza giustificata con successo' })
+    if (justifyForm.value.pin) {
+      await attendanceService.verifyPinAndJustify({
+        attendance_id: selectedAttendance.value.id,
+        pin: justifyForm.value.pin,
+        reason: justifyForm.value.reason,
+        notes: justifyForm.value.notes
+      })
+    } else {
+      await attendanceStore.justifyAbsence(
+        selectedChildId.value,
+        selectedAttendance.value.id,
+        justifyForm.value.reason,
+        justifyForm.value.notes
+      )
+    }
+    $q.notify({ type: 'positive', message: 'Assenza giustificata con successo mediante PIN dispositivo' })
     justifyModal.value = false
     await loadChildData()
-  } catch {
-    $q.notify({ type: 'negative', message: 'Errore durante l\'invio della giustifica' })
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.error || 'Errore durante la verifica del PIN o l\'invio della giustifica'
+    })
   } finally {
     submittingJustify.value = false
   }

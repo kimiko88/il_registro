@@ -240,9 +240,10 @@ const loadAttendanceData = async () => {
 
   loading.value = true
   try {
-    const [sumRes, attRes] = await Promise.allSettled([
+    const [sumRes, attRes, limRes] = await Promise.allSettled([
       attendanceService.getChildAttendanceSummary(props.studentId),
-      attendanceService.getChildAttendance(props.studentId)
+      attendanceService.getChildAttendance(props.studentId),
+      attendanceService.getAbsenceLimitStatus(props.studentId)
     ])
 
     if (sumRes.status === 'fulfilled' && sumRes.value?.data) {
@@ -251,6 +252,11 @@ const loadAttendanceData = async () => {
 
     if (attRes.status === 'fulfilled' && attRes.value?.data) {
       rawRecords.value = Array.isArray(attRes.value.data) ? attRes.value.data : (attRes.value.data.records || [])
+    }
+
+    if (limRes.status === 'fulfilled' && limRes.value?.data?.data) {
+      const data = limRes.value.data.data
+      if (data.total_school_hours) currentAnnualHours.value = data.total_school_hours
     }
   } catch (err) {
     console.warn('Could not load absence limit details', err)

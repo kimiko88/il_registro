@@ -101,3 +101,64 @@ type JustificationRequest struct {
 
 // Ensure time package is used (needed if time.Time appears in other DTOs).
 var _ = time.Now
+
+// --- School Meals & Parent PIN DTOs ---
+
+type StudentMealItem struct {
+	StudentID string `json:"student_id" binding:"required"`
+	MealType  string `json:"meal_type" binding:"required"` // standard, bianco, dieta_sanitaria, dieta_etico_religiosa, nessuno
+	MealNotes string `json:"meal_notes,omitempty"`
+}
+
+type SaveMealsBatchRequest struct {
+	ClassID string            `json:"class_id" binding:"required"`
+	Date    string            `json:"date" binding:"required"`
+	Meals   []StudentMealItem `json:"meals" binding:"required"`
+}
+
+type ClassMealsSummary struct {
+	ClassID         string `json:"class_id"`
+	ClassName       string `json:"class_name"`
+	TotalMeals      int    `json:"total_meals"`
+	StandardCount   int    `json:"standard_count"`
+	WhiteCount      int    `json:"white_count"`
+	HealthDietCount int    `json:"health_diet_count"`
+	EthicDietCount  int    `json:"ethic_diet_count"`
+}
+
+type StudentSpecialDietDetail struct {
+	StudentID   string `json:"student_id"`
+	StudentName string `json:"student_name"`
+	ClassName   string `json:"class_name"`
+	MealType    string `json:"meal_type"`
+	MealNotes   string `json:"meal_notes"`
+}
+
+type DailyMealsReportResponse struct {
+	Date                string                     `json:"date"`
+	SchoolID            string                     `json:"school_id"`
+	TotalMeals          int                        `json:"total_meals"`
+	StandardCount       int                        `json:"standard_count"`
+	WhiteCount          int                        `json:"white_count"`
+	HealthDietCount     int                        `json:"health_diet_count"`
+	EthicDietCount      int                        `json:"ethic_diet_count"`
+	ClassesBreakdown    []ClassMealsSummary        `json:"classes_breakdown"`
+	SpecialDietsDetails []StudentSpecialDietDetail `json:"special_diets_details"`
+}
+
+type VerifyPinAndJustifyRequest struct {
+	AttendanceID string `json:"attendance_id" binding:"required"`
+	Pin          string `json:"pin" binding:"required"`
+	Reason       string `json:"reason"`
+	Notes        string `json:"notes"`
+}
+
+type AbsenceLimitStatusResponse struct {
+	StudentID         string  `json:"student_id"`
+	TotalSchoolHours  int     `json:"total_school_hours"`
+	AbsentHours       int     `json:"absent_hours"`
+	AbsenceRate       float64 `json:"absence_rate"`
+	MaxLimitRate      float64 `json:"max_limit_rate"` // 25.0% (D.P.R. 122/2009)
+	IsExceedingLimit  bool    `json:"is_exceeding_limit"`
+	HealthDerogations int     `json:"health_derogations"`
+}

@@ -4,12 +4,12 @@ import "strings"
 
 // Canonical School Tiers in the Italian Education System
 const (
-	TierInfanzia              = "infanzia"
-	TierPrimaria              = "primaria"
-	TierSecondariaPrimoGrado  = "secondaria_primo_grado"
+	TierInfanzia               = "infanzia"
+	TierPrimaria               = "primaria"
+	TierSecondariaPrimoGrado   = "secondaria_primo_grado"
 	TierSecondariaSecondoGrado = "secondaria_secondo_grado"
-	TierComprensivo           = "comprensivo"
-	TierOmnicomprensivo       = "omnicomprensivo"
+	TierComprensivo            = "comprensivo"
+	TierOmnicomprensivo        = "omnicomprensivo"
 )
 
 // TierFeatures models the regulatory characteristics and capabilities of a school tier.
@@ -81,20 +81,20 @@ func GetTierFeatures(rawTier string) TierFeatures {
 	switch tier {
 	case TierInfanzia:
 		return TierFeatures{
-			Tier:               TierInfanzia,
-			Name:               "Scuola dell'Infanzia",
-			NormativeReference: "D.M. 254/2012 Indicazioni Nazionali per il curricolo",
-			EvaluationType:     "campi_esperienza",
-			HasGrades:          false,
-			HasCampiEsperienza: true,
-			HasDailyDiary:      true,
-			HasPrimaryLevels:   false,
+			Tier:                  TierInfanzia,
+			Name:                  "Scuola dell'Infanzia",
+			NormativeReference:    "D.M. 254/2012 Indicazioni Nazionali per il curricolo",
+			EvaluationType:        "campi_esperienza",
+			HasGrades:             false,
+			HasCampiEsperienza:    true,
+			HasDailyDiary:         true,
+			HasPrimaryLevels:      false,
 			HasLearningObjectives: false,
-			HasDeferredScrutiny: false,
-			HasSchoolCredits:   false,
-			HasPCTO:            false,
-			HasInvalsi:         false,
-			HasOrientamento:    false,
+			HasDeferredScrutiny:   false,
+			HasSchoolCredits:      false,
+			HasPCTO:               false,
+			HasInvalsi:            false,
+			HasOrientamento:       false,
 			CampiEsperienza: []string{
 				"Il sé e l'altro",
 				"Il corpo e il movimento",
