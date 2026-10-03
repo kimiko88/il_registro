@@ -94,6 +94,54 @@ ALTER TABLE primary_learning_objectives ENABLE ROW LEVEL SECURITY;
 ALTER TABLE primary_evaluations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE class_may15_documents ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY primary_learning_objectives_policy ON primary_learning_objectives FOR ALL TO authenticated, service_role USING (true) WITH CHECK (true);
-CREATE POLICY primary_evaluations_policy ON primary_evaluations FOR ALL TO authenticated, service_role USING (true) WITH CHECK (true);
-CREATE POLICY class_may15_documents_policy ON class_may15_documents FOR ALL TO authenticated, service_role USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS primary_learning_objectives_policy ON primary_learning_objectives;
+DROP POLICY IF EXISTS primary_learning_objectives_select_policy ON primary_learning_objectives;
+DROP POLICY IF EXISTS primary_learning_objectives_service_policy ON primary_learning_objectives;
+
+CREATE POLICY primary_learning_objectives_select_policy
+    ON primary_learning_objectives
+    FOR SELECT
+    TO authenticated, service_role
+    USING (true);
+
+CREATE POLICY primary_learning_objectives_service_policy
+    ON primary_learning_objectives
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS primary_evaluations_policy ON primary_evaluations;
+DROP POLICY IF EXISTS primary_evaluations_select_policy ON primary_evaluations;
+DROP POLICY IF EXISTS primary_evaluations_service_policy ON primary_evaluations;
+
+CREATE POLICY primary_evaluations_select_policy
+    ON primary_evaluations
+    FOR SELECT
+    TO authenticated, service_role
+    USING (true);
+
+CREATE POLICY primary_evaluations_service_policy
+    ON primary_evaluations
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS class_may15_documents_policy ON class_may15_documents;
+DROP POLICY IF EXISTS class_may15_documents_select_policy ON class_may15_documents;
+DROP POLICY IF EXISTS class_may15_documents_service_policy ON class_may15_documents;
+
+CREATE POLICY class_may15_documents_select_policy
+    ON class_may15_documents
+    FOR SELECT
+    TO authenticated, service_role
+    USING (true);
+
+CREATE POLICY class_may15_documents_service_policy
+    ON class_may15_documents
+    FOR ALL
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
+
