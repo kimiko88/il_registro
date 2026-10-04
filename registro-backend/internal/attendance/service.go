@@ -56,6 +56,11 @@ type Service interface {
 	GetChildUnjustified(ctx context.Context, parentID, studentID string) ([]Attendance, error)
 	JustifyChildAbsence(ctx context.Context, parentID, studentID, attendanceID string, req JustifyAbsenceRequest) error
 	GetChildAttendanceStats(ctx context.Context, parentID, studentID string) (*AttendanceStats, error)
+
+	SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error
+	GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error)
+	VerifyPinAndJustify(ctx context.Context, parentID string, req VerifyPinAndJustifyRequest) error
+	GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error)
 }
 
 type service struct {
@@ -1124,4 +1129,51 @@ func countWeekdays(start, end time.Time) int {
 		}
 	}
 	return weekdays
+}
+
+func (s *service) SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error {
+	if classID == "" || date == "" {
+		return errors.New("classe e data sono campi obbligatori per la prenotazione pasti")
+	}
+	validTypes := map[string]bool{
+		"standard":              true,
+		"bianco":                true,
+		"dieta_sanitaria":       true,
+		"dieta_etico_religiosa": true,
+		"nessuno":               true,
+	}
+	for _, m := range meals {
+		if !validTypes[m.MealType] {
+			return fmt.Errorf("tipologia pasto non valida: %s (consentiti: standard, bianco, dieta_sanitaria, dieta_etico_religiosa, nessuno)", m.MealType)
+		}
+	}
+	return s.repo.SaveMealsBatch(ctx, classID, date, meals)
+}
+
+func (s *service) GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error) {
+	if schoolID == "" || date == "" {
+		return nil, errors.New("scuola e data obbligatorie per il report centro cottura")
+	}
+	return s.repo.GetDailyMealsReport(ctx, schoolID, date)
+}
+
+func (s *service) VerifyPinAndJustify(ctx context.Context, parentID string, req VerifyPinAndJustifyRequest) error {
+	if len(req.Pin) < 4 {
+		return errors.New("PIN dispositivo non valido: deve contenere almeno 4 cifre")
+	}
+	if req.AttendanceID == "" {
+		return errors.New("ID record presenza mancante")
+	}
+	reason := req.Reason
+	if reason == "" {
+		reason = "Giustificato da genitore con PIN dispositivo"
+	}
+	return s.repo.VerifyPinAndJustifyAbsence(ctx, req.AttendanceID, parentID, reason, req.Notes)
+}
+
+func (s *service) GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error) {
+	if studentID == "" {
+		return nil, errors.New("ID studente obbligatorio")
+	}
+	return s.repo.GetAbsenceLimitStatus(ctx, studentID)
 }

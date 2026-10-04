@@ -21,13 +21,18 @@ type EducationalTrip struct {
 }
 
 type TripConsent struct {
-	ID        string    `json:"id" db:"id"`
-	TripID    string    `json:"trip_id" db:"trip_id"`
-	StudentID string    `json:"student_id" db:"student_id"`
-	ParentID  *string   `json:"parent_id,omitempty" db:"parent_id"`
-	Status    string    `json:"status" db:"status"` // 'granted', 'denied'
-	SignedAt  time.Time `json:"signed_at" db:"signed_at"`
-	IPAddress string    `json:"ip_address,omitempty" db:"ip_address"`
+	ID             string    `json:"id" db:"id"`
+	TripID         string    `json:"trip_id" db:"trip_id"`
+	StudentID      string    `json:"student_id" db:"student_id"`
+	ParentID       *string   `json:"parent_id,omitempty" db:"parent_id"`
+	Status         string    `json:"status" db:"status"` // 'granted', 'denied'
+	SignedAt       time.Time `json:"signed_at" db:"signed_at"`
+	IPAddress      string    `json:"ip_address,omitempty" db:"ip_address"`
+	PinVerified    bool      `json:"pin_verified" db:"pin_verified"`
+	DietaryNotes   string    `json:"dietary_notes" db:"dietary_notes"`
+	MedicalNotes   string    `json:"medical_notes" db:"medical_notes"`
+	EmergencyPhone string    `json:"emergency_phone" db:"emergency_phone"`
+	PaymentStatus  string    `json:"payment_status" db:"payment_status"`
 
 	// Joined
 	StudentName string `json:"student_name,omitempty"`
@@ -45,7 +50,12 @@ type CreateTripRequest struct {
 }
 
 type SubmitConsentRequest struct {
-	TripID    string `json:"trip_id" binding:"required"`
-	StudentID string `json:"student_id" binding:"required"`
-	Status    string `json:"status" binding:"required"` // 'granted', 'denied'
+	TripID         string `json:"trip_id" binding:"required"`
+	StudentID      string `json:"student_id" binding:"required"`
+	Status         string `json:"status" binding:"required"` // 'granted', 'denied'
+	Pin            string `json:"pin"`
+	DietaryNotes   string `json:"dietary_notes"`
+	MedicalNotes   string `json:"medical_notes"`
+	EmergencyPhone string `json:"emergency_phone"`
+	PaymentStatus  string `json:"payment_status"`
 }

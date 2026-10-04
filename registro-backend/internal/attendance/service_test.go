@@ -168,6 +168,18 @@ func (m *MockAttendanceRepo) GetStudentAttendanceStats(studentID string) (*Atten
 	}
 	return args.Get(0).(*AttendanceStats), args.Error(1)
 }
+func (m *MockAttendanceRepo) SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error {
+	return nil
+}
+func (m *MockAttendanceRepo) GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error) {
+	return &DailyMealsReportResponse{}, nil
+}
+func (m *MockAttendanceRepo) VerifyPinAndJustifyAbsence(ctx context.Context, attendanceID, parentID, reason, notes string) error {
+	return nil
+}
+func (m *MockAttendanceRepo) GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error) {
+	return &AbsenceLimitStatusResponse{StudentID: studentID}, nil
+}
 
 type MockUserRepo struct {
 	mock.Mock

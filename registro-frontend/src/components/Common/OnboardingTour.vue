@@ -201,6 +201,19 @@
                   <q-icon name="lightbulb" color="amber-7" size="16px" />
                   <span>{{ activeStep.tip }}</span>
                 </div>
+
+                <!-- Direct link to section -->
+                <div v-if="activeStep.route" class="step-route-action q-mt-md">
+                  <q-btn
+                    outline
+                    size="sm"
+                    :color="activeStep.color"
+                    icon="open_in_new"
+                    :label="t('onboardingExtra.goToSection')"
+                    class="rounded-borders btn-goto-section"
+                    @click="navigateTo(activeStep.route)"
+                  />
+                </div>
               </div>
             </transition>
 
@@ -257,6 +270,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from '@/stores/auth'
@@ -266,6 +280,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue', 'completed', 'open-guide'])
 
+const router = useRouter()
 const { t, tm, te } = useI18n()
 const $q = useQuasar()
 const authStore = useAuthStore()
@@ -334,90 +349,90 @@ const roleLabel   = computed(() => t(roleMeta[userRole.value]?.label || 'roles.u
 // ── Steps definition ─────────────────────────────────────────────────────────
 const STEP_DEFS = {
   principal: [
-    { icon: 'dashboard',         color: 'deep-purple' },
-    { icon: 'manage_accounts',   color: 'indigo' },
-    { icon: 'verified',          color: 'teal' },
-    { icon: 'swap_horiz',        color: 'orange' },
-    { icon: 'gavel',             color: 'blue' },
-    { icon: 'assessment',        color: 'purple' }
+    { icon: 'dashboard',         color: 'deep-purple', route: '/' },
+    { icon: 'manage_accounts',   color: 'indigo',      route: '/secretary/users' },
+    { icon: 'verified',          color: 'teal',        route: '/ata/personnel-desk' },
+    { icon: 'swap_horiz',        color: 'orange',      route: '/secretary/substitutions' },
+    { icon: 'gavel',             color: 'blue',        route: '/secretary/verbali' },
+    { icon: 'assessment',        color: 'purple',      route: '/secretary/reports' }
   ],
   teacher: [
-    { icon:'dashboard',       color:'indigo'  },
-    { icon:'menu_book',       color:'blue'    },
-    { icon:'grade',           color:'green'   },
-    { icon:'event',           color:'orange'  },
-    { icon:'people',          color:'purple'  },
-    { icon:'settings',        color:'grey'    },
-    { icon:'draw',            color:'cyan'    },
-    { icon:'workspace_premium', color:'amber' }
+    { icon:'dashboard',          color:'indigo',       route: '/' },
+    { icon:'menu_book',          color:'blue',         route: '/teacher/classes' },
+    { icon:'grade',              color:'green',        route: '/teacher/grades' },
+    { icon:'event',              color:'orange',       route: '/teacher/agenda' },
+    { icon:'people',             color:'purple',       route: '/teacher/colloqui' },
+    { icon:'settings',           color:'grey',         route: '/teacher/settings' },
+    { icon:'draw',               color:'cyan',         route: '/teacher/lessons' },
+    { icon:'workspace_premium',  color:'amber',        route: '/teacher/competencies' }
   ],
   student: [
-    { icon:'dashboard',       color:'teal'    },
-    { icon:'grade',           color:'green'   },
-    { icon:'event_available', color:'blue'    },
-    { icon:'assignment',      color:'orange'  },
-    { icon:'description',     color:'purple'  },
-    { icon:'calendar_month',  color:'red'     },
-    { icon:'work',            color:'cyan'    },
-    { icon:'campaign',        color:'pink'    }
+    { icon:'dashboard',          color:'teal',         route: '/' },
+    { icon:'grade',              color:'green',        route: '/student/grades' },
+    { icon:'event_available',    color:'blue',         route: '/student/attendance' },
+    { icon:'assignment',         color:'orange',       route: '/student/homework' },
+    { icon:'description',        color:'purple',       route: '/student/documents' },
+    { icon:'calendar_month',     color:'red',          route: '/student/timetable' },
+    { icon:'work',               color:'cyan',         route: '/student/pcto' },
+    { icon:'campaign',           color:'pink',         route: '/student/communications' }
   ],
   parent: [
-    { icon:'dashboard',       color:'purple'  },
-    { icon:'child_care',      color:'pink'    },
-    { icon:'grade',           color:'green'   },
-    { icon:'campaign',        color:'blue'    },
-    { icon:'meeting_room',    color:'orange'  },
-    { icon:'payment',         color:'teal'    },
-    { icon:'verified_user',   color:'indigo'  },
-    { icon:'analytics',       color:'red'     }
+    { icon:'dashboard',          color:'purple',       route: '/' },
+    { icon:'child_care',         color:'pink',         route: '/parent/children' },
+    { icon:'grade',              color:'green',        route: '/parent/grades' },
+    { icon:'campaign',           color:'blue',         route: '/parent/communications' },
+    { icon:'meeting_room',       color:'orange',       route: '/parent/colloqui' },
+    { icon:'payment',            color:'teal',         route: '/parent/payments' },
+    { icon:'verified_user',      color:'indigo',       route: '/parent/attendance' },
+    { icon:'analytics',          color:'red',          route: '/parent/grades' }
   ],
   secretary: [
-    { icon:'dashboard',       color:'orange'  },
-    { icon:'groups',          color:'indigo'  },
-    { icon:'verified',        color:'green'   },
-    { icon:'schedule',        color:'blue'    },
-    { icon:'assessment',      color:'purple'  },
-    { icon:'manage_accounts', color:'red'     },
-    { icon:'badge',           color:'cyan'    },
-    { icon:'newspaper',       color:'teal'    }
+    { icon:'dashboard',          color:'orange',       route: '/' },
+    { icon:'groups',             color:'indigo',       route: '/secretary/classes' },
+    { icon:'verified',           color:'green',        route: '/secretary/certificates' },
+    { icon:'schedule',           color:'blue',         route: '/secretary/timetable' },
+    { icon:'assessment',         color:'purple',       route: '/secretary/reports' },
+    { icon:'manage_accounts',    color:'red',          route: '/secretary/users' },
+    { icon:'badge',              color:'cyan',         route: '/secretary/students' },
+    { icon:'newspaper',          color:'teal',         route: '/secretary/communications' }
   ],
   admin: [
-    { icon:'dashboard',       color:'red'     },
-    { icon:'monitor_heart',   color:'orange'  },
-    { icon:'manage_accounts', color:'blue'    },
-    { icon:'analytics',       color:'green'   },
-    { icon:'security',        color:'purple'  },
-    { icon:'settings',        color:'grey'    },
-    { icon:'corporate_fare',  color:'indigo'  },
-    { icon:'api',             color:'cyan'    }
+    { icon:'dashboard',          color:'red',          route: '/' },
+    { icon:'monitor_heart',      color:'orange',       route: '/admin/monitoring' },
+    { icon:'manage_accounts',    color:'blue',         route: '/admin/users' },
+    { icon:'analytics',          color:'green',        route: '/admin/analytics' },
+    { icon:'security',           color:'purple',       route: '/admin/audit-logs' },
+    { icon:'settings',           color:'grey',         route: '/admin/settings' },
+    { icon:'corporate_fare',     color:'indigo',       route: '/admin/schools' },
+    { icon:'api',                color:'cyan',         route: '/admin/settings' }
   ],
   assistente_amministrativo: [
-    { icon: 'dashboard',        color: 'cyan' },
-    { icon: 'calendar_month',   color: 'blue' },
-    { icon: 'forward_to_inbox', color: 'purple' },
-    { icon: 'cloud_sync',       color: 'indigo' },
-    { icon: 'gavel',            color: 'teal' }
+    { icon: 'dashboard',         color: 'cyan',        route: '/ata' },
+    { icon: 'calendar_month',    color: 'blue',        route: '/ata/timecard' },
+    { icon: 'forward_to_inbox',  color: 'purple',      route: '/ata/personnel-desk' },
+    { icon: 'cloud_sync',        color: 'indigo',      route: '/secretary/sidi' },
+    { icon: 'gavel',             color: 'teal',        route: '/secretary/verbali' }
   ],
   collaboratore_ds: [
-    { icon: 'dashboard',        color: 'amber' },
-    { icon: 'bolt',             color: 'red' },
-    { icon: 'swap_horiz',       color: 'blue' },
-    { icon: 'co_present',       color: 'orange' },
-    { icon: 'gavel',            color: 'purple' }
+    { icon: 'dashboard',         color: 'amber',       route: '/ata' },
+    { icon: 'bolt',              color: 'red',         route: '/ata/emergency-substitutions' },
+    { icon: 'swap_horiz',        color: 'blue',        route: '/secretary/substitutions' },
+    { icon: 'co_present',        color: 'orange',      route: '/ata/strike' },
+    { icon: 'gavel',             color: 'purple',      route: '/secretary/verbali' }
   ],
   collaboratore_scolastico: [
-    { icon: 'dashboard',        color: 'teal' },
-    { icon: 'door_front',       color: 'blue' },
-    { icon: 'logout',           color: 'orange' },
-    { icon: 'build',            color: 'red' },
-    { icon: 'badge',            color: 'green' }
+    { icon: 'dashboard',         color: 'teal',        route: '/ata' },
+    { icon: 'door_front',        color: 'blue',        route: '/ata/visitor-registry' },
+    { icon: 'logout',            color: 'orange',      route: '/ata/visitor-registry' },
+    { icon: 'build',             color: 'red',         route: '/ata/maintenance' },
+    { icon: 'badge',             color: 'green',       route: '/ata/timecard' }
   ],
   dsga: [
-    { icon: 'dashboard',        color: 'deep-orange' },
-    { icon: 'assessment',       color: 'blue' },
-    { icon: 'verified',         color: 'green' },
-    { icon: 'cloud_sync',       color: 'indigo' },
-    { icon: 'gavel',            color: 'purple' }
+    { icon: 'dashboard',         color: 'deep-orange', route: '/ata' },
+    { icon: 'assessment',        color: 'blue',        route: '/ata/timecard' },
+    { icon: 'verified',          color: 'green',       route: '/ata/personnel-desk' },
+    { icon: 'cloud_sync',        color: 'indigo',      route: '/secretary/sidi' },
+    { icon: 'gavel',             color: 'purple',      route: '/ata/strike' }
   ]
 }
 
@@ -440,6 +455,7 @@ const tourSteps = computed(() => {
     return {
       icon:    d.icon,
       color:   d.color,
+      route:   d.route,
       title:   t(titleKey),
       desc:    t(descKey),
       bullets
@@ -501,6 +517,13 @@ function completeTour() {
 function openGuideAndComplete() {
   completeTour()
   emit('open-guide')
+}
+
+function navigateTo(route) {
+  completeTour()
+  if (route) {
+    router.push(route)
+  }
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -1021,6 +1044,22 @@ function floatIconStyle(i) {
   background: #2d2a1e;
   border-color: #92400e;
   color: #fde68a;
+}
+
+.step-route-action {
+  display: flex;
+  align-items: center;
+}
+.btn-goto-section {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.2px;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+.btn-goto-section:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* Navigation */

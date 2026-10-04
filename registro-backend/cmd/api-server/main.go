@@ -32,13 +32,19 @@ import (
 	"registro-backend/internal/didactic_materials"
 	"registro-backend/internal/documents"
 	"registro-backend/internal/elearning"
+	"registro-backend/internal/elections"
+	"registro-backend/internal/enrollment"
 	"registro-backend/internal/extracurricular"
+	"registro-backend/internal/family_desk"
 	"registro-backend/internal/general_meetings"
 	"registro-backend/internal/grades"
 	"registro-backend/internal/groups"
 	"registro-backend/internal/handler"
+	"registro-backend/internal/helpdesk"
 	"registro-backend/internal/lessons"
 	"registro-backend/internal/mailer"
+	"registro-backend/internal/may15"
+	"registro-backend/internal/middleschoolexam"
 	"registro-backend/internal/middleware"
 	"registro-backend/internal/notes"
 	"registro-backend/internal/notifications"
@@ -46,12 +52,15 @@ import (
 	"registro-backend/internal/parents"
 	"registro-backend/internal/payments"
 	"registro-backend/internal/pcto"
+	"registro-backend/internal/pcto_tutor"
 	"registro-backend/internal/pdfworker"
 	"registro-backend/internal/pdp"
 	"registro-backend/internal/personnel_desk"
-
 	"registro-backend/internal/postgres"
+	"registro-backend/internal/primaryeval"
+	"registro-backend/internal/protocol"
 	"registro-backend/internal/recovery"
+	"registro-backend/internal/religion_alternative"
 	"registro-backend/internal/reports"
 	"registro-backend/internal/rooms"
 	"registro-backend/internal/rubrics"
@@ -550,6 +559,12 @@ func main() {
 			parentsRepo := parents.NewRepository(database)
 			parentsSvc := parents.NewService(parentsRepo, usersRepo, gradesRepo, attendanceRepo, commsRepo)
 			parentsH := parents.NewHandler(parentsSvc)
+			if pgRepo, ok := parentsRepo.(parents.DualSignatureRepository); ok {
+				dualSvc := parents.NewDualSignatureService(pgRepo)
+				accessGuard := parents.NewAccessGuard(pgRepo)
+				parentsH.SetDualSignatureService(dualSvc)
+				parentsH.SetAccessGuard(accessGuard)
+			}
 			parentsH.RegisterRoutes(protected)
 
 			creditsRepo := credits.NewRepository(database)
@@ -575,6 +590,16 @@ func main() {
 			tenantsSvc := tenants.NewService(tenantsRepo)
 			tenantsH := tenants.NewHandler(tenantsSvc)
 			tenantsH.RegisterRoutes(protected)
+
+			enrollmentRepo := enrollment.NewRepository(database)
+			enrollmentSvc := enrollment.NewService(enrollmentRepo)
+			enrollmentH := enrollment.NewHandler(enrollmentSvc)
+			enrollmentH.RegisterRoutes(protected)
+
+			examRepo := middleschoolexam.NewRepository(database)
+			examSvc := middleschoolexam.NewService(examRepo)
+			examH := middleschoolexam.NewHandler(examSvc)
+			examH.RegisterRoutes(protected)
 
 			certRepo := certificates.NewRepository(database)
 			certSvc := certificates.NewService(certRepo, usersRepo)
@@ -630,6 +655,54 @@ func main() {
 
 			// Sportello Digitale Personale
 			deskH.RegisterRoutes(protected)
+
+			// Valutazione Primaria (O.M. 172/2020 — Giudizi Descrittivi & Obiettivi di Apprendimento)
+			primaryEvalRepo := primaryeval.NewRepository(database)
+			primaryEvalSvc := primaryeval.NewService(primaryEvalRepo)
+			primaryEvalH := primaryeval.NewHandler(primaryEvalSvc)
+			primaryEvalH.RegisterRoutes(protected)
+
+			// Documento del 15 Maggio (Art. 17 D.Lgs. 62/2017 - Esami di Stato Classe 5ª)
+			may15Repo := may15.NewRepository(database)
+			may15Svc := may15.NewService(may15Repo)
+			may15H := may15.NewHandler(may15Svc)
+			may15H.RegisterRoutes(protected)
+
+			// Materia Alternativa all'IRC (Architettura Nativa a Gruppi)
+			religionAltRepo := religion_alternative.NewPostgresRepository(database)
+			religionAltSvc := religion_alternative.NewService(religionAltRepo)
+			religionAltH := religion_alternative.NewHandler(religionAltSvc)
+			religionAltH.RegisterRoutes(protected)
+
+			// Sportello Digitale Istanze Famiglie & Delegati Permanenti
+			familyDeskRepo := family_desk.NewPostgresRepository(database)
+			familyDeskSvc := family_desk.NewService(familyDeskRepo)
+			familyDeskH := family_desk.NewHandler(familyDeskSvc)
+			familyDeskH.RegisterRoutes(protected)
+
+			// Portale Esterno Tutor Aziendale PCTO
+			pctoTutorRepo := pcto_tutor.NewPostgresRepository(database)
+			pctoTutorSvc := pcto_tutor.NewService(pctoTutorRepo)
+			pctoTutorH := pcto_tutor.NewHandler(pctoTutorSvc)
+			pctoTutorH.RegisterRoutes(api)
+
+			// Elezioni Organi Collegiali (Urna Digitale & Voto Online Anonimo)
+			electionsRepo := elections.NewPostgresRepository(database)
+			electionsSvc := elections.NewService(electionsRepo)
+			electionsH := elections.NewHandler(electionsSvc)
+			electionsH.RegisterRoutes(protected)
+
+			// Sportello Help Didattico Pomeridiano e Rendicontazione FIS
+			helpDeskRepo := helpdesk.NewPostgresRepository(database)
+			helpDeskSvc := helpdesk.NewService(helpDeskRepo)
+			helpDeskH := helpdesk.NewHandler(helpDeskSvc)
+			helpDeskH.RegisterRoutes(protected)
+
+			// Titolario & Protocollo Ufficiale AgID
+			protocolRepo := protocol.NewPostgresRepository(database)
+			protocolSvc := protocol.NewService(protocolRepo)
+			protocolH := protocol.NewHandler(protocolSvc)
+			protocolH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}

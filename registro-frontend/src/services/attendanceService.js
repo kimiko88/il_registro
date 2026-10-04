@@ -44,6 +44,18 @@ export const attendanceService = {
     async getStudentSummary(studentId) {
         const res = await api.get(`/attendance/students/${studentId}/summary`)
         return res.data
+    },
+    async saveMealsBatch(data) {
+        return api.post('/attendance/meals/batch', data)
+    },
+    async getDailyMealsReport(date) {
+        return api.get('/attendance/meals/report', { params: { date } })
+    },
+    async verifyPinAndJustify(data) {
+        return api.post('/attendance/verify-pin-and-justify', data)
+    },
+    async getAbsenceLimitStatus(studentId) {
+        return api.get(`/attendance/absence-limit-status/${studentId}`)
     }
 }
 

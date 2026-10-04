@@ -83,6 +83,29 @@
       </div>
     </q-banner>
 
+    <!-- Primary School Descriptive Evaluation Alert & Switcher (O.M. 172/2020) -->
+    <q-banner v-if="selectedClassId && isPrimaryClass" class="rounded-xl border q-mb-md shadow-soft" :class="$q.dark.isActive ? 'bg-indigo-10 text-indigo-1 border-indigo-8' : 'bg-indigo-50 text-indigo-10 border-indigo-200'">
+      <template v-slot:avatar>
+        <q-icon name="menu_book" color="primary" size="32px" />
+      </template>
+      <div class="text-weight-bold text-subtitle1">
+        Scuola Primaria — Valutazione Descrittiva per Obiettivi (O.M. 172/2020 & DDL Valditara)
+      </div>
+      <div class="text-caption q-mt-xs">
+        Per la Scuola Primaria la normativa ministeriale non consente la scala numerica decimale 1-10 ma la valutazione descrittiva a 4 livelli (Avanzato, Intermedio, Base, In via di prima acquisizione) per ciascun obiettivo di apprendimento.
+      </div>
+      <template v-slot:action>
+        <q-btn
+          unelevated
+          color="primary"
+          icon="auto_stories"
+          label="Apri Registro Valutazione Primaria"
+          class="q-px-md text-weight-bold rounded-lg"
+          @click="router.push('/teacher/primary-eval')"
+        />
+      </template>
+    </q-banner>
+
     <!-- Main Content Area -->
     <div v-if="selectedClassId">
         
@@ -253,18 +276,33 @@ import { useQuasar, date } from 'quasar';
 import SkeletonTable from '@/components/Common/SkeletonTable.vue';
 import { useUndoToast } from '@/composables/useUndoToast';
 import { useSchoolYearStore } from '@/stores/schoolYear';
+import { useSchoolStore } from '@/stores/schools';
+import { useRouter } from 'vue-router';
 import { ITALIAN_GRADE_OPTIONS, formatGrade } from '@/utils/gradeUtils';
 
 const $q = useQuasar();
 const { t } = useI18n();
+const router = useRouter();
 useUndoToast();
 const classesStore = useClassesStore();
 const gradesStore = useGradesStore();
 const authStore = useAuthStore();
 const schoolYearStore = useSchoolYearStore();
+const schoolStore = useSchoolStore();
 
 const selectedClassId = ref(null);
 const selectedSubject = ref(null);
+
+const currentClassObj = computed(() => {
+  return classesStore.classes.find(c => c.id === selectedClassId.value);
+});
+
+const isPrimaryClass = computed(() => {
+  if (currentClassObj.value?.school_level === 'primaria') return true;
+  if (currentClassObj.value?.name?.toLowerCase().includes('primaria')) return true;
+  if (schoolStore.currentSchoolTier === 'primaria') return true;
+  return false;
+});
 
 const isCivicaSubject = (s) => {
   const name = (s.subject_name || s.name || '').toLowerCase();

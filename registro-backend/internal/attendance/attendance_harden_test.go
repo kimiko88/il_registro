@@ -125,6 +125,19 @@ func (m *mockServiceForHardenTest) GetChildAttendanceStats(ctx context.Context, 
 	return args.Get(0).(*AttendanceStats), args.Error(1)
 }
 
+func (m *mockServiceForHardenTest) SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error {
+	return nil
+}
+func (m *mockServiceForHardenTest) GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error) {
+	return &DailyMealsReportResponse{}, nil
+}
+func (m *mockServiceForHardenTest) VerifyPinAndJustify(ctx context.Context, parentID string, req VerifyPinAndJustifyRequest) error {
+	return nil
+}
+func (m *mockServiceForHardenTest) GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error) {
+	return &AbsenceLimitStatusResponse{StudentID: studentID}, nil
+}
+
 func TestGetAnalytics_RequiresUserID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockSvc := new(mockServiceForHardenTest)

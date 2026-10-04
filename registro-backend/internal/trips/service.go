@@ -115,12 +115,22 @@ func (s *Service) SubmitConsent(ctx context.Context, actorID, actorRole, ipAddre
 		parentID = &actorID
 	}
 
+	paymentStatus := req.PaymentStatus
+	if paymentStatus == "" {
+		paymentStatus = "unpaid"
+	}
+
 	c := &TripConsent{
-		TripID:    req.TripID,
-		StudentID: req.StudentID,
-		ParentID:  parentID,
-		Status:    req.Status,
-		IPAddress: ipAddress,
+		TripID:         req.TripID,
+		StudentID:      req.StudentID,
+		ParentID:       parentID,
+		Status:         req.Status,
+		IPAddress:      ipAddress,
+		PinVerified:    req.Pin != "",
+		DietaryNotes:   req.DietaryNotes,
+		MedicalNotes:   req.MedicalNotes,
+		EmergencyPhone: req.EmergencyPhone,
+		PaymentStatus:  paymentStatus,
 	}
 
 	return s.repo.SubmitConsent(ctx, c)

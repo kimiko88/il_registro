@@ -16,6 +16,12 @@ export const schoolService = {
     deleteSchool(id) {
         return api.delete(`/schools/${id}`);
     },
+    getTiers() {
+        return api.get('/schools/tiers');
+    },
+    getTierFeatures(id) {
+        return api.get(`/schools/${id}/tier-features`);
+    },
     importSchools(file) {
         const formData = new FormData();
         formData.append('file', file);

@@ -84,6 +84,18 @@ func (m *MockAttRepo) IsTeacherSubstitute(ctx context.Context, teacherID, classI
 func (m *MockAttRepo) HasOverlappingJustification(ctx context.Context, studentID string, startDate, endDate time.Time) (bool, error) {
 	return false, nil
 }
+func (m *MockAttRepo) SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error {
+	return nil
+}
+func (m *MockAttRepo) GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error) {
+	return &DailyMealsReportResponse{}, nil
+}
+func (m *MockAttRepo) VerifyPinAndJustifyAbsence(ctx context.Context, attendanceID, parentID, reason, notes string) error {
+	return nil
+}
+func (m *MockAttRepo) GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error) {
+	return &AbsenceLimitStatusResponse{StudentID: studentID}, nil
+}
 
 func TestRegression_FutureAttendance(t *testing.T) {
 	repo := &MockAttRepo{}

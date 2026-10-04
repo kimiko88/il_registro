@@ -133,6 +133,18 @@ func (m *mockRepo) GetMonthlyBreakdown(_ context.Context, _ string, _ string) ([
 func (m *mockRepo) GetStudentAttendanceStats(_ string) (*AttendanceStats, error) {
 	return &AttendanceStats{}, nil
 }
+func (m *mockRepo) SaveMealsBatch(_ context.Context, _ string, _ string, _ []StudentMealItem) error {
+	return nil
+}
+func (m *mockRepo) GetDailyMealsReport(_ context.Context, _ string, _ string) (*DailyMealsReportResponse, error) {
+	return &DailyMealsReportResponse{}, nil
+}
+func (m *mockRepo) VerifyPinAndJustifyAbsence(_ context.Context, _, _, _, _ string) error {
+	return nil
+}
+func (m *mockRepo) GetAbsenceLimitStatus(_ context.Context, _ string) (*AbsenceLimitStatusResponse, error) {
+	return &AbsenceLimitStatusResponse{MaxLimitRate: 25.0}, nil
+}
 
 // mockUserRepo satisfies users.Repository with configurable stubs.
 type mockUserRepo struct {

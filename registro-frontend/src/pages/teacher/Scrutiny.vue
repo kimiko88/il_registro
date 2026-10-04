@@ -44,6 +44,9 @@
       </template>
       <div class="text-weight-bold text-subtitle1">{{ $t('help.teacher.scrutiny.deferredBannerTitle') }}</div>
       <div class="text-body2">{{ $t('help.teacher.scrutiny.deferredBannerBody') }}</div>
+      <div class="text-caption text-deep-orange-9 q-mt-xs text-weight-medium">
+        Normativa: O.M. 92/2007 (Sessione di recupero debiti formativi estivi e scioglimento della riserva).
+      </div>
     </q-banner>
 
     <div v-if="!selectedClassId" class="flex flex-center" style="height: 60vh">
@@ -180,7 +183,27 @@
                 <q-btn flat round dense icon="warning" color="amber-9" @click="openDeficiencyModal(props.row)">
                   <q-tooltip>{{ $t('scrutinyPage.deficiencySubtitle') }}</q-tooltip>
                 </q-btn>
-                <q-btn v-if="period === 2 || period === 3 || ['Sospeso', 'Giudizio Sospeso'].includes(props.row.record?.final_decision)" flat round dense icon="event_repeat" color="deep-orange" @click="openDeferredModal(props.row)">
+                <q-btn
+                  v-if="period === 3"
+                  color="deep-orange-8"
+                  icon="how_to_reg"
+                  :label="$t('scrutinyPage.resolveReservation') || 'Sciogli Riserva'"
+                  unelevated
+                  dense
+                  class="q-px-sm rounded-borders text-weight-bold"
+                  @click="openDeferredModal(props.row)"
+                >
+                  <q-tooltip>{{ $t('help.teacher.scrutiny.deferredAction') }}</q-tooltip>
+                </q-btn>
+                <q-btn
+                  v-else-if="period === 2 || ['Sospeso', 'Giudizio Sospeso'].includes(props.row.record?.final_decision)"
+                  flat
+                  round
+                  dense
+                  icon="event_repeat"
+                  color="deep-orange"
+                  @click="openDeferredModal(props.row)"
+                >
                   <q-tooltip>{{ $t('help.teacher.scrutiny.deferredScrutiny') }}</q-tooltip>
                 </q-btn>
               </q-td>
@@ -348,11 +371,27 @@ const schoolYearStore = useSchoolYearStore()
 
 const selectedClassId = ref(null)
 const period = ref(1)
-const periodOptions = computed(() => [
-  { label: t('help.teacher.scrutiny.period1'), value: 1 },
-  { label: t('help.teacher.scrutiny.period2'), value: 2 },
-  { label: t('help.teacher.scrutiny.deferredScrutiny'), value: 3 }
-])
+const calendarPeriods = ref([])
+const periodOptions = computed(() => {
+  const base = calendarPeriods.value.length > 0
+    ? calendarPeriods.value.map((p, index) => ({
+        label: p.name || `Periodo ${index + 1}`,
+        value: p.period || p.value || (index + 1)
+      }))
+    : [
+        { label: t('help.teacher.scrutiny.period1') || 'Scrutinio 1° Semestre', value: 1 },
+        { label: t('help.teacher.scrutiny.period2') || 'Scrutinio 2° Semestre / Finale', value: 2 }
+      ]
+
+  // Normativa O.M. 92/2007: Scrutinio Differito (Debiti formativi) è il Periodo 3
+  if (!base.some(p => p.value === 3)) {
+    base.push({
+      label: t('help.teacher.scrutiny.deferredScrutiny') || 'Scrutinio Differito (Debiti)',
+      value: 3
+    })
+  }
+  return base
+})
 const loading = ref(false)
 const saving = ref(false)
 const matrix = ref({})
@@ -430,10 +469,7 @@ onMounted(async () => {
   try {
     const res = await api.get('/school-calendar/periods')
     if (res.data && res.data.length > 0) {
-      periodOptions.value = res.data.map((p, index) => ({
-        label: p.name,
-        value: p.period || p.value || (index + 1)
-      }))
+      calendarPeriods.value = res.data
     }
   } catch { /* fallback */ }
 })

@@ -28,6 +28,7 @@ type mockIntegrationTimetableRepo struct {
 	assignments      []timetablegen.AssignmentData
 	rooms            []timetablegen.RoomData
 	associatedGroups []timetablegen.AssociatedGroup
+	quickPrefs       []timetablegen.TeacherQuickPreferenceItem
 }
 
 func newMockIntegrationTimetableRepo() *mockIntegrationTimetableRepo {
@@ -286,10 +287,32 @@ func (m *mockIntegrationTimetableRepo) InheritAllClassesCurriculumPlans(ctx cont
 }
 
 func (m *mockIntegrationTimetableRepo) GetTeachersQuickPreferences(ctx context.Context, schoolID string, academicYearID *string) ([]timetablegen.TeacherQuickPreferenceItem, map[int]int, error) {
-	return nil, nil, nil
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	counts := make(map[int]int)
+	for _, item := range m.quickPrefs {
+		if item.DayOff >= 1 && item.DayOff <= 6 {
+			counts[item.DayOff]++
+		}
+	}
+	return m.quickPrefs, counts, nil
 }
 
 func (m *mockIntegrationTimetableRepo) SaveTeacherQuickPreferences(ctx context.Context, schoolID string, academicYearID *string, items []timetablegen.TeacherQuickPreferenceItem) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	itemMap := make(map[string]timetablegen.TeacherQuickPreferenceItem)
+	for _, ex := range m.quickPrefs {
+		itemMap[ex.TeacherID] = ex
+	}
+	for _, it := range items {
+		itemMap[it.TeacherID] = it
+	}
+	var updated []timetablegen.TeacherQuickPreferenceItem
+	for _, it := range itemMap {
+		updated = append(updated, it)
+	}
+	m.quickPrefs = updated
 	return nil
 }
 
@@ -440,8 +463,8 @@ func TestIntegration_TimetableGenerationLifecycle(t *testing.T) {
 
 	// 5. Poll for completion
 	var jobResp timetablegen.TimetableJob
-	for i := 0; i < 20; i++ {
-		time.Sleep(20 * time.Millisecond)
+	for i := 0; i < 50; i++ {
+		time.Sleep(50 * time.Millisecond)
 		req = httptest.NewRequest(http.MethodGet, "/timetable/generate/"+jobID, nil)
 		w = httptest.NewRecorder()
 		routerVP.ServeHTTP(w, req)

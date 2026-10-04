@@ -7,6 +7,8 @@ type School struct {
 	ID            string    `json:"id" db:"id"`
 	Name          string    `json:"name" db:"name"`
 	Code          string    `json:"code" db:"code"` // Codice meccanografico - frontend expects this
+	SchoolLevel   string    `json:"school_level" db:"type"`
+	Type          string    `json:"type" db:"type"`
 	Address       string    `json:"address" db:"address"`
 	City          string    `json:"city" db:"city"`
 	Province      string    `json:"province" db:"province"`
@@ -23,22 +25,26 @@ type School struct {
 
 // CreateSchoolRequest represents the request to create a school (frontend fields)
 type CreateSchoolRequest struct {
-	Name    string `json:"name" binding:"required"`
-	Code    string `json:"code" binding:"required"`
-	Address string `json:"address"`
-	Email   string `json:"email"`
-	Phone   string `json:"phone"`
-	City    string `json:"city"`
+	Name        string `json:"name" binding:"required"`
+	Code        string `json:"code" binding:"required"`
+	SchoolLevel string `json:"school_level"`
+	Type        string `json:"type"`
+	Address     string `json:"address"`
+	Email       string `json:"email"`
+	Phone       string `json:"phone"`
+	City        string `json:"city"`
 }
 
 // UpdateSchoolRequest represents the request to update a school
 type UpdateSchoolRequest struct {
-	Name    *string `json:"name"`
-	Code    *string `json:"code"`
-	Address *string `json:"address"`
-	Email   *string `json:"email"`
-	Phone   *string `json:"phone"`
-	City    *string `json:"city"`
+	Name        *string `json:"name"`
+	Code        *string `json:"code"`
+	SchoolLevel *string `json:"school_level"`
+	Type        *string `json:"type"`
+	Address     *string `json:"address"`
+	Email       *string `json:"email"`
+	Phone       *string `json:"phone"`
+	City        *string `json:"city"`
 }
 
 // ListParams represents query parameters for listing schools

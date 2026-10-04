@@ -72,6 +72,30 @@ func (m *mockTextbooksRepo) RemoveFromClass(ctx context.Context, assignmentID st
 func (m *mockTextbooksRepo) ListByClass(ctx context.Context, classID string) ([]textbooks.ClassTextbook, error) {
 	return m.assignments[classID], nil
 }
+func (m *mockTextbooksRepo) UpsertAIECatalog(ctx context.Context, books []textbooks.AIECatalogBook) (int, error) {
+	return 0, nil
+}
+func (m *mockTextbooksRepo) SearchAIECatalog(ctx context.Context, query, subject, schoolOrder string, limit int) ([]textbooks.AIECatalogBook, error) {
+	return nil, nil
+}
+func (m *mockTextbooksRepo) GetSpendingLimit(ctx context.Context, schoolID string, classYear int, schoolOrder, academicYear string) (*textbooks.SpendingLimit, error) {
+	return nil, nil
+}
+func (m *mockTextbooksRepo) UpsertSpendingLimit(ctx context.Context, limit *textbooks.SpendingLimit) error {
+	return nil
+}
+func (m *mockTextbooksRepo) ListClassAdoptions(ctx context.Context, classID string) ([]textbooks.ClassAdoptionItem, error) {
+	return nil, nil
+}
+func (m *mockTextbooksRepo) SaveClassAdoption(ctx context.Context, item *textbooks.ClassAdoptionItem) error {
+	return nil
+}
+func (m *mockTextbooksRepo) DeleteClassAdoption(ctx context.Context, id string) error {
+	return nil
+}
+func (m *mockTextbooksRepo) GetClassInfo(ctx context.Context, classID string) (int, string, string, string, string, error) {
+	return 0, "", "", "", "", nil
+}
 
 func TestIntegration_Textbooks_Adoption_Workflow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
