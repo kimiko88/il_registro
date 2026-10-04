@@ -16,17 +16,17 @@ func TestFormationSolver_DPR81Compliance(t *testing.T) {
 		if i > 20 {
 			gender = "F"
 		}
-		grade := 6 + (i % 5) // grades 6..10
+		grade := 6 + (i % 5)        // grades 6..10
 		hasL104 := i == 1 || i == 2 // 2 disabled students
 		apps = append(apps, EnrollmentApplication{
-			ID:                 fmt.Sprintf("app-%d", i),
-			StudentTaxCode:     fmt.Sprintf("CF%04d", i),
-			StudentFirstName:   fmt.Sprintf("Nome%d", i),
-			StudentLastName:    fmt.Sprintf("Cognome%d", i),
-			Gender:             gender,
-			MiddleSchoolGrade:  grade,
-			HasDisabilityL104:  hasL104,
-			SecondLanguage:     "Spagnolo",
+			ID:                fmt.Sprintf("app-%d", i),
+			StudentTaxCode:    fmt.Sprintf("CF%04d", i),
+			StudentFirstName:  fmt.Sprintf("Nome%d", i),
+			StudentLastName:   fmt.Sprintf("Cognome%d", i),
+			Gender:            gender,
+			MiddleSchoolGrade: grade,
+			HasDisabilityL104: hasL104,
+			SecondLanguage:    "Spagnolo",
 		})
 	}
 
@@ -71,42 +71,42 @@ func TestFormationSolver_DPR81Compliance(t *testing.T) {
 func TestFormationSolver_RequestedClassmates(t *testing.T) {
 	apps := []EnrollmentApplication{
 		{
-			ID:                 "app-1",
-			StudentTaxCode:     "CF0001",
-			StudentFirstName:   "Marco",
-			StudentLastName:    "Rossi",
-			Gender:             "M",
-			MiddleSchoolGrade:  8,
-			SecondLanguage:     "Inglese",
+			ID:                  "app-1",
+			StudentTaxCode:      "CF0001",
+			StudentFirstName:    "Marco",
+			StudentLastName:     "Rossi",
+			Gender:              "M",
+			MiddleSchoolGrade:   8,
+			SecondLanguage:      "Inglese",
 			RequestedClassmates: []string{"CF0002"},
 		},
 		{
-			ID:                 "app-2",
-			StudentTaxCode:     "CF0002",
-			StudentFirstName:   "Luca",
-			StudentLastName:    "Bianchi",
-			Gender:             "M",
-			MiddleSchoolGrade:  8,
-			SecondLanguage:     "Inglese",
+			ID:                  "app-2",
+			StudentTaxCode:      "CF0002",
+			StudentFirstName:    "Luca",
+			StudentLastName:     "Bianchi",
+			Gender:              "M",
+			MiddleSchoolGrade:   8,
+			SecondLanguage:      "Inglese",
 			RequestedClassmates: []string{"CF0001"},
 		},
 		{
-			ID:                 "app-3",
-			StudentTaxCode:     "CF0003",
-			StudentFirstName:   "Sara",
-			StudentLastName:    "Verdi",
-			Gender:             "F",
-			MiddleSchoolGrade:  7,
-			SecondLanguage:     "Inglese",
+			ID:                "app-3",
+			StudentTaxCode:    "CF0003",
+			StudentFirstName:  "Sara",
+			StudentLastName:   "Verdi",
+			Gender:            "F",
+			MiddleSchoolGrade: 7,
+			SecondLanguage:    "Inglese",
 		},
 		{
-			ID:                 "app-4",
-			StudentTaxCode:     "CF0004",
-			StudentFirstName:   "Elena",
-			StudentLastName:    "Neri",
-			Gender:             "F",
-			MiddleSchoolGrade:  9,
-			SecondLanguage:     "Inglese",
+			ID:                "app-4",
+			StudentTaxCode:    "CF0004",
+			StudentFirstName:  "Elena",
+			StudentLastName:   "Neri",
+			Gender:            "F",
+			MiddleSchoolGrade: 9,
+			SecondLanguage:    "Inglese",
 		},
 	}
 

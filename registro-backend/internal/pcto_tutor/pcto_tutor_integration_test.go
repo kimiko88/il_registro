@@ -13,11 +13,11 @@ import (
 )
 
 type mockTutorRepo struct {
-	tutors       map[string]*CompanyTutor
-	byToken      map[string]*CompanyTutor
-	assignments  map[string]bool
+	tutors        map[string]*CompanyTutor
+	byToken       map[string]*CompanyTutor
+	assignments   map[string]bool
 	verifications []TimesheetVerification
-	evaluations  []CompanyEvaluation
+	evaluations   []CompanyEvaluation
 }
 
 func newMockTutorRepo() *mockTutorRepo {

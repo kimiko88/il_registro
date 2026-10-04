@@ -60,11 +60,11 @@ type RejectDualAuthRequest struct {
 }
 
 type StudentCustodyInfo struct {
-	StudentID               string      `json:"student_id"`
-	ParentID                string      `json:"parent_id"`
-	CustodyType             CustodyType `json:"custody_type"`
-	CourtOrderDetails       string      `json:"court_order_details,omitempty"`
-	CourtOrderDate          string      `json:"court_order_date,omitempty"`
-	CanAuthorizeActivities  bool        `json:"can_authorize_activities"`
-	IsMirrorNotified        bool        `json:"is_mirror_notified"`
+	StudentID              string      `json:"student_id"`
+	ParentID               string      `json:"parent_id"`
+	CustodyType            CustodyType `json:"custody_type"`
+	CourtOrderDetails      string      `json:"court_order_details,omitempty"`
+	CourtOrderDate         string      `json:"court_order_date,omitempty"`
+	CanAuthorizeActivities bool        `json:"can_authorize_activities"`
+	IsMirrorNotified       bool        `json:"is_mirror_notified"`
 }

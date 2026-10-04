@@ -12,7 +12,7 @@ type ProtocolEntry struct {
 	ProtocolYear           int       `json:"protocol_year"`
 	ProtocolNumber         int       `json:"protocol_number"`
 	ProtocolDate           time.Time `json:"protocol_date"`
-	FlowDirection          string    `json:"flow_direction"` // in, out, internal
+	FlowDirection          string    `json:"flow_direction"`       // in, out, internal
 	ClassificationTitle    int       `json:"classification_title"` // Titolo I..X
 	ClassificationClass    string    `json:"classification_class"`
 	ClassificationFascicle string    `json:"classification_fascicle,omitempty"`
@@ -48,9 +48,9 @@ type XMLIntestazione struct {
 }
 
 type XMLIdentificatore struct {
-	Numero          string `xml:"Numero"`
+	Numero            string `xml:"Numero"`
 	DataRegistrazione string `xml:"DataRegistrazione"`
-	Flusso          string `xml:"Flusso"`
+	Flusso            string `xml:"Flusso"`
 }
 
 type XMLSoggetto struct {

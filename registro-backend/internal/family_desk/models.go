@@ -16,10 +16,10 @@ const (
 )
 
 const (
-	StatusSubmitted    = "submitted"
+	StatusSubmitted     = "submitted"
 	StatusInIstruttoria = "in_istruttoria"
-	StatusApproved     = "approved"
-	StatusRejected     = "rejected"
+	StatusApproved      = "approved"
+	StatusRejected      = "rejected"
 )
 
 type FamilyRequest struct {

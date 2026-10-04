@@ -52,9 +52,9 @@ func TestUnder14Compliance(t *testing.T) {
 
 func TestBuildDelegateFromDelegaRequest(t *testing.T) {
 	req := FamilyRequest{
-		ID:        "req-123",
-		StudentID: "student-456",
-		SchoolID:  "school-789",
+		ID:          "req-123",
+		StudentID:   "student-456",
+		SchoolID:    "school-789",
 		RequestType: TypeDelegaRitiro,
 		FormData: map[string]interface{}{
 			"first_name":      "Mario",

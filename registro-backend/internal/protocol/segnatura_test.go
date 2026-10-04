@@ -8,17 +8,17 @@ import (
 
 func TestGenerateAgIDSegnaturaXML(t *testing.T) {
 	entry := ProtocolEntry{
-		ProtocolYear:         2026,
-		ProtocolNumber:       452,
-		ProtocolDate:         time.Date(2026, 10, 4, 10, 0, 0, 0, time.UTC),
-		FlowDirection:        "in",
-		ClassificationTitle:  7, // Titolo VII - Alunni
-		ClassificationClass:  "1",
+		ProtocolYear:           2026,
+		ProtocolNumber:         452,
+		ProtocolDate:           time.Date(2026, 10, 4, 10, 0, 0, 0, time.UTC),
+		FlowDirection:          "in",
+		ClassificationTitle:    7, // Titolo VII - Alunni
+		ClassificationClass:    "1",
 		ClassificationFascicle: "Iscrizioni",
-		Subject:              "Domanda di iscrizione alunno Rossi Mario",
-		Sender:               "Rossi Mario (Genitore)",
-		Recipient:            "Liceo Statale Scientifico",
-		DocumentHashSHA256:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		Subject:                "Domanda di iscrizione alunno Rossi Mario",
+		Sender:                 "Rossi Mario (Genitore)",
+		Recipient:              "Liceo Statale Scientifico",
+		DocumentHashSHA256:     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 	}
 
 	xmlBytes, err := GenerateSegnaturaXML(entry)

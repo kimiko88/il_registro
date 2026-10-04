@@ -38,7 +38,7 @@ type AlternativeEvaluation struct {
 	SchoolID         string    `json:"school_id"`
 	GroupID          *string   `json:"group_id,omitempty"`
 	ClassID          *string   `json:"class_id,omitempty"`
-	Period           string    `json:"period"` // q1, q2, finale
+	Period           string    `json:"period"`       // q1, q2, finale
 	SubjectKind      string    `json:"subject_kind"` // irc, materia_alternativa
 	JudgmentLevel    string    `json:"judgment_level"`
 	DescriptiveNotes string    `json:"descriptive_notes,omitempty"`

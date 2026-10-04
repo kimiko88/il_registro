@@ -31,13 +31,13 @@ type TutorAssignment struct {
 }
 
 type AssignedStudentInfo struct {
-	StudentID       string  `json:"student_id"`
-	StudentName     string  `json:"student_name"`
-	ProjectID       string  `json:"project_id"`
-	ProjectTitle    string  `json:"project_title"`
-	TotalHours      int     `json:"total_hours"`
-	CompletedHours  float64 `json:"completed_hours"`
-	IsEvaluated     bool    `json:"is_evaluated"`
+	StudentID      string  `json:"student_id"`
+	StudentName    string  `json:"student_name"`
+	ProjectID      string  `json:"project_id"`
+	ProjectTitle   string  `json:"project_title"`
+	TotalHours     int     `json:"total_hours"`
+	CompletedHours float64 `json:"completed_hours"`
+	IsEvaluated    bool    `json:"is_evaluated"`
 }
 
 type TimesheetVerification struct {

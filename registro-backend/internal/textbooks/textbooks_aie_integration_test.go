@@ -14,9 +14,9 @@ import (
 
 type mockAIEFullRepo struct {
 	mockRepo
-	catalog        []AIECatalogBook
-	limits         map[string]*SpendingLimit
-	adoptions      map[string][]ClassAdoptionItem
+	catalog   []AIECatalogBook
+	limits    map[string]*SpendingLimit
+	adoptions map[string][]ClassAdoptionItem
 }
 
 func newMockAIEFullRepo() *mockAIEFullRepo {

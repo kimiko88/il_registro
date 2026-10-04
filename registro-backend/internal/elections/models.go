@@ -60,12 +60,12 @@ type ListVoteCount struct {
 }
 
 type ScrutinyResult struct {
-	ElectionID      string          `json:"election_id"`
-	TotalVoters     int             `json:"total_voters"`
-	TotalVotesCast  int             `json:"total_votes_cast"`
-	BlankVotes      int             `json:"blank_votes"`
-	ListsResults    []ListVoteCount `json:"lists_results"`
-	ElectedMembers  []CandidateSeat `json:"elected_members"`
+	ElectionID     string          `json:"election_id"`
+	TotalVoters    int             `json:"total_voters"`
+	TotalVotesCast int             `json:"total_votes_cast"`
+	BlankVotes     int             `json:"blank_votes"`
+	ListsResults   []ListVoteCount `json:"lists_results"`
+	ElectedMembers []CandidateSeat `json:"elected_members"`
 }
 
 type CandidateSeat struct {

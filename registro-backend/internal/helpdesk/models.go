@@ -9,20 +9,20 @@ import (
 )
 
 type HelpDeskSlot struct {
-	ID           string    `json:"id"`
-	SchoolID     string    `json:"school_id"`
-	TeacherID    string    `json:"teacher_id"`
-	SubjectID    string    `json:"subject_id"`
-	SlotDate     string    `json:"slot_date"` // YYYY-MM-DD
-	StartTime    string    `json:"start_time"` // HH:MM
-	EndTime      string    `json:"end_time"`   // HH:MM
-	RoomID       *string   `json:"room_id,omitempty"`
-	MaxCapacity  int       `json:"max_capacity"`
-	Status       string    `json:"status"` // open, fully_booked, completed, cancelled
-	BookingsCount int      `json:"bookings_count,omitempty"`
-	TeacherName  string    `json:"teacher_name,omitempty"`
-	SubjectName  string    `json:"subject_name,omitempty"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID            string    `json:"id"`
+	SchoolID      string    `json:"school_id"`
+	TeacherID     string    `json:"teacher_id"`
+	SubjectID     string    `json:"subject_id"`
+	SlotDate      string    `json:"slot_date"`  // YYYY-MM-DD
+	StartTime     string    `json:"start_time"` // HH:MM
+	EndTime       string    `json:"end_time"`   // HH:MM
+	RoomID        *string   `json:"room_id,omitempty"`
+	MaxCapacity   int       `json:"max_capacity"`
+	Status        string    `json:"status"` // open, fully_booked, completed, cancelled
+	BookingsCount int       `json:"bookings_count,omitempty"`
+	TeacherName   string    `json:"teacher_name,omitempty"`
+	SubjectName   string    `json:"subject_name,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type HelpDeskBooking struct {
@@ -37,11 +37,11 @@ type HelpDeskBooking struct {
 }
 
 type FISAccountingSummary struct {
-	TeacherID     string  `json:"teacher_id"`
-	TeacherName   string  `json:"teacher_name"`
+	TeacherID      string  `json:"teacher_id"`
+	TeacherName    string  `json:"teacher_name"`
 	CompletedSlots int     `json:"completed_slots"`
-	TotalHours    float64 `json:"total_hours"`
-	AttendedCount int     `json:"attended_count"`
+	TotalHours     float64 `json:"total_hours"`
+	AttendedCount  int     `json:"attended_count"`
 }
 
 func CalculateSlotHours(startTime, endTime string) (float64, error) {

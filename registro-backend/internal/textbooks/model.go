@@ -97,14 +97,14 @@ type ClassAdoptionItem struct {
 }
 
 type SpendingReport struct {
-	TotalSpending       float64           `json:"total_spending"`
-	SpendingLimit       float64           `json:"spending_limit"`
-	ToleranceThreshold  float64           `json:"tolerance_threshold"`
-	AllowedTolerancePct float64           `json:"allowed_tolerance_pct"`
-	Difference          float64           `json:"difference"`
-	Percentage          float64           `json:"percentage"`
-	Status              SpendingStatus    `json:"status"`
-	AdoptionsCount      int               `json:"adoptions_count"`
+	TotalSpending       float64             `json:"total_spending"`
+	SpendingLimit       float64             `json:"spending_limit"`
+	ToleranceThreshold  float64             `json:"tolerance_threshold"`
+	AllowedTolerancePct float64             `json:"allowed_tolerance_pct"`
+	Difference          float64             `json:"difference"`
+	Percentage          float64             `json:"percentage"`
+	Status              SpendingStatus      `json:"status"`
+	AdoptionsCount      int                 `json:"adoptions_count"`
 	Items               []ClassAdoptionItem `json:"items"`
 }
 
