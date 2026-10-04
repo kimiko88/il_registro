@@ -119,9 +119,7 @@ func (s *FormationSolver) Solve(pool []EnrollmentApplication, params FormationPa
 			}
 		}
 
-		for _, member := range group {
-			classes[bestClassIdx].Students = append(classes[bestClassIdx].Students, member)
-		}
+		classes[bestClassIdx].Students = append(classes[bestClassIdx].Students, group...)
 	}
 
 	// Sort and distribute remaining standard students balancing gender and grade

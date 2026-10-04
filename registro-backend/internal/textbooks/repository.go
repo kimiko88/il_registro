@@ -174,7 +174,6 @@ func (r *postgresRepository) SearchAIECatalog(ctx context.Context, queryStr, sub
 	if schoolOrder != "" {
 		conditions = append(conditions, fmt.Sprintf("school_order = $%d", argIdx))
 		args = append(args, schoolOrder)
-		argIdx++
 	}
 
 	whereClause := ""

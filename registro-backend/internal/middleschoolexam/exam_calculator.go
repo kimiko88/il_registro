@@ -35,10 +35,7 @@ func CalculateExamOutcome(c ExamCandidateGrades) ExamOutcomeResult {
 	}
 
 	// 5. Honors (Lode) only permitted with 10/10 final grade and unanimous subcommission vote
-	hasHonors := false
-	if finalGrade == 10 && c.ProposedHonors {
-		hasHonors = true
-	}
+	hasHonors := finalGrade == 10 && c.ProposedHonors
 
 	return ExamOutcomeResult{
 		ExamMean:   examMean,

@@ -78,7 +78,6 @@ func (r *sqlRepository) ListObjectives(ctx context.Context, schoolID, subjectID 
 	if classID != nil && *classID != "" {
 		query += fmt.Sprintf(" AND (o.class_id = $%d OR o.class_id IS NULL)", idx)
 		args = append(args, *classID)
-		idx++
 	}
 
 	query += " ORDER BY o.year_grade ASC, o.title ASC"
