@@ -286,10 +286,22 @@ func (r *postgresRepository) SaveClassAdoption(ctx context.Context, item *ClassA
 	if item.ID == "" {
 		item.ID = uuid.New().String()
 	}
+
+	var isAie bool
+	_ = r.db.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM aie_catalog WHERE id = $1)", item.BookID).Scan(&isAie)
+
+	if isAie {
+		query := `
+			INSERT INTO class_textbook_adoptions (id, class_id, subject_id, book_id, adoption_type, is_already_owned, is_monographic, notes)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		`
+		_, err := r.db.ExecContext(ctx, query, item.ID, item.ClassID, item.SubjectID, item.BookID, item.AdoptionType, item.IsAlreadyOwned, item.IsMonographic, item.Notes)
+		return err
+	}
+
 	query := `
-		INSERT INTO class_textbook_adoptions (id, class_id, subject_id, book_id, adoption_type, is_already_owned, is_monographic, notes)
+		INSERT INTO class_textbook_adoptions (id, class_id, subject_id, textbook_id, adoption_type, is_already_owned, is_monographic, notes)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		ON CONFLICT (class_id, textbook_id) DO NOTHING
 	`
 	_, err := r.db.ExecContext(ctx, query, item.ID, item.ClassID, item.SubjectID, item.BookID, item.AdoptionType, item.IsAlreadyOwned, item.IsMonographic, item.Notes)
 	return err

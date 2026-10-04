@@ -57,7 +57,14 @@ DO $$ BEGIN
         ));
 
     DROP POLICY IF EXISTS "Allow entity protocol links" ON entity_protocol_links;
-    CREATE POLICY "Allow entity protocol links"
-        ON entity_protocol_links FOR ALL
+    DROP POLICY IF EXISTS entity_protocol_links_select_policy ON entity_protocol_links;
+    DROP POLICY IF EXISTS entity_protocol_links_service_policy ON entity_protocol_links;
+    CREATE POLICY entity_protocol_links_select_policy
+        ON entity_protocol_links FOR SELECT
+        TO authenticated, service_role
         USING (true);
+    CREATE POLICY entity_protocol_links_service_policy
+        ON entity_protocol_links FOR ALL
+        TO service_role
+        USING (true) WITH CHECK (true);
 END $$;

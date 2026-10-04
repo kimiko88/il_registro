@@ -25,7 +25,8 @@ func ExportAIEFormat(records []AIEExportRecord) (string, error) {
 		"TIPO_ADOZIONE",
 		"GIA_IN_POSSESSO",
 	}
-	buf.WriteString(strings.Join(header, ";") + "\r\n")
+	buf.WriteString(strings.Join(header, ";"))
+	buf.WriteString("\r\n")
 
 	for _, r := range records {
 		alreadyOwnedStr := "NO"
@@ -47,7 +48,8 @@ func ExportAIEFormat(records []AIEExportRecord) (string, error) {
 			r.AdoptionType,
 			alreadyOwnedStr,
 		}
-		buf.WriteString(strings.Join(line, ";") + "\r\n")
+		buf.WriteString(strings.Join(line, ";"))
+		buf.WriteString("\r\n")
 	}
 
 	return buf.String(), nil

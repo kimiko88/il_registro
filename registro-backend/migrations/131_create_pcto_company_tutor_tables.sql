@@ -84,17 +84,38 @@ DO $$ BEGIN
         ));
 
     DROP POLICY IF EXISTS "Allow access to tutor assignments" ON pcto_tutor_assignments;
-    CREATE POLICY "Allow access to tutor assignments"
-        ON pcto_tutor_assignments FOR ALL
+    DROP POLICY IF EXISTS pcto_tutor_assignments_select_policy ON pcto_tutor_assignments;
+    DROP POLICY IF EXISTS pcto_tutor_assignments_service_policy ON pcto_tutor_assignments;
+    CREATE POLICY pcto_tutor_assignments_select_policy
+        ON pcto_tutor_assignments FOR SELECT
+        TO authenticated, service_role
         USING (true);
+    CREATE POLICY pcto_tutor_assignments_service_policy
+        ON pcto_tutor_assignments FOR ALL
+        TO service_role
+        USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "Allow access to timesheet verifications" ON pcto_timesheet_verifications;
-    CREATE POLICY "Allow access to timesheet verifications"
-        ON pcto_timesheet_verifications FOR ALL
+    DROP POLICY IF EXISTS pcto_timesheet_verifications_select_policy ON pcto_timesheet_verifications;
+    DROP POLICY IF EXISTS pcto_timesheet_verifications_service_policy ON pcto_timesheet_verifications;
+    CREATE POLICY pcto_timesheet_verifications_select_policy
+        ON pcto_timesheet_verifications FOR SELECT
+        TO authenticated, service_role
         USING (true);
+    CREATE POLICY pcto_timesheet_verifications_service_policy
+        ON pcto_timesheet_verifications FOR ALL
+        TO service_role
+        USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "Allow access to company evaluations" ON pcto_company_evaluations;
-    CREATE POLICY "Allow access to company evaluations"
-        ON pcto_company_evaluations FOR ALL
+    DROP POLICY IF EXISTS pcto_company_evaluations_select_policy ON pcto_company_evaluations;
+    DROP POLICY IF EXISTS pcto_company_evaluations_service_policy ON pcto_company_evaluations;
+    CREATE POLICY pcto_company_evaluations_select_policy
+        ON pcto_company_evaluations FOR SELECT
+        TO authenticated, service_role
         USING (true);
+    CREATE POLICY pcto_company_evaluations_service_policy
+        ON pcto_company_evaluations FOR ALL
+        TO service_role
+        USING (true) WITH CHECK (true);
 END $$;

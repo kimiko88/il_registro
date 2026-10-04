@@ -376,6 +376,94 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <!-- Dialog Add Class Adoption -->
+    <q-dialog v-model="showAdoptionDialog" persistent class="premium-dialog">
+      <q-card style="display: flex; flex-direction: column; width: 550px; max-width: 95vw; max-height: 90vh;" class="glass-card overflow-hidden bg-white">
+        <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center">
+          <div class="text-h5 text-weight-bold text-outfit">
+            {{ t('textbooksAie.addAdoption') }}
+          </div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
+        </q-card-section>
+
+        <q-card-section class="q-pa-xl scroll" style="flex: 1; overflow-y: auto;">
+          <q-form @submit="submitAdoption" class="q-gutter-y-md">
+            <!-- Book selection -->
+            <q-select
+              v-model="adoptionForm.book_id"
+              :options="bookOptions"
+              emit-value
+              map-options
+              outlined
+              :label="t('textbooksPage.colTitle') + ' *'"
+              :rules="[val => !!val || t('common.requiredField')]"
+              @update:model-value="onBookSelected"
+            >
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold">{{ scope.opt.title }}</q-item-label>
+                    <q-item-label caption>{{ scope.opt.author }} · {{ scope.opt.isbn }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-badge color="primary">€{{ Number(scope.opt.price || 0).toFixed(2) }}</q-badge>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+
+            <!-- Subject selection -->
+            <q-select
+              v-model="adoptionForm.subject_id"
+              :options="subjectOptions"
+              emit-value
+              map-options
+              outlined
+              :label="(t('textbooksPage.colSubject') || 'Materia') + ' *'"
+              :rules="[val => !!val || t('common.requiredField')]"
+            />
+
+            <!-- Adoption Type -->
+            <q-select
+              v-model="adoptionForm.adoption_type"
+              :options="adoptionTypeOptions"
+              emit-value
+              map-options
+              outlined
+              :label="t('textbooksAie.newAdoption')"
+            />
+
+            <!-- Already Owned (Pluriennale) -->
+            <q-checkbox
+              v-model="adoptionForm.is_already_owned"
+              :label="t('textbooksAie.alreadyOwned') + ' (esclude dal tetto di spesa)'"
+              dense
+            />
+
+            <!-- Notes -->
+            <q-input
+              v-model="adoptionForm.notes"
+              :label="t('common.notes') || 'Note'"
+              outlined
+              dense
+            />
+
+            <div class="row justify-end q-gutter-md q-pt-md">
+              <q-btn flat :label="t('common.cancel')" v-close-popup color="grey-7" />
+              <q-btn
+                color="primary"
+                type="submit"
+                :label="t('common.save')"
+                :loading="adoptionSubmitting"
+                class="rounded-lg q-px-lg shadow-soft"
+              />
+            </div>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -384,6 +472,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { textbookService } from '@/services/textbookService'
+import adminService from '@/services/adminService'
 import { useClassesStore } from '@/stores/classes'
 
 const { t } = useI18n()
@@ -407,6 +496,114 @@ const adoptionsLoading = ref(false)
 const showImportDialog = ref(false)
 const importFile = ref(null)
 const importing = ref(false)
+
+// Adoption Dialog State
+const showAdoptionDialog = ref(false)
+const adoptionSubmitting = ref(false)
+const subjects = ref([])
+
+const adoptionForm = reactive({
+  book_id: '',
+  subject_id: '',
+  adoption_type: 'nuova_adozione',
+  is_already_owned: false,
+  notes: ''
+})
+
+const bookOptions = computed(() => {
+  return textbooks.value.map(b => ({
+    label: `${b.title} — ${b.author} (€${Number(b.price || 0).toFixed(2)})`,
+    value: b.id,
+    title: b.title,
+    author: b.author,
+    isbn: b.isbn,
+    price: b.price,
+    subject: b.subject
+  }))
+})
+
+const subjectOptions = computed(() => {
+  return subjects.value.map(s => ({
+    label: s.name || s.subject_name || s.id,
+    value: s.id || s.subject_id
+  }))
+})
+
+const adoptionTypeOptions = computed(() => [
+  { label: t('textbooksAie.newAdoption') || 'Nuova Adozione', value: 'nuova_adozione' },
+  { label: t('textbooksAie.scorrimento') || 'Scorrimento', value: 'scorrimento' },
+  { label: t('textbooksAie.recommended') || 'Consigliato', value: 'consigliato' }
+])
+
+function onBookSelected(bookId) {
+  const chosen = textbooks.value.find(b => b.id === bookId)
+  if (chosen && chosen.subject && subjects.value.length > 0) {
+    const match = subjects.value.find(s =>
+      (s.name && s.name.toLowerCase() === chosen.subject.toLowerCase())
+    )
+    if (match) {
+      adoptionForm.subject_id = match.id || match.subject_id
+    }
+  }
+}
+
+async function loadSubjectsForClass(classId) {
+  if (!classId) return
+  try {
+    const res = await adminService.getClassSubjects(classId)
+    if (res.data && res.data.length > 0) {
+      subjects.value = res.data.map(s => ({
+        id: s.subject_id || s.id,
+        name: s.subject_name || s.name
+      }))
+    } else {
+      const fallback = await adminService.getSubjects()
+      subjects.value = fallback.data || []
+    }
+  } catch {
+    try {
+      const fallback = await adminService.getSubjects()
+      subjects.value = fallback.data || []
+    } catch {
+      subjects.value = []
+    }
+  }
+}
+
+async function openAdoptionDialog() {
+  if (!selectedClass.value) return
+  await loadSubjectsForClass(selectedClass.value)
+  adoptionForm.book_id = textbooks.value.length > 0 ? textbooks.value[0].id : ''
+  adoptionForm.subject_id = subjects.value.length > 0 ? (subjects.value[0].id || subjects.value[0].subject_id) : ''
+  if (adoptionForm.book_id) {
+    onBookSelected(adoptionForm.book_id)
+  }
+  adoptionForm.adoption_type = 'nuova_adozione'
+  adoptionForm.is_already_owned = false
+  adoptionForm.notes = ''
+  showAdoptionDialog.value = true
+}
+
+async function submitAdoption() {
+  if (!selectedClass.value || !adoptionForm.book_id) return
+  adoptionSubmitting.value = true
+  try {
+    await textbookService.adoptBook(selectedClass.value, {
+      book_id: adoptionForm.book_id,
+      subject_id: adoptionForm.subject_id,
+      adoption_type: adoptionForm.adoption_type,
+      is_already_owned: adoptionForm.is_already_owned,
+      notes: adoptionForm.notes
+    })
+    $q.notify({ type: 'positive', message: t('textbooksPage.saveSuccess') || 'Adozione salvata con successo' })
+    showAdoptionDialog.value = false
+    await loadClassAdoptions(selectedClass.value)
+  } catch {
+    $q.notify({ type: 'negative', message: t('textbooksPage.saveError') || 'Errore durante il salvataggio' })
+  } finally {
+    adoptionSubmitting.value = false
+  }
+}
 
 const form = reactive({
   title: '',
@@ -478,6 +675,7 @@ async function loadClassAdoptions(classId) {
     ])
     spendingReport.value = reportRes.data
     classAdoptions.value = adoptionsRes.data || []
+    loadSubjectsForClass(classId)
   } catch (err) {
     console.error(err)
   } finally {

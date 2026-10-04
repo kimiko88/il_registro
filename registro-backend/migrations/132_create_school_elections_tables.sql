@@ -80,22 +80,50 @@ DO $$ BEGIN
         ));
 
     DROP POLICY IF EXISTS "School members can view lists and candidates" ON election_lists;
-    CREATE POLICY "School members can view lists and candidates"
-        ON election_lists FOR ALL
+    DROP POLICY IF EXISTS election_lists_select_policy ON election_lists;
+    DROP POLICY IF EXISTS election_lists_service_policy ON election_lists;
+    CREATE POLICY election_lists_select_policy
+        ON election_lists FOR SELECT
+        TO authenticated, service_role
         USING (true);
+    CREATE POLICY election_lists_service_policy
+        ON election_lists FOR ALL
+        TO service_role
+        USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "School members can view candidates" ON election_candidates;
-    CREATE POLICY "School members can view candidates"
-        ON election_candidates FOR ALL
+    DROP POLICY IF EXISTS election_candidates_select_policy ON election_candidates;
+    DROP POLICY IF EXISTS election_candidates_service_policy ON election_candidates;
+    CREATE POLICY election_candidates_select_policy
+        ON election_candidates FOR SELECT
+        TO authenticated, service_role
         USING (true);
+    CREATE POLICY election_candidates_service_policy
+        ON election_candidates FOR ALL
+        TO service_role
+        USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "Voters can check own registry" ON election_voter_registry;
-    CREATE POLICY "Voters can check own registry"
-        ON election_voter_registry FOR ALL
+    DROP POLICY IF EXISTS election_voter_registry_select_policy ON election_voter_registry;
+    DROP POLICY IF EXISTS election_voter_registry_service_policy ON election_voter_registry;
+    CREATE POLICY election_voter_registry_select_policy
+        ON election_voter_registry FOR SELECT
+        TO authenticated, service_role
         USING (true);
+    CREATE POLICY election_voter_registry_service_policy
+        ON election_voter_registry FOR ALL
+        TO service_role
+        USING (true) WITH CHECK (true);
 
     DROP POLICY IF EXISTS "Ballot box anonymous insert and count" ON election_ballot_box;
-    CREATE POLICY "Ballot box anonymous insert and count"
-        ON election_ballot_box FOR ALL
+    DROP POLICY IF EXISTS election_ballot_box_select_policy ON election_ballot_box;
+    DROP POLICY IF EXISTS election_ballot_box_service_policy ON election_ballot_box;
+    CREATE POLICY election_ballot_box_select_policy
+        ON election_ballot_box FOR SELECT
+        TO authenticated, service_role
         USING (true);
+    CREATE POLICY election_ballot_box_service_policy
+        ON election_ballot_box FOR ALL
+        TO service_role
+        USING (true) WITH CHECK (true);
 END $$;

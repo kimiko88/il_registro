@@ -52,7 +52,14 @@ DO $$ BEGIN
         ));
 
     DROP POLICY IF EXISTS "Allow bookings management" ON help_desk_bookings;
-    CREATE POLICY "Allow bookings management"
-        ON help_desk_bookings FOR ALL
+    DROP POLICY IF EXISTS help_desk_bookings_select_policy ON help_desk_bookings;
+    DROP POLICY IF EXISTS help_desk_bookings_service_policy ON help_desk_bookings;
+    CREATE POLICY help_desk_bookings_select_policy
+        ON help_desk_bookings FOR SELECT
+        TO authenticated, service_role
         USING (true);
+    CREATE POLICY help_desk_bookings_service_policy
+        ON help_desk_bookings FOR ALL
+        TO service_role
+        USING (true) WITH CHECK (true);
 END $$;
