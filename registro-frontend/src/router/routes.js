@@ -102,6 +102,7 @@ export default [
             { path: 'secretary/textbooks', component: () => import('@/pages/secretary/Textbooks.vue'), meta: { title: 'Adozione Libri di Testo', titleKey: 'routeTitles.textbooks', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'assistente_alunni', 'coordinator'] } },
             { path: 'secretary/settings', component: () => import('@/pages/secretary/Settings.vue'), meta: { title: 'Impostazioni Segreteria', titleKey: 'routeTitles.settings', roles: ['secretary', 'principal', 'vice_principal'] } },
             { path: 'secretary/classes', component: () => import('@/pages/secretary/Classes.vue'), meta: { title: 'Gestione Classi', titleKey: 'routeTitles.classes', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/class-formation', component: () => import('@/pages/secretary/ClassFormation.vue'), meta: { title: 'Formazione Classi Prime & SIDI', titleKey: 'routeTitles.classes', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
             { path: 'secretary/timetable', component: () => import('@/pages/secretary/Timetable.vue'), meta: { title: 'Orario Scolastico & Cattedre', titleKey: 'routeTitles.timetable', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'collaboratore_ds', 'dsga'] } },
             { path: 'secretary/rooms', component: () => import('@/pages/secretary/Rooms.vue'), meta: { title: 'Aule Prenotabili & Plessi', titleKey: 'routeTitles.rooms', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'collaboratore_ds'] } },
             { path: 'secretary/timetable-constraints', component: () => import('@/pages/secretary/TimetableConstraints.vue'), meta: { title: 'Vincoli Orario & Aule', titleKey: 'routeTitles.timetableConstraints', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'collaboratore_ds'] } },
@@ -114,6 +115,10 @@ export default [
             { path: 'secretary/sidi', component: () => import('@/pages/secretary/SidiExports.vue'), meta: { title: 'Flussi SIDI (MIM)', titleKey: 'routeTitles.sidiExports', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'dsga', 'assistente_amministrativo', 'assistente_alunni'] } },
             { path: 'secretary/verbali', component: () => import('@/pages/secretary/VerbaliManagement.vue'), meta: { title: 'Verbali & Modelli Riunioni', titleKey: 'routeTitles.verbali', roles: ['secretary', 'principal', 'vice_principal', 'admin', 'superadmin', 'dsga', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_protocollo', 'responsabile_gestione_documentale', 'responsabile_conservazione'] } },
             { path: 'secretary/students/:id/fascicolo', component: () => import('@/pages/secretary/FascicoloStudente.vue'), meta: { title: 'Fascicolo Studente', titleKey: 'routeTitles.fascicolo', roles: ['secretary', 'principal', 'vice_principal'] } },
+            { path: 'secretary/religion-alternative', component: () => import('@/pages/secretary/ReligionAlternative.vue'), meta: { title: 'Materia Alternativa IRC', titleKey: 'routeTitles.classes', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal'] } },
+            { path: 'secretary/family-desk', component: () => import('@/pages/secretary/FamilyDeskAdmin.vue'), meta: { title: 'Istanze Famiglie', titleKey: 'routeTitles.documents', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'assistente_amministrativo', 'assistente_sportello'] } },
+            { path: 'secretary/protocol', component: () => import('@/pages/secretary/ProtocolRegister.vue'), meta: { title: 'Protocollo Ufficiale AgID', titleKey: 'routeTitles.documents', roles: ['secretary', 'admin', 'superadmin', 'principal', 'vice_principal', 'assistente_protocollo'] } },
+            { path: 'admin/election-scrutiny', component: () => import('@/pages/admin/ElectionScrutiny.vue'), meta: { title: 'Scrutinio Elezioni', titleKey: 'routeTitles.auditLogs', roles: ['superadmin', 'admin', 'principal', 'vice_principal'] } },
             { path: 'secretary/audit-logs', redirect: '/admin/audit-logs' },
             { path: 'secretary/audit-log', redirect: '/admin/audit-logs' },
 
@@ -161,6 +166,8 @@ export default [
             { path: 'teacher/primary-eval', component: () => import('@/pages/teacher/PrimaryEval.vue'), meta: { title: 'Valutazione Descrittiva Primaria', titleKey: 'primaryEval.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
             { path: 'teacher/trips', component: () => import('@/pages/teacher/TripCompanion.vue'), meta: { title: 'Accompagnatore Viaggi & Uscite', titleKey: 'tripCompanion.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
             { path: 'teacher/may15', component: () => import('@/pages/teacher/May15Document.vue'), meta: { title: 'Documento del 15 Maggio', titleKey: 'may15.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/middle-school-exam', component: () => import('@/pages/teacher/MiddleSchoolExam.vue'), meta: { title: 'Esame di Stato I Ciclo (Terza Media)', titleKey: 'routeTitles.scrutiny', roles: ['teacher', 'coordinator', 'vice_principal', 'principal'] } },
+            { path: 'teacher/help-desk', component: () => import('@/pages/teacher/HelpDeskManagement.vue'), meta: { title: 'Sportello Help & FIS', titleKey: 'routeTitles.recovery', roles: ['teacher', 'coordinator', 'vice_principal'] } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { title: 'Pannello Studente', titleKey: 'routeTitles.studentPanel', roles: ['student'] } },
@@ -181,6 +188,8 @@ export default [
             { path: 'student/school-calendar', component: () => import('@/pages/student/SchoolCalendar.vue'), meta: { title: 'Calendario Scolastico', titleKey: 'routeTitles.agenda', roles: ['student'] } },
             { path: 'student/report-card', component: () => import('@/pages/student/ReportCard.vue'), meta: { title: 'Pagella Online', titleKey: 'routeTitles.reportCard', roles: ['student'] } },
             { path: 'student/settings', component: () => import('@/pages/student/Settings.vue'), meta: { title: 'Impostazioni Studente', titleKey: 'routeTitles.settings', roles: ['student'] } },
+            { path: 'student/help-desk', component: () => import('@/pages/student/HelpDeskBooking.vue'), meta: { title: 'Prenota Sportello Help', titleKey: 'routeTitles.recovery', roles: ['student'] } },
+            { path: 'elections/vote/:id?', component: () => import('@/pages/elections/VotingBooth.vue'), meta: { title: 'Cabina Elettorale Digitale', roles: ['student', 'parent', 'teacher', 'admin', 'secretary', 'superadmin'] } },
 
             // Parent Routes
             { path: 'parent', component: () => import('@/pages/parent/Index.vue'), meta: { title: 'Pannello Famiglie', titleKey: 'routeTitles.parentPanel', roles: ['parent'] } },
@@ -199,6 +208,8 @@ export default [
             { path: 'parent/timetable', component: () => import('@/pages/parent/Timetable.vue'), meta: { title: 'Orario Lezioni', titleKey: 'routeTitles.timetable', roles: ['parent'] } },
             { path: 'parent/pdp', component: () => import('@/pages/parent/PdpView.vue'), meta: { title: 'Piano PDP / PEI', titleKey: 'routeTitles.pdp', roles: ['parent'] } },
             { path: 'parent/documents', component: () => import('@/pages/parent/Documents.vue'), meta: { title: 'Documentazione & Moduli', titleKey: 'routeTitles.documents', roles: ['parent'] } },
+            { path: 'parent/authorizations', component: () => import('@/pages/parent/Authorizations.vue'), meta: { title: 'Autorizzazioni & Doppia Firma', titleKey: 'routeTitles.authorizations', roles: ['parent'] } },
+            { path: 'parent/family-desk', component: () => import('@/pages/parent/FamilyDesk.vue'), meta: { title: 'Sportello Istanze Online', titleKey: 'routeTitles.documents', roles: ['parent'] } },
             { path: 'parent/payments', component: () => import('@/pages/parent/Payments.vue'), meta: { title: 'Pagamenti Scolastici', titleKey: 'routeTitles.certificates', roles: ['parent'] } },
             { path: 'parent/settings', component: () => import('@/pages/parent/Settings.vue'), meta: { title: 'Impostazioni Genitore', titleKey: 'routeTitles.settings', roles: ['parent'] } },
 
@@ -267,6 +278,11 @@ export default [
         children: [
             { path: '', component: () => import('@/pages/Login.vue'), meta: { title: 'Recupero Password', titleKey: 'routeTitles.forgotPassword', requiresAuth: false } }
         ]
+    },
+    {
+        path: '/pcto/tutor-portal',
+        component: () => import('@/pages/pcto/CompanyTutorPortal.vue'),
+        meta: { title: 'Portale Tutor Aziendale PCTO', requiresAuth: false }
     },
     {
         path: '/:catchAll(.*)*',

@@ -29,8 +29,8 @@ type SupportPeiGoal struct {
 	SchoolID             string    `json:"school_id"`
 	StudentID            string    `json:"student_id"`
 	StudentName          string    `json:"student_name,omitempty"`
-	PeiType              string    `json:"pei_type"` // 'equipollente', 'differenziato'
-	Axis                 string    `json:"axis"`     // 'autonomia', 'cognitiva', 'comunicazionale', 'relazionale', 'linguistica', 'sensoriale'
+	PeiType              string    `json:"pei_type"`              // 'equipollente', 'differenziato'
+	Axis                 string    `json:"axis"`                  // 'autonomia', 'cognitiva', 'comunicazionale', 'relazionale', 'linguistica', 'sensoriale'
 	MinisterialDimension string    `json:"ministerial_dimension"` // 'dimensione_relazione', 'dimensione_comunicazione', 'dimensione_autonomia', 'dimensione_cognitiva' (D.I. 182/2020)
 	PathwayType          string    `json:"pathway_type"`          // 'percorso_a_ordinario', 'percorso_b_personalizzato', 'percorso_c_differenziato'
 	Title                string    `json:"title"`
@@ -67,4 +67,3 @@ type CreatePeiGoalRequest struct {
 	ProgressStatus       string `json:"progress_status"`
 	GloNotes             string `json:"glo_notes"`
 }
-
