@@ -3,6 +3,7 @@ package timetablegen
 import (
 	"context"
 	"encoding/json"
+	"sync"
 	"testing"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 )
 
 type mockTimetableRepo struct {
+	mu                   sync.RWMutex
 	preferences          []TeacherPreference
 	reqs                 []SubjectRoomRequirement
 	constraints          []TimetableConstraint
@@ -25,6 +27,8 @@ func newMockTimetableRepo() *mockTimetableRepo {
 }
 
 func (m *mockTimetableRepo) SavePreferencesBatch(ctx context.Context, schoolID, teacherID string, academicYearID *string, prefs []PreferenceEntry) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	for _, p := range prefs {
 		m.preferences = append(m.preferences, TeacherPreference{
 			ID:             uuid.New().String(),
@@ -41,6 +45,8 @@ func (m *mockTimetableRepo) SavePreferencesBatch(ctx context.Context, schoolID, 
 }
 
 func (m *mockTimetableRepo) GetTeacherPreferences(ctx context.Context, schoolID, teacherID string, academicYearID *string) ([]TeacherPreference, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	var res []TeacherPreference
 	for _, p := range m.preferences {
 		if p.SchoolID == schoolID && p.TeacherID == teacherID {
@@ -51,14 +57,24 @@ func (m *mockTimetableRepo) GetTeacherPreferences(ctx context.Context, schoolID,
 }
 
 func (m *mockTimetableRepo) LoadAllPreferences(ctx context.Context, schoolID string, academicYearID *string) ([]TeacherPreference, error) {
-	return m.preferences, nil
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]TeacherPreference, len(m.preferences))
+	copy(res, m.preferences)
+	return res, nil
 }
 
 func (m *mockTimetableRepo) ListRoomRequirements(ctx context.Context, schoolID string) ([]SubjectRoomRequirement, error) {
-	return m.reqs, nil
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]SubjectRoomRequirement, len(m.reqs))
+	copy(res, m.reqs)
+	return res, nil
 }
 
 func (m *mockTimetableRepo) SaveRoomRequirement(ctx context.Context, schoolID string, req SaveRoomRequirementRequest) (*SubjectRoomRequirement, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	sr := SubjectRoomRequirement{
 		ID:               uuid.New().String(),
 		SchoolID:         schoolID,
@@ -73,14 +89,22 @@ func (m *mockTimetableRepo) SaveRoomRequirement(ctx context.Context, schoolID st
 }
 
 func (m *mockTimetableRepo) DeleteRoomRequirement(ctx context.Context, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	return nil
 }
 
 func (m *mockTimetableRepo) ListConstraints(ctx context.Context, schoolID string) ([]TimetableConstraint, error) {
-	return m.constraints, nil
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]TimetableConstraint, len(m.constraints))
+	copy(res, m.constraints)
+	return res, nil
 }
 
 func (m *mockTimetableRepo) SaveConstraint(ctx context.Context, schoolID string, req SaveConstraintRequest) (*TimetableConstraint, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	c := TimetableConstraint{
 		ID:             uuid.New().String(),
 		SchoolID:       schoolID,
@@ -98,47 +122,70 @@ func (m *mockTimetableRepo) SaveConstraint(ctx context.Context, schoolID string,
 }
 
 func (m *mockTimetableRepo) DeleteConstraint(ctx context.Context, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	return nil
 }
 
 func (m *mockTimetableRepo) GetDesiderataWindow(ctx context.Context, schoolID string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	return m.desiderataWindowOpen, nil
 }
 
 func (m *mockTimetableRepo) SetDesiderataWindow(ctx context.Context, schoolID string, isOpen bool) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.desiderataWindowOpen = isOpen
 	return nil
 }
 
 func (m *mockTimetableRepo) CreateJob(ctx context.Context, job *TimetableJob) (*TimetableJob, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if job.ID == "" {
 		job.ID = uuid.New().String()
 	}
-	m.jobs[job.ID] = job
-	return job, nil
+	jobCopy := *job
+	if len(job.ResultSummary) > 0 {
+		jobCopy.ResultSummary = append([]byte(nil), job.ResultSummary...)
+	}
+	m.jobs[job.ID] = &jobCopy
+	res := jobCopy
+	return &res, nil
 }
 
 func (m *mockTimetableRepo) UpdateJob(ctx context.Context, job *TimetableJob) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if existing, ok := m.jobs[job.ID]; ok {
 		if job.Status != "" {
 			existing.Status = job.Status
 		}
 		if len(job.ResultSummary) > 0 {
-			existing.ResultSummary = job.ResultSummary
+			existing.ResultSummary = append([]byte(nil), job.ResultSummary...)
 		}
 		if job.ErrorMessage != nil {
-			existing.ErrorMessage = job.ErrorMessage
+			msg := *job.ErrorMessage
+			existing.ErrorMessage = &msg
 		}
 		if job.CompletedAt != nil {
-			existing.CompletedAt = job.CompletedAt
+			t := *job.CompletedAt
+			existing.CompletedAt = &t
 		}
 	}
 	return nil
 }
 
 func (m *mockTimetableRepo) GetJob(ctx context.Context, id string) (*TimetableJob, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	if j, ok := m.jobs[id]; ok {
-		return j, nil
+		jobCopy := *j
+		if len(j.ResultSummary) > 0 {
+			jobCopy.ResultSummary = append([]byte(nil), j.ResultSummary...)
+		}
+		return &jobCopy, nil
 	}
 	return nil, ErrJobNotFound
 }
@@ -170,8 +217,19 @@ func (m *mockTimetableRepo) LoadAssociatedGroups(ctx context.Context, schoolID s
 }
 
 func (m *mockTimetableRepo) PublishGeneratedSchedule(ctx context.Context, schoolID string, slots []GeneratedSlot) error {
-	m.published = slots
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.published = make([]GeneratedSlot, len(slots))
+	copy(m.published, slots)
 	return nil
+}
+
+func (m *mockTimetableRepo) getPublished() []GeneratedSlot {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	res := make([]GeneratedSlot, len(m.published))
+	copy(res, m.published)
+	return res
 }
 
 func (m *mockTimetableRepo) ListAcademicYears(ctx context.Context, schoolID string) ([]string, error) {
@@ -318,8 +376,9 @@ func TestTimetableService(t *testing.T) {
 		t.Fatalf("unexpected error publishing schedule: %v", err)
 	}
 
-	if len(repo.published) != 2 {
-		t.Errorf("expected 2 published slots, got %d", len(repo.published))
+	publishedSlots := repo.getPublished()
+	if len(publishedSlots) != 2 {
+		t.Errorf("expected 2 published slots, got %d", len(publishedSlots))
 	}
 
 	// Verify ResultSummary JSON was stored properly
@@ -549,8 +608,8 @@ func TestPublishSchedule_WithAlternativeID_And_CustomSlots(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to publish default schedule: %v", err)
 	}
-	if len(repo.published) != len(result.Slots) {
-		t.Errorf("expected %d published slots, got %d", len(result.Slots), len(repo.published))
+	if len(repo.getPublished()) != len(result.Slots) {
+		t.Errorf("expected %d published slots, got %d", len(result.Slots), len(repo.getPublished()))
 	}
 
 	// 2. Publish Alternative 2 (didactic_first)
@@ -561,8 +620,8 @@ func TestPublishSchedule_WithAlternativeID_And_CustomSlots(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to publish alternative 2: %v", err)
 	}
-	if len(repo.published) != len(result.Alternatives[1].Slots) {
-		t.Errorf("expected %d published slots for alt 2, got %d", len(result.Alternatives[1].Slots), len(repo.published))
+	if len(repo.getPublished()) != len(result.Alternatives[1].Slots) {
+		t.Errorf("expected %d published slots for alt 2, got %d", len(result.Alternatives[1].Slots), len(repo.getPublished()))
 	}
 
 	// 3. Publish Alternative 3 (compact_teacher)
@@ -573,8 +632,8 @@ func TestPublishSchedule_WithAlternativeID_And_CustomSlots(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to publish alternative 3: %v", err)
 	}
-	if len(repo.published) != len(result.Alternatives[2].Slots) {
-		t.Errorf("expected %d published slots for alt 3, got %d", len(result.Alternatives[2].Slots), len(repo.published))
+	if len(repo.getPublished()) != len(result.Alternatives[2].Slots) {
+		t.Errorf("expected %d published slots for alt 3, got %d", len(result.Alternatives[2].Slots), len(repo.getPublished()))
 	}
 
 	// 4. Publish custom slots directly
@@ -592,8 +651,9 @@ func TestPublishSchedule_WithAlternativeID_And_CustomSlots(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to publish custom slots: %v", err)
 	}
-	if len(repo.published) != 1 || repo.published[0].ClassID != "c-custom" {
-		t.Errorf("expected 1 custom published slot, got %+v", repo.published)
+	publishedCustom := repo.getPublished()
+	if len(publishedCustom) != 1 || publishedCustom[0].ClassID != "c-custom" {
+		t.Errorf("expected 1 custom published slot, got %+v", publishedCustom)
 	}
 
 	// 5. Error handling: Non-existent job
