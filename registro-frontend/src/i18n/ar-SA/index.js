@@ -1633,7 +1633,9 @@ export default {
       "step4_title": "ملفات SIDI والوزارة",
       "step4_desc": "أنشئ وراجع وصدر ملفات XML المعتمدة لمزامنة البيانات مع نظام SIDI التابع لوزارة التعليم.",
       "step5_title": "المحاضر والنماذج الرسمية",
-      "step5_desc": "استخدم نماذج معتمدة لصياغة وأرشفة وترقيم محاضر الاجتماعات الرسمية ومجالس المدرسة واللجان المختلفة."
+      "step5_desc": "استخدم نماذج معتمدة لصياغة وأرشفة وترقيم محاضر الاجتماعات الرسمية ومجالس المدرسة واللجان المختلفة.",
+      "step6_title": "Administrative Enterprise Hub",
+      "step6_desc": "Operational management of PagoPA notices with IUV codes, Student Curriculum for State Graduation (D.M. 88/2020), and SIDI MIM cooperative flow synchronization."
     },
     "collaboratore_ds": {
       "step1_title": "لوحة تحكم مساعد المدير",
@@ -1669,7 +1671,9 @@ export default {
       "step4_title": "حزم SIDI والتقارير الوزارية",
       "step4_desc": "تدقيق واعتماد إرسال حزم XML إلى نظام SIDI المركزي، وأنظمة الرواتب، ومنصات المتابعة المالية الحكومية.",
       "step5_title": "الإضرابات والخدمات الأساسية الدنيا",
-      "step5_desc": "تحديد وتكليف أفراد الحد الأدنى الإلزامي من الموظفين لضمان استمرار الخدمات العامة الحيوية أثناء الإضرابات."
+      "step5_desc": "تحديد وتكليف أفراد الحد الأدنى الإلزامي من الموظفين لضمان استمرار الخدمات العامة الحيوية أثناء الإضرابات.",
+      "step6_title": "Enterprise Hub: Notice Board, Inventory & OPI",
+      "step6_desc": "Supervision of legal publications on the Official Notice Board, movable assets inventory registry, accounting reconciliation with OPI/SIOPE+ bank receipts, and canteen oversight."
     },
     "principal": {
       "step1_title": "لوحة تحكم مدير المدرسة والنظرة العامة",
@@ -1683,7 +1687,9 @@ export default {
       "step5_title": "محاضر الاجتماعات والقرارات المدرسية",
       "step5_desc": "Review and approval of Teachers' Assembly minutes, Class Council deliberations, and digital preservation according to public standards.",
       "step6_title": "المتابعة التربوية واعتماد النتائج ومنع التسرب",
-      "step6_desc": "Institutional performance statistics, term scrutiny validation, and early warning analytics for student dropout prevention."
+      "step6_desc": "Institutional performance statistics, term scrutiny validation, and early warning analytics for student dropout prevention.",
+      "step7_title": "Enterprise Hub & Remote Qualified Signature",
+      "step7_desc": "Centralized management of Remote Qualified Digital Signature (CAdES/PAdES), Online Official Notice Board, Ministry Teacher Calls, and School Canteen service activation."
     }
   },
   "help": {
@@ -2191,6 +2197,22 @@ export default {
         "مواعيد الاختبارات",
         "الأنشطة اللاصفية",
         "الرحلات والفعاليات"
+      ],
+      "step9_title": "Psychological Counseling Desk (CIC)",
+      "step9_desc": "Book confidential counseling appointments under complete professional secrecy (Law 56/1989), with automatic parental consent verification for minors.",
+      "step9_bullets": [
+        "Confidential booking",
+        "Strict medical confidentiality",
+        "Parental consent verification",
+        "Session history"
+      ],
+      "step10_title": "School Canteen & Meals",
+      "step10_desc": "View daily menus, check meal attendance confirmed from the class register, and view your registered dietary profile (standard or certified special diets).",
+      "step10_bullets": [
+        "Daily menu",
+        "Confirmed meal attendance",
+        "Standard / special dietary profile",
+        "Meal attendance history"
       ]
     },
     "parent": {
@@ -2245,6 +2267,22 @@ export default {
         "سجل المدفوعات",
         "تحميل الإيصالات",
         "طلب وثائق"
+      ],
+      "step9_title": "Psychological Desk & Informed Consent",
+      "step9_desc": "Digitally sign the mandatory informed consent for children's access to psychological counseling (Law 56/1989) and request parental counseling consultations.",
+      "step9_bullets": [
+        "Informed consent signature",
+        "Child welfare protection",
+        "Parental counseling requests",
+        "Quick child selector"
+      ],
+      "step10_title": "School Canteen & Electronic Wallet",
+      "step10_desc": "Monitor available meal wallet balance for each child, make instant online top-ups with PagoPA (+€10, +€25, +€50, +€100), and track meal deductions history.",
+      "step10_bullets": [
+        "Live wallet balance",
+        "Instant PagoPA top-up",
+        "Immediate IUV code generation",
+        "Meal debit history"
       ]
     },
     "secretary": {
@@ -2299,6 +2337,14 @@ export default {
         "تعيين الأدوار",
         "إعادة تعيين كلمات المرور",
         "التحكم بالوصول"
+      ],
+      "step9_title": "Enterprise Hub: PagoPA, Graduation & SIDI",
+      "step9_desc": "Mass emission of PagoPA payment notices with IUV codes, Student Curriculum preparation for State Exam (D.M. 88/2020), and cooperative application synchronization with SIDI MIM.",
+      "step9_bullets": [
+        "PagoPA Notices & IUV Codes",
+        "Student Curriculum Model",
+        "SIDI MIM Cooperation",
+        "School Canteen Module"
       ]
     },
     "admin": {
@@ -2353,6 +2399,14 @@ export default {
         "إلزامية المصادقة الثنائية",
         "أعلام الميزات",
         "وضع الصيانة"
+      ],
+      "step9_title": "Enterprise School Management Hub",
+      "step9_desc": "Central governance platform for all 10 institutional regulatory modules (PagoPA, Remote Signature, Notice Board, Teacher Calls, Graduation, Canteen, Inventory, DPO Privacy, SIDI, Counseling Desk) with live role simulation.",
+      "step9_bullets": [
+        "10 Regulatory Modules Governance",
+        "Instant Role Simulator",
+        "Institutional Service Activation",
+        "AgID & Ministry Compliance"
       ]
     },
     "assistente_amministrativo": {
@@ -2385,6 +2439,14 @@ export default {
         "أرشيف القرارات والمداولات",
         "ترقيم تسلسلي رسمي للمحاضر",
         "حفظ وأرشفة إلكترونية آمنة"
+      ],
+      "step6_title": "Administrative Enterprise Hub",
+      "step6_desc": "Operational management of PagoPA notices with IUV codes, Student Curriculum for State Graduation (D.M. 88/2020), and SIDI MIM cooperative flow synchronization.",
+      "step6_bullets": [
+        "PagoPA Notices with IUV",
+        "Student Curriculum D.M. 88/2020",
+        "SIDI MIM Cooperation",
+        "Treasury Reconciliation"
       ]
     },
     "collaboratore_ds": {
@@ -2481,6 +2543,14 @@ export default {
         "تطبيق اتفاقية تنظيم الإضراب",
         "إصدار أوامر التكليف بالخدمة",
         "تحرير محضر نسب المشاركة"
+      ],
+      "step6_title": "Enterprise Hub: Notice Board, Inventory & OPI",
+      "step6_desc": "Supervision of legal publications on the Official Notice Board, movable assets inventory registry, accounting reconciliation with OPI/SIOPE+ bank receipts, and canteen oversight.",
+      "step6_bullets": [
+        "Online Official Notice Board",
+        "Asset Inventory & Write-offs",
+        "OPI/SIOPE+ Reconciliation",
+        "Canteen Activation Control"
       ]
     },
     "principal": {
@@ -2519,6 +2589,14 @@ export default {
         "Term scrutiny sign-off",
         "Dropout risk alerts",
         "Institutional KPIs"
+      ],
+      "step7_title": "Enterprise Hub & Remote Qualified Signature",
+      "step7_desc": "Centralized management of Remote Qualified Digital Signature (CAdES/PAdES), Online Official Notice Board, Ministry Teacher Calls, and School Canteen service activation.",
+      "step7_bullets": [
+        "Qualified Remote Signature (FEQ)",
+        "Official Notice Board & Glyph Code",
+        "Ministry Substitute Calls",
+        "Canteen Service Activation"
       ]
     },
     "goToSection": "الانتقال إلى القسم"
@@ -4178,6 +4256,7 @@ export default {
     "viewAllGrades": "عرض جميع الدرجات"
   },
   "routeTitles": {
+    "enterpriseHub": "مركز المؤسسات والامتثال القانوني",
     "personnelDesk": "Digital Personnel Desk",
     "timecard": "Timecard & Leave Planner",
     "visitorRegistry": "Visitor & Concierge Registry",
@@ -6034,5 +6113,290 @@ export default {
     "widgetTitle": "قيد المستند رسمياً",
     "widgetHelp": "توليد ختم القيد الرقمي الفوري لهذا المستند",
     "stampedSuccess": "تم قيد المستند بالختم "
+  },
+  "enterprise": {
+    "header": {
+      "badgeCompliance": "المؤسسات والامتثال القانوني",
+      "badgeAgid": "MIM & AGID READY",
+      "title": "Enterprise School Management Hub",
+      "subtitle": "الوحدات التجارية الإستراتيجية المتوافقة مع معايير AgID و MIM و CAD و eIDAS.",
+      "viewRoleMatrix": "مصفوفة صلاحيات الأدوار",
+      "hideRoleMatrix": "إخفاء المصفوفة"
+    },
+    "matrix": {
+      "title": "مصفوفة صلاحيات الأدوار المؤسسية",
+      "subtitle": "تحديد الامتيازات التشغيلية والاطلاع العام والتوقيعات الرقمية القانونية",
+      "colFeature": "الوظيفة التجارية",
+      "colGovernance": "الإدارة الرئيسية",
+      "colOperations": "العمليات",
+      "colEndUsers": "المستخدمون النهائيون",
+      "colNorm": "المرجع التنظيمي"
+    },
+    "governance": {
+      "authorizedRoles": "الأدوار المصرح لها بالإدارة:",
+      "primaryGovernance": "الإدارة الرئيسية:",
+      "operations": "العمليات التشغيلية:",
+      "endUsers": "المستخدمون النهائيون:",
+      "legalRef": "المرجع القانوني:"
+    },
+    "roles": {
+      "ds": "مدير المدرسة (DS)",
+      "dsga": "المدير المالي والإداري (DSGA)",
+      "secretary": "السكرتارية الإدارية",
+      "secretaryAccounts": "سكرتارية الحسابات",
+      "secretaryStaff": "شؤون الموظفين",
+      "secretaryDidactics": "السكرتارية التعليمية",
+      "teacher": "معلم الفصل",
+      "commission": "لجنة امتحانات الثانوية العامة",
+      "dpo": "مسؤول حماية البيانات (DPO)",
+      "psychologist": "الأخصائي النفسي بالمدرسة (قانون 56/1989)",
+      "custodian": "أمين العهدة / المساعد الفني",
+      "parent": "ولي الأمر / العائلة",
+      "student": "الطالب",
+      "public": "الاطلاع العام / المواطنون"
+    },
+    "tabs": {
+      "pagopa": "1. PagoPA و OPI",
+      "interpelli": "2. إعلانات الاستخلاف OM 88",
+      "albo": "3. اللوحة الرسمية و ANAC",
+      "feq": "4. التوقيع المؤهل والختم",
+      "maturita": "5. الثانوية وسيرة الطالب",
+      "meals": "6. التغذية المدرسية والوجبات",
+      "inventory": "7. جرد العهد والأصول",
+      "privacy": "8. الخصوصية وإشارات التصوير",
+      "sidi": "9. الربط مع وزارة التعليم SIDI",
+      "psychology": "10. الإرشاد النفسي (CIC)"
+    },
+    "pagopa": {
+      "cardTitleNotice": "إصدار إشعار دفع PagoPA (ISO 7064)",
+      "cardSubtitleNotice": "إنشاء إشعار دفع برمز IUV متوافق مع AgID ورمز QR قابل للتنزيل.",
+      "studentId": "معرف الطالب",
+      "title": "سبب الدفع (مثل التأمين، الرحلات)",
+      "amount": "المبلغ (€)",
+      "generateNoticeBtn": "إنشاء إشعار IUV",
+      "iuvCode": "رمز IUV:",
+      "qrPayload": "بيانات QR:",
+      "downloadPdfBtn": "تنزيل إشعار PDF",
+      "cardTitleOpi": "مطابقة التدفقات البنكية OPI / SIOPE+",
+      "cardSubtitleOpi": "استيراد الإيصالات البنكية الإلكترونية لتسوية الحسابات الفورية.",
+      "opiInputLabel": "الصق بيانات XML أو CSV للإيصالات البنكية",
+      "reconcileBtn": "مطابقة تدفق OPI",
+      "checkSollecitiBtn": "فحص المتأخرات / التنبيهات",
+      "reconciledCount": "الإيصالات المطابقة:",
+      "totalAmount": "إجمالي المحصل:",
+      "successNotice": "تم إنشاء إشعار PagoPA ورمز IUV بنجاح!",
+      "successReconcile": "تمت مطابقة تدفق OPI بنجاح!",
+      "sollecitiFound": "تم العثور على {count} مدفوعات متأخرة تخضع للتنبيه.",
+      "modeSingle": "طالب فردي",
+      "modeClass": "الفصل بالكامل",
+      "selectStudent": "اختر الطالب",
+      "selectClass": "اختر الفصل",
+      "quickPresets": "أسباب ومبالغ سريعة:",
+      "generateBulkNoticeBtn": "إنشاء إشعارات IUV للفصل بالكامل ({count} طالب)",
+      "successBulkNotice": "تم إنشاء {count} إشعار PagoPA بنجاح للفصل!"
+    },
+    "interpelli": {
+      "cardTitlePublish": "نشر إعلان استخلاف المعلمين",
+      "cardSubtitlePublish": "لوحة إعلانات عامة رسمية متوافقة مع القرار الوزاري رقم 88/2024.",
+      "title": "عنوان الإعلان",
+      "concorsoClass": "التخصص / المادة (مثل A026, ADSS)",
+      "weeklyHours": "الساعات الأسبوعية",
+      "deadline": "الموعد النهائي للتقديم (YYYY-MM-DD)",
+      "publishBtn": "نشر الإعلان",
+      "cardTitleGraduatoria": "الترتيب التلقائي والاستدعاء",
+      "cardSubtitleGraduatoria": "حساب النقاط بناءً على المؤهلات مع استدعاء عاجل خلال 24 ساعة.",
+      "loadGraduatoriaBtn": "تحميل ترتيب المتقدمين",
+      "convocaBtn": "استدعاء (24 ساعة)",
+      "score": "النقاط: {score} | الرقم الضريبي: {cf}",
+      "noCandidates": "لا يوجد مرشحون حالياً.",
+      "successPublished": "تم نشر الإعلان بنجاح!",
+      "successConvoca": "تم إرسال الاستدعاء بمهلة 24 ساعة!",
+      "noActiveGraduatoria": "لا يوجد ترتيب نشط لهذا الإعلان."
+    },
+    "albo": {
+      "cardTitleAlbo": "النشر في اللوحة الإلكترونية الرسمية (قانون 69/2009)",
+      "cardSubtitleAlbo": "إعلان رسمي برقم قيد وعرض إلزامي لمدة 15 يوماً.",
+      "category": "الفئة القانونية",
+      "subject": "موضوع القرار",
+      "cigCode": "رمز CIG (للمشتريات والمناقصات)",
+      "awardedAmount": "المبلغ المعتمد (€)",
+      "publishBtn": "نشر في اللوحة الرسمية",
+      "cardTitleAnac": "الإدارة الشفافة وبيانات ANAC XML",
+      "cardSubtitleAnac": "إنشاء تلقائي لمجموعة بيانات XML لهيئة ANAC (قانون 190/2012 والمرسوم 33/2013).",
+      "downloadAnacBtn": "تصدير بيانات ANAC XML",
+      "anacDescription": "تتضمن تلقائياً صفقات الشفافية والمواعيد ورموز CIG المنشورة.",
+      "successPublished": "تم نشر المستند في اللوحة الرسمية لمدة 15 يوماً!",
+      "successAnac": "اكتمل تنزيل ملف ANAC XML."
+    },
+    "feq": {
+      "cardTitleCsc": "التوقيع السحابي المجمع CSC (Cloud Signature Consortium)",
+      "cardSubtitleCsc": "توقيع إلكتروني مؤهل للمدير / المسؤول المالي على مئات ملفات PDF برمز PIN و OTP.",
+      "pin": "رمز PIN للتوقيع عن بُعد",
+      "otp": "رمز OTP (تطبيق أو جهاز تحقق)",
+      "signBatchBtn": "توقيع الشهادات والدرجات دفعة واحدة",
+      "cardTitleGlifo": "الختم الأمني الرقمي (علامة المادة 23 CAD)",
+      "cardSubtitleGlifo": "ختم تشفيري يضمن مطابقة النسخة الورقية المطبوعة للأصل الرقمي.",
+      "glifoToken": "رمز التحقق العام",
+      "verifyGlifoBtn": "التحقق من صحة الختم",
+      "resultStatus": "النتيجة:",
+      "successSigned": "تم التوقيع إلكترونياً بالتوقيع المؤهل PAdES بنجاح!",
+      "successGlifoVerified": "تم التحقق من الختم بنجاح!"
+    },
+    "maturita": {
+      "cardTitleCredits": "حساب نقاط المرحلة الثانوية (مرسوم 62/2017)",
+      "cardSubtitleCredits": "تحويل تلقائي لمعدلات السنوات 3 و 4 و 5 وفق الجداول الوزارية الرسمية.",
+      "grade3rd": "معدل السنة الثالثة",
+      "grade4th": "معدل السنة الرابعة",
+      "grade5th": "معدل السنة الخامسة",
+      "calcBtn": "حساب النقاط المعتمدة",
+      "totalCredits": "إجمالي النقاط المدرسية: {credits} / 40 نقطة",
+      "cardTitleCurriculum": "السيرة الذاتية للطالب (قرار وزاري 88/2020)",
+      "cardSubtitleCurriculum": "تجميع الساعات المعتمدة والتدريب العملي (PCTO) وتصدير XML إلى الوزارة.",
+      "studentId": "معرف الطالب الخريج",
+      "downloadCurriculumBtn": "تنزيل XML السيرة الوزارية",
+      "successCalc": "تم حساب النقاط وفق الملحق أ من المرسوم 62/2017!",
+      "successCurriculum": "تم تصدير ملف XML للسيرة بنجاح!",
+      "selectStudent": "اختر الطالب الخريج (السنة 5)",
+      "filterClass": "تصفية حسب الفصل",
+      "selectedStudentDetails": "الطالب المختار:"
+    },
+    "meals": {
+      "cardTitleRollCall": "تسجيل حضور الوجبات المدرسية (قبل الساعة 09:00)",
+      "cardSubtitleRollCall": "تسجيل صباحي سريع للإرسال الفوري إلى المطبخ المركزي التابع للبلدية.",
+      "classId": "الفصل (مثل 2A ابتدائي)",
+      "date": "التاريخ (YYYY-MM-DD)",
+      "submitRollCallBtn": "إرسال الحضور إلى المطبخ المركزي",
+      "cardTitleWallet": "المحفظة الإلكترونية للوجبات",
+      "cardSubtitleWallet": "خصم تلقائي لكل وجبة وشحن إلكتروني عبر PagoPA.",
+      "studentId": "معرف الطالب",
+      "topupAmount": "مبلغ الشحن (€)",
+      "topupBtn": "شحن عبر PagoPA",
+      "successRollCall": "تم إرسال عدد الوجبات إلى المطبخ المركزي!",
+      "successWallet": "تم شحن محفظة الوجبات عبر PagoPA!",
+      "selectStudent": "اختر التلميذ",
+      "currentBalance": "الرصيد الحالي للمحفظة:",
+      "quickTopup": "شحن سريع:"
+    },
+    "inventory": {
+      "cardTitleAsset": "سجل الأصول والأجهزة المنقولة (مرسوم 129/2018)",
+      "cardSubtitleAsset": "تصنيف العهد المادية، المباني، المختبرات وحساب الإهلاك السنوي.",
+      "description": "وصف الجهاز (مثل شاشة تفاعلية، كمبيوتر محمول)",
+      "category": "فئة المحاسبة",
+      "initialValue": "القيمة الأولية (€)",
+      "createAssetBtn": "تسجيل العهدة وإنشاء الباركود",
+      "cardTitleLoan": "إعارة الأجهزة المجانية للطلاب (عقد عارية الاستعمال)",
+      "cardSubtitleLoan": "تسليم الأجهزة اللوحية/المحمولة للعائلات بعقد موقّع ومتابعة إرجاعها.",
+      "assetId": "معرف العهدة",
+      "studentId": "معرف الطالب",
+      "createLoanBtn": "إبرام عقد الإعارة",
+      "successAsset": "تم تسجيل الأصل في العهدة برقم متسلسل ورمز QR!",
+      "successLoan": "تم إبرام عقد الإعارة بنجاح!"
+    },
+    "privacy": {
+      "cardTitleTreatment": "سجل أنشطة معالجة البيانات (المادة 30 GDPR)",
+      "cardSubtitleTreatment": "توثيق شفاف للأغراض والأسس القانونية وإجراءات الأمان بالمؤسسة.",
+      "activityName": "نشاط المعالجة",
+      "legalBasis": "الأساس القانوني",
+      "saveTreatmentBtn": "تسجيل نشاط المعالجة GDPR",
+      "cardTitleTrafficLight": "إشارات خصوصية التصوير للمعلمين",
+      "cardSubtitleTrafficLight": "مؤشر فوري للرحلات والتصوير: 🟢 أخضر (مسموح)، 🟡 أصفر (داخلي فقط)، 🔴 أحمر (ممنوع منعاً باتاً).",
+      "greenBadge": "🟢 أخضر: الصور الرسمية مسموحة",
+      "yellowBadge": "🟡 أصفر: للاستخدام التعليمي الداخلي فقط",
+      "redBadge": "🔴 أحمر: التصوير ممنوع منعاً باتاً",
+      "successTreatment": "تم تسجيل المعالجة وفق المادة 30 من GDPR!"
+    },
+    "sidi": {
+      "cardTitleCert": "شهادة محطة العمل WebService MIM",
+      "cardSubtitleCert": "اتصال مباشر آمن بتقنية mTLS مع خوادم وزارة التعليم.",
+      "endpoint": "نقطة الاتصال:",
+      "connectionStatus": "حالة الاتصال:",
+      "connected": "متصل (الشهادة نشطة)",
+      "syncStudentsBtn": "مزامنة رموز SIDI للطلاب (نقرة واحدة)",
+      "cardTitleScrutiny": "إرسال نتائج التقييم النهائي إلى SIDI",
+      "cardSubtitleScrutiny": "إرسال نتائج النجاح والنقاط مباشرة إلى البوابة الوزارية دون ملفات يدوية.",
+      "pushScrutinyBtn": "إرسال النتائج إلى الوزارة",
+      "successSync": "اكتملت المزامنة مع خدمة SIDI MIM بنجاح!",
+      "successPush": "تم إرسال النتائج بنجاح إلى الوزارة!"
+    },
+    "psychology": {
+      "cardTitleBooking": "حجز استشارة نفسية بسرية ودون هوية (CIC)",
+      "cardSubtitleBooking": "حجز باسم مستعار محمي بالسرية المهنية بموجب القانون 56/1989.",
+      "slotTime": "الموعد المطلوب (YYYY-MM-DD HH:MM)",
+      "bookBtn": "حجز موعد سري",
+      "cardTitleConsent": "موافقة الوالدين المستنيرة الإلزامية",
+      "cardSubtitleConsent": "للطلاب القاصرين، تتطلب الجلسة التوقيع الإلزامي من كلا الوالدين.",
+      "studentId": "معرف الطالب القاصر",
+      "signConsentBtn": "توقيع موافقة الوالدين",
+      "successBooked": "تم حجز الموعد بنجاح باسم مستعار!",
+      "consentWarning": "يرجى التحقق من موافقة كلا الوالدين.",
+      "successConsent": "تم تسجيل الموافقة المستنيرة بنجاح!",
+      "modeSingle": "طالب فردي",
+      "modeClass": "الفصل بالكامل",
+      "selectStudent": "اختر الطالب القاصر",
+      "selectClass": "اختر الفصل",
+      "schoolYear": "العام الدراسي",
+      "sendBulkConsentBtn": "إرسال طلب الموافقة لجميع أولياء أمور الفصل ({count} طالب)",
+      "successBulkConsent": "تم تسجيل طلبات الموافقة لـ {count} طالب في الفصل!",
+      "studentsInClass": "طلاب الفصل:",
+      "statusPending": "في انتظار التوقيع",
+      "statusSigned": "موقّع من كلا الوالدين"
+    }
+  },
+  "psychologyDesk": {
+    "title": "Psychological Support Desk (CIC)",
+    "subtitle": "Confidential and anonymous school psychological counselling service (Law 56/1989)",
+    "consentOk": "Parental Consent Active",
+    "consentPending": "Consent Pending",
+    "privacyTitle": "Absolute Privacy & Professional Secrecy",
+    "privacyDesc": "Counselling sessions with the school psychologist are protected by professional secrecy under Art. 622 c.p. and Law 56/1989.",
+    "consentRequiredTitle": "Mandatory Parental Informed Consent",
+    "consentRequiredDesc": "For minor students, advance written consent from parents is required on the family portal before accessing individual counselling.",
+    "howToSign": "How to sign",
+    "bookTitle": "Book a Confidential Session",
+    "bookSubtitle": "Choose an available time slot. You will receive an anonymous confirmation code.",
+    "selectSlot": "Available Time Slot",
+    "placeholderSlot": "Select day and time",
+    "topic": "General Topic (Optional & Anonymous)",
+    "notesOptional": "Optional notes or preferences",
+    "submitBookingBtn": "Confirm Anonymous Booking",
+    "myBookingsTitle": "My Booked Appointments",
+    "myBookingsSubtitle": "View confirmed sessions with the school psychologist.",
+    "noBookings": "No sessions currently scheduled.",
+    "confirmed": "Confirmed"
+  },
+  "studentCanteen": {
+    "title": "School Canteen & Meals",
+    "subtitle": "View meal attendance, daily menu and special diets",
+    "serviceActive": "Canteen Service Active",
+    "serviceInactive": "Canteen Inactive",
+    "inactiveTitle": "The canteen service is not active for this school",
+    "inactiveDesc": "School meal service is not currently enabled for this school campus. If activated by the Principal or School Bursar, meal information will appear here automatically.",
+    "todayMenuTitle": "Today's Menu",
+    "weeklyCalendarTitle": "Weekly Meal Calendar"
+  },
+  "parentPsychology": {
+    "title": "Psychological Support Desk (CIC) & Parental Consent",
+    "subtitle": "Mandatory informed consent for children's access to school psychological support (Law 56/1989)",
+    "selectChild": "Select Child:",
+    "cardConsentTitle": "Mandatory Informed Consent (S.Y. 2025/2026)",
+    "statusSigned": "Consent Granted",
+    "statusPending": "Awaiting Signature",
+    "legalNotice": "Under Art. 316 c.c. and Law 56/1989, access to psychological support for minor students requires parental informed consent.",
+    "termsCheckbox": "I declare that I have read the information sheet and authorize my child to attend the school psychological counselling desk.",
+    "signConsentBtn": "Sign and Grant Informed Consent",
+    "parentConsultTitle": "Request Parent-Psychologist Consultation",
+    "sendRequestBtn": "Send Consultation Request"
+  },
+  "parentCanteen": {
+    "title": "School Canteen & Electronic Wallet",
+    "subtitle": "Manage meal wallet balance, online PagoPA top-up and consumption history",
+    "active": "Canteen Active",
+    "inactive": "Canteen Inactive",
+    "inactiveTitle": "The canteen service is not active for this school",
+    "inactiveDesc": "This school does not currently provide canteen services. When enabled by the Principal or School Bursar, you will be able to manage the meal wallet and top-ups here.",
+    "selectChild": "Select Child:",
+    "walletTitle": "Electronic Meal Wallet",
+    "topupBtn": "Top Up with PagoPA (IUV)",
+    "historyTitle": "Meal Consumption & Attendance History"
   }
 }

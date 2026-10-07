@@ -21,6 +21,11 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	grp.POST("/exports/generate", h.GenerateExport)
 	grp.GET("/exports", h.GetExports)
 	grp.GET("/exports/:id/download", h.DownloadExportXML)
+
+	// WebService MIM Cooperazione Applicativa
+	grp.POST("/sync-student-codes", h.SyncStudentCodes)
+	grp.POST("/push-scrutiny-results", h.PushScrutinyResults)
+	grp.GET("/cooperation-config", h.GetCooperationConfig)
 }
 
 func canAccessSidi(role string) bool {
@@ -105,4 +110,57 @@ func (h *Handler) DownloadExportXML(c *gin.Context) {
 
 	c.Header("Content-Disposition", "attachment; filename=flusso_sidi.xml")
 	c.Data(http.StatusOK, "application/xml; charset=utf-8", []byte(xmlData))
+}
+
+func (h *Handler) SyncStudentCodes(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
+	if !canAccessSidi(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	var req struct {
+		Students []StudenteSIDI `json:"students"`
+	}
+	_ = c.ShouldBindJSON(&req)
+
+	resp, err := h.service.SyncStudentCodes(c.Request.Context(), schoolID, req.Students)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *Handler) PushScrutinyResults(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
+	if !canAccessSidi(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	var req PushScrutinyResultsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp, err := h.service.PushScrutinyResults(c.Request.Context(), schoolID, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *Handler) GetCooperationConfig(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	cfg, err := h.service.GetCooperationConfig(c.Request.Context(), schoolID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, cfg)
 }

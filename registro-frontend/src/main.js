@@ -18,6 +18,16 @@ import './assets/styles/globals.css'
 
 import { useErrorStore } from './stores/error'
 import { useOutboxStore } from './stores/outbox'
+// Ensure passive event listeners for touch events to eliminate browser performance violations
+if (typeof EventTarget !== 'undefined' && typeof window !== 'undefined') {
+  const originalAddEventListener = EventTarget.prototype.addEventListener
+  EventTarget.prototype.addEventListener = function (type, fn, options) {
+    if (['touchstart', 'touchmove'].includes(type) && (options === undefined || options === false)) {
+      options = { passive: true }
+    }
+    return originalAddEventListener.call(this, type, fn, options)
+  }
+}
 
 const savedLang = getSavedLocale(true)
 

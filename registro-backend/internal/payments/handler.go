@@ -20,8 +20,12 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	{
 		g.GET("", h.List)
 		g.GET("/:id", h.Get)
+		g.GET("/:id/bollettino", h.GetBollettino)
+		g.POST("/:id/checkout", h.Checkout)
 		g.POST("/:id/pay", h.Pay)
 		g.POST("", h.Create)
+		g.POST("/reconcile-opi", h.ReconcileOPI)
+		g.GET("/solleciti", h.GetSolleciti)
 	}
 }
 
@@ -142,4 +146,105 @@ func (h *Handler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, payment)
+}
+
+func (h *Handler) GetBollettino(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	paymentID := c.Param("id")
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	notice, err := h.service.GetBollettino(c.Request.Context(), userID, role, schoolID, paymentID)
+	if err != nil {
+		if err == ErrUnauthorized {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		if err == ErrPaymentNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "pagamento non trovato"})
+			return
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, notice)
+}
+
+func (h *Handler) Checkout(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	paymentID := c.Param("id")
+
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req struct {
+		ReturnURL string `json:"return_url"`
+	}
+	_ = c.ShouldBindJSON(&req)
+	if req.ReturnURL == "" {
+		req.ReturnURL = "https://scuola.edu.it/pagamenti/conferma"
+	}
+
+	session, err := h.service.Checkout(c.Request.Context(), userID, role, paymentID, req.ReturnURL)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, session)
+}
+
+func (h *Handler) ReconcileOPI(c *gin.Context) {
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	format := c.DefaultQuery("format", "OPI_XML")
+	data, err := c.GetRawData()
+	if err != nil || len(data) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "flusso OPI mancante o non valido"})
+		return
+	}
+
+	report, err := h.service.ReconcileOPI(c.Request.Context(), schoolID, format, data)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, report)
+}
+
+func (h *Handler) GetSolleciti(c *gin.Context) {
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+
+	if role != "admin" && role != "superadmin" && role != "secretary" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	solleciti, err := h.service.GetSolleciti(c.Request.Context(), schoolID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"total":     len(solleciti),
+		"solleciti": solleciti,
+	})
 }

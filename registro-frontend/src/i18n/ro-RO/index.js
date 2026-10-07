@@ -1633,7 +1633,9 @@ export default {
       "step4_title": "Fluxuri SIDI & Portale Ministeriale",
       "step4_desc": "Generează, validează și exportă pachete de date XML pentru sincronizarea cu portalul SIDI al Ministerului Educației.",
       "step5_title": "Procese-Verbale & Șabloane Ședințe",
-      "step5_desc": "Accesează șabloane standardizate pentru redactarea, arhivarea și numerotarea proceselor-verbale ale comisiilor și consiliilor."
+      "step5_desc": "Accesează șabloane standardizate pentru redactarea, arhivarea și numerotarea proceselor-verbale ale comisiilor și consiliilor.",
+      "step6_title": "Administrative Enterprise Hub",
+      "step6_desc": "Operational management of PagoPA notices with IUV codes, Student Curriculum for State Graduation (D.M. 88/2020), and SIDI MIM cooperative flow synchronization."
     },
     "collaboratore_ds": {
       "step1_title": "Panoul Colaboratorului Directorului",
@@ -1669,7 +1671,9 @@ export default {
       "step4_title": "Fluxuri SIDI & Raportări Minister",
       "step4_desc": "Validarea și autorizarea transmiterii datelor XML către sistemul național SIDI, salarizare și monitorizări financiare.",
       "step5_title": "Greve & Servicii Publice Esențiale",
-      "step5_desc": "Stabilirea și alocarea contingentelor minime de personal pentru asigurarea funcționării serviciilor de bază în caz de grevă."
+      "step5_desc": "Stabilirea și alocarea contingentelor minime de personal pentru asigurarea funcționării serviciilor de bază în caz de grevă.",
+      "step6_title": "Enterprise Hub: Notice Board, Inventory & OPI",
+      "step6_desc": "Supervision of legal publications on the Official Notice Board, movable assets inventory registry, accounting reconciliation with OPI/SIOPE+ bank receipts, and canteen oversight."
     },
     "principal": {
       "step1_title": "Panou de Comandă Direcțiune & Privire Generală",
@@ -1683,7 +1687,9 @@ export default {
       "step5_title": "Procese-Verbale & Hotărâri Colegiale",
       "step5_desc": "Review and approval of Teachers' Assembly minutes, Class Council deliberations, and digital preservation according to public standards.",
       "step6_title": "Monitorizare Didactică, Scrutin & Abandon Școlar",
-      "step6_desc": "Institutional performance statistics, term scrutiny validation, and early warning analytics for student dropout prevention."
+      "step6_desc": "Institutional performance statistics, term scrutiny validation, and early warning analytics for student dropout prevention.",
+      "step7_title": "Enterprise Hub & Remote Qualified Signature",
+      "step7_desc": "Centralized management of Remote Qualified Digital Signature (CAdES/PAdES), Online Official Notice Board, Ministry Teacher Calls, and School Canteen service activation."
     }
   },
   "help": {
@@ -2071,6 +2077,22 @@ export default {
         "Date teste",
         "Activități extra",
         "Evenimente"
+      ],
+      "step9_title": "Psychological Counseling Desk (CIC)",
+      "step9_desc": "Book confidential counseling appointments under complete professional secrecy (Law 56/1989), with automatic parental consent verification for minors.",
+      "step9_bullets": [
+        "Confidential booking",
+        "Strict medical confidentiality",
+        "Parental consent verification",
+        "Session history"
+      ],
+      "step10_title": "School Canteen & Meals",
+      "step10_desc": "View daily menus, check meal attendance confirmed from the class register, and view your registered dietary profile (standard or certified special diets).",
+      "step10_bullets": [
+        "Daily menu",
+        "Confirmed meal attendance",
+        "Standard / special dietary profile",
+        "Meal attendance history"
       ]
     },
     "parent": {
@@ -2125,6 +2147,22 @@ export default {
         "Istoric plăți",
         "Chitanțe",
         "Cereri documente"
+      ],
+      "step9_title": "Psychological Desk & Informed Consent",
+      "step9_desc": "Digitally sign the mandatory informed consent for children's access to psychological counseling (Law 56/1989) and request parental counseling consultations.",
+      "step9_bullets": [
+        "Informed consent signature",
+        "Child welfare protection",
+        "Parental counseling requests",
+        "Quick child selector"
+      ],
+      "step10_title": "School Canteen & Electronic Wallet",
+      "step10_desc": "Monitor available meal wallet balance for each child, make instant online top-ups with PagoPA (+€10, +€25, +€50, +€100), and track meal deductions history.",
+      "step10_bullets": [
+        "Live wallet balance",
+        "Instant PagoPA top-up",
+        "Immediate IUV code generation",
+        "Meal debit history"
       ]
     },
     "secretary": {
@@ -2179,6 +2217,14 @@ export default {
         "Asignare roluri",
         "Resetare parolă",
         "Gestiune acces"
+      ],
+      "step9_title": "Enterprise Hub: PagoPA, Graduation & SIDI",
+      "step9_desc": "Mass emission of PagoPA payment notices with IUV codes, Student Curriculum preparation for State Exam (D.M. 88/2020), and cooperative application synchronization with SIDI MIM.",
+      "step9_bullets": [
+        "PagoPA Notices & IUV Codes",
+        "Student Curriculum Model",
+        "SIDI MIM Cooperation",
+        "School Canteen Module"
       ]
     },
     "admin": {
@@ -2233,6 +2279,14 @@ export default {
         "2FA obligatoriu",
         "Feature flags",
         "Mentenanță"
+      ],
+      "step9_title": "Enterprise School Management Hub",
+      "step9_desc": "Central governance platform for all 10 institutional regulatory modules (PagoPA, Remote Signature, Notice Board, Teacher Calls, Graduation, Canteen, Inventory, DPO Privacy, SIDI, Counseling Desk) with live role simulation.",
+      "step9_bullets": [
+        "10 Regulatory Modules Governance",
+        "Instant Role Simulator",
+        "Institutional Service Activation",
+        "AgID & Ministry Compliance"
       ]
     },
     "assistente_amministrativo": {
@@ -2265,6 +2319,14 @@ export default {
         "Arhivă decizii și ședințe consiliu",
         "Numerotare cronologică certificată",
         "Gestionare electronică a documentelor"
+      ],
+      "step6_title": "Administrative Enterprise Hub",
+      "step6_desc": "Operational management of PagoPA notices with IUV codes, Student Curriculum for State Graduation (D.M. 88/2020), and SIDI MIM cooperative flow synchronization.",
+      "step6_bullets": [
+        "PagoPA Notices with IUV",
+        "Student Curriculum D.M. 88/2020",
+        "SIDI MIM Cooperation",
+        "Treasury Reconciliation"
       ]
     },
     "collaboratore_ds": {
@@ -2361,6 +2423,14 @@ export default {
         "Aplicare acord funcționare pe timp de grevă",
         "Emitere dispoziții de serviciu",
         "Proces-verbal participare grevă"
+      ],
+      "step6_title": "Enterprise Hub: Notice Board, Inventory & OPI",
+      "step6_desc": "Supervision of legal publications on the Official Notice Board, movable assets inventory registry, accounting reconciliation with OPI/SIOPE+ bank receipts, and canteen oversight.",
+      "step6_bullets": [
+        "Online Official Notice Board",
+        "Asset Inventory & Write-offs",
+        "OPI/SIOPE+ Reconciliation",
+        "Canteen Activation Control"
       ]
     },
     "principal": {
@@ -2399,6 +2469,14 @@ export default {
         "Term scrutiny sign-off",
         "Dropout risk alerts",
         "Institutional KPIs"
+      ],
+      "step7_title": "Enterprise Hub & Remote Qualified Signature",
+      "step7_desc": "Centralized management of Remote Qualified Digital Signature (CAdES/PAdES), Online Official Notice Board, Ministry Teacher Calls, and School Canteen service activation.",
+      "step7_bullets": [
+        "Qualified Remote Signature (FEQ)",
+        "Official Notice Board & Glyph Code",
+        "Ministry Substitute Calls",
+        "Canteen Service Activation"
       ]
     },
     "goToSection": "Mergi la secțiune"
@@ -4033,6 +4111,7 @@ export default {
     "viewAllGrades": "Vezi toate notele"
   },
   "routeTitles": {
+    "enterpriseHub": "Hub Enterprise și Conformitate Legală",
     "personnelDesk": "Digital Personnel Desk",
     "timecard": "Timecard & Leave Planner",
     "visitorRegistry": "Visitor & Concierge Registry",
@@ -5889,5 +5968,290 @@ export default {
     "widgetTitle": "Înregistrează Documentul",
     "widgetHelp": "Generează instantaneu ștampila oficială de înregistrare pentru acest document",
     "stampedSuccess": "Document înregistrat cu ștampila "
+  },
+  "enterprise": {
+    "header": {
+      "badgeCompliance": "ENTERPRISE & CONFORMITATE LEGALĂ",
+      "badgeAgid": "MIM & AGID READY",
+      "title": "Enterprise School Management Hub",
+      "subtitle": "Module comerciale strategice conforme standardelor normative AgID, MIM, CAD și eIDAS.",
+      "viewRoleMatrix": "Matricea Competențelor",
+      "hideRoleMatrix": "Ascunde Matricea"
+    },
+    "matrix": {
+      "title": "Matricea Competențelor pe Roluri Instituționale",
+      "subtitle": "Maparea drepturilor de operare, consultare publică și semnătură digitală legală",
+      "colFeature": "Funcționalitate Comercială",
+      "colGovernance": "Guvernanță Principală",
+      "colOperations": "Operațiuni",
+      "colEndUsers": "Utilizatori Finali",
+      "colNorm": "Cadru Legal"
+    },
+    "governance": {
+      "authorizedRoles": "Roluri Autorizate pentru Gestionare:",
+      "primaryGovernance": "Guvernanță Principală:",
+      "operations": "Operațiuni Curente:",
+      "endUsers": "Utilizatori Finali:",
+      "legalRef": "Referință Normativă:"
+    },
+    "roles": {
+      "ds": "Director Școlar (DS)",
+      "dsga": "Director Financiar-Contabil (DSGA)",
+      "secretary": "Secretariat Administrativ",
+      "secretaryAccounts": "Secretariat Contabilitate",
+      "secretaryStaff": "Secretariat Resurse Umane",
+      "secretaryDidactics": "Secretariat Didactic",
+      "teacher": "Profesor / Cadru Didactic",
+      "commission": "Comisia Examenului de Bacalaureat",
+      "dpo": "Responsabil cu Protecția Datelor (DPO)",
+      "psychologist": "Psiholog Școlar (Legea 56/1989)",
+      "custodian": "Gestionar Patrimoniu / Asistent Tehnic",
+      "parent": "Părinte / Familie",
+      "student": "Elev",
+      "public": "Consultare Publică / Cetățeni"
+    },
+    "tabs": {
+      "pagopa": "1. PagoPA & OPI",
+      "interpelli": "2. Supliniri OM 88",
+      "albo": "3. Avizier Oficial & ANAC",
+      "feq": "4. Semnătură Calificată & Sigiliu",
+      "maturita": "5. Bacalaureat & Curriculum",
+      "meals": "6. Cantină Școlară & Diete",
+      "inventory": "7. Inventar Patrimoniu",
+      "privacy": "8. GDPR & Semafor Foto",
+      "sidi": "9. SIDI Interoperabilitate MIM",
+      "psychology": "10. Cabinet Psihologic (CIC)"
+    },
+    "pagopa": {
+      "cardTitleNotice": "Emitere Notificare PagoPA (ISO 7064 Mod 97-10)",
+      "cardSubtitleNotice": "Generează notificare de plată cu cod IUV conform AgID și cod QR descărcabil.",
+      "studentId": "ID Elev",
+      "title": "Descriere Plată (ex. Asigurare, Excursii)",
+      "amount": "Sumă (€)",
+      "generateNoticeBtn": "Generează Notificare IUV",
+      "iuvCode": "Cod IUV:",
+      "qrPayload": "Payload QR:",
+      "downloadPdfBtn": "Descarcă Formular PDF",
+      "cardTitleOpi": "Reconciliere Bancară OPI / SIOPE+",
+      "cardSubtitleOpi": "Importă recipisele bancare electronice pentru reconciliere contabilă instantanee.",
+      "opiInputLabel": "Inserați conținutul XML sau CSV al chitanțelor bancare",
+      "reconcileBtn": "Reconciliază Fluxul OPI",
+      "checkSollecitiBtn": "Verifică Plăți Restante / Notificări",
+      "reconciledCount": "Chitanțe Reconciliate:",
+      "totalAmount": "Total Încasat:",
+      "successNotice": "Notificarea PagoPA și codul IUV au fost generate cu succes!",
+      "successReconcile": "Fluxul OPI a fost reconciliat cu succes!",
+      "sollecitiFound": "Au fost găsite {count} plăți restante pentru notificare.",
+      "modeSingle": "Elev Individual",
+      "modeClass": "Întreaga Clasă",
+      "selectStudent": "Selectează Elev",
+      "selectClass": "Selectează Clasa",
+      "quickPresets": "Motive & Sume Rapide:",
+      "generateBulkNoticeBtn": "Generează Notificări IUV pentru Întreaga Clasă ({count} Elevi)",
+      "successBulkNotice": "{count} notificări PagoPA generate cu succes pentru clasă!"
+    },
+    "interpelli": {
+      "cardTitlePublish": "Publicare Anunț Suplinire Cadre Didactice",
+      "cardSubtitlePublish": "Avizier instituțional public conform Ordonanței Ministeriale nr. 88/2024.",
+      "title": "Titlu Anunț",
+      "concorsoClass": "Specialitate / Catedră (ex. A026, ADSS)",
+      "weeklyHours": "Ore Săptămânale",
+      "deadline": "Termen Înscriere (AAAA-LL-ZZ)",
+      "publishBtn": "Publică Anunțul",
+      "cardTitleGraduatoria": "Clasament Automat & Convocare",
+      "cardSubtitleGraduatoria": "Calcul meritocratic al punctajului și convocare urgentă cu răspuns în 24 ore.",
+      "loadGraduatoriaBtn": "Încarcă Clasamentul Candidaților",
+      "convocaBtn": "Convoacă (24h)",
+      "score": "Punctaj: {score} pct | CNP: {cf}",
+      "noCandidates": "Niciun candidat înregistrat în acest moment.",
+      "successPublished": "Anunțul de selecție a fost publicat cu succes!",
+      "successConvoca": "Convocarea a fost transmisă cu termen de 24 ore!",
+      "noActiveGraduatoria": "Nu există un clasament activ pentru acest anunț."
+    },
+    "albo": {
+      "cardTitleAlbo": "Publicare în Avizierul Electronic (Legea 69/2009)",
+      "cardSubtitleAlbo": "Publicitate legală cu număr de registru și afișare obligatorie de 15 zile.",
+      "category": "Categorie Juridică",
+      "subject": "Obiectul Actului",
+      "cigCode": "Cod CIG (achiziții publice)",
+      "awardedAmount": "Valoare Atribuită (€)",
+      "publishBtn": "Publică în Avizierul Oficial",
+      "cardTitleAnac": "Transparență Instituțională & ANAC XML",
+      "cardSubtitleAnac": "Generare automată a setului de date XML pentru ANAC (Legea 190/2012 și O.G. 33/2013).",
+      "downloadAnacBtn": "Exportă Setul de Date ANAC XML",
+      "anacDescription": "Include automat loturile de transparență, termenele și codurile CIG publicate.",
+      "successPublished": "Actul a fost publicat în avizierul oficial pentru 15 zile!",
+      "successAnac": "Descărcarea fișierului ANAC XML a fost finalizată."
+    },
+    "feq": {
+      "cardTitleCsc": "Semnătură Electronică Masivă CSC (Cloud Signature Consortium)",
+      "cardSubtitleCsc": "Semnătură calificată pentru Director / Contabil pe sute de fișiere PDF cu PIN și OTP.",
+      "pin": "PIN Semnătură Digitală",
+      "otp": "Cod OTP (Aplicație sau Token)",
+      "signBatchBtn": "Semnează Masiv Foile Matricole & Diplomele",
+      "cardTitleGlifo": "Sigiliu Electronic de Securitate (Glif Art. 23 CAD)",
+      "cardSubtitleGlifo": "Marcaj criptografic care garantează conformitatea copiei tipărite cu originalul digital.",
+      "glifoToken": "Token de Verificare Publică",
+      "verifyGlifoBtn": "Verifică Autenticitatea Glifului",
+      "resultStatus": "Rezultat:",
+      "successSigned": "Lot semnat electronic cu semnătură calificată PAdES!",
+      "successGlifoVerified": "Gliful a fost verificat cu succes!"
+    },
+    "maturita": {
+      "cardTitleCredits": "Calculul Creditelor Școlare (Decr. Leg. 62/2017)",
+      "cardSubtitleCredits": "Conversia automată a mediilor anuale din clasele a XI-a și a XII-a conform tabelelor ministeriale.",
+      "grade3rd": "Media Anul 3",
+      "grade4th": "Media Anul 4",
+      "grade5th": "Media Anul 5",
+      "calcBtn": "Calculează Creditele Oficiale",
+      "totalCredits": "Total Credite Școlare: {credits} / 40 puncte",
+      "cardTitleCurriculum": "Curriculumul Elevului (Ordin Ministerial 88/2020)",
+      "cardSubtitleCurriculum": "Centralizează creditele, stagiile de practică (PCTO) și exportă fișierul XML către Minister.",
+      "studentId": "ID Elev Absolvent",
+      "downloadCurriculumBtn": "Descarcă XML Curriculum Ministerial",
+      "successCalc": "Creditele au fost calculate conform Anexei A din Decr. Leg. 62/2017!",
+      "successCurriculum": "Fișierul XML al curriculumului a fost exportat cu succes!",
+      "selectStudent": "Selectează Elev Absolvent (Anul 5)",
+      "filterClass": "Filtrează după Clasă",
+      "selectedStudentDetails": "Elev Selectat:"
+    },
+    "meals": {
+      "cardTitleRollCall": "Prezența la Cantină (Până la ora 09:00)",
+      "cardSubtitleRollCall": "Apel matinal rapid pentru transmiterea numărului de porții către bucătăria centrală.",
+      "classId": "Clasa (ex. Clasa a II-a A)",
+      "date": "Data (AAAA-LL-ZZ)",
+      "submitRollCallBtn": "Transmite Prezența la Bucătărie",
+      "cardTitleWallet": "Portofel Electronic Cantină",
+      "cardSubtitleWallet": "Debitarea automată a meselor și reîncărcare online prin PagoPA.",
+      "studentId": "ID Elev",
+      "topupAmount": "Sumă Reîncărcare (€)",
+      "topupBtn": "Reîncarcă prin PagoPA",
+      "successRollCall": "Numărul de porții a fost transmis la bucătărie!",
+      "successWallet": "Portofelul cantinei a fost reîncărcat prin PagoPA!",
+      "selectStudent": "Selectează Elev",
+      "currentBalance": "Sold Curent Portofel:",
+      "quickTopup": "Reîncărcare Rapidă:"
+    },
+    "inventory": {
+      "cardTitleAsset": "Registrul Bunurilor Mobile & Echipamentelor (Decr. 129/2018)",
+      "cardSubtitleAsset": "Clasificare patrimonială, clădire, laborator și amortizare anuală.",
+      "description": "Descriere Bun (ex. Tablă Interactivă, Laptop)",
+      "category": "Categorie Contabilă",
+      "initialValue": "Valoare Inițială (€)",
+      "createAssetBtn": "Înregistrează Bunul & Generează Cod de Bare",
+      "cardTitleLoan": "Comodat Gratuit Dispozitive Digitale",
+      "cardSubtitleLoan": "Acordarea de tablete/laptopuri familiilor cu contract semnat și evidența restituirii.",
+      "assetId": "ID Bun",
+      "studentId": "ID Elev",
+      "createLoanBtn": "Încheie Contract de Comodat",
+      "successAsset": "Bun înregistrat în patrimoniu cu număr de inventar și QR!",
+      "successLoan": "Contractul de comodat a fost încheiat cu succes!"
+    },
+    "privacy": {
+      "cardTitleTreatment": "Registrul Operațiunilor de Prelucrare (Art. 30 GDPR)",
+      "cardSubtitleTreatment": "Maparea transparentă a scopurilor, temeiurilor juridice și măsurilor de securitate.",
+      "activityName": "Activitate de Prelucrare",
+      "legalBasis": "Temei Juridic",
+      "saveTreatmentBtn": "Înregistrează Activitatea GDPR",
+      "cardTitleTrafficLight": "Semafor de Confidențialitate Foto pentru Profesori",
+      "cardSubtitleTrafficLight": "Indicator vizual pentru excursii și fotografii: 🟢 Verde (permis), 🟡 Galben (doar intern), 🔴 Roșu (strict interzis).",
+      "greenBadge": "🟢 VERDE: Fotografii Oficiale Permise",
+      "yellowBadge": "🟡 GALBEN: Doar Uz Didactic Intern",
+      "redBadge": "🔴 ROȘU: Fotografii Strict Interzise",
+      "successTreatment": "Activitatea a fost înregistrată conform Art. 30 GDPR!"
+    },
+    "sidi": {
+      "cardTitleCert": "Certificat de Post WebService MIM",
+      "cardSubtitleCert": "Conexiune directă securizată mTLS cu serverele Ministerului Educației.",
+      "endpoint": "Punct de Conectare:",
+      "connectionStatus": "Stare Conexiune:",
+      "connected": "CONECTAT (Certificat Activ)",
+      "syncStudentsBtn": "Sincronizează Codurile SIDI (1-Clic)",
+      "cardTitleScrutiny": "Transmiterea Rezultatelor Finale către SIDI",
+      "cardSubtitleScrutiny": "Trimite situația școlară și creditele direct în portalul ministerului fără fișiere manuale.",
+      "pushScrutinyBtn": "Transmite Rezultatele la Minister",
+      "successSync": "Sincronizarea WebService SIDI MIM a fost finalizată!",
+      "successPush": "Rezultatele au fost transmise cu succes către Minister!"
+    },
+    "psychology": {
+      "cardTitleBooking": "Programare Anonimă & Confidențială (CIC)",
+      "cardSubtitleBooking": "Programare sub pseudonim protejată de secretul profesional conform Legii 56/1989.",
+      "slotTime": "Data și Ora Solicitată (AAAA-LL-ZZ HH:MM)",
+      "bookBtn": "Rezervă Ședință Confidențială",
+      "cardTitleConsent": "Acord Informat Părintesc Obligatoriu",
+      "cardSubtitleConsent": "Pentru elevii minori, ședința necesită obligatoriu acordul ambilor părinți.",
+      "studentId": "ID Elev Minor",
+      "signConsentBtn": "Semnează Acordul Părintesc",
+      "successBooked": "Ședință rezervată cu pseudonim anonim!",
+      "consentWarning": "Verificați acordul ambilor părinți.",
+      "successConsent": "Acordul informat a fost înregistrat cu succes!",
+      "modeSingle": "Elev Individual",
+      "modeClass": "Întreaga Clasă",
+      "selectStudent": "Selectează Elev Minor",
+      "selectClass": "Selectează Clasa",
+      "schoolYear": "An Școlar",
+      "sendBulkConsentBtn": "Trimite Solicitare de Acord către Întreaga Clasă ({count} Elevi)",
+      "successBulkConsent": "Solicitări de acord înregistrate pentru {count} elevi ai clasei!",
+      "studentsInClass": "Elevii Clasei:",
+      "statusPending": "În așteptarea semnăturii",
+      "statusSigned": "Semnat de ambii părinți"
+    }
+  },
+  "psychologyDesk": {
+    "title": "Psychological Support Desk (CIC)",
+    "subtitle": "Confidential and anonymous school psychological counselling service (Law 56/1989)",
+    "consentOk": "Parental Consent Active",
+    "consentPending": "Consent Pending",
+    "privacyTitle": "Absolute Privacy & Professional Secrecy",
+    "privacyDesc": "Counselling sessions with the school psychologist are protected by professional secrecy under Art. 622 c.p. and Law 56/1989.",
+    "consentRequiredTitle": "Mandatory Parental Informed Consent",
+    "consentRequiredDesc": "For minor students, advance written consent from parents is required on the family portal before accessing individual counselling.",
+    "howToSign": "How to sign",
+    "bookTitle": "Book a Confidential Session",
+    "bookSubtitle": "Choose an available time slot. You will receive an anonymous confirmation code.",
+    "selectSlot": "Available Time Slot",
+    "placeholderSlot": "Select day and time",
+    "topic": "General Topic (Optional & Anonymous)",
+    "notesOptional": "Optional notes or preferences",
+    "submitBookingBtn": "Confirm Anonymous Booking",
+    "myBookingsTitle": "My Booked Appointments",
+    "myBookingsSubtitle": "View confirmed sessions with the school psychologist.",
+    "noBookings": "No sessions currently scheduled.",
+    "confirmed": "Confirmed"
+  },
+  "studentCanteen": {
+    "title": "School Canteen & Meals",
+    "subtitle": "View meal attendance, daily menu and special diets",
+    "serviceActive": "Canteen Service Active",
+    "serviceInactive": "Canteen Inactive",
+    "inactiveTitle": "The canteen service is not active for this school",
+    "inactiveDesc": "School meal service is not currently enabled for this school campus. If activated by the Principal or School Bursar, meal information will appear here automatically.",
+    "todayMenuTitle": "Today's Menu",
+    "weeklyCalendarTitle": "Weekly Meal Calendar"
+  },
+  "parentPsychology": {
+    "title": "Psychological Support Desk (CIC) & Parental Consent",
+    "subtitle": "Mandatory informed consent for children's access to school psychological support (Law 56/1989)",
+    "selectChild": "Select Child:",
+    "cardConsentTitle": "Mandatory Informed Consent (S.Y. 2025/2026)",
+    "statusSigned": "Consent Granted",
+    "statusPending": "Awaiting Signature",
+    "legalNotice": "Under Art. 316 c.c. and Law 56/1989, access to psychological support for minor students requires parental informed consent.",
+    "termsCheckbox": "I declare that I have read the information sheet and authorize my child to attend the school psychological counselling desk.",
+    "signConsentBtn": "Sign and Grant Informed Consent",
+    "parentConsultTitle": "Request Parent-Psychologist Consultation",
+    "sendRequestBtn": "Send Consultation Request"
+  },
+  "parentCanteen": {
+    "title": "School Canteen & Electronic Wallet",
+    "subtitle": "Manage meal wallet balance, online PagoPA top-up and consumption history",
+    "active": "Canteen Active",
+    "inactive": "Canteen Inactive",
+    "inactiveTitle": "The canteen service is not active for this school",
+    "inactiveDesc": "This school does not currently provide canteen services. When enabled by the Principal or School Bursar, you will be able to manage the meal wallet and top-ups here.",
+    "selectChild": "Select Child:",
+    "walletTitle": "Electronic Meal Wallet",
+    "topupBtn": "Top Up with PagoPA (IUV)",
+    "historyTitle": "Meal Consumption & Attendance History"
   }
 }

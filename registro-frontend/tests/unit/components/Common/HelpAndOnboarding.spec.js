@@ -67,7 +67,7 @@ describe('Onboarding & Help Center Components', () => {
       expect(localStorage.getItem('onboarding_done_teacher')).toBe('true')
     })
 
-    it('resolves principal role and loads 6 dedicated tour steps with valid titles', () => {
+    it('resolves principal role and loads 7 dedicated tour steps with valid titles', () => {
       const principalPinia = createTestingPinia({
         createSpy: vi.fn,
         initialState: {
@@ -92,13 +92,14 @@ describe('Onboarding & Help Center Components', () => {
       })
 
       expect(wrapper.vm.userRole).toBe('principal')
-      expect(wrapper.vm.tourSteps).toHaveLength(6)
+      expect(wrapper.vm.tourSteps).toHaveLength(7)
       expect(wrapper.vm.tourSteps[0].title).toBe('Dashboard Direzione & Quadro Generale')
       expect(wrapper.vm.tourSteps[1].title).toBe('Personale, Nomine & Incarichi')
       expect(wrapper.vm.tourSteps[2].title).toBe('Decreti & Visti Personale')
       expect(wrapper.vm.tourSteps[3].title).toBe('Sostituzioni Docenti & Gestione Emergenze')
       expect(wrapper.vm.tourSteps[4].title).toBe('Atti, Verbali & Delibere Collegiali')
       expect(wrapper.vm.tourSteps[5].title).toBe('Monitoraggio Didattico, Scrutini & Dispersione')
+      expect(wrapper.vm.tourSteps[6].title).toBe('Enterprise Hub & Firma Remota FEQ')
     })
 
     it('correctly maps various institutional roles to canonical roles', () => {

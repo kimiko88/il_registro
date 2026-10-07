@@ -129,3 +129,45 @@ type QualifiedService interface {
 	VerifyQualified(ctx interface{}, signatureID string) (*VerifyResult, error)
 	GetQualifiedByDocument(ctx interface{}, documentID string) ([]QualifiedSignature, error)
 }
+
+// CSC (Cloud Signature Consortium) Models
+type CSCBatchSignRequest struct {
+	DocumentIDs []string `json:"document_ids" binding:"required"`
+	PIN         string   `json:"pin" binding:"required"`
+	OTP         string   `json:"otp" binding:"required"`
+	SignerRole  string   `json:"signer_role"` // "Dirigente Scolastico", "DSGA"
+}
+
+type CSCBatchSignResponse struct {
+	TotalRequested int                  `json:"total_requested"`
+	TotalSigned    int                  `json:"total_signed"`
+	Signatures     []QualifiedSignature `json:"signatures"`
+	BatchID        string               `json:"batch_id"`
+	SignedAt       time.Time            `json:"signed_at"`
+}
+
+// CAD Art. 23 Digital Stamp (Glifo)
+type DigitalStamp struct {
+	DocumentID      string    `json:"document_id"`
+	DocumentType    string    `json:"document_type"`
+	DocumentSHA256  string    `json:"document_sha256"`
+	GlifoToken      string    `json:"glifo_token"`
+	QRCodePayload   string    `json:"qr_code_payload"`
+	VerificationURL string    `json:"verification_url"`
+	SignerName      string    `json:"signer_name"`
+	SignerRole      string    `json:"signer_role"`
+	SignedAt        time.Time `json:"signed_at"`
+	HMACSignature   string    `json:"hmac_signature"`
+}
+
+type DigitalStampVerification struct {
+	IsValid        bool      `json:"is_valid"`
+	DocumentID     string    `json:"document_id"`
+	DocumentType   string    `json:"document_type"`
+	DocumentSHA256 string    `json:"document_sha256"`
+	SignerName     string    `json:"signer_name"`
+	SignerRole     string    `json:"signer_role"`
+	SignedAt       time.Time `json:"signed_at"`
+	LegalReference string    `json:"legal_reference"`
+	Message        string    `json:"message"`
+}

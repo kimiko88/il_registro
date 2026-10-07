@@ -40,7 +40,7 @@
         <div class="text-grey-7">{{ t('login.subtitle') }}</div>
       </div>
 
-      <q-form aria-label="Modulo di accesso" @submit="onSubmit" class="q-gutter-y-md">
+      <q-form tag="form" action="#" method="post" aria-label="Modulo di accesso" @submit="onSubmit" class="q-gutter-y-md">
         <q-input
           v-model="email"
           :label="t('login.emailLabel')"

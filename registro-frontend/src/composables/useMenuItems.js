@@ -8,7 +8,7 @@
  *
  * Ogni categoria puÃ² avere badge: il nome del contatore da useMenuBadges()
  */
-export function useMenuItems(role, assignments = []) {
+export function useMenuItems(role, assignments = [], isCanteenEnabled = true) {
     const normRole = (role || '').toLowerCase()
 
     if (!normRole) {
@@ -26,6 +26,7 @@ export function useMenuItems(role, assignments = []) {
                 { label: 'Gestione Utenti',     icon: 'people',               path: '/admin/users' },
                 { label: 'Gestione Admin',      icon: 'admin_panel_settings', path: '/admin/admins' },
                 { label: 'Monitoraggio Sistema', icon: 'monitor_heart',       path: '/admin/monitoring' },
+                { label: 'Enterprise & Compliance', icon: 'verified_user',    path: '/admin/enterprise' },
             ]
         },
         {
@@ -65,6 +66,7 @@ export function useMenuItems(role, assignments = []) {
                 { label: 'Orario & Cattedre',          icon: 'schedule',  path: '/secretary/timetable' },
                 { label: 'Analytics',                  icon: 'analytics', path: '/admin/analytics' },
                 { label: 'E-Learning (Google/Teams)',  icon: 'hub',       path: '/admin/elearning' },
+                { label: 'Enterprise & Compliance',    icon: 'verified_user', path: '/admin/enterprise' },
                 { label: 'Verbali & Riunioni',         icon: 'gavel',     path: '/secretary/verbali' },
                 { label: 'Impostazioni',               icon: 'settings',  path: '/admin/settings' },
             ]
@@ -108,6 +110,7 @@ export function useMenuItems(role, assignments = []) {
                 { label: 'Presenze Personale', icon: 'co_present', path: '/ata/attendance',          badge: 'absentStaff' },
                 { label: 'Scioperi',           icon: 'campaign',   path: '/ata/strike' },
                 { label: 'Comunicazioni',      icon: 'email',      path: '/secretary/communications', badge: 'unreadMessages' },
+                { label: 'Enterprise & Compliance', icon: 'verified_user', path: '/admin/enterprise' },
                 { label: 'Report & PCTO',      icon: 'assessment', path: '/secretary/reports' },
                 { label: 'Impostazioni',       icon: 'settings',   path: '/secretary/settings' },
             ]
@@ -233,6 +236,8 @@ export function useMenuItems(role, assignments = []) {
             children: [
                 { label: 'Agenda & Calendario',   icon: 'edit_calendar', path: '/student/agenda' },
                 { label: 'PCTO & Orientamento',   icon: 'work',          path: '/student/pcto' },
+                { label: 'Sportello d\'Ascolto (CIC)', icon: 'psychology', path: '/student/psychology' },
+                ...(isCanteenEnabled ? [{ label: 'Mensa Scolastica', icon: 'restaurant', path: '/student/canteen' }] : []),
                 { label: 'Comunicazioni',         icon: 'email',         path: '/student/communications', badge: 'unreadMessages' },
                 { label: 'Documenti',             icon: 'description',   path: '/student/documents' },
                 { label: 'Impostazioni & Profilo', icon: 'settings',     path: '/student/settings' },
@@ -263,6 +268,8 @@ export function useMenuItems(role, assignments = []) {
             children: [
                 { label: 'Orario Lezioni',         icon: 'schedule',          path: '/parent/timetable' },
                 { label: 'Colloqui & Ricevimenti', icon: 'event',             path: '/parent/colloqui', badge: 'pendingColloqui' },
+                { label: 'Sportello Psicologico (CIC)', icon: 'psychology',   path: '/parent/psychology' },
+                ...(isCanteenEnabled ? [{ label: 'Mensa & Borsellino Pasti', icon: 'restaurant', path: '/parent/canteen' }] : []),
                 { label: 'Uscite & Viaggi',        icon: 'card_travel',       path: '/parent/trips' },
                 { label: 'Pagamenti',              icon: 'payments',          path: '/parent/payments' },
                 { label: 'Documenti',              icon: 'description',       path: '/parent/documents' },

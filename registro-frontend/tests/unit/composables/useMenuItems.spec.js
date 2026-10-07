@@ -124,6 +124,17 @@ describe('useMenuItems', () => {
             expect(flatItems.map(item => item.label)).toContain('Presenze')
             expect(flatItems.map(item => item.label).some(l => l.includes('PCTO'))).toBe(true)
             expect(flatItems.map(item => item.label).some(l => l.includes('Orientamento'))).toBe(true)
+            expect(flatItems.map(item => item.path)).toContain('/student/psychology')
+        })
+
+        it('should conditionally include/exclude canteen based on isCanteenEnabled', () => {
+            const withCanteen = getFlatItems('student')
+            expect(withCanteen.map(item => item.path)).toContain('/student/canteen')
+
+            const rawNoCanteen = useMenuItems('student', [], false)
+            const flatNoCanteen = []
+            rawNoCanteen.forEach(i => i.children ? flatNoCanteen.push(...i.children) : flatNoCanteen.push(i))
+            expect(flatNoCanteen.map(item => item.path)).not.toContain('/student/canteen')
         })
     })
 
@@ -135,6 +146,17 @@ describe('useMenuItems', () => {
             expect(flatItems.map(item => item.label)).toContain('I Miei Figli')
             expect(flatItems.map(item => item.label).some(l => l.includes('Colloqui'))).toBe(true)
             expect(flatItems.map(item => item.label)).toContain('Documenti')
+            expect(flatItems.map(item => item.path)).toContain('/parent/psychology')
+        })
+
+        it('should conditionally include/exclude canteen for parent based on isCanteenEnabled', () => {
+            const withCanteen = getFlatItems('parent')
+            expect(withCanteen.map(item => item.path)).toContain('/parent/canteen')
+
+            const rawNoCanteen = useMenuItems('parent', [], false)
+            const flatNoCanteen = []
+            rawNoCanteen.forEach(i => i.children ? flatNoCanteen.push(...i.children) : flatNoCanteen.push(i))
+            expect(flatNoCanteen.map(item => item.path)).not.toContain('/parent/canteen')
         })
     })
 
