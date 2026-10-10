@@ -32,8 +32,8 @@ func BenchmarkParseAIECatalog(b *testing.B) {
 	var sb strings.Builder
 	sb.WriteString("CODICE_ISBN;TITOLO;AUTORI;EDITORE;PREZZO;MATERIA;CLASSE;ANNO\n")
 	for i := 0; i < 50; i++ {
-		sb.WriteString(fmt.Sprintf("978880%07d;Libro di Test %d;Autore %d;Editore;%d.50;Materia;1;2025\n",
-			i, i, i, 15+(i%20)))
+		fmt.Fprintf(&sb, "978880%07d;Libro di Test %d;Autore %d;Editore;%d.50;Materia;1;2025\n",
+			i, i, i, 15+(i%20))
 	}
 	catalogBytes := []byte(sb.String())
 

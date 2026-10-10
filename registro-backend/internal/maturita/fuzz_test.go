@@ -27,11 +27,14 @@ func FuzzCalculateYearCredits(f *testing.F) {
 			if err != nil {
 				t.Errorf("unexpected error for year=%d, avg=%f: %v", year, avg, err)
 			}
-			maxCredit := 12
-			if year == 4 {
+			var maxCredit int
+			switch year {
+			case 4:
 				maxCredit = 13
-			} else if year == 5 {
+			case 5:
 				maxCredit = 15
+			default:
+				maxCredit = 12
 			}
 			if credits < 7 || credits > maxCredit {
 				t.Errorf("credits %d out of bounds for year %d", credits, year)

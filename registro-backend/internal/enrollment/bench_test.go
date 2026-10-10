@@ -16,8 +16,8 @@ func BenchmarkParseSIDIExport(b *testing.B) {
 		if i%2 == 1 {
 			gender = "F"
 		}
-		sb.WriteString(fmt.Sprintf("SIDI-%04d;Nome%d;Cognome%d;TAXCODE%09d;2012-05-15;%s;%d;Scientifico;Francese;false;false;irc;;GenNome;GenCognome;gen@example.com;3331234567\n",
-			i, i, i, i, gender, 6+(i%5)))
+		fmt.Fprintf(&sb, "SIDI-%04d;Nome%d;Cognome%d;TAXCODE%09d;2012-05-15;%s;%d;Scientifico;Francese;false;false;irc;;GenNome;GenCognome;gen@example.com;3331234567\n",
+			i, i, i, i, gender, 6+(i%5))
 	}
 	csvData := []byte(sb.String())
 
