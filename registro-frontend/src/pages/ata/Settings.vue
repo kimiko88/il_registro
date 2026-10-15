@@ -79,7 +79,7 @@
           <div class="row q-col-gutter-lg">
             <!-- Left Info Card -->
             <div class="col-12 col-md-4">
-              <q-card flat bordered class="rounded-xl p-4 bg-slate-50 border-slate-200 full-height flex column justify-between">
+              <q-card flat class="rounded-xl q-pa-lg bg-slate-50 full-height flex column justify-between">
                 <div class="text-center q-pt-md">
                   <q-avatar size="96px" :color="roleBadgeColor" text-color="white" class="shadow-md q-mb-md">
                     <q-icon name="person" size="56px" />
@@ -116,7 +116,7 @@
                   </div>
                 </div>
 
-                <div class="q-mt-lg p-3 bg-white rounded-lg border border-slate-200">
+                <div class="q-mt-lg q-pa-sm bg-white rounded-lg">
                   <div class="row items-center text-caption text-slate-600">
                     <q-icon name="verified_user" color="positive" size="20px" class="q-mr-xs" />
                     <span>Accesso conforme alle norme SPID / CIE e AgID.</span>
@@ -127,7 +127,7 @@
 
             <!-- Right Detail Form -->
             <div class="col-12 col-md-8">
-              <q-card flat bordered class="rounded-xl p-5 bg-white border-slate-200">
+              <q-card flat class="rounded-xl q-pa-lg bg-white">
                 <div class="text-h6 text-weight-bold text-slate-800 q-mb-xs">
                   Dati di Servizio e Recapiti Istituzionali
                 </div>
@@ -267,7 +267,7 @@
           <div class="row q-col-gutter-lg">
             <!-- Left: Password Form -->
             <div class="col-12 col-md-7">
-              <q-card flat bordered class="rounded-xl p-5 bg-white border-slate-200">
+              <q-card flat class="rounded-xl q-pa-lg bg-white">
                 <div class="row items-center q-mb-md">
                   <q-avatar color="indigo-50" text-color="indigo-700" icon="lock_reset" size="44px" class="q-mr-md" />
                   <div>
@@ -325,7 +325,7 @@
                   </q-input>
 
                   <!-- Password Strength Indicator -->
-                  <div v-if="pwdForm.newPassword" class="q-mb-xs p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div v-if="pwdForm.newPassword" class="q-mb-xs q-pa-sm bg-slate-50 rounded-lg">
                     <div class="row items-center justify-between text-caption text-slate-700 q-mb-xs">
                       <span class="text-weight-medium">Forza Password:</span>
                       <span class="text-weight-bold" :class="passwordStrengthColorText">{{ passwordStrengthLabel }}</span>
@@ -401,7 +401,7 @@
             <div class="col-12 col-md-5">
               <div class="q-gutter-y-md">
                 <!-- AgID / ACN Security Card -->
-                <q-card flat bordered class="rounded-xl p-4 bg-white border-slate-200">
+                <q-card flat class="rounded-xl q-pa-md bg-slate-50">
                   <div class="row items-center q-mb-sm">
                     <q-avatar color="teal-50" text-color="teal-8" icon="shield" size="36px" class="q-mr-sm" />
                     <div class="text-subtitle2 text-weight-bold text-slate-800">Requisiti di Sicurezza AgID</div>
@@ -418,7 +418,7 @@
                 </q-card>
 
                 <!-- 2FA Info Card -->
-                <q-card flat bordered class="rounded-xl p-4 bg-white border-slate-200">
+                <q-card flat class="rounded-xl q-pa-md bg-slate-50">
                   <div class="row items-center justify-between q-mb-sm">
                     <div class="row items-center">
                       <q-avatar color="blue-50" text-color="blue-700" icon="phonelink_lock" size="36px" class="q-mr-sm" />
@@ -447,7 +447,7 @@
             Configura le notifiche e gli avvisi di servizio specifici per le mansioni amministrative e contabili.
           </div>
 
-          <q-card flat bordered class="rounded-xl bg-white border-slate-200 overflow-hidden">
+          <q-card flat class="rounded-xl bg-white overflow-hidden">
             <q-list separator>
               <!-- 1. Richieste Ferie e Permessi da vistare (DSGA) -->
               <q-item tag="label" v-ripple class="q-py-md">
@@ -557,7 +557,7 @@
         <!-- TAB 4: ACCESSIBILITÀ & LINGUA -->
         <q-tab-panel name="accessibility" class="q-pa-lg">
           <!-- Language Selector -->
-          <q-card flat bordered class="rounded-xl p-4 bg-white border-slate-200 q-mb-lg">
+          <q-card flat class="rounded-xl q-pa-lg bg-white q-mb-lg">
             <div class="row items-center justify-between">
               <div class="row items-center">
                 <q-avatar color="indigo-50" text-color="indigo-700" icon="language" size="40px" class="q-mr-md" />

@@ -90,7 +90,7 @@
         </q-input>
         
         <div class="row justify-between items-center q-mt-sm">
-          <q-checkbox id="remember-me" v-model="rememberMe" :label="t('login.rememberMe')" dense size="sm" color="primary" />
+          <q-checkbox id="remember-me" v-model="rememberMe" :label="t('login.rememberMe')" dense size="sm" color="primary" class="text-grey-7" />
         </div>
 
         <!-- Inline Error Alert (Reattivo al cambio lingua) -->
@@ -382,12 +382,19 @@ async function onSubmit() {
 <style scoped>
 .login-card {
   padding: 3rem 2.5rem;
+  color: var(--text-primary, #0f172a);
 }
 @media (max-width: 599px) {
   .login-card {
     padding: 1.5rem 1.25rem !important;
     margin: 0.5rem;
   }
+}
+.login-card :deep(.q-checkbox__label) {
+  color: #616161 !important;
+}
+.body--dark .login-card :deep(.q-checkbox__label) {
+  color: #94a3b8 !important;
 }
 .rounded-input :deep(.q-field__control) {
   border-radius: 12px;

@@ -369,14 +369,17 @@
           flat
           dense
           color="primary"
-          icon="search"
-          class="q-mr-xs search-shortcut-btn"
-          :aria-label="t('common.search')"
+          class="q-mr-xs q-px-xs search-shortcut-btn"
+          :aria-label="t('common.search') + ' (Ctrl+K)'"
           @click="globalSearchRef?.open()"
           key="global-search-btn"
+          no-caps
         >
-          <q-tooltip>{{ t('common.search') }}</q-tooltip>
-          <q-badge floating transparent class="search-kbd-badge gt-xs">K</q-badge>
+          <q-tooltip>{{ t('common.search') }} (Ctrl+K)</q-tooltip>
+          <div class="row items-center no-wrap">
+            <q-icon name="search" size="20px" />
+            <span class="search-kbd-badge gt-xs">K</span>
+          </div>
         </q-btn>
 
         <!-- Offline Outbox Status Badge & Dialog Trigger -->
@@ -1570,21 +1573,30 @@ defineExpose({
 }
 
 .search-shortcut-btn {
-  position: relative;
+  border-radius: 8px;
 }
 
 .search-kbd-badge {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  background: rgba(99, 102, 241, 0.15) !important;
-  color: #6366f1 !important;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  font-family: inherit;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--q-primary, #4f46e5);
+  border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: 4px;
-  padding: 0 3px;
+  padding: 0 4px;
   line-height: 14px;
   height: 14px;
-  top: 2px;
-  right: 2px;
+  margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.body--dark .search-kbd-badge {
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.4);
 }
 
 /* ── Quick Access section nel drawer ── */
