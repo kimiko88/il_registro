@@ -99,6 +99,65 @@ body {
 }
 
 /* Theme Custom Properties & Gradients */
+/* Emerald Palette Utility Classes (Quasar & Custom) */
+.bg-emerald,
+.bg-emerald-600 {
+    background-color: #059669 !important;
+}
+
+.bg-emerald-500 {
+    background-color: #10b981 !important;
+}
+
+.bg-emerald-700 {
+    background-color: #047857 !important;
+}
+
+.bg-emerald-1,
+.bg-emerald-50 {
+    background-color: #ecfdf5 !important;
+}
+
+.bg-emerald-100 {
+    background-color: #d1fae5 !important;
+}
+
+.bg-emerald-200 {
+    background-color: #a7f3d0 !important;
+}
+
+.text-emerald,
+.text-emerald-600 {
+    color: #059669 !important;
+}
+
+.text-emerald-500 {
+    color: #10b981 !important;
+}
+
+.text-emerald-7,
+.text-emerald-700 {
+    color: #047857 !important;
+}
+
+.text-emerald-8,
+.text-emerald-800 {
+    color: #065f46 !important;
+}
+
+.text-emerald-9,
+.text-emerald-900 {
+    color: #064e3b !important;
+}
+
+.border-emerald-200 {
+    border-color: #a7f3d0 !important;
+}
+
+.border-emerald-300 {
+    border-color: #6ee7b7 !important;
+}
+
 [data-theme="indigo"] {
     --bg-primary: #f8fafc;
     --bg-secondary: #ffffff;
