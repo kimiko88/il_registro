@@ -1633,7 +1633,9 @@ export default {
       "step4_title": "Flussi SIDI & Portali MIM",
       "step4_desc": "Genera, valida ed esporta i tracciati XML per la sincronizzazione dei dati con il portale SIDI del Ministero dell'Istruzione e del Merito.",
       "step5_title": "Verbali & Modelli Riunioni",
-      "step5_desc": "Accedi ai modelli standardizzati per redigere, archiviare e protocollare i verbali delle riunioni collegiali e delle commissioni."
+      "step5_desc": "Accedi ai modelli standardizzati per redigere, archiviare e protocollare i verbali delle riunioni collegiali e delle commissioni.",
+      "step6_title": "Enterprise Hub Amministrativo",
+      "step6_desc": "Gestione operativa avvisi PagoPA con codice IUV, Curriculum dello Studente per la Maturità (D.M. 88/2020) e sincronizzazione flussi cooperativi SIDI MIM."
     },
     "collaboratore_ds": {
       "step1_title": "Dashboard Collaboratore del Dirigente",
@@ -1669,7 +1671,9 @@ export default {
       "step4_title": "Flussi SIDI & Monitoraggio MIM",
       "step4_desc": "Validazione e autorizzazione all'invio dei flussi informativi verso il sistema ministeriale SIDI, NoiPA e monitoraggi finanziari.",
       "step5_title": "Scioperi & Contingenti Minimi",
-      "step5_desc": "Definizione e gestione dei contingenti minimi di personale ATA per garantire i servizi pubblici essenziali durante le giornate di sciopero."
+      "step5_desc": "Definizione e gestione dei contingenti minimi di personale ATA per garantire i servizi pubblici essenziali durante le giornate di sciopero.",
+      "step6_title": "Enterprise Hub: Albo, Inventario & OPI",
+      "step6_desc": "Supervisione delle pubblicazioni all'Albo Pretorio, gestione registro inventario beni mobili con ammortamento e discarico, riconciliazione contabile con quietanze telematiche OPI/SIOPE+ e monitoraggio refezione."
     },
     "principal": {
       "step1_title": "Dashboard Direzione & Quadro Generale",
@@ -1683,7 +1687,9 @@ export default {
       "step5_title": "Atti, Verbali & Delibere Collegiali",
       "step5_desc": "Consultazione e approvazione dei verbali del Collegio Docenti, Consigli di Classe e delibere con archiviazione digitale conforme al CAD.",
       "step6_title": "Monitoraggio Didattico, Scrutini & Dispersione",
-      "step6_desc": "Quadro statistico complessivo sull'andamento didattico, validazione delle sessioni di scrutinio e prevenzione della dispersione scolastica."
+      "step6_desc": "Quadro statistico complessivo sull'andamento didattico, validazione delle sessioni di scrutinio e prevenzione della dispersione scolastica.",
+      "step7_title": "Enterprise Hub & Firma Remota FEQ",
+      "step7_desc": "Gestione centralizzata della Firma Remota FEQ (CAdES/PAdES) con marcatura temporale, pubblicazione all'Albo Pretorio On-Line con sigillo elettronico, Interpelli supplenze MIM e attivazione del servizio mensa scolastica."
     }
   },
   "help": {
@@ -2071,6 +2077,22 @@ export default {
         "Date verifiche",
         "Attività extra",
         "Gite ed eventi"
+      ],
+      "step9_title": "Sportello d'Ascolto (CIC) & Riservatezza",
+      "step9_desc": "Prenota colloqui di supporto psicologico in totale confidenzialità (L. 56/1989 e art. 622 c.p.), con verifica automatica del consenso genitoriale per studenti minori.",
+      "step9_bullets": [
+        "Prenotazione confidenziale",
+        "Tutela assoluta riservatezza",
+        "Verifica consenso genitori",
+        "Storico appuntamenti"
+      ],
+      "step10_title": "Mensa Scolastica & Refezione",
+      "step10_desc": "Consulta il menu del giorno, verifica le presenze pasto confermate dal registro di classe e visualizza il tuo profilo dietetico registrato (standard o diete speciali certificate).",
+      "step10_bullets": [
+        "Menu del giorno",
+        "Presenza pasto confermata",
+        "Dieta standard o speciale",
+        "Storico refezione"
       ]
     },
     "parent": {
@@ -2125,6 +2147,22 @@ export default {
         "Storico pagamenti",
         "Scarica ricevute",
         "Richiedi documenti"
+      ],
+      "step9_title": "Sportello Psicologico & Consenso Informato",
+      "step9_desc": "Sottoscrivi digitalmente il consenso informato obbligatorio per l'accesso dei figli allo sportello d'ascolto (art. 316 c.c. e L. 56/1989) e richiedi colloqui di consulenza per genitori.",
+      "step9_bullets": [
+        "Firma consenso informato",
+        "Tutela minori L. 56/1989",
+        "Consulenza genitoriale",
+        "Selezione rapida figli"
+      ],
+      "step10_title": "Mensa Scolastica & Borsellino Elettronico",
+      "step10_desc": "Monitora il saldo disponibile per ciascun figlio, effettua ricariche online veloci con PagoPA (+10€, +25€, +50€, +100€ o importo libero) e controlla lo storico addebiti pasti.",
+      "step10_bullets": [
+        "Saldo borsellino in tempo reale",
+        "Ricarica rapida PagoPA",
+        "Generazione codice IUV",
+        "Monitoraggio addebiti pasti"
       ]
     },
     "secretary": {
@@ -2179,6 +2217,14 @@ export default {
         "Assegna ruoli",
         "Reset password",
         "Gestione accessi"
+      ],
+      "step9_title": "Enterprise Hub: PagoPA, Maturità & SIDI",
+      "step9_desc": "Emissione massiva avvisi di pagamento PagoPA con codice IUV, predisposizione Curriculum dello Studente per l'Esame di Stato (D.M. 88/2020) e cooperazione applicativa con i servizi SIDI MIM.",
+      "step9_bullets": [
+        "Emissione avvisi PagoPA & IUV",
+        "Curriculum dello Studente",
+        "Cooperazione SIDI MIM",
+        "Mensa Scolastica"
       ]
     },
     "admin": {
@@ -2233,6 +2279,14 @@ export default {
         "2FA obbligatorio",
         "Feature flags",
         "Manutenzione"
+      ],
+      "step9_title": "Enterprise School Management Hub",
+      "step9_desc": "Piattaforma centrale di governance per tutti i 10 moduli istituzionali (PagoPA, Firma FEQ, Albo Pretorio, Interpelli, Maturità, Mensa, Inventario, Privacy DPO, SIDI, Psicologo) con simulatore di ruoli integrato.",
+      "step9_bullets": [
+        "Governance 10 moduli normativi",
+        "Simulatore ruoli istantaneo",
+        "Attivazione servizi d'istituto",
+        "Conformità AgID e MIM"
       ]
     },
     "assistente_amministrativo": {
@@ -2265,6 +2319,14 @@ export default {
         "Archivio delibere e adunanze",
         "Numerazione e conservazione a norma",
         "Condivisione documenti digitali"
+      ],
+      "step6_title": "Enterprise Hub Amministrativo",
+      "step6_desc": "Gestione operativa avvisi PagoPA con codice IUV, Curriculum dello Studente per la Maturità (D.M. 88/2020) e sincronizzazione flussi cooperativi SIDI MIM.",
+      "step6_bullets": [
+        "Avvisi PagoPA con IUV",
+        "Curriculum Studente D.M. 88/2020",
+        "Cooperazione SIDI MIM",
+        "Riconciliazione tesoreria"
       ]
     },
     "collaboratore_ds": {
@@ -2361,6 +2423,14 @@ export default {
         "Applicazione accordo di istituto L. 146/90",
         "Emissione formale ordini di servizio",
         "Verbale e reportistica di adesione"
+      ],
+      "step6_title": "Enterprise Hub: Albo, Inventario & OPI",
+      "step6_desc": "Supervisione delle pubblicazioni all'Albo Pretorio, gestione registro inventario beni mobili con ammortamento e discarico, riconciliazione contabile con quietanze telematiche OPI/SIOPE+ e monitoraggio refezione.",
+      "step6_bullets": [
+        "Albo Pretorio On-Line",
+        "Inventario beni & discarico",
+        "Riconciliazione OPI/SIOPE+",
+        "Attivazione Mensa"
       ]
     },
     "principal": {
@@ -2399,6 +2469,14 @@ export default {
         "Validazione scrutini",
         "Rischio dispersione",
         "Indicatori RAV e PTOF"
+      ],
+      "step7_title": "Enterprise Hub & Firma Remota FEQ",
+      "step7_desc": "Gestione centralizzata della Firma Remota FEQ (CAdES/PAdES) con marcatura temporale, pubblicazione all'Albo Pretorio On-Line con sigillo elettronico, Interpelli supplenze MIM e attivazione del servizio mensa scolastica.",
+      "step7_bullets": [
+        "Firma Remota Qualificata FEQ",
+        "Albo Pretorio & Codice Glifo",
+        "Interpelli supplenze MIM",
+        "Attivazione Servizio Mensa"
       ]
     },
     "goToSection": "Vai alla sezione"
@@ -4033,6 +4111,7 @@ export default {
     "viewAllGrades": "Vedi tutti i voti"
   },
   "routeTitles": {
+    "enterpriseHub": "Enterprise & Legal Compliance Hub",
     "personnelDesk": "Sportello Digitale Personale",
     "timecard": "Cartellino & Piano Ferie",
     "visitorRegistry": "Registro Visitatori & Portineria",
@@ -5889,5 +5968,290 @@ export default {
     "widgetTitle": "Protocolla Atto",
     "widgetHelp": "Genera istantaneamente il timbro di protocollo AgID per questo documento",
     "stampedSuccess": "Atto protocollato con timbro "
+  },
+  "enterprise": {
+    "header": {
+      "badgeCompliance": "ENTERPRISE & LEGAL COMPLIANCE",
+      "badgeAgid": "MIM & AGID READY",
+      "title": "Enterprise School Management Hub",
+      "subtitle": "Moduli commerciali strategici conformi agli standard normativi AgID, MIM, CAD ed eIDAS.",
+      "viewRoleMatrix": "Matrice Competenze Ruoli",
+      "hideRoleMatrix": "Nascondi Matrice Ruoli"
+    },
+    "matrix": {
+      "title": "Matrice di Competenza Ruoli Istituzionali",
+      "subtitle": "Mappatura dei privilegi operativi, consultazione e firme legali per ciascun modulo commerciale",
+      "colFeature": "Funzionalità Commerciale",
+      "colGovernance": "Gestione Principale",
+      "colOperations": "Operatività",
+      "colEndUsers": "Utenti Finali",
+      "colNorm": "Riferimento Normativo"
+    },
+    "governance": {
+      "authorizedRoles": "Ruoli Autorizzati alla Gestione:",
+      "primaryGovernance": "Gestione Principale:",
+      "operations": "Operatività:",
+      "endUsers": "Utenti Finali:",
+      "legalRef": "Riferimento Normativo:"
+    },
+    "roles": {
+      "ds": "Dirigente Scolastico (DS)",
+      "dsga": "DSGA",
+      "secretary": "Segreteria Amministrativa",
+      "secretaryAccounts": "Segreteria Contabile",
+      "secretaryStaff": "Segreteria Personale",
+      "secretaryDidactics": "Segreteria Didattica",
+      "teacher": "Docente di Classe",
+      "commission": "Commissione Esame di Stato",
+      "dpo": "Data Protection Officer (DPO)",
+      "psychologist": "Psicologo Scolastico (L. 56/1989)",
+      "custodian": "Custode Consegnatario / Assistente Tecnico",
+      "parent": "Genitore / Famiglia",
+      "student": "Studente",
+      "public": "Consultazione Pubblica / Cittadini"
+    },
+    "tabs": {
+      "pagopa": "1. PagoPA & OPI",
+      "interpelli": "2. Interpelli OM 88",
+      "albo": "3. Albo & ANAC",
+      "feq": "4. FEQ CSC & Glifo",
+      "maturita": "5. Maturità & Curriculum",
+      "meals": "6. Mensa & Diete",
+      "inventory": "7. Inventario Cespiti",
+      "privacy": "8. Privacy & Semaforo",
+      "sidi": "9. SIDI Cooperazione",
+      "psychology": "10. Sportello CIC"
+    },
+    "pagopa": {
+      "cardTitleNotice": "Emissione Avviso PagoPA (ISO 7064 Mod 97-10)",
+      "cardSubtitleNotice": "Genera avviso di pagamento con codice IUV conforme AgID e QR code scaricabile.",
+      "studentId": "ID Studente",
+      "title": "Causale Versamento (es. Assicurazione, Gite)",
+      "amount": "Importo (€)",
+      "generateNoticeBtn": "Genera Avviso IUV",
+      "iuvCode": "Codice IUV:",
+      "qrPayload": "Payload QR:",
+      "downloadPdfBtn": "Scarica Bollettino PDF",
+      "cardTitleOpi": "Riconciliazione Flussi OPI / SIOPE+",
+      "cardSubtitleOpi": "Importa le quietanze telematiche dalla banca tesoriera per pareggio contabile istantaneo.",
+      "opiInputLabel": "Incolla tracciato XML o CSV quietanze banca",
+      "reconcileBtn": "Riconcilia Flusso OPI",
+      "checkSollecitiBtn": "Verifica Morosità / Solleciti",
+      "reconciledCount": "Quietanze Riconciliate:",
+      "totalAmount": "Totale Incassato:",
+      "successNotice": "Avviso PagoPA e IUV generati con successo!",
+      "successReconcile": "Flusso OPI riconciliato con successo!",
+      "sollecitiFound": "Trovati {count} pagamenti scaduti soggetti a sollecito.",
+      "modeSingle": "Singolo Studente",
+      "modeClass": "Intera Classe",
+      "selectStudent": "Seleziona Studente",
+      "selectClass": "Seleziona Classe",
+      "quickPresets": "Causali & Importi Rapidi:",
+      "generateBulkNoticeBtn": "Genera Avvisi IUV per Tutta la Classe ({count} Studenti)",
+      "successBulkNotice": "{count} Avvisi PagoPA e IUV generati con successo per la classe!"
+    },
+    "interpelli": {
+      "cardTitlePublish": "Pubblica Avviso Interpello Supplenza",
+      "cardSubtitlePublish": "Bacheca istituzionale aperta al pubblico ai sensi dell'Ordinanza Ministeriale n. 88/2024.",
+      "title": "Titolo Avviso",
+      "concorsoClass": "Classe di Concorso (es. A026, ADSS)",
+      "weeklyHours": "Ore Settimanali",
+      "deadline": "Termine di Candidatura (YYYY-MM-DD)",
+      "publishBtn": "Pubblica Interpello",
+      "cardTitleGraduatoria": "Graduatoria Automatica & Convocazione",
+      "cardSubtitleGraduatoria": "Calcolo meritocratico punteggio titoli, servizio, abilitazione e riscontro convocazione.",
+      "loadGraduatoriaBtn": "Carica Graduatoria Interpelli",
+      "convocaBtn": "Convoca (24h)",
+      "score": "Punteggio: {score} punti | CF: {cf}",
+      "noCandidates": "Nessun candidato presente al momento.",
+      "successPublished": "Interpello pubblicato con successo!",
+      "successConvoca": "Convocazione inviata con scadenza 24 ore!",
+      "noActiveGraduatoria": "Nessuna graduatoria attiva per l'avviso specificato."
+    },
+    "albo": {
+      "cardTitleAlbo": "Affissione Albo Pretorio Telematico (L. 69/2009)",
+      "cardSubtitleAlbo": "Pubblicità legale con numerazione di repertorio e ciclo obbligatorio di 15 giorni.",
+      "category": "Categoria Giuridica",
+      "subject": "Oggetto dell'Atto",
+      "cigCode": "CIG (se appalto/gara)",
+      "awardedAmount": "Importo Aggiudicato (€)",
+      "publishBtn": "Pubblica all'Albo Pretorio",
+      "cardTitleAnac": "Amministrazione Trasparente & ANAC XML",
+      "cardSubtitleAnac": "Generazione automatica del dataset XML per ANAC (Legge 190/2012 e D.Lgs. 33/2013).",
+      "downloadAnacBtn": "Esporta Dataset ANAC XML",
+      "anacDescription": "Include automaticamente i lotti di trasparenza, tempi di completamento e CIG pubblicati.",
+      "successPublished": "Atto pubblicato all'Albo Pretorio per 15 giorni!",
+      "successAnac": "Download tracciato ANAC XML completato."
+    },
+    "feq": {
+      "cardTitleCsc": "Firma Remota Massiva CSC (Cloud Signature Consortium)",
+      "cardSubtitleCsc": "Firma digitale qualificata del Dirigente Scolastico / DSGA su centinaia di PDF con PIN e OTP.",
+      "pin": "PIN Firma Remota",
+      "otp": "Codice OTP (App o Token fisico)",
+      "signBatchBtn": "Firma Massiva Pagelle & Diplomi",
+      "cardTitleGlifo": "Timbro Digitale di Sicurezza (Glifo Art. 23 CAD)",
+      "cardSubtitleGlifo": "Apposizione di contrassegno crittografico per garantire la conformità della copia cartacea stampata.",
+      "glifoToken": "Glifo Token per Verifica Pubblica",
+      "verifyGlifoBtn": "Verifica Autenticità Glifo",
+      "resultStatus": "Esito:",
+      "successSigned": "Lotto firmato digitalmente con FEQ CSC PAdES!",
+      "successGlifoVerified": "Glifo verificato con successo!"
+    },
+    "maturita": {
+      "cardTitleCredits": "Calcolo Crediti Triennio (D.Lgs. 62/2017)",
+      "cardSubtitleCredits": "Conversione automatica delle medie scolastiche delle classi 3ª, 4ª e 5ª con tabelle ministeriali ufficiali.",
+      "grade3rd": "Media 3° Anno",
+      "grade4th": "Media 4° Anno",
+      "grade5th": "Media 5° Anno",
+      "calcBtn": "Calcola Crediti Ufficiali",
+      "totalCredits": "Totale Crediti Scolastici: {credits} / 40 punti",
+      "cardTitleCurriculum": "Curriculum dello Studente (D.M. 88/2020)",
+      "cardSubtitleCurriculum": "Raccoglie crediti, PCTO, certificazioni linguistiche/informatiche con esportazione XML verso il Ministero.",
+      "studentId": "ID Studente Diplomando",
+      "downloadCurriculumBtn": "Scarica XML Curriculum Ministeriale",
+      "successCalc": "Crediti calcolati secondo Allegato A D.Lgs. 62/2017!",
+      "successCurriculum": "XML Curriculum dello Studente esportato con successo!",
+      "selectStudent": "Seleziona Studente Diplomando (5° Anno)",
+      "filterClass": "Filtra per Classe",
+      "selectedStudentDetails": "Studente Selezionato:"
+    },
+    "meals": {
+      "cardTitleRollCall": "Rilevazione Presenze Mensa (Entro le 09:00)",
+      "cardSubtitleRollCall": "Appello rapido mattutino per trasmissione immediata al centro cottura comunale.",
+      "classId": "Classe (es. 2A Primaria)",
+      "date": "Data (YYYY-MM-DD)",
+      "submitRollCallBtn": "Invia Presenze al Centro Cottura",
+      "cardTitleWallet": "Borsellino Elettronico Mensa",
+      "cardSubtitleWallet": "Addebito automatico a consumo e ricarica telematica integrata con PagoPA.",
+      "studentId": "ID Alunno",
+      "topupAmount": "Importo Ricarica (€)",
+      "topupBtn": "Ricarica con PagoPA",
+      "successRollCall": "Numero pasti trasmesso al centro cottura!",
+      "successWallet": "Borsellino mensa ricaricato con PagoPA!",
+      "selectStudent": "Seleziona Alunno",
+      "currentBalance": "Saldo Attuale Borsellino:",
+      "quickTopup": "Ricarica Rapida:"
+    },
+    "inventory": {
+      "cardTitleAsset": "Registro Beni Mobili & Cespiti (D.I. 129/2018)",
+      "cardSubtitleAsset": "Classificazione patrimoniale, plesso, laboratorio e ammortamento economico annuale.",
+      "description": "Descrizione Bene (es. LIM, Notebook PNRR)",
+      "category": "Categoria Contabile",
+      "initialValue": "Valore Iniziale (€)",
+      "createAssetBtn": "Registra Cespite & Genera Barcode",
+      "cardTitleLoan": "Comodato d'Uso Gratuito Dispositivi",
+      "cardSubtitleLoan": "Assegnazione tablet/notebook alle famiglie con contratto firmato e tracciamento restituzioni.",
+      "assetId": "ID Cespite",
+      "studentId": "ID Studente",
+      "createLoanBtn": "Stipula Contratto Comodato",
+      "successAsset": "Cespite registrato a inventario con matricola e QR!",
+      "successLoan": "Contratto comodato d'uso stipulato con successo!"
+    },
+    "privacy": {
+      "cardTitleTreatment": "Registro Trattamenti Privacy (Art. 30 GDPR)",
+      "cardSubtitleTreatment": "Mappatura trasparente di finalità, basi giuridiche e misure di sicurezza dell'Istituto.",
+      "activityName": "Attività di Trattamento",
+      "legalBasis": "Base Giuridica",
+      "saveTreatmentBtn": "Registra Trattamento GDPR",
+      "cardTitleTrafficLight": "Semaforo Privacy per Docenti",
+      "cardSubtitleTrafficLight": "Badge visivo istantaneo per gite e foto: 🟢 Verde (autorizzato), 🟡 Giallo (parziale), 🔴 Rosso (divieto assoluto).",
+      "greenBadge": "🟢 VERDE: Foto Istituzionali OK",
+      "yellowBadge": "🟡 GIALLO: Solo Didattica Interna",
+      "redBadge": "🔴 ROSSO: Divieto Assoluto Foto",
+      "successTreatment": "Trattamento registrato a norma Art. 30 GDPR!"
+    },
+    "sidi": {
+      "cardTitleCert": "Certificato di Postazione WebService MIM",
+      "cardSubtitleCert": "Connessione diretta sicura in mTLS con i server del Ministero dell'Istruzione e del Merito.",
+      "endpoint": "Endpoint:",
+      "connectionStatus": "Stato Connessione:",
+      "connected": "CONNESSO (Certificato Attivo)",
+      "syncStudentsBtn": "Sincronizza Codici SIDI Alunni (1-Clic)",
+      "cardTitleScrutiny": "Trasmissione Esiti Scrutini SIDI",
+      "cardSubtitleScrutiny": "Invia direttamente gli esiti di ammissione e i crediti al portale ministeriale senza download manuali.",
+      "pushScrutinyBtn": "Trasmetti Scrutini al MIM",
+      "successSync": "Sincronizzazione WebService SIDI MIM completata!",
+      "successPush": "Esiti scrutini trasmessi con successo al MIM!"
+    },
+    "psychology": {
+      "cardTitleBooking": "Prenotazione Anonima & Riservata (CIC)",
+      "cardSubtitleBooking": "Accesso con alias pseudonimo protetto dal segreto professionale ex Legge 56/1989.",
+      "slotTime": "Data e Ora Richiesta (YYYY-MM-DD HH:MM)",
+      "bookBtn": "Prenota Colloquio Riservato",
+      "cardTitleConsent": "Consenso Informato Genitoriale Obbligatorio",
+      "cardSubtitleConsent": "Per gli studenti minorenni, il colloquio è autorizzato esclusivamente previa firma di entrambi i genitori.",
+      "studentId": "ID Studente Minore",
+      "signConsentBtn": "Firma Consenso Genitoriale",
+      "successBooked": "Colloquio prenotato con alias anonimo!",
+      "consentWarning": "Verifica il consenso di entrambi i genitori.",
+      "successConsent": "Consenso informato registrato!",
+      "modeSingle": "Singolo Studente",
+      "modeClass": "Intera Classe",
+      "selectStudent": "Seleziona Studente Minore",
+      "selectClass": "Seleziona Classe",
+      "schoolYear": "Anno Scolastico",
+      "sendBulkConsentBtn": "Invia Richiesta Consenso Informato a Tutta la Classe ({count} Studenti)",
+      "successBulkConsent": "Richieste di consenso informato registrate per {count} studenti della classe!",
+      "studentsInClass": "Studenti della Classe:",
+      "statusPending": "In attesa di firma",
+      "statusSigned": "Firmato da entrambi i genitori"
+    }
+  },
+  "psychologyDesk": {
+    "title": "Sportello d'Ascolto & Consulenza Psicologica (CIC)",
+    "subtitle": "Servizio di supporto psicologico scolastico anonimo e riservato (L. 56/1989 & MIM-CNOP)",
+    "consentOk": "Consenso Genitoriale Attivo",
+    "consentPending": "Consenso in Attesa",
+    "privacyTitle": "Tutela Assoluta della Riservatezza & Segreto Professionale",
+    "privacyDesc": "I colloqui con lo psicologo scolastico sono coperti da segreto professionale ai sensi dell'art. 622 c.p. e della Legge 56/1989. Nessun docente, compagno o terzo ha accesso ai contenuti discussi.",
+    "consentRequiredTitle": "Consenso Informato Genitoriale Obbligatorio",
+    "consentRequiredDesc": "Per accedere ai colloqui individuali con lo psicologo, per gli studenti minorenni è necessaria la firma preventiva del consenso informato da parte dei genitori sul portale famiglie.",
+    "howToSign": "Come fare",
+    "bookTitle": "Prenota un Colloquio Riservato",
+    "bookSubtitle": "Scegli uno slot orario tra quelli disponibili. Riceverai un codice anonimo di conferma.",
+    "selectSlot": "Slot Orario Disponibile",
+    "placeholderSlot": "Seleziona giorno e orario",
+    "topic": "Area Generale del Colloquio (Opzionale & Anonima)",
+    "notesOptional": "Eventuali note o preferenze orarie (facoltative)",
+    "submitBookingBtn": "Conferma Prenotazione Anonima",
+    "myBookingsTitle": "I Miei Appuntamenti Prenotati",
+    "myBookingsSubtitle": "Consulta gli appuntamenti confermati con lo psicologo d'istituto.",
+    "noBookings": "Nessun colloquio programmato al momento.",
+    "confirmed": "Confermato"
+  },
+  "studentCanteen": {
+    "title": "Mensa Scolastica & Refezione",
+    "subtitle": "Visualizzazione presenze mensa, menu del giorno e diete speciali",
+    "serviceActive": "Servizio Mensa Attivo",
+    "serviceInactive": "Mensa Non Attiva",
+    "inactiveTitle": "Il Servizio Mensa non è attivo per questo istituto",
+    "inactiveDesc": "La refezione scolastica non è prevista per questo plesso o tipologia di scuola. Qualora il servizio venga attivato dalla Dirigenza o dalla DSGA, le informazioni compariranno automaticamente qui.",
+    "todayMenuTitle": "Menu del Giorno",
+    "weeklyCalendarTitle": "Calendario Settimanale Refezione"
+  },
+  "parentPsychology": {
+    "title": "Sportello Psicologico (CIC) & Consenso Genitoriale",
+    "subtitle": "Consenso informato obbligatorio per l'accesso dei figli allo sportello d'ascolto (L. 56/1989)",
+    "selectChild": "Seleziona Figlio/a:",
+    "cardConsentTitle": "Consenso Informato Obbligatorio (A.S. 2025/2026)",
+    "statusSigned": "Consenso Rilasciato",
+    "statusPending": "In Attesa di Firma",
+    "legalNotice": "Ai sensi dell'art. 316 c.c., della Legge 56/1989 e delle linee di indirizzo MIM, l'accesso al servizio di consulenza psicologica per studenti minori è subordinato al consenso informato dei genitori.",
+    "termsCheckbox": "Dichiaro di aver letto l'informativa e autorizzo mio/a figlio/a a fruire dei colloqui dello sportello d'ascolto psicologico.",
+    "signConsentBtn": "Firma e Rilascia Consenso Informato",
+    "parentConsultTitle": "Richiesta Colloquio Genitore-Psicologo",
+    "sendRequestBtn": "Invia Richiesta di Contatto"
+  },
+  "parentCanteen": {
+    "title": "Mensa Scolastica & Borsellino Elettronico",
+    "subtitle": "Gestione saldo pasti, ricarica online PagoPA e monitoraggio refezione",
+    "active": "Servizio Mensa Attivo",
+    "inactive": "Mensa Non Attiva",
+    "inactiveTitle": "Il Servizio Mensa non è attivo per questo istituto",
+    "inactiveDesc": "La scuola non prevede al momento il servizio di refezione scolastica. Qualora venga attivato dalla Dirigente o dalla DSGA, potrai gestire qui il borsellino elettronico e le ricariche.",
+    "selectChild": "Seleziona Figlio/a:",
+    "walletTitle": "Borsellino Elettronico Pasti",
+    "topupBtn": "Ricarica con PagoPA (IUV)",
+    "historyTitle": "Storico Pasti & Presenze Mensa"
   }
 }

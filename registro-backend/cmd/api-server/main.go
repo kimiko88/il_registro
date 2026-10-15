@@ -17,6 +17,7 @@ import (
 	"registro-backend/internal/accessibility"
 	"registro-backend/internal/admin"
 	"registro-backend/internal/agenda"
+	"registro-backend/internal/albopretorio"
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/auditlog"
 	"registro-backend/internal/auth"
@@ -41,9 +42,13 @@ import (
 	"registro-backend/internal/groups"
 	"registro-backend/internal/handler"
 	"registro-backend/internal/helpdesk"
+	"registro-backend/internal/interpelli"
+	"registro-backend/internal/inventory"
 	"registro-backend/internal/lessons"
 	"registro-backend/internal/mailer"
+	"registro-backend/internal/maturita"
 	"registro-backend/internal/may15"
+	"registro-backend/internal/meals"
 	"registro-backend/internal/middleschoolexam"
 	"registro-backend/internal/middleware"
 	"registro-backend/internal/notes"
@@ -58,7 +63,9 @@ import (
 	"registro-backend/internal/personnel_desk"
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/primaryeval"
+	"registro-backend/internal/privacy"
 	"registro-backend/internal/protocol"
+	"registro-backend/internal/psychology"
 	"registro-backend/internal/recovery"
 	"registro-backend/internal/religion_alternative"
 	"registro-backend/internal/reports"
@@ -291,6 +298,28 @@ func main() {
 	adminMiddleware := admin.NewMiddleware()
 	healthH := handler.NewHealthHandler(database)
 
+	// Nuovi Moduli Enterprise Dealbreaker
+	interpelliSvc := interpelli.NewService(nil)
+	interpelliH := interpelli.NewHandler(interpelliSvc)
+
+	alboSvc := albopretorio.NewService(nil)
+	alboH := albopretorio.NewHandler(alboSvc)
+
+	maturitaSvc := maturita.NewService(nil)
+	maturitaH := maturita.NewHandler(maturitaSvc)
+
+	mealsSvc := meals.NewService(nil)
+	mealsH := meals.NewHandler(mealsSvc)
+
+	inventorySvc := inventory.NewService(nil)
+	inventoryH := inventory.NewHandler(inventorySvc)
+
+	privacySvc := privacy.NewService(nil)
+	privacyH := privacy.NewHandler(privacySvc)
+
+	psychologySvc := psychology.NewService(nil)
+	psychologyH := psychology.NewHandler(psychologySvc)
+
 	// 8. Setup Router
 	r := gin.New()
 	_ = r.SetTrustedProxies([]string{"127.0.0.1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"})
@@ -396,6 +425,11 @@ func main() {
 		api.POST("/public/accessibility-feedback", a11yH.SubmitPublic)
 		api.POST("/public/csp-report", handler.HandleCSPReport)
 		r.POST("/public/csp-report", handler.HandleCSPReport)
+
+		// Public Routes per Interpelli, Albo Pretorio e Timbro Digitale
+		interpelliH.RegisterPublicRoutes(api)
+		alboH.RegisterPublicRoutes(api)
+		signaturesH.RegisterPublicRoutes(api)
 
 		api.GET("/ws", authMiddleware.AuthenticateWSTicket(wsTicketStore), func(c *gin.Context) {
 			wsHandler.Listen(c)
@@ -703,6 +737,15 @@ func main() {
 			protocolSvc := protocol.NewService(protocolRepo)
 			protocolH := protocol.NewHandler(protocolSvc)
 			protocolH.RegisterRoutes(protected)
+
+			// 10 Nuovi Moduli Enterprise Dealbreaker
+			interpelliH.RegisterProtectedRoutes(protected)
+			alboH.RegisterProtectedRoutes(protected)
+			maturitaH.RegisterRoutes(protected)
+			mealsH.RegisterRoutes(protected)
+			inventoryH.RegisterRoutes(protected)
+			privacyH.RegisterRoutes(protected)
+			psychologyH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}

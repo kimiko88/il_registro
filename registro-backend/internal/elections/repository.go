@@ -86,6 +86,9 @@ func (r *postgresRepo) ListElections(ctx context.Context, schoolID string) ([]Sc
 		}
 		list = append(list, e)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return list, nil
 }
 
@@ -128,6 +131,9 @@ func (r *postgresRepo) GetListsWithCandidates(ctx context.Context, electionID st
 		}
 		lists = append(lists, l)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	for i := range lists {
 		cQuery := `
@@ -143,6 +149,10 @@ func (r *postgresRepo) GetListsWithCandidates(ctx context.Context, electionID st
 				if err := cRows.Scan(&c.ID, &c.ListID, &c.FirstName, &c.LastName, &c.CandidateOrder); err == nil {
 					lists[i].Candidates = append(lists[i].Candidates, c)
 				}
+			}
+			if err := cRows.Err(); err != nil {
+				cRows.Close()
+				return nil, err
 			}
 			cRows.Close()
 		}

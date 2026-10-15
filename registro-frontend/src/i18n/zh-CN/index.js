@@ -1633,7 +1633,9 @@ export default {
       "step4_title": "SIDI 与教育部数据对接",
       "step4_desc": "生成、校验并导出符合标准的 XML 数据包，用于同步至教育部 SIDI 官方系统。",
       "step5_title": "会议纪要与标准模板",
-      "step5_desc": "利用规范化模板快速编写、归档并正式编号校务委员会及各专项工作会议纪要。"
+      "step5_desc": "利用规范化模板快速编写、归档并正式编号校务委员会及各专项工作会议纪要。",
+      "step6_title": "Administrative Enterprise Hub",
+      "step6_desc": "Operational management of PagoPA notices with IUV codes, Student Curriculum for State Graduation (D.M. 88/2020), and SIDI MIM cooperative flow synchronization."
     },
     "collaboratore_ds": {
       "step1_title": "副校长及校务协作工作台",
@@ -1669,7 +1671,9 @@ export default {
       "step4_title": "SIDI 数据流与教育部报表",
       "step4_desc": "审查并授权向教育部中央 SIDI 系统、薪酬平台及财政监管系统报送 XML 数据包。",
       "step5_title": "罢工保障与法定底线服务",
-      "step5_desc": "制定并派定罢工期间校园最低保障应急人员，确保公共基础服务不中断。"
+      "step5_desc": "制定并派定罢工期间校园最低保障应急人员，确保公共基础服务不中断。",
+      "step6_title": "Enterprise Hub: Notice Board, Inventory & OPI",
+      "step6_desc": "Supervision of legal publications on the Official Notice Board, movable assets inventory registry, accounting reconciliation with OPI/SIOPE+ bank receipts, and canteen oversight."
     },
     "principal": {
       "step1_title": "校长总览控制台与学校概况",
@@ -1683,7 +1687,9 @@ export default {
       "step5_title": "校务会议记录与决议归档",
       "step5_desc": "Review and approval of Teachers' Assembly minutes, Class Council deliberations, and digital preservation according to public standards.",
       "step6_title": "教学质量监测、成绩终审与控辍保学",
-      "step6_desc": "Institutional performance statistics, term scrutiny validation, and early warning analytics for student dropout prevention."
+      "step6_desc": "Institutional performance statistics, term scrutiny validation, and early warning analytics for student dropout prevention.",
+      "step7_title": "Enterprise Hub & Remote Qualified Signature",
+      "step7_desc": "Centralized management of Remote Qualified Digital Signature (CAdES/PAdES), Online Official Notice Board, Ministry Teacher Calls, and School Canteen service activation."
     }
   },
   "help": {
@@ -2071,6 +2077,22 @@ export default {
         "测验日期",
         "课外活动",
         "校外活动与活动"
+      ],
+      "step9_title": "Psychological Counseling Desk (CIC)",
+      "step9_desc": "Book confidential counseling appointments under complete professional secrecy (Law 56/1989), with automatic parental consent verification for minors.",
+      "step9_bullets": [
+        "Confidential booking",
+        "Strict medical confidentiality",
+        "Parental consent verification",
+        "Session history"
+      ],
+      "step10_title": "School Canteen & Meals",
+      "step10_desc": "View daily menus, check meal attendance confirmed from the class register, and view your registered dietary profile (standard or certified special diets).",
+      "step10_bullets": [
+        "Daily menu",
+        "Confirmed meal attendance",
+        "Standard / special dietary profile",
+        "Meal attendance history"
       ]
     },
     "parent": {
@@ -2125,6 +2147,22 @@ export default {
         "付款历史",
         "下载收据",
         "申请文件"
+      ],
+      "step9_title": "Psychological Desk & Informed Consent",
+      "step9_desc": "Digitally sign the mandatory informed consent for children's access to psychological counseling (Law 56/1989) and request parental counseling consultations.",
+      "step9_bullets": [
+        "Informed consent signature",
+        "Child welfare protection",
+        "Parental counseling requests",
+        "Quick child selector"
+      ],
+      "step10_title": "School Canteen & Electronic Wallet",
+      "step10_desc": "Monitor available meal wallet balance for each child, make instant online top-ups with PagoPA (+€10, +€25, +€50, +€100), and track meal deductions history.",
+      "step10_bullets": [
+        "Live wallet balance",
+        "Instant PagoPA top-up",
+        "Immediate IUV code generation",
+        "Meal debit history"
       ]
     },
     "secretary": {
@@ -2179,6 +2217,14 @@ export default {
         "分配角色",
         "重置密码",
         "访问控制"
+      ],
+      "step9_title": "Enterprise Hub: PagoPA, Graduation & SIDI",
+      "step9_desc": "Mass emission of PagoPA payment notices with IUV codes, Student Curriculum preparation for State Exam (D.M. 88/2020), and cooperative application synchronization with SIDI MIM.",
+      "step9_bullets": [
+        "PagoPA Notices & IUV Codes",
+        "Student Curriculum Model",
+        "SIDI MIM Cooperation",
+        "School Canteen Module"
       ]
     },
     "admin": {
@@ -2233,6 +2279,14 @@ export default {
         "强制双重认证",
         "功能标志",
         "维护模式"
+      ],
+      "step9_title": "Enterprise School Management Hub",
+      "step9_desc": "Central governance platform for all 10 institutional regulatory modules (PagoPA, Remote Signature, Notice Board, Teacher Calls, Graduation, Canteen, Inventory, DPO Privacy, SIDI, Counseling Desk) with live role simulation.",
+      "step9_bullets": [
+        "10 Regulatory Modules Governance",
+        "Instant Role Simulator",
+        "Institutional Service Activation",
+        "AgID & Ministry Compliance"
       ]
     },
     "assistente_amministrativo": {
@@ -2265,6 +2319,14 @@ export default {
         "行政决议与会商全归档",
         "连续流水公文流水号",
         "安全合规数字档案库"
+      ],
+      "step6_title": "Administrative Enterprise Hub",
+      "step6_desc": "Operational management of PagoPA notices with IUV codes, Student Curriculum for State Graduation (D.M. 88/2020), and SIDI MIM cooperative flow synchronization.",
+      "step6_bullets": [
+        "PagoPA Notices with IUV",
+        "Student Curriculum D.M. 88/2020",
+        "SIDI MIM Cooperation",
+        "Treasury Reconciliation"
       ]
     },
     "collaboratore_ds": {
@@ -2361,6 +2423,14 @@ export default {
         "罢工协议法定条款执行",
         "下发正式执勤调令文书",
         "出勤与履职情况备案存查"
+      ],
+      "step6_title": "Enterprise Hub: Notice Board, Inventory & OPI",
+      "step6_desc": "Supervision of legal publications on the Official Notice Board, movable assets inventory registry, accounting reconciliation with OPI/SIOPE+ bank receipts, and canteen oversight.",
+      "step6_bullets": [
+        "Online Official Notice Board",
+        "Asset Inventory & Write-offs",
+        "OPI/SIOPE+ Reconciliation",
+        "Canteen Activation Control"
       ]
     },
     "principal": {
@@ -2399,6 +2469,14 @@ export default {
         "Term scrutiny sign-off",
         "Dropout risk alerts",
         "Institutional KPIs"
+      ],
+      "step7_title": "Enterprise Hub & Remote Qualified Signature",
+      "step7_desc": "Centralized management of Remote Qualified Digital Signature (CAdES/PAdES), Online Official Notice Board, Ministry Teacher Calls, and School Canteen service activation.",
+      "step7_bullets": [
+        "Qualified Remote Signature (FEQ)",
+        "Official Notice Board & Glyph Code",
+        "Ministry Substitute Calls",
+        "Canteen Service Activation"
       ]
     },
     "goToSection": "前往该板块"
@@ -4058,6 +4136,7 @@ export default {
     "viewAllGrades": "查阅全部学科学分"
   },
   "routeTitles": {
+    "enterpriseHub": "企业与法规合规管理中心",
     "personnelDesk": "Digital Personnel Desk",
     "timecard": "Timecard & Leave Planner",
     "visitorRegistry": "Visitor & Concierge Registry",
@@ -5914,5 +5993,290 @@ export default {
     "widgetTitle": "公文登记盖印",
     "widgetHelp": "即刻为此文件生成合规的 AgID 电子公文登记印章",
     "stampedSuccess": "已为此文件加盖公文印章："
+  },
+  "enterprise": {
+    "header": {
+      "badgeCompliance": "企业级与法规合规保障",
+      "badgeAgid": "MIM & AGID READY",
+      "title": "Enterprise School Management Hub",
+      "subtitle": "符合意大利 AgID、MIM、CAD 和欧盟 eIDAS 规范标准的商业化教育管理模块。",
+      "viewRoleMatrix": "角色职能权限矩阵",
+      "hideRoleMatrix": "收起矩阵"
+    },
+    "matrix": {
+      "title": "机构角色权责合规矩阵",
+      "subtitle": "全功能模块操作权限、公共查询范围及法定电子签名职责划分",
+      "colFeature": "商业功能模块",
+      "colGovernance": "核心主责管理",
+      "colOperations": "日常业务操作",
+      "colEndUsers": "最终用户群体",
+      "colNorm": "法定依据"
+    },
+    "governance": {
+      "authorizedRoles": "授权管理角色：",
+      "primaryGovernance": "主要主管角色：",
+      "operations": "业务操作角色：",
+      "endUsers": "最终服务群体：",
+      "legalRef": "法律参考规范："
+    },
+    "roles": {
+      "ds": "校长 (Dirigente Scolastico)",
+      "dsga": "总务财务长 (DSGA)",
+      "secretary": "行政办公室秘书",
+      "secretaryAccounts": "财务核算科",
+      "secretaryStaff": "教职工档案科",
+      "secretaryDidactics": "教务学籍科",
+      "teacher": "班主任 / 任课教师",
+      "commission": "国家会考委员会",
+      "dpo": "数据合规官 (DPO)",
+      "psychologist": "驻校心理咨询师 (56/1989号法)",
+      "custodian": "设备资产管理员 / 技术员",
+      "parent": "家长 / 监护人",
+      "student": "学生",
+      "public": "公众公开查询 / 公民"
+    },
+    "tabs": {
+      "pagopa": "1. PagoPA 与 OPI 财务",
+      "interpelli": "2. OM 88 顶岗招聘公示",
+      "albo": "3. 电子政务公示栏与 ANAC",
+      "feq": "4. QES 合规签名与防伪字形",
+      "maturita": "5. 国家会考学分与学生档案",
+      "meals": "6. 学校供餐考勤与特膳",
+      "inventory": "7. 固定资产台账与借用",
+      "privacy": "8. GDPR 隐私与拍照状态",
+      "sidi": "9. SIDI 教育部数据对接",
+      "psychology": "10. 心理咨询保密预约 (CIC)"
+    },
+    "pagopa": {
+      "cardTitleNotice": "开具 PagoPA 缴费通知书 (ISO 7064)",
+      "cardSubtitleNotice": "生成符合 AgID 标准的 IUV 唯一缴费凭证码及可下载的付款二维码。",
+      "studentId": "学生学号",
+      "title": "缴费项目款项说明 (如保险、研学旅行)",
+      "amount": "金额 (€)",
+      "generateNoticeBtn": "生成 IUV 缴费单",
+      "iuvCode": "IUV 凭证号：",
+      "qrPayload": "二维码数据：",
+      "downloadPdfBtn": "下载 PDF 缴费单",
+      "cardTitleOpi": "OPI / SIOPE+ 银行流水对账",
+      "cardSubtitleOpi": "直接导入国库银行电子回单，实现财务即时轧账。",
+      "opiInputLabel": "粘贴银行回单 XML 或 CSV 报文数据",
+      "reconcileBtn": "执行 OPI 自动对账",
+      "checkSollecitiBtn": "检查逾期欠费与催缴名单",
+      "reconciledCount": "已完成对账笔数：",
+      "totalAmount": "实收总金额：",
+      "successNotice": "PagoPA 缴费单及 IUV 凭证码已成功生成！",
+      "successReconcile": "OPI 银行回单对账完成！",
+      "sollecitiFound": "查询到 {count} 笔逾期需发送催缴通知的费用。",
+      "modeSingle": "单个学生",
+      "modeClass": "整个班级",
+      "selectStudent": "选择缴费学生",
+      "selectClass": "选择班级",
+      "quickPresets": "快捷缴费项目与金额：",
+      "generateBulkNoticeBtn": "为全班生成 IUV 缴费单 ({count} 名学生)",
+      "successBulkNotice": "已成功为该班级生成 {count} 份 PagoPA 缴费单与 IUV 凭证！"
+    },
+    "interpelli": {
+      "cardTitlePublish": "发布顶岗代课教师招聘公告",
+      "cardSubtitlePublish": "根据意大利教育部第 88/2024 号部长令向全社会公开招考公告。",
+      "title": "招聘公告标题",
+      "concorsoClass": "学科分类编号 (如 A026, ADSS)",
+      "weeklyHours": "每周任课课时",
+      "deadline": "报名截止日期 (YYYY-MM-DD)",
+      "publishBtn": "发布招募公告",
+      "cardTitleGraduatoria": "自动资历积分榜与录用通知",
+      "cardSubtitleGraduatoria": "依据学位证书、执教资历自动计分，支持24小时限时回复征召。",
+      "loadGraduatoriaBtn": "加载应聘候选人资历榜",
+      "convocaBtn": "发送录用通知 (24小时限时)",
+      "score": "综合资历得分：{score} 分 | 税号：{cf}",
+      "noCandidates": "当前暂无符合条件的应聘者。",
+      "successPublished": "招聘公告已成功向公众发布！",
+      "successConvoca": "24小时限时确认征聘通知已发出！",
+      "noActiveGraduatoria": "该公告暂无生效中的积分榜单。"
+    },
+    "albo": {
+      "cardTitleAlbo": "电子政务法定公告栏公示 (69/2009号法)",
+      "cardSubtitleAlbo": "具备法定效力的流水号登记，强制公示满15日。",
+      "category": "法律文书类别",
+      "subject": "文书公示事由",
+      "cigCode": "公共采购 CIG 编号",
+      "awardedAmount": "中标/立项金额 (€)",
+      "publishBtn": "在法定公告栏公开张贴",
+      "cardTitleAnac": "政务公开透明与 ANAC XML",
+      "cardSubtitleAnac": "自动生成国家反腐署 ANAC 所需的标准 XML 数据包 (依据第190/2012号法及33/2013号法令)。",
+      "downloadAnacBtn": "导出 ANAC XML 报文",
+      "anacDescription": "自动包含采购标段、工期履约进度及已公示的 CIG 编码。",
+      "successPublished": "公文已在电子公告栏发布公示，公示期为15日！",
+      "successAnac": "ANAC XML 报文导出下载完成。"
+    },
+    "feq": {
+      "cardTitleCsc": "云端批量合格电子签名 CSC (Cloud Signature Consortium)",
+      "cardSubtitleCsc": "校长或财务主管使用 PIN 及 OTP 动态验证码对上百份 PDF 成绩单/毕业证进行批量权威签名。",
+      "pin": "云端签名 PIN 码",
+      "otp": "OTP 动态验证码 (App 或硬件令牌)",
+      "signBatchBtn": "批量签署成绩单与毕业证",
+      "cardTitleGlifo": "数字安全防伪印记 (CAD 第23条电子印章)",
+      "cardSubtitleGlifo": "附加加密防伪二维码标记，确保纸质打印件与电子母本具有同等法定真实性。",
+      "glifoToken": "公众核验安全令牌",
+      "verifyGlifoBtn": "核验防伪印章真实性",
+      "resultStatus": "查验结果：",
+      "successSigned": "已使用 FEQ CSC PAdES 完成文档批量数字签名！",
+      "successGlifoVerified": "防伪印章核验无误，符合 CAD 规范！"
+    },
+    "maturita": {
+      "cardTitleCredits": "高中三年段学分换算 (第62/2017号法令)",
+      "cardSubtitleCredits": "根据教育部官方对照表自动将高三、高四、高五各学年平均绩点换算为高考学分。",
+      "grade3rd": "高三年段均分",
+      "grade4th": "高四年段均分",
+      "grade5th": "高五年段均分",
+      "calcBtn": "计算官方国家会考学分",
+      "totalCredits": "累计总学分：{credits} / 满分40分",
+      "cardTitleCurriculum": "学生电子档案生平 (第88/2020号令)",
+      "cardSubtitleCurriculum": "汇总高中学分、校企实训实习 (PCTO)、语言与计算机认证并直报教育部。",
+      "studentId": "应届毕业生学号",
+      "downloadCurriculumBtn": "下载教育部标准 XML 档案",
+      "successCalc": "学分已按第62/2017号法令附件A标准精确换算！",
+      "successCurriculum": "教育部专用学生生平 XML 报文导出成功！",
+      "selectStudent": "选择应届毕业考生 (高三年段)",
+      "filterClass": "按班级筛选",
+      "selectedStudentDetails": "已选学生详情："
+    },
+    "meals": {
+      "cardTitleRollCall": "学校供餐考勤上报 (每日09:00前截止)",
+      "cardSubtitleRollCall": "晨间点名快速清点就餐人数，即时同步至市政中央厨房配餐系统。",
+      "classId": "所属班级 (如 小学二年级A班)",
+      "date": "日期 (YYYY-MM-DD)",
+      "submitRollCallBtn": "向上报用餐人数至中央厨房",
+      "cardTitleWallet": "学生食堂电子钱包",
+      "cardSubtitleWallet": "就餐自动扣费，支持家长通过 PagoPA 线上充值。",
+      "studentId": "学生学号",
+      "topupAmount": "充值金额 (€)",
+      "topupBtn": "通过 PagoPA 快捷充值",
+      "successRollCall": "供餐人数已成功传输至中央配餐中心！",
+      "successWallet": "食堂电子钱包已通过 PagoPA 充值入账！",
+      "selectStudent": "选择就餐学生",
+      "currentBalance": "食堂钱包当前余额：",
+      "quickTopup": "快捷充值面额："
+    },
+    "inventory": {
+      "cardTitleAsset": "动产与仪器设备台账登记 (第129/2018号部令)",
+      "cardSubtitleAsset": "学校固定资产分类、校区、实验室归属及年度折旧核算。",
+      "description": "资产物资描述 (如 智能互动黑板、平板电脑)",
+      "category": "财务会计分类",
+      "initialValue": "原值金额 (€)",
+      "createAssetBtn": "录入资产并生成条形码/二维码",
+      "cardTitleLoan": "教学数字化设备免费借用协议 (Comodato)",
+      "cardSubtitleLoan": "为家庭配发笔记本电脑和平板，签署协议并跟踪设备归还期。",
+      "assetId": "固定资产编号",
+      "studentId": "领用学生学号",
+      "createLoanBtn": "签署设备免费借用合同",
+      "successAsset": "资产已登记入库，并生成资产编号与二维码！",
+      "successLoan": "设备借用合同已成功签订归档！"
+    },
+    "privacy": {
+      "cardTitleTreatment": "GDPR 个人信息处理活动登记簿 (第30条)",
+      "cardSubtitleTreatment": "透明化梳理学校各类数据处理的目的、法律依据和安全防护技术措施。",
+      "activityName": "数据处理业务活动",
+      "legalBasis": "合法性依据",
+      "saveTreatmentBtn": "登记 GDPR 处理活动",
+      "cardTitleTrafficLight": "教师肖像权隐私三色通行指示灯",
+      "cardSubtitleTrafficLight": "外出研学与集体活动拍照即时合规提示：🟢 绿灯 (全项授权许可)，🟡 黄灯 (仅限校内教学)，🔴 红灯 (严禁公开拍照)。",
+      "greenBadge": "🟢 绿灯：允许官方校园宣传与发布",
+      "yellowBadge": "🟡 黄灯：仅限校内封闭教学研讨使用",
+      "redBadge": "🔴 红灯：严禁任何公开拍摄与传播",
+      "successTreatment": "处理活动已按 GDPR 第30条规范正式登记！"
+    },
+    "sidi": {
+      "cardTitleCert": "教育部 SIDI 专用 WebService 终端证书",
+      "cardSubtitleCert": "与意大利教育部 SIDI 服务器建立双向 mTLS 高安全加密通信通道。",
+      "endpoint": "服务接入终结点：",
+      "connectionStatus": "通信链路状态：",
+      "connected": "已连接 (数字证书正常生效中)",
+      "syncStudentsBtn": "一键同步全国 SIDI 学籍码",
+      "cardTitleScrutiny": "期末期末成绩会考结果上报 SIDI",
+      "cardSubtitleScrutiny": "无需手动繁琐制表，一键将升学资格与学分报送至国家教育部平台。",
+      "pushScrutinyBtn": "上报评审结果至教育部",
+      "successSync": "SIDI MIM 接口数据同步圆满完成！",
+      "successPush": "期末考核结果已成功直报教育部！"
+    },
+    "psychology": {
+      "cardTitleBooking": "匿名与绝密心理咨询预约 (CIC)",
+      "cardSubtitleBooking": "依据第 56/1989 号法律职业保密特权，使用化名进行心理援助预约。",
+      "slotTime": "预约日期与时间 (YYYY-MM-DD HH:MM)",
+      "bookBtn": "预约保密心理疏导",
+      "cardTitleConsent": "法定家长知情同意书签署",
+      "cardSubtitleConsent": "未成年学生接受心理疏导，严格要求必须取得父母双方签署的书面同意。",
+      "studentId": "未成年学生学号",
+      "signConsentBtn": "签署家长知情同意书",
+      "successBooked": "已使用匿名代号成功预约心理咨询！",
+      "consentWarning": "请务必核实并确认父母双方签署的同意书。",
+      "successConsent": "监护人知情同意书已归档登记！",
+      "modeSingle": "单个学生",
+      "modeClass": "整个班级",
+      "selectStudent": "选择未成年学生",
+      "selectClass": "选择班级",
+      "schoolYear": "学年",
+      "sendBulkConsentBtn": "向全班家长批量发送知情同意书签署通知 ({count} 名学生)",
+      "successBulkConsent": "已成功为该班级 {count} 名学生登记家长知情同意书！",
+      "studentsInClass": "班级学生名单：",
+      "statusPending": "等待签署",
+      "statusSigned": "双方父母均已签署"
+    }
+  },
+  "psychologyDesk": {
+    "title": "Psychological Support Desk (CIC)",
+    "subtitle": "Confidential and anonymous school psychological counselling service (Law 56/1989)",
+    "consentOk": "Parental Consent Active",
+    "consentPending": "Consent Pending",
+    "privacyTitle": "Absolute Privacy & Professional Secrecy",
+    "privacyDesc": "Counselling sessions with the school psychologist are protected by professional secrecy under Art. 622 c.p. and Law 56/1989.",
+    "consentRequiredTitle": "Mandatory Parental Informed Consent",
+    "consentRequiredDesc": "For minor students, advance written consent from parents is required on the family portal before accessing individual counselling.",
+    "howToSign": "How to sign",
+    "bookTitle": "Book a Confidential Session",
+    "bookSubtitle": "Choose an available time slot. You will receive an anonymous confirmation code.",
+    "selectSlot": "Available Time Slot",
+    "placeholderSlot": "Select day and time",
+    "topic": "General Topic (Optional & Anonymous)",
+    "notesOptional": "Optional notes or preferences",
+    "submitBookingBtn": "Confirm Anonymous Booking",
+    "myBookingsTitle": "My Booked Appointments",
+    "myBookingsSubtitle": "View confirmed sessions with the school psychologist.",
+    "noBookings": "No sessions currently scheduled.",
+    "confirmed": "Confirmed"
+  },
+  "studentCanteen": {
+    "title": "School Canteen & Meals",
+    "subtitle": "View meal attendance, daily menu and special diets",
+    "serviceActive": "Canteen Service Active",
+    "serviceInactive": "Canteen Inactive",
+    "inactiveTitle": "The canteen service is not active for this school",
+    "inactiveDesc": "School meal service is not currently enabled for this school campus. If activated by the Principal or School Bursar, meal information will appear here automatically.",
+    "todayMenuTitle": "Today's Menu",
+    "weeklyCalendarTitle": "Weekly Meal Calendar"
+  },
+  "parentPsychology": {
+    "title": "Psychological Support Desk (CIC) & Parental Consent",
+    "subtitle": "Mandatory informed consent for children's access to school psychological support (Law 56/1989)",
+    "selectChild": "Select Child:",
+    "cardConsentTitle": "Mandatory Informed Consent (S.Y. 2025/2026)",
+    "statusSigned": "Consent Granted",
+    "statusPending": "Awaiting Signature",
+    "legalNotice": "Under Art. 316 c.c. and Law 56/1989, access to psychological support for minor students requires parental informed consent.",
+    "termsCheckbox": "I declare that I have read the information sheet and authorize my child to attend the school psychological counselling desk.",
+    "signConsentBtn": "Sign and Grant Informed Consent",
+    "parentConsultTitle": "Request Parent-Psychologist Consultation",
+    "sendRequestBtn": "Send Consultation Request"
+  },
+  "parentCanteen": {
+    "title": "School Canteen & Electronic Wallet",
+    "subtitle": "Manage meal wallet balance, online PagoPA top-up and consumption history",
+    "active": "Canteen Active",
+    "inactive": "Canteen Inactive",
+    "inactiveTitle": "The canteen service is not active for this school",
+    "inactiveDesc": "This school does not currently provide canteen services. When enabled by the Principal or School Bursar, you will be able to manage the meal wallet and top-ups here.",
+    "selectChild": "Select Child:",
+    "walletTitle": "Electronic Meal Wallet",
+    "topupBtn": "Top Up with PagoPA (IUV)",
+    "historyTitle": "Meal Consumption & Attendance History"
   }
 }

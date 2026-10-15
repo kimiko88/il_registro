@@ -118,11 +118,17 @@ Il frontend integra un sistema multilivello di assistenza e onboarding guidato p
 1. **Onboarding Tour Interattivo (`OnboardingTour.vue`)**:
    - Tutorial guidato specifico per tutti i 10 ruoli canonici (`principal`, `teacher`, `student`, `parent`, `secretary`, `admin`, `assistente_amministrativo`, `collaboratore_ds`, `collaboratore_scolastico`, `dsga`).
    - **Navigazione Diretta alle Sezioni**: ogni step associa la rotta applicativa corrispondente (es. `/ata/visitor-registry`, `/secretary/timetable`, `/teacher/classes`) e mette a disposizione dell'utente il pulsante interattivo `onboardingExtra.goToSection` ("Vai alla sezione") per completare il tour e recarsi direttamente alla funzionalità.
-   - Allineamento completo dei permessi e flussi:
+   - Allineamento completo dei permessi e flussi per le nuove funzionalità Enterprise:
+     - **Dirigente Scolastico (`principal` - 7 step)**: panoramica, approvazioni, circolari, organigramma, gestione docenti/classi, sicurezza e Governance Enterprise Hub (`/admin/enterprise` - Firma FEQ, Albo Pretorio, Interpelli e attivazione Mensa).
+     - **Studente (`student` - 10 step)**: orario, voti, assenze, didattica, compiti, PCTO, e nuove sezioni per Sportello d'Ascolto Psicologico CIC (`/student/psychology`) e Mensa & Borsellino Pasti (`/student/canteen`).
+     - **Genitore (`parent` - 10 step)**: libretto web con firma PIN, voti, colloqui, autorizzazioni gite, pagamenti PagoPA, pagelle, e nuove sezioni per Sportello d'Ascolto & Consenso Informato (`/parent/psychology`) e Borsellino Mensa & Ricariche PagoPA (`/parent/canteen`).
+     - **Segreteria (`secretary` - 9 step)**: orario, anagrafiche, certificati, iscrizioni, scrutini e Hub Gestionale Enterprise (`/admin/enterprise` - PagoPA ISO 7064 Mod 97-10, Maturità D.M. 88/2020, Cooperazione SIDI MIM).
+     - **Amministratore (`admin` - 9 step)**: configurazione istituto, audit log, backup, sicurezza e Enterprise Hub Governance con simulatore ruoli (`/admin/enterprise`).
+     - **Assistente Amministrativo (`assistente_amministrativo` - 6 step)**: protocollo, iscrizioni, assenze, e Hub Operativo Enterprise (`/admin/enterprise`).
+     - **DSGA (`dsga` - 6 step)**: bilancio, contratti, cedolini, e Amministrazione Contabile Enterprise (`/admin/enterprise` - riconciliazione OPI/SIOPE+, Albo Pretorio, Inventario beni).
      - **Collaboratore Scolastico**: accesso rapido al Registro Visitatori (`/ata/visitor-registry`), Cartellino CCNL (`/ata/timecard`), Segnalazione Guasti (`/ata/maintenance`) e Sportello Personale (`/ata/personnel-desk`), escludendo presenze d'istituto riservate al DSGA/segreteria.
-     - **Segreteria**: evidenziazione del generatore automatico orario (`/secretary/timetable`), vincoli e desiderata docenti (`/secretary/timetable-constraints`, `/secretary/schedule-preferences`), sostituzioni e monitoraggio scioperi (`/ata/strike`), oltre alla gestione classi con assegnazione coordinatori e filtro per anno scolastico.
      - **Docente**: gestione classi con badge coordinatore, conteggio studenti e filtro per anno scolastico attivo.
-   - Card grafiche con pillole di funzionalità, badge di categoria, suggerimenti pratici e lista puntata.
+   - Card grafiche con pillole di funzionalità, badge di categoria, suggerimenti pratici, elenco puntato ed atterraggio diretto (`onboardingExtra.goToSection`).
    - Tracciamento completamento automatizzato in `localStorage` (`onboarding_done_{role}`).
 2. **Pannello Help Center Full-Screen (`HelpCenterPanel.vue`)**:
    - Finestra modale a schermo intero con ricerca full-text istantanea in tutte le guide.

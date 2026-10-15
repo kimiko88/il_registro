@@ -66,3 +66,34 @@ type SidiValidationResult struct {
 	MissingSidiIDs []string `json:"missing_sidi_ids"`
 	Errors         []string `json:"errors"`
 }
+
+type SidiCooperationConfig struct {
+	EndpointURL           string `json:"endpoint_url"`
+	CodiceMeccanografico  string `json:"codice_meccanografico"`
+	CertificatoPostazione string `json:"certificato_postazione"`
+	Environment           string `json:"environment"` // "PRODUZIONE", "COLLAUDO"
+}
+
+type SyncSidiCodesResponse struct {
+	TotalProcessed int               `json:"total_processed"`
+	TotalUpdated   int               `json:"total_updated"`
+	UpdatedCodes   map[string]string `json:"updated_codes"` // CF -> Codice SIDI
+	ProtocolloMIM  string            `json:"protocollo_mim"`
+	SyncTimestamp  time.Time         `json:"sync_timestamp"`
+}
+
+type PushScrutinyResultsRequest struct {
+	SchoolYear string          `json:"school_year"`
+	Sessione   string          `json:"sessione"` // "GIUGNO", "SETTEMBRE"
+	ClassID    string          `json:"class_id"`
+	Results    []ScrutinioSIDI `json:"results"`
+}
+
+type PushScrutinyResultsResponse struct {
+	Status           string    `json:"status"` // "TRASMESSO_CON_SUCCESSO", "SCARTATO"
+	ProtocolloMIM    string    `json:"protocollo_mim"`
+	RecordsProcessed int       `json:"records_processed"`
+	RecordsAccepted  int       `json:"records_accepted"`
+	Errors           []string  `json:"errors"`
+	TransmittedAt    time.Time `json:"transmitted_at"`
+}

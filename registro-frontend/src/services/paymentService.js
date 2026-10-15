@@ -12,6 +12,26 @@ export const paymentService = {
   },
   createPayment(data) {
     return api.post('/payments', data)
+  },
+  createBulkPayments(studentIds, paymentData) {
+    return Promise.all(studentIds.map(id => this.createPayment({ ...paymentData, student_id: id })))
+  },
+  // PagoPA & OPI Enterprise Dealbreakers
+  getBollettino(id) {
+    return api.get(`/payments/${id}/bollettino`)
+  },
+  createCheckoutSession(id, returnUrl) {
+    return api.post(`/payments/${id}/checkout`, { return_url: returnUrl })
+  },
+  reconcileOPI(streamData, format = 'OPI_XML') {
+    return api.post(`/payments/reconcile-opi?format=${format}`, streamData, {
+      headers: {
+        'Content-Type': format === 'OPI_XML' ? 'application/xml' : 'text/csv'
+      }
+    })
+  },
+  getSolleciti() {
+    return api.get('/payments/solleciti')
   }
 }
 

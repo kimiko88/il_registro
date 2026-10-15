@@ -218,9 +218,37 @@ Nei componenti `OnboardingTour.vue`, `HelpDrawer.vue` e `HelpCenterPanel.vue`, o
 
 ### Onboarding Tour & Centro Guide Adattivo
 - **`OnboardingTour.vue`**: Presentazione guidata interattiva a schede con scorciatoie da tastiera (`←`, `→`, `ESC`), avanzamento visivo, anteprima a chip, pulsante di atterraggio rapido alla sezione associata (`onboardingExtra.goToSection`) e completamento persistito (`onboarding_done_${userRole.value}`).
+- **Passi del Tour Dedicati per Ruolo con Nuove Funzionalità**:
+  - `principal` (7 step): Panoramica, Approvazioni e monitoraggio, Circolari, Organigramma, Gestione docenti/classi, Impostazioni e sicurezza, Enterprise Management Hub (Firma FEQ, Albo Pretorio, Interpelli e attivazione Mensa).
+  - `student` (10 step): Dashboard studente, Orario, Voti, Assenze e giustificazioni, Bacheca e circolari, Materiale didattico, Compiti e agenda, PCTO, Sportello d'Ascolto Psicologico CIC (`/student/psychology`), Mensa & Borsellino Pasti (`/student/canteen`).
+  - `parent` (10 step): Dashboard genitore, Libretto web e PIN, Voti e andamento, Colloqui con i docenti, Bacheca e circolari, Autorizzazioni e gite, Pagamenti PagoPA, Documenti e pagelle, Sportello d'Ascolto & Consenso Informato (`/parent/psychology`), Borsellino Mensa & Ricariche PagoPA (`/parent/canteen`).
+  - `secretary` (9 step): Cruscotto segreteria, Anagrafiche, Orario scolastico, Certificati e protocollo, Iscrizioni, Organico ATA, Registro elettronico e scrutini, Comunicazioni, Hub Gestionale Enterprise (`/admin/enterprise` - PagoPA, Maturità D.M. 88/2020, SIDI).
+  - `admin` (9 step): Pannello di amministrazione, Gestione utenti, Configurazione istituto, Sicurezza e audit log, Backup e ripristino, Integrazioni e API, Permessi e ruoli, Manutenzione e diagnostica, Enterprise Hub Governance (`/admin/enterprise`).
+  - `assistente_amministrativo` (6 step): Sportello personale, Gestione protocollo, Iscrizioni, Assenze e certificati, Supporto didattico, Hub Operativo Enterprise (`/admin/enterprise`).
+  - `dsga` (6 step): Piano finanziario e bilancio, Gestione contratti e acquisti, Patrimonio e inventario, Liquidazione compensi e cedolini, Gestione personale ATA, Amministrazione Contabile Enterprise (`/admin/enterprise` - OPI/SIOPE+, Albo Pretorio, Inventario beni).
 - **`HelpDrawer.vue`**: Pannello a scomparsa laterale destra con motore di ricerca istantaneo, filtri per categoria di ruolo, domande frequenti espanse ed accesso al tour.
 - **`HelpCenterPanel.vue`**: Centro assistenza completo a schermo con catalogo guide tematiche, tempi di lettura stimati, procedure passo-passo e blocco FAQ correlate.
 - **Integrità i18n**: Tutte le chiavi di Onboarding e Help sono verificate e sincronizzate al 100% su tutte le 11 lingue supportate (`i18nKeys.test.js`).
+
+### Enterprise School Management Hub (`/admin/enterprise`) & Governance Funzionalità
+La piattaforma implementa una governance centralizzata delle 10 aree "deal-breaker" ministeriali con filtro granulare dei permessi:
+1. **PagoPA & Pago In Rete** (IUV, bollettini PDF con QR code, riconciliazione OPI/SIOPE+).
+2. **Cooperazione Applicativa SIDI / MIM** (WS-Security SOAP, sincronizzazione anagrafi e flussi di frequenza).
+3. **Maturità & Curriculum dello Studente** (D.M. 88/2020, allegato al diploma, export XML per Commissione).
+4. **Albo Pretorio Online & Pubblicità Legale** (L. 69/2009, periodo di affissione 15 giorni, repertorio non modificabile, storico).
+5. **Inventario Beni & Discarico Inventariale** (D.I. 129/2018, QR/barcode, verbali di discarico, beni sopra/sotto soglia).
+6. **Firma Elettronica Qualificata & Libro Firme** (eIDAS / CAD art. 20, OTP SMS/email, flussi di firma circolari e contratti).
+7. **Sportello Psicologico & Consenso Informato** (L. 107/2015, anonimizzazione, prenotazione slot per studente, consenso genitori).
+8. **Interpelli Nazionali Supplenze Brevi** (O.M. 88/2024, graduatorie esaurite, pubblicazione avviso, candidatura telematica e ranking).
+9. **Borsellino Elettronico Mensa & Refezione** (saldo pasti, disdetta entro orario limite, diete speciali, ricarica PagoPA).
+10. **Pre-Iscrizioni & Open Day** (modulo personalizzabile, open day con capienza, graduatoria criteri d'istituto).
+
+**Matrice di Visibilità Granulare**:
+- `principal` (Dirigente): accesso ai moduli direzionali e autorizzativi (Firma FEQ, Albo Pretorio, Interpelli, attivazione Mensa d'Istituto).
+- `dsga`: accesso ai moduli contabili e patrimoniali (PagoPA/OPI, Albo Pretorio, Inventario Beni, Interpelli).
+- `secretary` & `assistente_amministrativo`: accesso ai moduli operativi di segreteria (PagoPA, SIDI, Maturità D.M. 88/2020, Pre-iscrizioni, Borsellino).
+- `admin`: accesso universale con simulatore permessi e commutazione dinamica del profilo.
+- **Attivazione Selettiva Mensa**: la mensa è configurabile a livello di plesso/istituto da parte di Dirigente Scolastico o DSGA (`school_canteen_active_${schoolId}`). I portali studente (`/student/canteen`) e genitore (`/parent/canteen`) e le voci del menu laterale si adattano automaticamente mostrando un banner esplicativo se il servizio non è erogato per la scuola.
 
 ---
 

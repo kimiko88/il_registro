@@ -79,6 +79,15 @@ export default [
             },
             { path: 'admin/audit-log', redirect: '/admin/audit-logs' },
             {
+                path: 'admin/enterprise',
+                component: () => import('@/pages/admin/EnterpriseHub.vue'),
+                meta: {
+                    title: 'Enterprise & Legal Compliance Hub',
+                    titleKey: 'routeTitles.enterpriseHub',
+                    roles: ['superadmin', 'admin', 'principal', 'vice_principal', 'dsga', 'secretary', 'assistente_amministrativo', 'assistente_contabilita', 'dpo', 'teacher', 'docente', 'psychologist']
+                }
+            },
+            {
                 path: 'admin/tenants',
                 component: () => import('@/pages/admin/Tenants.vue'),
                 meta: { title: 'Gestione Multi-Tenant', titleKey: 'routeTitles.tenants', roles: ['superadmin'] }
@@ -189,6 +198,8 @@ export default [
             { path: 'student/report-card', component: () => import('@/pages/student/ReportCard.vue'), meta: { title: 'Pagella Online', titleKey: 'routeTitles.reportCard', roles: ['student'] } },
             { path: 'student/settings', component: () => import('@/pages/student/Settings.vue'), meta: { title: 'Impostazioni Studente', titleKey: 'routeTitles.settings', roles: ['student'] } },
             { path: 'student/help-desk', component: () => import('@/pages/student/HelpDeskBooking.vue'), meta: { title: 'Prenota Sportello Help', titleKey: 'routeTitles.recovery', roles: ['student'] } },
+            { path: 'student/psychology', component: () => import('@/pages/student/PsychologyDesk.vue'), meta: { title: 'Sportello d\'Ascolto (CIC)', titleKey: 'routeTitles.psychology', roles: ['student'] } },
+            { path: 'student/canteen', component: () => import('@/pages/student/Canteen.vue'), meta: { title: 'Mensa Scolastica', titleKey: 'routeTitles.canteen', roles: ['student'] } },
             { path: 'elections/vote/:id?', component: () => import('@/pages/elections/VotingBooth.vue'), meta: { title: 'Cabina Elettorale Digitale', roles: ['student', 'parent', 'teacher', 'admin', 'secretary', 'superadmin'] } },
 
             // Parent Routes
@@ -211,6 +222,8 @@ export default [
             { path: 'parent/authorizations', component: () => import('@/pages/parent/Authorizations.vue'), meta: { title: 'Autorizzazioni & Doppia Firma', titleKey: 'routeTitles.authorizations', roles: ['parent'] } },
             { path: 'parent/family-desk', component: () => import('@/pages/parent/FamilyDesk.vue'), meta: { title: 'Sportello Istanze Online', titleKey: 'routeTitles.documents', roles: ['parent'] } },
             { path: 'parent/payments', component: () => import('@/pages/parent/Payments.vue'), meta: { title: 'Pagamenti Scolastici', titleKey: 'routeTitles.certificates', roles: ['parent'] } },
+            { path: 'parent/psychology', component: () => import('@/pages/parent/PsychologyConsent.vue'), meta: { title: 'Sportello Psicologico (CIC)', titleKey: 'routeTitles.psychology', roles: ['parent'] } },
+            { path: 'parent/canteen', component: () => import('@/pages/parent/CanteenWallet.vue'), meta: { title: 'Borsellino Mensa & Pasti', titleKey: 'routeTitles.canteen', roles: ['parent'] } },
             { path: 'parent/settings', component: () => import('@/pages/parent/Settings.vue'), meta: { title: 'Impostazioni Genitore', titleKey: 'routeTitles.settings', roles: ['parent'] } },
 
             {

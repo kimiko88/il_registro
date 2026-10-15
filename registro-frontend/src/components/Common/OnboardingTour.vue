@@ -281,7 +281,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'completed', 'open-guide'])
 
 const router = useRouter()
-const { t, tm, te } = useI18n()
+const { t, tm, te } = useI18n({ useScope: 'global' })
 const $q = useQuasar()
 const authStore = useAuthStore()
 
@@ -354,7 +354,18 @@ const STEP_DEFS = {
     { icon: 'verified',          color: 'teal',        route: '/ata/personnel-desk' },
     { icon: 'swap_horiz',        color: 'orange',      route: '/secretary/substitutions' },
     { icon: 'gavel',             color: 'blue',        route: '/secretary/verbali' },
-    { icon: 'assessment',        color: 'purple',      route: '/secretary/reports' }
+    { icon: 'assessment',        color: 'purple',      route: '/secretary/reports' },
+    {
+      icon: 'verified_user',
+      color: 'purple',
+      route: '/admin/enterprise',
+      bullets: [
+        'Firma Remota Qualificata FEQ',
+        'Albo Pretorio & Codice Glifo',
+        'Interpelli supplenze MIM',
+        'Attivazione Servizio Mensa'
+      ]
+    }
   ],
   teacher: [
     { icon:'dashboard',          color:'indigo',       route: '/' },
@@ -374,7 +385,29 @@ const STEP_DEFS = {
     { icon:'description',        color:'purple',       route: '/student/documents' },
     { icon:'calendar_month',     color:'red',          route: '/student/timetable' },
     { icon:'work',               color:'cyan',         route: '/student/pcto' },
-    { icon:'campaign',           color:'pink',         route: '/student/communications' }
+    { icon:'campaign',           color:'pink',         route: '/student/communications' },
+    {
+      icon: 'psychology',
+      color: 'pink',
+      route: '/student/psychology',
+      bullets: [
+        'Prenotazione confidenziale',
+        'Tutela assoluta riservatezza',
+        'Verifica consenso genitori',
+        'Storico appuntamenti'
+      ]
+    },
+    {
+      icon: 'restaurant',
+      color: 'teal',
+      route: '/student/canteen',
+      bullets: [
+        'Menu del giorno',
+        'Presenza pasto confermata',
+        'Dieta standard o speciale',
+        'Storico refezione'
+      ]
+    }
   ],
   parent: [
     { icon:'dashboard',          color:'purple',       route: '/' },
@@ -384,7 +417,29 @@ const STEP_DEFS = {
     { icon:'meeting_room',       color:'orange',       route: '/parent/colloqui' },
     { icon:'payment',            color:'teal',         route: '/parent/payments' },
     { icon:'verified_user',      color:'indigo',       route: '/parent/attendance' },
-    { icon:'analytics',          color:'red',          route: '/parent/grades' }
+    { icon:'analytics',          color:'red',          route: '/parent/grades' },
+    {
+      icon: 'psychology',
+      color: 'pink',
+      route: '/parent/psychology',
+      bullets: [
+        'Firma consenso informato',
+        'Tutela minori L. 56/1989',
+        'Consulenza genitoriale',
+        'Selezione rapida figli'
+      ]
+    },
+    {
+      icon: 'account_balance_wallet',
+      color: 'teal',
+      route: '/parent/canteen',
+      bullets: [
+        'Saldo borsellino in tempo reale',
+        'Ricarica rapida PagoPA',
+        'Generazione codice IUV',
+        'Monitoraggio addebiti pasti'
+      ]
+    }
   ],
   secretary: [
     { icon:'dashboard',          color:'orange',       route: '/' },
@@ -394,7 +449,18 @@ const STEP_DEFS = {
     { icon:'assessment',         color:'purple',       route: '/secretary/reports' },
     { icon:'manage_accounts',    color:'red',          route: '/secretary/users' },
     { icon:'badge',              color:'cyan',         route: '/secretary/students' },
-    { icon:'newspaper',          color:'teal',         route: '/secretary/communications' }
+    { icon:'newspaper',          color:'teal',         route: '/secretary/communications' },
+    {
+      icon: 'hub',
+      color: 'indigo',
+      route: '/admin/enterprise',
+      bullets: [
+        'Emissione avvisi PagoPA & IUV',
+        'Curriculum dello Studente',
+        'Cooperazione SIDI MIM',
+        'Mensa Scolastica'
+      ]
+    }
   ],
   admin: [
     { icon:'dashboard',          color:'red',          route: '/' },
@@ -404,14 +470,36 @@ const STEP_DEFS = {
     { icon:'security',           color:'purple',       route: '/admin/audit-logs' },
     { icon:'settings',           color:'grey',         route: '/admin/settings' },
     { icon:'corporate_fare',     color:'indigo',       route: '/admin/schools' },
-    { icon:'api',                color:'cyan',         route: '/admin/settings' }
+    { icon:'api',                color:'cyan',         route: '/admin/settings' },
+    {
+      icon: 'hub',
+      color: 'deep-purple',
+      route: '/admin/enterprise',
+      bullets: [
+        'Governance 10 moduli normativi',
+        'Simulatore ruoli istantaneo',
+        'Attivazione servizi d\'istituto',
+        'Conformità AgID e MIM'
+      ]
+    }
   ],
   assistente_amministrativo: [
     { icon: 'dashboard',         color: 'cyan',        route: '/ata' },
     { icon: 'calendar_month',    color: 'blue',        route: '/ata/timecard' },
     { icon: 'forward_to_inbox',  color: 'purple',      route: '/ata/personnel-desk' },
     { icon: 'cloud_sync',        color: 'indigo',      route: '/secretary/sidi' },
-    { icon: 'gavel',             color: 'teal',        route: '/secretary/verbali' }
+    { icon: 'gavel',             color: 'teal',        route: '/secretary/verbali' },
+    {
+      icon: 'hub',
+      color: 'cyan',
+      route: '/admin/enterprise',
+      bullets: [
+        'Avvisi PagoPA con IUV',
+        'Curriculum Studente D.M. 88/2020',
+        'Cooperazione SIDI MIM',
+        'Riconciliazione tesoreria'
+      ]
+    }
   ],
   collaboratore_ds: [
     { icon: 'dashboard',         color: 'amber',       route: '/ata' },
@@ -432,7 +520,18 @@ const STEP_DEFS = {
     { icon: 'assessment',        color: 'blue',        route: '/ata/timecard' },
     { icon: 'verified',          color: 'green',       route: '/ata/personnel-desk' },
     { icon: 'cloud_sync',        color: 'indigo',      route: '/secretary/sidi' },
-    { icon: 'gavel',             color: 'purple',      route: '/ata/strike' }
+    { icon: 'gavel',             color: 'purple',      route: '/ata/strike' },
+    {
+      icon: 'hub',
+      color: 'deep-orange',
+      route: '/admin/enterprise',
+      bullets: [
+        'Albo Pretorio On-Line',
+        'Inventario beni & discarico',
+        'Riconciliazione OPI/SIOPE+',
+        'Attivazione Mensa'
+      ]
+    }
   ]
 }
 
@@ -449,15 +548,27 @@ const tourSteps = computed(() => {
       : `onboardingExtra.${role}.step${n}_desc`
     const bulletsKey = `onboardingExtra.${role}.step${n}_bullets`
 
+    const altTitleKey = n <= 6
+      ? `onboardingExtra.${role}.step${n}_title`
+      : `onboarding.${role}.step${n}_title`
+    const altDescKey = n <= 6
+      ? `onboardingExtra.${role}.step${n}_desc`
+      : `onboarding.${role}.step${n}_desc`
+
     const rawBullets = typeof tm === 'function' ? tm(bulletsKey) : []
-    const bullets = Array.isArray(rawBullets) ? rawBullets : []
+    const bullets = Array.isArray(rawBullets) && rawBullets.length > 0
+      ? rawBullets
+      : (Array.isArray(d.bullets) ? d.bullets : [])
+
+    const title = te(titleKey) ? t(titleKey) : (te(altTitleKey) ? t(altTitleKey) : '')
+    const desc = te(descKey) ? t(descKey) : (te(altDescKey) ? t(altDescKey) : '')
 
     return {
       icon:    d.icon,
       color:   d.color,
       route:   d.route,
-      title:   t(titleKey),
-      desc:    t(descKey),
+      title,
+      desc,
       bullets
     }
   })

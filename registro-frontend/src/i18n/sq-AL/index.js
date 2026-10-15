@@ -1633,7 +1633,9 @@ export default {
       "step4_title": "Rrjedhat SIDI & Portali i Ministrisë",
       "step4_desc": "Gjenero, valido dhe eksporto paketat e të dhënave XML për sinkronizim me portalin SIDI të Ministrisë së Arsimit.",
       "step5_title": "Procesverbalet & Modelet e Mbledhjeve",
-      "step5_desc": "Përdor modele të standardizuara për hartimin, arkivimin dhe numërimin zyrtar të procesverbaleve të këshillave dhe komisioneve."
+      "step5_desc": "Përdor modele të standardizuara për hartimin, arkivimin dhe numërimin zyrtar të procesverbaleve të këshillave dhe komisioneve.",
+      "step6_title": "Administrative Enterprise Hub",
+      "step6_desc": "Operational management of PagoPA notices with IUV codes, Student Curriculum for State Graduation (D.M. 88/2020), and SIDI MIM cooperative flow synchronization."
     },
     "collaboratore_ds": {
       "step1_title": "Paneli i Bashkëpunëtorit të Drejtorit",
@@ -1669,7 +1671,9 @@ export default {
       "step4_title": "Rrjedhat SIDI & Raportimet në Ministri",
       "step4_desc": "Validimi dhe miratimi i dërgimit të paketave XML drejt sistemit shtetëror SIDI, pagave dhe monitorimeve buxhetore.",
       "step5_title": "Grevat & Shërbimet Publike Thelbësore",
-      "step5_desc": "Përcaktimi dhe caktimi i kontingjenteve minimale të personelit për të garantuar shërbimet thelbësore gjatë grevave."
+      "step5_desc": "Përcaktimi dhe caktimi i kontingjenteve minimale të personelit për të garantuar shërbimet thelbësore gjatë grevave.",
+      "step6_title": "Enterprise Hub: Notice Board, Inventory & OPI",
+      "step6_desc": "Supervision of legal publications on the Official Notice Board, movable assets inventory registry, accounting reconciliation with OPI/SIOPE+ bank receipts, and canteen oversight."
     },
     "principal": {
       "step1_title": "Paneli i Drejtorisë & Pasqyra e Përgjithshme",
@@ -1683,7 +1687,9 @@ export default {
       "step5_title": "Procesverbalet & Vendimet e Këshillit",
       "step5_desc": "Review and approval of Teachers' Assembly minutes, Class Council deliberations, and digital preservation according to public standards.",
       "step6_title": "Monitorimi Pedagogjik, Provimet & Parandalimi i Braktisjes",
-      "step6_desc": "Institutional performance statistics, term scrutiny validation, and early warning analytics for student dropout prevention."
+      "step6_desc": "Institutional performance statistics, term scrutiny validation, and early warning analytics for student dropout prevention.",
+      "step7_title": "Enterprise Hub & Remote Qualified Signature",
+      "step7_desc": "Centralized management of Remote Qualified Digital Signature (CAdES/PAdES), Online Official Notice Board, Ministry Teacher Calls, and School Canteen service activation."
     }
   },
   "help": {
@@ -2191,6 +2197,22 @@ export default {
         "Datat e testeve",
         "Aktivitete extra",
         "Ngjarje"
+      ],
+      "step9_title": "Psychological Counseling Desk (CIC)",
+      "step9_desc": "Book confidential counseling appointments under complete professional secrecy (Law 56/1989), with automatic parental consent verification for minors.",
+      "step9_bullets": [
+        "Confidential booking",
+        "Strict medical confidentiality",
+        "Parental consent verification",
+        "Session history"
+      ],
+      "step10_title": "School Canteen & Meals",
+      "step10_desc": "View daily menus, check meal attendance confirmed from the class register, and view your registered dietary profile (standard or certified special diets).",
+      "step10_bullets": [
+        "Daily menu",
+        "Confirmed meal attendance",
+        "Standard / special dietary profile",
+        "Meal attendance history"
       ]
     },
     "parent": {
@@ -2245,6 +2267,22 @@ export default {
         "Historiku i pagesave",
         "Faturat",
         "Kërkesa për dokumente"
+      ],
+      "step9_title": "Psychological Desk & Informed Consent",
+      "step9_desc": "Digitally sign the mandatory informed consent for children's access to psychological counseling (Law 56/1989) and request parental counseling consultations.",
+      "step9_bullets": [
+        "Informed consent signature",
+        "Child welfare protection",
+        "Parental counseling requests",
+        "Quick child selector"
+      ],
+      "step10_title": "School Canteen & Electronic Wallet",
+      "step10_desc": "Monitor available meal wallet balance for each child, make instant online top-ups with PagoPA (+€10, +€25, +€50, +€100), and track meal deductions history.",
+      "step10_bullets": [
+        "Live wallet balance",
+        "Instant PagoPA top-up",
+        "Immediate IUV code generation",
+        "Meal debit history"
       ]
     },
     "secretary": {
@@ -2299,6 +2337,14 @@ export default {
         "Cakto role",
         "Rivendos fjalëkalimin",
         "Menaxho hyrjet"
+      ],
+      "step9_title": "Enterprise Hub: PagoPA, Graduation & SIDI",
+      "step9_desc": "Mass emission of PagoPA payment notices with IUV codes, Student Curriculum preparation for State Exam (D.M. 88/2020), and cooperative application synchronization with SIDI MIM.",
+      "step9_bullets": [
+        "PagoPA Notices & IUV Codes",
+        "Student Curriculum Model",
+        "SIDI MIM Cooperation",
+        "School Canteen Module"
       ]
     },
     "admin": {
@@ -2353,6 +2399,14 @@ export default {
         "2FA i detyrueshëm",
         "Feature flags",
         "Mirëmbajtje"
+      ],
+      "step9_title": "Enterprise School Management Hub",
+      "step9_desc": "Central governance platform for all 10 institutional regulatory modules (PagoPA, Remote Signature, Notice Board, Teacher Calls, Graduation, Canteen, Inventory, DPO Privacy, SIDI, Counseling Desk) with live role simulation.",
+      "step9_bullets": [
+        "10 Regulatory Modules Governance",
+        "Instant Role Simulator",
+        "Institutional Service Activation",
+        "AgID & Ministry Compliance"
       ]
     },
     "assistente_amministrativo": {
@@ -2385,6 +2439,14 @@ export default {
         "Arkiva e vendimeve dhe mbledhjeve",
         "Numërim rendor zyrtar",
         "Ruajtje e sigurt dixhitale"
+      ],
+      "step6_title": "Administrative Enterprise Hub",
+      "step6_desc": "Operational management of PagoPA notices with IUV codes, Student Curriculum for State Graduation (D.M. 88/2020), and SIDI MIM cooperative flow synchronization.",
+      "step6_bullets": [
+        "PagoPA Notices with IUV",
+        "Student Curriculum D.M. 88/2020",
+        "SIDI MIM Cooperation",
+        "Treasury Reconciliation"
       ]
     },
     "collaboratore_ds": {
@@ -2481,6 +2543,14 @@ export default {
         "Zbatimi i marrëveshjes së grevës",
         "Lëshimi i urdhrave zyrtarë të shërbimit",
         "Procesverbali i pjesëmarrjes në grevë"
+      ],
+      "step6_title": "Enterprise Hub: Notice Board, Inventory & OPI",
+      "step6_desc": "Supervision of legal publications on the Official Notice Board, movable assets inventory registry, accounting reconciliation with OPI/SIOPE+ bank receipts, and canteen oversight.",
+      "step6_bullets": [
+        "Online Official Notice Board",
+        "Asset Inventory & Write-offs",
+        "OPI/SIOPE+ Reconciliation",
+        "Canteen Activation Control"
       ]
     },
     "principal": {
@@ -2519,6 +2589,14 @@ export default {
         "Term scrutiny sign-off",
         "Dropout risk alerts",
         "Institutional KPIs"
+      ],
+      "step7_title": "Enterprise Hub & Remote Qualified Signature",
+      "step7_desc": "Centralized management of Remote Qualified Digital Signature (CAdES/PAdES), Online Official Notice Board, Ministry Teacher Calls, and School Canteen service activation.",
+      "step7_bullets": [
+        "Qualified Remote Signature (FEQ)",
+        "Official Notice Board & Glyph Code",
+        "Ministry Substitute Calls",
+        "Canteen Service Activation"
       ]
     },
     "goToSection": "Shko te seksioni"
@@ -4178,6 +4256,7 @@ export default {
     "viewAllGrades": "Shiko të gjitha notat"
   },
   "routeTitles": {
+    "enterpriseHub": "Qendra Enterprise dhe Përputhshmëria Ligjore",
     "personnelDesk": "Digital Personnel Desk",
     "timecard": "Timecard & Leave Planner",
     "visitorRegistry": "Visitor & Concierge Registry",
@@ -6034,5 +6113,290 @@ export default {
     "widgetTitle": "Protokollo Shkresën",
     "widgetHelp": "Gjeneron menjëherë vulën zyrtare të protokollit për këtë dokument",
     "stampedSuccess": "Dokumenti u protokollua me vulën "
+  },
+  "enterprise": {
+    "header": {
+      "badgeCompliance": "ENTERPRISE DHE PËRPUTHSHMËRI LIGJORE",
+      "badgeAgid": "MIM & AGID READY",
+      "title": "Enterprise School Management Hub",
+      "subtitle": "Module strategjike komerciale në përputhje me standardet rregullatore AgID, MIM, CAD dhe eIDAS.",
+      "viewRoleMatrix": "Matrica e Kompetencave të Roleve",
+      "hideRoleMatrix": "Fshih Matricën"
+    },
+    "matrix": {
+      "title": "Matrica e Kompetencave të Roleve Institucionale",
+      "subtitle": "Hartëzimi i të drejtave operacionale, konsultimit publik dhe nënshkrimeve ligjore",
+      "colFeature": "Funksioni Komercial",
+      "colGovernance": "Qeverisja Kryesore",
+      "colOperations": "Operacionet",
+      "colEndUsers": "Përdoruesit Fundorë",
+      "colNorm": "Baza Ligjore"
+    },
+    "governance": {
+      "authorizedRoles": "Rolet e Autorizuara për Menaxhim:",
+      "primaryGovernance": "Qeverisja Kryesore:",
+      "operations": "Operacionet Ditore:",
+      "endUsers": "Përdoruesit Fundorë:",
+      "legalRef": "Referenca Ligjore:"
+    },
+    "roles": {
+      "ds": "Drejtori i Shkollës (DS)",
+      "dsga": "Drejtori Administrativ dhe Financiar (DSGA)",
+      "secretary": "Sekretaria Administrative",
+      "secretaryAccounts": "Sekretaria Financiare",
+      "secretaryStaff": "Sekretaria e Personelit",
+      "secretaryDidactics": "Sekretaria Mësimore",
+      "teacher": "Mësuesi Kujdestar / Mësimdhënës",
+      "commission": "Komisioni i Maturës Shtetërore",
+      "dpo": "Oficeri i Mbrojtjes së të Dhënave (DPO)",
+      "psychologist": "Psikologu Shkollor (Ligji 56/1989)",
+      "custodian": "Përgjegjësi i Inventarit / Asistenti Teknik",
+      "parent": "Prindi / Familja",
+      "student": "Nxënësi",
+      "public": "Konsultimi Publik / Qytetarët"
+    },
+    "tabs": {
+      "pagopa": "1. PagoPA dhe OPI",
+      "interpelli": "2. Njoftime Zëvendësimi OM 88",
+      "albo": "3. Tabela Zyrtare dhe ANAC",
+      "feq": "4. Nënshkrimi QES dhe Vula",
+      "maturita": "5. Matura dhe Kurrikula",
+      "meals": "6. Mensa Shkollore dhe Dietat",
+      "inventory": "7. Inventari i Pasurive",
+      "privacy": "8. GDPR dhe Semafori i Fotove",
+      "sidi": "9. SIDI Ndërveprimi me MIM",
+      "psychology": "10. Këshillimi Psikologjik (CIC)"
+    },
+    "pagopa": {
+      "cardTitleNotice": "Lëshimi i Njoftimit PagoPA (ISO 7064 Mod 97-10)",
+      "cardSubtitleNotice": "Gjeneron fletë-pagesë me kod IUV sipas AgID dhe kod QR të shkarkueshëm.",
+      "studentId": "ID e Nxënësit",
+      "title": "Arsyeja e Pagesës (p.sh. Siguracioni, Ekskursione)",
+      "amount": "Shuma (€)",
+      "generateNoticeBtn": "Gjenero Njoftimin IUV",
+      "iuvCode": "Kodi IUV:",
+      "qrPayload": "Të dhënat QR:",
+      "downloadPdfBtn": "Shkarko Fletëpagesën PDF",
+      "cardTitleOpi": "Pajtimi i Rrjedhave Bankare OPI / SIOPE+",
+      "cardSubtitleOpi": "Importon mandat-pagesat elektronike nga banka për barazim kontabël të menjëhershëm.",
+      "opiInputLabel": "Ngjitni të dhënat XML ose CSV të faturave bankare",
+      "reconcileBtn": "Pajto Rrjedhën OPI",
+      "checkSollecitiBtn": "Kontrollo Pagesat e Prapambetura",
+      "reconciledCount": "Pagesa të Pajtuara:",
+      "totalAmount": "Shuma Totale e Mbledhur:",
+      "successNotice": "Njoftimi PagoPA dhe kodi IUV u gjeneruan me sukses!",
+      "successReconcile": "Rrjedha OPI u pajtua me sukses!",
+      "sollecitiFound": "U gjetën {count} pagesa të vonuara për njoftim.",
+      "modeSingle": "Nxënës Individual",
+      "modeClass": "E Gjithë Klasa",
+      "selectStudent": "Zgjidh Nxënësin",
+      "selectClass": "Zgjidh Klasën",
+      "quickPresets": "Arsyet & Shumat e Shpejta:",
+      "generateBulkNoticeBtn": "Gjenero Njoftime IUV për të Gjithë Klasën ({count} Nxënës)",
+      "successBulkNotice": "{count} njoftime PagoPA u gjeneruan me sukses për klasën!"
+    },
+    "interpelli": {
+      "cardTitlePublish": "Publiko Njoftim për Zëvendësim Mësuesi",
+      "cardSubtitlePublish": "Tabelë zyrtare publike në përputhje me Urdhrin Ministror nr. 88/2024.",
+      "title": "Titulli i Njoftimit",
+      "concorsoClass": "Profili / Lënda (p.sh. A026, ADSS)",
+      "weeklyHours": "Orë Javore",
+      "deadline": "Afati i Aplikimit (VVVV-MM-DD)",
+      "publishBtn": "Publiko Njoftimin",
+      "cardTitleGraduatoria": "Renditja Automatike dhe Thirrja",
+      "cardSubtitleGraduatoria": "Llogaritje meritokratike e pikëve dhe thirrje urgjente brenda 24 orëve.",
+      "loadGraduatoriaBtn": "Ngarko Renditjen e Kandidatëve",
+      "convocaBtn": "Thirr (24 orë)",
+      "score": "Pikët: {score} pikë | NIPT/CF: {cf}",
+      "noCandidates": "Nuk ka kandidatë në këtë moment.",
+      "successPublished": "Njoftimi u publikua me sukses!",
+      "successConvoca": "Thirrja u dërgua me afat 24 orë!",
+      "noActiveGraduatoria": "Nuk ka renditje aktive për këtë njoftim."
+    },
+    "albo": {
+      "cardTitleAlbo": "Publikimi në Tabelën Zyrtare Elektronike (Ligji 69/2009)",
+      "cardSubtitleAlbo": "Transparencë ligjore me numër protokolli dhe afat të detyrueshëm 15 ditor.",
+      "category": "Kategoria Ligjore",
+      "subject": "Objekti i Aktit",
+      "cigCode": "Kodi CIG (prokurim publik)",
+      "awardedAmount": "Vlera e Kontratës (€)",
+      "publishBtn": "Publiko në Tabelën Zyrtare",
+      "cardTitleAnac": "Administratë Transparente dhe ANAC XML",
+      "cardSubtitleAnac": "Gjenerim automatik i skedarit XML për ANAC (Ligji 190/2012 dhe Dekreti 33/2013).",
+      "downloadAnacBtn": "Eksporto Skedarin ANAC XML",
+      "anacDescription": "Përfshin automatikisht lotet e transparencës, afatet dhe kodet CIG të publikuara.",
+      "successPublished": "Akti u publikua në tabelën zyrtare për 15 ditë!",
+      "successAnac": "Shkarkimi i ANAC XML përfundoi me sukses."
+    },
+    "feq": {
+      "cardTitleCsc": "Nënshkrimi Masiv në Distancë CSC (Cloud Signature Consortium)",
+      "cardSubtitleCsc": "Nënshkrim elektronik i kualifikuar për Drejtorin / DSGA në qindra PDF me PIN dhe OTP.",
+      "pin": "PIN i Nënshkrimit në Distancë",
+      "otp": "Kodi OTP (Aplikacion ose Token)",
+      "signBatchBtn": "Nënshkruaj Dëftesat dhe Diplomat",
+      "cardTitleGlifo": "Vula Digjitale e Sigurisë (Glifi Neni 23 CAD)",
+      "cardSubtitleGlifo": "Shenjë kriptografike që garanton përputhshmërinë e kopjes së printuar me origjinalin.",
+      "glifoToken": "Tokeni i Verifikimit Publik",
+      "verifyGlifoBtn": "Verifiko Autenticitetin e Vulës",
+      "resultStatus": "Rezultati:",
+      "successSigned": "Dokumentet u nënshkruan me sukses me nënshkrim të kualifikuar PAdES!",
+      "successGlifoVerified": "Vula u verifikua me sukses!"
+    },
+    "maturita": {
+      "cardTitleCredits": "Llogaritja e Krediteve të Maturës (Dekreti 62/2017)",
+      "cardSubtitleCredits": "Konvertim automatik i notave mesatare të viteve 3, 4 dhe 5 sipas tabelave ministrore.",
+      "grade3rd": "Mesatarja Viti 3",
+      "grade4th": "Mesatarja Viti 4",
+      "grade5th": "Mesatarja Viti 5",
+      "calcBtn": "Llogarit Kreditet Zyrtare",
+      "totalCredits": "Totali i Krediteve Shkollore: {credits} / 40 pikë",
+      "cardTitleCurriculum": "Kurrikula e Nxënësit (Urdhri Ministror 88/2020)",
+      "cardSubtitleCurriculum": "Mbledh kreditet, praktikat (PCTO), certifikatat dhe eksporton skedarin XML për Ministrinë.",
+      "studentId": "ID e Nxënësit Maturant",
+      "downloadCurriculumBtn": "Shkarko XML e Kurrikulës Ministrore",
+      "successCalc": "Kreditet u llogaritën sipas Shtojcës A të Dekretit 62/2017!",
+      "successCurriculum": "Skedari XML i Kurrikulës u eksportua me sukses!",
+      "selectStudent": "Zgjidh Nxënësin Maturant (Viti 5)",
+      "filterClass": "Filtro sipas Klasës",
+      "selectedStudentDetails": "Nxënësi i Zgjedhur:"
+    },
+    "meals": {
+      "cardTitleRollCall": "Regjistrimi i Pjesëmarrjes në Mensë (Deri në 09:00)",
+      "cardSubtitleRollCall": "Regjistrim i shpejtë i mëngjesit për transmetim të menjëhershëm në kuzhinën qendrore.",
+      "classId": "Klasa (p.sh. 2A Fillore)",
+      "date": "Data (VVVV-MM-DD)",
+      "submitRollCallBtn": "Dërgo Pjesëmarrjen në Kuzhinë",
+      "cardTitleWallet": "Kuleta Elektronike e Mensës",
+      "cardSubtitleWallet": "Zbritje automatike për vakt dhe rimbushje elektronike me PagoPA.",
+      "studentId": "ID e Nxënësit",
+      "topupAmount": "Shuma e Rimbushjes (€)",
+      "topupBtn": "Rimbush me PagoPA",
+      "successRollCall": "Numri i vakteve u transmetua në kuzhinë!",
+      "successWallet": "Kuleta e mensës u rimbush me PagoPA!",
+      "selectStudent": "Zgjidh Nxënësin",
+      "currentBalance": "Gjendja Aktuale e Kuletës:",
+      "quickTopup": "Rimbushje e Shpejtë:"
+    },
+    "inventory": {
+      "cardTitleAsset": "Regjistri i Pasurive të Luajtshme dhe Pajisjeve (Dekreti 129/2018)",
+      "cardSubtitleAsset": "Klasifikimi i pasurive, godina, laboratori dhe amortizimi vjetor.",
+      "description": "Përshkrimi i Pajisjes (p.sh. Tabelë Interaktive, Laptop)",
+      "category": "Kategoria Kontabël",
+      "initialValue": "Vlera Fillestare (€)",
+      "createAssetBtn": "Regjistro Pajisjen & Gjenero Barkodin",
+      "cardTitleLoan": "Përdorim Falas i Pajisjeve (Komodat)",
+      "cardSubtitleLoan": "Dhënia e tabletave/laptopëve për familjet me kontratë të nënshkruar dhe ndjekje kthimi.",
+      "assetId": "ID e Pasurisë",
+      "studentId": "ID e Nxënësit",
+      "createLoanBtn": "Lidh Kontratën e Huapërdorjes",
+      "successAsset": "Pajisja u regjistrua në inventar me numër dhe kod QR!",
+      "successLoan": "Kontrata e huapërdorjes u lidh me sukses!"
+    },
+    "privacy": {
+      "cardTitleTreatment": "Regjistri i Veprimeve të Përpunimit (Neni 30 GDPR)",
+      "cardSubtitleTreatment": "Hartëzimi transparent i qëllimeve, bazave ligjore dhe masave të sigurisë.",
+      "activityName": "Veprimi i Përpunimit",
+      "legalBasis": "Baza Ligjore",
+      "saveTreatmentBtn": "Regjistro Përpunimin GDPR",
+      "cardTitleTrafficLight": "Semafori i Privatësisë së Fotove për Mësuesit",
+      "cardSubtitleTrafficLight": "Tregues vizual për ekskursione dhe foto: 🟢 Jeshile (lejuar), 🟡 Verdhe (vetëm brenda), 🔴 Kuqe (rreptësisht e ndaluar).",
+      "greenBadge": "🟢 JESHIL: Fotot Zyrtare të Lejuara",
+      "yellowBadge": "🟡 VERDHË: Vetëm për Përdorim Didaktik të Brendshëm",
+      "redBadge": "🔴 KUQ: Fotot Rreptësisht të Ndaluara",
+      "successTreatment": "Përpunimi u regjistrua sipas Nenit 30 të GDPR!"
+    },
+    "sidi": {
+      "cardTitleCert": "Certifikata e Stacionit WebService MIM",
+      "cardSubtitleCert": "Lidhje e drejtpërdrejtë e sigurt mTLS me serverët e Ministrisë së Arsimit.",
+      "endpoint": "Pika e Lidhjes:",
+      "connectionStatus": "Gjendja e Lidhjes:",
+      "connected": "I LIDHUR (Certifikatë Aktive)",
+      "syncStudentsBtn": "Sinkronizo Kodet SIDI (1-Klik)",
+      "cardTitleScrutiny": "Transmetimi i Rezultateve Përfundimtare në SIDI",
+      "cardSubtitleScrutiny": "Dërgon vlerësimet dhe kreditet direkt në portalin ministror pa skedarë manualë.",
+      "pushScrutinyBtn": "Transmeto Rezultatet te Ministria",
+      "successSync": "Sinkronizimi me WebService SIDI MIM përfundoi!",
+      "successPush": "Rezultatet u dërguan me sukses në Ministri!"
+    },
+    "psychology": {
+      "cardTitleBooking": "Takim Anonim dhe Konfidencial (CIC)",
+      "cardSubtitleBooking": "Rezervim nën pseudonim i mbrojtur nga fshehtësia profesionale sipas Ligjit 56/1989.",
+      "slotTime": "Data dhe Ora e Kërkuar (VVVV-MM-DD HH:MM)",
+      "bookBtn": "Rezervo Takim Konfidencial",
+      "cardTitleConsent": "Pëlqimi i Detyrueshëm i Informuar nga Prindërit",
+      "cardSubtitleConsent": "Për nxënësit e mitur, takimi kërkon rreptësisht nënshkrimin e të dy prindërve.",
+      "studentId": "ID e Nxënësit të Mitur",
+      "signConsentBtn": "Nënshkruaj Pëlqimin e Prindërve",
+      "successBooked": "Takimi u rezervua me pseudonim anonim!",
+      "consentWarning": "Verifikoni pëlqimin e të dy prindërve.",
+      "successConsent": "Pëlqimi i informuar u regjistrua me sukses!",
+      "modeSingle": "Nxënës Individual",
+      "modeClass": "E Gjithë Klasa",
+      "selectStudent": "Zgjidh Nxënësin e Mitur",
+      "selectClass": "Zgjidh Klasën",
+      "schoolYear": "Viti Shkollor",
+      "sendBulkConsentBtn": "Dërgo Kërkesë për Pëlqim te e Gjithë Klasa ({count} Nxënës)",
+      "successBulkConsent": "Kërkesat për pëlqim u regjistruan për {count} nxënës të klasës!",
+      "studentsInClass": "Nxënësit e Klasës:",
+      "statusPending": "Në pritje të nënshkrimit",
+      "statusSigned": "Nënshkruar nga të dy prindërit"
+    }
+  },
+  "psychologyDesk": {
+    "title": "Psychological Support Desk (CIC)",
+    "subtitle": "Confidential and anonymous school psychological counselling service (Law 56/1989)",
+    "consentOk": "Parental Consent Active",
+    "consentPending": "Consent Pending",
+    "privacyTitle": "Absolute Privacy & Professional Secrecy",
+    "privacyDesc": "Counselling sessions with the school psychologist are protected by professional secrecy under Art. 622 c.p. and Law 56/1989.",
+    "consentRequiredTitle": "Mandatory Parental Informed Consent",
+    "consentRequiredDesc": "For minor students, advance written consent from parents is required on the family portal before accessing individual counselling.",
+    "howToSign": "How to sign",
+    "bookTitle": "Book a Confidential Session",
+    "bookSubtitle": "Choose an available time slot. You will receive an anonymous confirmation code.",
+    "selectSlot": "Available Time Slot",
+    "placeholderSlot": "Select day and time",
+    "topic": "General Topic (Optional & Anonymous)",
+    "notesOptional": "Optional notes or preferences",
+    "submitBookingBtn": "Confirm Anonymous Booking",
+    "myBookingsTitle": "My Booked Appointments",
+    "myBookingsSubtitle": "View confirmed sessions with the school psychologist.",
+    "noBookings": "No sessions currently scheduled.",
+    "confirmed": "Confirmed"
+  },
+  "studentCanteen": {
+    "title": "School Canteen & Meals",
+    "subtitle": "View meal attendance, daily menu and special diets",
+    "serviceActive": "Canteen Service Active",
+    "serviceInactive": "Canteen Inactive",
+    "inactiveTitle": "The canteen service is not active for this school",
+    "inactiveDesc": "School meal service is not currently enabled for this school campus. If activated by the Principal or School Bursar, meal information will appear here automatically.",
+    "todayMenuTitle": "Today's Menu",
+    "weeklyCalendarTitle": "Weekly Meal Calendar"
+  },
+  "parentPsychology": {
+    "title": "Psychological Support Desk (CIC) & Parental Consent",
+    "subtitle": "Mandatory informed consent for children's access to school psychological support (Law 56/1989)",
+    "selectChild": "Select Child:",
+    "cardConsentTitle": "Mandatory Informed Consent (S.Y. 2025/2026)",
+    "statusSigned": "Consent Granted",
+    "statusPending": "Awaiting Signature",
+    "legalNotice": "Under Art. 316 c.c. and Law 56/1989, access to psychological support for minor students requires parental informed consent.",
+    "termsCheckbox": "I declare that I have read the information sheet and authorize my child to attend the school psychological counselling desk.",
+    "signConsentBtn": "Sign and Grant Informed Consent",
+    "parentConsultTitle": "Request Parent-Psychologist Consultation",
+    "sendRequestBtn": "Send Consultation Request"
+  },
+  "parentCanteen": {
+    "title": "School Canteen & Electronic Wallet",
+    "subtitle": "Manage meal wallet balance, online PagoPA top-up and consumption history",
+    "active": "Canteen Active",
+    "inactive": "Canteen Inactive",
+    "inactiveTitle": "The canteen service is not active for this school",
+    "inactiveDesc": "This school does not currently provide canteen services. When enabled by the Principal or School Bursar, you will be able to manage the meal wallet and top-ups here.",
+    "selectChild": "Select Child:",
+    "walletTitle": "Electronic Meal Wallet",
+    "topupBtn": "Top Up with PagoPA (IUV)",
+    "historyTitle": "Meal Consumption & Attendance History"
   }
 }

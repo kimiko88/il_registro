@@ -112,6 +112,9 @@ func (r *postgresRepo) ListRequests(ctx context.Context, schoolID, parentID, sta
 		}
 		list = append(list, req)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return list, nil
 }
 
@@ -168,6 +171,9 @@ func (r *postgresRepo) ListPermanentDelegates(ctx context.Context, studentID, sc
 			d.ApprovedRequestID = &appID.String
 		}
 		list = append(list, d)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return list, nil
 }

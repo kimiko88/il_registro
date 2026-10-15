@@ -1633,7 +1633,9 @@ export default {
       "step4_title": "Flujos SIDI y Portales Ministeriales",
       "step4_desc": "Genera, valida y exporta archivos XML para la sincronización de datos con la plataforma ministerial SIDI.",
       "step5_title": "Actas y Plantillas de Reuniones",
-      "step5_desc": "Accede a modelos estandarizados para redactar, archivar y registrar oficialmente las actas de órganos colegiados y comisiones."
+      "step5_desc": "Accede a modelos estandarizados para redactar, archivar y registrar oficialmente las actas de órganos colegiados y comisiones.",
+      "step6_title": "Administrative Enterprise Hub",
+      "step6_desc": "Operational management of PagoPA notices with IUV codes, Student Curriculum for State Graduation (D.M. 88/2020), and SIDI MIM cooperative flow synchronization."
     },
     "collaboratore_ds": {
       "step1_title": "Panel del Colaborador de Dirección",
@@ -1669,7 +1671,9 @@ export default {
       "step4_title": "Flujos SIDI y Reportes al Ministerio",
       "step4_desc": "Validación y autorización del envío de paquetes XML a SIDI, nóminas públicas y monitorización financiera del ministerio.",
       "step5_title": "Huelgas y Servicios Mínimos",
-      "step5_desc": "Determinación y asignación de los contingentes mínimos del personal para garantizar los servicios esenciales del centro."
+      "step5_desc": "Determinación y asignación de los contingentes mínimos del personal para garantizar los servicios esenciales del centro.",
+      "step6_title": "Enterprise Hub: Notice Board, Inventory & OPI",
+      "step6_desc": "Supervision of legal publications on the Official Notice Board, movable assets inventory registry, accounting reconciliation with OPI/SIOPE+ bank receipts, and canteen oversight."
     },
     "principal": {
       "step1_title": "Panel de Dirección & Visión General",
@@ -1683,7 +1687,9 @@ export default {
       "step5_title": "Actas, Resoluciones & Deliberaciones",
       "step5_desc": "Review and approval of Teachers' Assembly minutes, Class Council deliberations, and digital preservation according to public standards.",
       "step6_title": "Supervisión Pedagógica, Evaluaciones & Abandono Escolar",
-      "step6_desc": "Institutional performance statistics, term scrutiny validation, and early warning analytics for student dropout prevention."
+      "step6_desc": "Institutional performance statistics, term scrutiny validation, and early warning analytics for student dropout prevention.",
+      "step7_title": "Enterprise Hub & Remote Qualified Signature",
+      "step7_desc": "Centralized management of Remote Qualified Digital Signature (CAdES/PAdES), Online Official Notice Board, Ministry Teacher Calls, and School Canteen service activation."
     }
   },
   "help": {
@@ -2071,6 +2077,22 @@ export default {
         "Fechas de exámenes",
         "Actividades extra",
         "Excursiones y eventos"
+      ],
+      "step9_title": "Psychological Counseling Desk (CIC)",
+      "step9_desc": "Book confidential counseling appointments under complete professional secrecy (Law 56/1989), with automatic parental consent verification for minors.",
+      "step9_bullets": [
+        "Confidential booking",
+        "Strict medical confidentiality",
+        "Parental consent verification",
+        "Session history"
+      ],
+      "step10_title": "School Canteen & Meals",
+      "step10_desc": "View daily menus, check meal attendance confirmed from the class register, and view your registered dietary profile (standard or certified special diets).",
+      "step10_bullets": [
+        "Daily menu",
+        "Confirmed meal attendance",
+        "Standard / special dietary profile",
+        "Meal attendance history"
       ]
     },
     "parent": {
@@ -2125,6 +2147,22 @@ export default {
         "Historial de pagos",
         "Descargar recibos",
         "Solicitar certificados"
+      ],
+      "step9_title": "Psychological Desk & Informed Consent",
+      "step9_desc": "Digitally sign the mandatory informed consent for children's access to psychological counseling (Law 56/1989) and request parental counseling consultations.",
+      "step9_bullets": [
+        "Informed consent signature",
+        "Child welfare protection",
+        "Parental counseling requests",
+        "Quick child selector"
+      ],
+      "step10_title": "School Canteen & Electronic Wallet",
+      "step10_desc": "Monitor available meal wallet balance for each child, make instant online top-ups with PagoPA (+€10, +€25, +€50, +€100), and track meal deductions history.",
+      "step10_bullets": [
+        "Live wallet balance",
+        "Instant PagoPA top-up",
+        "Immediate IUV code generation",
+        "Meal debit history"
       ]
     },
     "secretary": {
@@ -2179,6 +2217,14 @@ export default {
         "Asignar roles",
         "Restablecer clave",
         "Gestión de accesos"
+      ],
+      "step9_title": "Enterprise Hub: PagoPA, Graduation & SIDI",
+      "step9_desc": "Mass emission of PagoPA payment notices with IUV codes, Student Curriculum preparation for State Exam (D.M. 88/2020), and cooperative application synchronization with SIDI MIM.",
+      "step9_bullets": [
+        "PagoPA Notices & IUV Codes",
+        "Student Curriculum Model",
+        "SIDI MIM Cooperation",
+        "School Canteen Module"
       ]
     },
     "admin": {
@@ -2233,6 +2279,14 @@ export default {
         "2FA obligatorio",
         "Feature flags",
         "Modo mantenimiento"
+      ],
+      "step9_title": "Enterprise School Management Hub",
+      "step9_desc": "Central governance platform for all 10 institutional regulatory modules (PagoPA, Remote Signature, Notice Board, Teacher Calls, Graduation, Canteen, Inventory, DPO Privacy, SIDI, Counseling Desk) with live role simulation.",
+      "step9_bullets": [
+        "10 Regulatory Modules Governance",
+        "Instant Role Simulator",
+        "Institutional Service Activation",
+        "AgID & Ministry Compliance"
       ]
     },
     "assistente_amministrativo": {
@@ -2265,6 +2319,14 @@ export default {
         "Archivo de acuerdos y sesiones",
         "Numeración correlativa oficial",
         "Gestión documental digital"
+      ],
+      "step6_title": "Administrative Enterprise Hub",
+      "step6_desc": "Operational management of PagoPA notices with IUV codes, Student Curriculum for State Graduation (D.M. 88/2020), and SIDI MIM cooperative flow synchronization.",
+      "step6_bullets": [
+        "PagoPA Notices with IUV",
+        "Student Curriculum D.M. 88/2020",
+        "SIDI MIM Cooperation",
+        "Treasury Reconciliation"
       ]
     },
     "collaboratore_ds": {
@@ -2361,6 +2423,14 @@ export default {
         "Aplicación del acuerdo de servicios mínimos",
         "Emisión de órdenes de servicio oficiales",
         "Acta y estadísticas de seguimiento"
+      ],
+      "step6_title": "Enterprise Hub: Notice Board, Inventory & OPI",
+      "step6_desc": "Supervision of legal publications on the Official Notice Board, movable assets inventory registry, accounting reconciliation with OPI/SIOPE+ bank receipts, and canteen oversight.",
+      "step6_bullets": [
+        "Online Official Notice Board",
+        "Asset Inventory & Write-offs",
+        "OPI/SIOPE+ Reconciliation",
+        "Canteen Activation Control"
       ]
     },
     "principal": {
@@ -2399,6 +2469,14 @@ export default {
         "Term scrutiny sign-off",
         "Dropout risk alerts",
         "Institutional KPIs"
+      ],
+      "step7_title": "Enterprise Hub & Remote Qualified Signature",
+      "step7_desc": "Centralized management of Remote Qualified Digital Signature (CAdES/PAdES), Online Official Notice Board, Ministry Teacher Calls, and School Canteen service activation.",
+      "step7_bullets": [
+        "Qualified Remote Signature (FEQ)",
+        "Official Notice Board & Glyph Code",
+        "Ministry Substitute Calls",
+        "Canteen Service Activation"
       ]
     },
     "goToSection": "Ir a la sección"
@@ -4033,6 +4111,7 @@ export default {
     "viewAllGrades": "Ver todas las calificaciones"
   },
   "routeTitles": {
+    "enterpriseHub": "Centro Enterprise y Cumplimiento Legal",
     "personnelDesk": "Digital Personnel Desk",
     "timecard": "Timecard & Leave Planner",
     "visitorRegistry": "Visitor & Concierge Registry",
@@ -5889,5 +5968,290 @@ export default {
     "widgetTitle": "Sellar Documento",
     "widgetHelp": "Genera al instante el sello oficial de registro para este expediente",
     "stampedSuccess": "Documento registrado con sello "
+  },
+  "enterprise": {
+    "header": {
+      "badgeCompliance": "ENTERPRISE & CUMPLIMIENTO LEGAL",
+      "badgeAgid": "MIM & AGID READY",
+      "title": "Enterprise School Management Hub",
+      "subtitle": "Módulos comerciales estratégicos conformes a los estándares normativos AgID, MIM, CAD y eIDAS.",
+      "viewRoleMatrix": "Matriz de Competencias",
+      "hideRoleMatrix": "Ocultar Matriz"
+    },
+    "matrix": {
+      "title": "Matriz de Competencias de Roles Institucionales",
+      "subtitle": "Mapeo de privilegios operativos, consulta pública y firmas legales para cada módulo comercial",
+      "colFeature": "Función Comercial",
+      "colGovernance": "Gobernanza Principal",
+      "colOperations": "Operaciones",
+      "colEndUsers": "Usuarios Finales",
+      "colNorm": "Referencia Normativa"
+    },
+    "governance": {
+      "authorizedRoles": "Roles Autorizados para la Gestión:",
+      "primaryGovernance": "Gobernanza Principal:",
+      "operations": "Operaciones:",
+      "endUsers": "Usuarios Finales:",
+      "legalRef": "Referencia Legal:"
+    },
+    "roles": {
+      "ds": "Director Escolar (DS)",
+      "dsga": "Secretario Administrador (DSGA)",
+      "secretary": "Secretaría Administrativa",
+      "secretaryAccounts": "Secretaría de Contabilidad",
+      "secretaryStaff": "Secretaría de Personal",
+      "secretaryDidactics": "Secretaría Académica",
+      "teacher": "Profesor / Tutor",
+      "commission": "Comisión de Examen de Estado",
+      "dpo": "Delegado de Protección de Datos (DPO)",
+      "psychologist": "Psicólogo Escolar (Ley 56/1989)",
+      "custodian": "Conserje / Asistente Técnico",
+      "parent": "Padre / Familia",
+      "student": "Estudiante",
+      "public": "Consulta Pública / Ciudadanos"
+    },
+    "tabs": {
+      "pagopa": "1. PagoPA y OPI",
+      "interpelli": "2. Convocatorias OM 88",
+      "albo": "3. Tablón Oficial y ANAC",
+      "feq": "4. Firma QES y Glifo",
+      "maturita": "5. Examen de Estado y Currículo",
+      "meals": "6. Comedor Escolar y Dietas",
+      "inventory": "7. Inventario de Activos",
+      "privacy": "8. RGPD y Semáforo",
+      "sidi": "9. SIDI Cooperación MIM",
+      "psychology": "10. Gabinete Psicológico (CIC)"
+    },
+    "pagopa": {
+      "cardTitleNotice": "Emisión de Aviso PagoPA (ISO 7064 Mod 97-10)",
+      "cardSubtitleNotice": "Genera aviso de pago con código IUV conforme a AgID y código QR descargable.",
+      "studentId": "ID de Estudiante",
+      "title": "Concepto de Pago (ej. Seguro, Excursiones)",
+      "amount": "Importe (€)",
+      "generateNoticeBtn": "Generar Aviso IUV",
+      "iuvCode": "Código IUV:",
+      "qrPayload": "Carga QR:",
+      "downloadPdfBtn": "Descargar Justificante PDF",
+      "cardTitleOpi": "Conciliación Bancaria OPI / SIOPE+",
+      "cardSubtitleOpi": "Importa recibos bancarios telemáticos para cuadre contable instantáneo.",
+      "opiInputLabel": "Pegar XML o CSV de recibos bancarios",
+      "reconcileBtn": "Conciliar Flujo OPI",
+      "checkSollecitiBtn": "Comprobar Morosidad / Reclamaciones",
+      "reconciledCount": "Recibos Conciliados:",
+      "totalAmount": "Total Recaudado:",
+      "successNotice": "¡Aviso PagoPA y código IUV generados con éxito!",
+      "successReconcile": "¡Flujo OPI conciliado con éxito!",
+      "sollecitiFound": "Se encontraron {count} pagos vencidos pendientes de reclamación.",
+      "modeSingle": "Estudiante Individual",
+      "modeClass": "Clase Completa",
+      "selectStudent": "Seleccionar Estudiante",
+      "selectClass": "Seleccionar Clase",
+      "quickPresets": "Conceptos e Importes Rápidos:",
+      "generateBulkNoticeBtn": "Generar Avisos IUV para Toda la Clase ({count} Estudiantes)",
+      "successBulkNotice": "¡{count} avisos PagoPA e IUV generados con éxito para la clase!"
+    },
+    "interpelli": {
+      "cardTitlePublish": "Publicar Convocatoria de Sustitución",
+      "cardSubtitlePublish": "Tablón institucional público según la Orden Ministerial n.º 88/2024.",
+      "title": "Título de la Convocatoria",
+      "concorsoClass": "Especialidad Docente (ej. A026, ADSS)",
+      "weeklyHours": "Horas Semanales",
+      "deadline": "Plazo de Solicitud (AAAA-MM-DD)",
+      "publishBtn": "Publicar Convocatoria",
+      "cardTitleGraduatoria": "Baremo Automático y Convocatoria",
+      "cardSubtitleGraduatoria": "Cálculo meritocrático de puntos, méritos y llamamiento urgente de 24 horas.",
+      "loadGraduatoriaBtn": "Cargar Baremo de Candidatos",
+      "convocaBtn": "Convocar (24h)",
+      "score": "Puntuación: {score} pts | NIF: {cf}",
+      "noCandidates": "No hay candidatos disponibles en este momento.",
+      "successPublished": "¡Convocatoria publicada con éxito!",
+      "successConvoca": "¡Convocatoria enviada con plazo de 24 horas!",
+      "noActiveGraduatoria": "No hay baremo activo para esta convocatoria."
+    },
+    "albo": {
+      "cardTitleAlbo": "Publicación en Tablón Electrónico (Ley 69/2009)",
+      "cardSubtitleAlbo": "Publicidad legal con numeración de registro y ciclo preceptivo de 15 días.",
+      "category": "Categoría Jurídica",
+      "subject": "Objeto del Acto",
+      "cigCode": "Código CIG (si es contrato público)",
+      "awardedAmount": "Importe Adjudicado (€)",
+      "publishBtn": "Publicar en Tablón Oficial",
+      "cardTitleAnac": "Administración Transparente y ANAC XML",
+      "cardSubtitleAnac": "Generación automática del conjunto de datos XML para ANAC (Ley 190/2012 y Dec. Leg. 33/2013).",
+      "downloadAnacBtn": "Exportar Conjunto de Datos ANAC XML",
+      "anacDescription": "Incluye automáticamente lotes de transparencia, plazos y códigos CIG publicados.",
+      "successPublished": "¡Acto publicado en el Tablón Oficial durante 15 días!",
+      "successAnac": "Descarga de ANAC XML completada."
+    },
+    "feq": {
+      "cardTitleCsc": "Firma Remota Masiva CSC (Cloud Signature Consortium)",
+      "cardSubtitleCsc": "Firma electrónica cualificada del Director / Administrador en cientos de PDF con PIN y OTP.",
+      "pin": "PIN de Firma Remota",
+      "otp": "Código OTP (App o Token físico)",
+      "signBatchBtn": "Firmar Boletas y Diplomas en Masa",
+      "cardTitleGlifo": "Sello Digital de Seguridad (Glifo Art. 23 CAD)",
+      "cardSubtitleGlifo": "Estampado criptográfico que garantiza la autenticidad de la copia impresa en papel.",
+      "glifoToken": "Token de Verificación Pública",
+      "verifyGlifoBtn": "Verificar Autenticidad del Glifo",
+      "resultStatus": "Resultado:",
+      "successSigned": "¡Lote firmado digitalmente con FEQ CSC PAdES!",
+      "successGlifoVerified": "¡Glifo verificado con éxito!"
+    },
+    "maturita": {
+      "cardTitleCredits": "Cálculo de Créditos de Bachillerato (Dec. Leg. 62/2017)",
+      "cardSubtitleCredits": "Conversión automática de medias de calificaciones de 3.º, 4.º y 5.º año con tablas oficiales.",
+      "grade3rd": "Nota Media 3.er Año",
+      "grade4th": "Nota Media 4.º Año",
+      "grade5th": "Nota Media 5.º Año",
+      "calcBtn": "Calcular Créditos Oficiales",
+      "totalCredits": "Total de Créditos Escolares: {credits} / 40 puntos",
+      "cardTitleCurriculum": "Currículo del Estudiante (Dec. Min. 88/2020)",
+      "cardSubtitleCurriculum": "Recopila créditos, prácticas (PCTO), certificaciones de idiomas y exporta XML al Ministerio.",
+      "studentId": "ID de Estudiante Graduando",
+      "downloadCurriculumBtn": "Descargar XML de Currículo Ministerial",
+      "successCalc": "¡Créditos calculados según el Anexo A del Dec. Leg. 62/2017!",
+      "successCurriculum": "¡XML de Currículo del Estudiante exportado con éxito!",
+      "selectStudent": "Seleccionar Estudiante Graduando (5.º Año)",
+      "filterClass": "Filtrar por Clase",
+      "selectedStudentDetails": "Estudiante Seleccionado:"
+    },
+    "meals": {
+      "cardTitleRollCall": "Control de Asistencia al Comedor (Hasta las 09:00)",
+      "cardSubtitleRollCall": "Pase de lista matutino rápido para envío inmediato a la cocina municipal.",
+      "classId": "Grupo (ej. 2.º A Primaria)",
+      "date": "Fecha (AAAA-MM-DD)",
+      "submitRollCallBtn": "Enviar Comensales a la Cocina",
+      "cardTitleWallet": "Monedero Electrónico de Comedor",
+      "cardSubtitleWallet": "Cargo automático por menú y recarga telemática integrada con PagoPA.",
+      "studentId": "ID de Alumno",
+      "topupAmount": "Importe de Recarga (€)",
+      "topupBtn": "Recargar con PagoPA",
+      "successRollCall": "¡Número de comidas transmitido a la cocina!",
+      "successWallet": "¡Monedero de comedor recargado con PagoPA!",
+      "selectStudent": "Seleccionar Alumno",
+      "currentBalance": "Saldo Actual del Monedero:",
+      "quickTopup": "Recarga Rápida:"
+    },
+    "inventory": {
+      "cardTitleAsset": "Registro de Bienes Muebles y Activos (Dec. Intermin. 129/2018)",
+      "cardSubtitleAsset": "Clasificación patrimonial, sede, laboratorio y amortización anual.",
+      "description": "Descripción del Bien (ej. Pizarra Digital, Portátil)",
+      "category": "Categoría Contable",
+      "initialValue": "Valor Inicial (€)",
+      "createAssetBtn": "Registrar Activo y Generar Código de Barras",
+      "cardTitleLoan": "Comodato de Dispositivos Gratuitos",
+      "cardSubtitleLoan": "Asignación de tablets/portátiles a familias con contrato firmado y seguimiento de devoluciones.",
+      "assetId": "ID de Activo",
+      "studentId": "ID de Estudiante",
+      "createLoanBtn": "Formalizar Contrato de Préstamo",
+      "successAsset": "¡Activo registrado en inventario con matrícula y código QR!",
+      "successLoan": "¡Contrato de préstamo formalizado con éxito!"
+    },
+    "privacy": {
+      "cardTitleTreatment": "Registro de Actividades de Tratamiento (Art. 30 RGPD)",
+      "cardSubtitleTreatment": "Mapeo transparente de finalidades, bases jurídicas y medidas de seguridad.",
+      "activityName": "Actividad de Tratamiento",
+      "legalBasis": "Base Jurídica",
+      "saveTreatmentBtn": "Registrar Tratamiento RGPD",
+      "cardTitleTrafficLight": "Semáforo de Privacidad para Docentes",
+      "cardSubtitleTrafficLight": "Distintivo visual instantáneo para salidas y fotos: 🟢 Verde (autorizado), 🟡 Amarillo (solo interno), 🔴 Rojo (estrictamente prohibido).",
+      "greenBadge": "🟢 VERDE: Fotos Institucionales Autorizadas",
+      "yellowBadge": "🟡 AMARILLO: Solo Uso Didáctico Interno",
+      "redBadge": "🔴 ROJO: Fotos Estrictamente Prohibidas",
+      "successTreatment": "¡Tratamiento registrado según el Art. 30 del RGPD!"
+    },
+    "sidi": {
+      "cardTitleCert": "Certificado de Puesto WebService MIM",
+      "cardSubtitleCert": "Conexión directa y segura mTLS con los servidores del Ministerio de Educación.",
+      "endpoint": "Punto de Conexión:",
+      "connectionStatus": "Estado de Conexión:",
+      "connected": "CONECTADO (Certificado Activo)",
+      "syncStudentsBtn": "Sincronizar Códigos SIDI (1-Clic)",
+      "cardTitleScrutiny": "Transmisión de Evaluaciones Finales a SIDI",
+      "cardSubtitleScrutiny": "Envía directamente las calificaciones y créditos al portal ministerial sin ficheros manuales.",
+      "pushScrutinyBtn": "Transmitir Evaluaciones al Ministerio",
+      "successSync": "¡Sincronización WebService SIDI MIM completada!",
+      "successPush": "¡Evaluaciones transmitidas con éxito al Ministerio!"
+    },
+    "psychology": {
+      "cardTitleBooking": "Cita Anónima y Confidencial (CIC)",
+      "cardSubtitleBooking": "Acceso con alias protegido por el secreto profesional según la Ley 56/1989.",
+      "slotTime": "Fecha y Hora Solicitada (AAAA-MM-DD HH:MM)",
+      "bookBtn": "Reservar Cita Confidencial",
+      "cardTitleConsent": "Consentimiento Paternal Informado Obligatorio",
+      "cardSubtitleConsent": "Para alumnos menores, la sesión requiere estrictamente la firma de ambos progenitores.",
+      "studentId": "ID de Estudiante Menor",
+      "signConsentBtn": "Firmar Consentimiento Paternal",
+      "successBooked": "¡Cita reservada con alias anónimo!",
+      "consentWarning": "Compruebe el consentimiento de ambos progenitores.",
+      "successConsent": "¡Consentimiento informado registrado con éxito!",
+      "modeSingle": "Estudiante Individual",
+      "modeClass": "Clase Completa",
+      "selectStudent": "Seleccionar Estudiante Menor",
+      "selectClass": "Seleccionar Clase",
+      "schoolYear": "Año Escolar",
+      "sendBulkConsentBtn": "Enviar Solicitud de Consentimiento a Toda la Clase ({count} Estudiantes)",
+      "successBulkConsent": "¡Solicitudes de consentimiento registradas para {count} estudiantes de la clase!",
+      "studentsInClass": "Estudiantes de la Clase:",
+      "statusPending": "Pendiente de firma",
+      "statusSigned": "Firmado por ambos progenitores"
+    }
+  },
+  "psychologyDesk": {
+    "title": "Psychological Support Desk (CIC)",
+    "subtitle": "Confidential and anonymous school psychological counselling service (Law 56/1989)",
+    "consentOk": "Parental Consent Active",
+    "consentPending": "Consent Pending",
+    "privacyTitle": "Absolute Privacy & Professional Secrecy",
+    "privacyDesc": "Counselling sessions with the school psychologist are protected by professional secrecy under Art. 622 c.p. and Law 56/1989.",
+    "consentRequiredTitle": "Mandatory Parental Informed Consent",
+    "consentRequiredDesc": "For minor students, advance written consent from parents is required on the family portal before accessing individual counselling.",
+    "howToSign": "How to sign",
+    "bookTitle": "Book a Confidential Session",
+    "bookSubtitle": "Choose an available time slot. You will receive an anonymous confirmation code.",
+    "selectSlot": "Available Time Slot",
+    "placeholderSlot": "Select day and time",
+    "topic": "General Topic (Optional & Anonymous)",
+    "notesOptional": "Optional notes or preferences",
+    "submitBookingBtn": "Confirm Anonymous Booking",
+    "myBookingsTitle": "My Booked Appointments",
+    "myBookingsSubtitle": "View confirmed sessions with the school psychologist.",
+    "noBookings": "No sessions currently scheduled.",
+    "confirmed": "Confirmed"
+  },
+  "studentCanteen": {
+    "title": "School Canteen & Meals",
+    "subtitle": "View meal attendance, daily menu and special diets",
+    "serviceActive": "Canteen Service Active",
+    "serviceInactive": "Canteen Inactive",
+    "inactiveTitle": "The canteen service is not active for this school",
+    "inactiveDesc": "School meal service is not currently enabled for this school campus. If activated by the Principal or School Bursar, meal information will appear here automatically.",
+    "todayMenuTitle": "Today's Menu",
+    "weeklyCalendarTitle": "Weekly Meal Calendar"
+  },
+  "parentPsychology": {
+    "title": "Psychological Support Desk (CIC) & Parental Consent",
+    "subtitle": "Mandatory informed consent for children's access to school psychological support (Law 56/1989)",
+    "selectChild": "Select Child:",
+    "cardConsentTitle": "Mandatory Informed Consent (S.Y. 2025/2026)",
+    "statusSigned": "Consent Granted",
+    "statusPending": "Awaiting Signature",
+    "legalNotice": "Under Art. 316 c.c. and Law 56/1989, access to psychological support for minor students requires parental informed consent.",
+    "termsCheckbox": "I declare that I have read the information sheet and authorize my child to attend the school psychological counselling desk.",
+    "signConsentBtn": "Sign and Grant Informed Consent",
+    "parentConsultTitle": "Request Parent-Psychologist Consultation",
+    "sendRequestBtn": "Send Consultation Request"
+  },
+  "parentCanteen": {
+    "title": "School Canteen & Electronic Wallet",
+    "subtitle": "Manage meal wallet balance, online PagoPA top-up and consumption history",
+    "active": "Canteen Active",
+    "inactive": "Canteen Inactive",
+    "inactiveTitle": "The canteen service is not active for this school",
+    "inactiveDesc": "This school does not currently provide canteen services. When enabled by the Principal or School Bursar, you will be able to manage the meal wallet and top-ups here.",
+    "selectChild": "Select Child:",
+    "walletTitle": "Electronic Meal Wallet",
+    "topupBtn": "Top Up with PagoPA (IUV)",
+    "historyTitle": "Meal Consumption & Attendance History"
   }
 }

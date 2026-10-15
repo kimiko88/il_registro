@@ -1162,3 +1162,19 @@ Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le pr
     - Architettura Offline-First con `useOfflineSync` e `useOutboxStore` basata su `IndexedDB` (`registro_offline`) con fallback su `localStorage`.
     - Integrazione di `executeWithOfflineQueue` in `PrimaryEval.vue` e `Attendance.vue` per accodamento trasparente delle registrazioni in assenza di rete e sincronizzazione automatica FIFO non appena la connettività viene ripristinata.
 
+
+- [x] **Enterprise School Management Hub (10 Moduli Normativi), Portali Studente/Genitore, Governance Ruoli & Onboarding Tour Completo (Ottobre 2026)**:
+  - **1. Enterprise School Management Hub (`/admin/enterprise`)**:
+    - Risolti problemi di linting (warning `background-clip` e import non utilizzati).
+    - Implementati i 10 moduli normativi: PagoPA (IUV ISO 7064 Mod 97-10), Cooperazione SIDI/MIM, Maturità D.M. 88/2020, Albo Pretorio Online (L. 69/2009), Inventario Beni (D.I. 129/2018), Firma FEQ (eIDAS/CAD), Sportello Psicologico (L. 107/2015), Interpelli Supplenze (O.M. 88/2024), Borsellino Mensa & Pre-Iscrizioni/Open Day.
+    - Selettore integrato di classe/studente con autocompletamento (nessun bisogno di copiare/incollare ID manuali).
+    - Invio massivo e a singola classe del Consenso Informato Psicologico.
+  - **2. Governance Ruoli & Attivazione Condizionale Mensa**:
+    - Segreteria (`secretary`, `assistente_amministrativo`): limitata visibilità unicamente ai moduli di propria competenza (PagoPA, SIDI, Maturità, Iscrizioni, Borsellino).
+    - DSGA (`dsga`): visualizzazione moduli contabili e patrimoniali (PagoPA/OPI, Albo Pretorio, Inventario, Interpelli).
+    - Dirigente Scolastico (`principal`): accesso a Firma FEQ, Albo Pretorio, Interpelli e toggle di attivazione servizio Mensa d'Istituto (`school_canteen_active_${schoolId}`).
+    - Portali Studente (`/student/psychology`, `/student/canteen`) e Genitore (`/parent/psychology`, `/parent/canteen`) integrati nella navigazione e protetti con banner esplicativo se la mensa non è attiva per l'istituto.
+  - **3. Onboarding Tour Interattivo (`OnboardingTour.vue`) per Tutti i Ruoli con Nuove Funzionalità**:
+    - Aggiunti step guidati dedicati con titoli, descrizioni, elenchi puntati e navigazione diretta per `principal` (7 step), `student` (10 step), `parent` (10 step), `secretary` (9 step), `admin` (9 step), `assistente_amministrativo` (6 step) e `dsga` (6 step).
+    - Allineamento completo delle traduzioni nelle 11 lingue supportate.
+    - Test unitari passati al 100% (`EnterpriseRoleTours.spec.js`, `HelpAndOnboarding.spec.js`, `OnboardingTourExtended.spec.js`).
