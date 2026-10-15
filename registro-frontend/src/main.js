@@ -91,7 +91,8 @@ app.use(Quasar, {
             positive: '#10B981', // Emerald 500
             negative: '#EF4444', // Red 500
             info: '#3B82F6',     // Blue 500
-            warning: '#F59E0B'   // Amber 500
+            warning: '#F59E0B',  // Amber 500
+            emerald: '#059669'   // Emerald School 600
         }
     }
 })
