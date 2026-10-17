@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"registro-backend/pkg/wsticket"
 
@@ -244,6 +245,13 @@ func (h *Handler) Logout(c *gin.Context) {
 		return
 	}
 
+	// Invalidate current JWT access token immediately in distributed JTI blacklist
+	authHeader := c.GetHeader("Authorization")
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+		_ = h.service.RevokeAccessToken(c.Request.Context(), tokenStr)
+	}
+
 	setRefreshTokenCookie(c, "", -1)
 	c.JSON(http.StatusOK, MessageResponse{Message: "logged out successfully"})
 }
@@ -273,6 +281,8 @@ func (h *Handler) GetCurrentUser(c *gin.Context) {
 		IsStaff:       user.IsStaff,
 		EmailVerified: user.EmailVerified,
 		MFAEnabled:    user.MFAEnabled,
+		BadgeCode:     user.BadgeCode,
+		Assignments:   user.Assignments,
 	})
 }
 

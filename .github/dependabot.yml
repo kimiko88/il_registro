@@ -11,6 +11,8 @@ updates:
     directory: "/registro-frontend"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "@vitest/mocker"
     reviewers:
       - "team-frontend"
 

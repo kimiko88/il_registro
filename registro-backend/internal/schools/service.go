@@ -49,13 +49,21 @@ func (s *Service) Create(ctx context.Context, req *CreateSchoolRequest) (*School
 		}
 	}
 
+	tier := req.SchoolLevel
+	if tier == "" {
+		tier = req.Type
+	}
+	tier = NormalizeTier(tier)
+
 	school := &School{
-		Name:    req.Name,
-		Code:    req.Code,
-		Address: req.Address,
-		City:    req.City,
-		Phone:   req.Phone,
-		Email:   req.Email,
+		Name:        req.Name,
+		Code:        req.Code,
+		SchoolLevel: tier,
+		Type:        tier,
+		Address:     req.Address,
+		City:        req.City,
+		Phone:       req.Phone,
+		Email:       req.Email,
 	}
 	if err := s.repo.Create(ctx, school); err != nil {
 		return nil, err
@@ -81,4 +89,22 @@ func (s *Service) Update(ctx context.Context, id string, req *UpdateSchoolReques
 // Delete deletes a school
 func (s *Service) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
+}
+
+// GetTierFeatures retrieves the normative tier features for a given school ID
+func (s *Service) GetTierFeatures(ctx context.Context, id string) (*TierFeatures, error) {
+	school, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if school == nil {
+		return nil, nil
+	}
+	features := GetTierFeatures(school.SchoolLevel)
+	return &features, nil
+}
+
+// ListTiers returns all supported canonical Italian school tiers and their normative rules
+func (s *Service) ListTiers(_ context.Context) []TierFeatures {
+	return GetAllTiers()
 }

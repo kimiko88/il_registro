@@ -1,6 +1,7 @@
 package payments
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -194,4 +195,49 @@ func (s *Service) Create(ctx context.Context, actorID, actorRole, schoolID strin
 		return nil, err
 	}
 	return p, nil
+}
+
+func (s *Service) GetBollettino(ctx context.Context, actorID, actorRole, schoolID, paymentID string) (*BollettinoNotice, error) {
+	p, err := s.GetByID(ctx, actorID, actorRole, schoolID, paymentID)
+	if err != nil {
+		return nil, err
+	}
+	schoolCF := "97123456789"
+	schoolName := "Istituto Scolastico Statale"
+	return GenerateBollettinoNotice(p, schoolCF, schoolName)
+}
+
+func (s *Service) Checkout(ctx context.Context, actorID, actorRole, paymentID, returnURL string) (*CheckoutSession, error) {
+	p, err := s.repo.GetByID(ctx, paymentID)
+	if err != nil || p == nil {
+		return nil, ErrPaymentNotFound
+	}
+	if p.Status == "paid" {
+		return nil, fmt.Errorf("questo pagamento risulta già saldato")
+	}
+	return InitiateCheckoutSession(p, returnURL)
+}
+
+func (s *Service) ReconcileOPI(ctx context.Context, schoolID, format string, data []byte) (*ReconciliationReport, error) {
+	quietanze, err := ParseOPIStream(bytes.NewReader(data), format)
+	if err != nil {
+		return nil, err
+	}
+	payments, err := s.repo.ListBySchool(ctx, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	report := ReconcileQuietanze(payments, quietanze)
+	for _, rp := range report.ReconciledPayments {
+		_ = s.repo.Pay(ctx, rp.ID, "SYSTEM_OPI", rp.PaymentMethod, rp.TransactionID, rp.ReceiptNumber)
+	}
+	return report, nil
+}
+
+func (s *Service) GetSolleciti(ctx context.Context, schoolID string) ([]*PaymentSollecito, error) {
+	payments, err := s.repo.ListBySchool(ctx, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	return CheckDelinquentPayments(payments, time.Now()), nil
 }

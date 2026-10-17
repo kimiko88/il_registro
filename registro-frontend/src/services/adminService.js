@@ -32,6 +32,14 @@ export const adminService = {
         return api.delete(`/admin/schools/${id}`)
     },
 
+    getTiers() {
+        return api.get('/schools/tiers')
+    },
+
+    getTierFeatures(id) {
+        return api.get(`/schools/${id}/tier-features`)
+    },
+
     getSchoolClasses(schoolId, academicYear = null) {
         const params = { school_id: schoolId }
         if (academicYear) params.academic_year = academicYear

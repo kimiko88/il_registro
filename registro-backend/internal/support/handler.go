@@ -29,7 +29,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 
 func (h *Handler) CreateDiaryEntry(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+	if role != "teacher" && role != "coordinator" && role != "coordinatore_classe" && role != "referente_inclusione" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i docenti e la dirigenza possono registrare voci nel diario di sostegno"})
 		return
 	}
@@ -107,7 +107,7 @@ func (h *Handler) ListDiaryEntries(c *gin.Context) {
 
 func (h *Handler) DeleteDiaryEntry(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" {
+	if role != "teacher" && role != "coordinator" && role != "coordinatore_classe" && role != "referente_inclusione" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}
@@ -128,7 +128,7 @@ func (h *Handler) DeleteDiaryEntry(c *gin.Context) {
 
 func (h *Handler) CreatePeiGoal(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+	if role != "teacher" && role != "coordinator" && role != "coordinatore_classe" && role != "referente_inclusione" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i docenti e la dirigenza possono creare obiettivi PEI"})
 		return
 	}
@@ -151,7 +151,7 @@ func (h *Handler) CreatePeiGoal(c *gin.Context) {
 
 func (h *Handler) UpdatePeiGoalProgress(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+	if role != "teacher" && role != "coordinator" && role != "coordinatore_classe" && role != "referente_inclusione" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i docenti e la dirigenza possono aggiornare il progresso PEI"})
 		return
 	}
@@ -219,7 +219,7 @@ func (h *Handler) ListPeiGoals(c *gin.Context) {
 
 func (h *Handler) DeletePeiGoal(c *gin.Context) {
 	role := c.GetString("role")
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" {
+	if role != "teacher" && role != "coordinator" && role != "coordinatore_classe" && role != "referente_inclusione" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

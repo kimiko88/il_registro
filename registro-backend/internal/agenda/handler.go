@@ -55,7 +55,7 @@ func (h *Handler) Create(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
 	schoolID := c.GetString("school_id")
-	if userID == "" || (role != "teacher" && role != "admin" && role != "superadmin") {
+	if userID == "" || (role != "teacher" && role != "coordinator" && role != "coordinatore_classe" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "collaboratore_ds") {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 		return
 	}

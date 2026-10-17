@@ -110,7 +110,7 @@ import { useAuthStore } from '@/stores/auth'
 
 const emit = defineEmits(['restart-tour'])
 const router = useRouter()
-const { t } = useI18n()
+const { t, te } = useI18n()
 const authStore = useAuthStore()
 
 const isOpen = ref(false)
@@ -119,21 +119,57 @@ const activeCategory = ref('')
 
 const userRole = computed(() => {
   const role = authStore.userRole || authStore.user?.role || 'student'
-  const r = role.toLowerCase()
-  if (r === 'superadmin') return 'admin'
-  return ['teacher', 'student', 'parent', 'secretary', 'admin'].includes(r) ? r : 'student'
+  const r = role.toLowerCase().trim()
+  if (['principal', 'vice_principal', 'dirigente_scolastico', 'collaboratore_vicario'].includes(r)) {
+    return 'principal'
+  }
+  if (['admin', 'superadmin', 'system_auditor', 'dpo'].includes(r)) {
+    return 'admin'
+  }
+  if (['secretary', 'staff', 'responsabile_gestione_documentale', 'responsabile_conservazione'].includes(r)) {
+    return 'secretary'
+  }
+  if (r === 'dsga') {
+    return 'dsga'
+  }
+  if (['collaboratore_ds', 'responsabile_servizio'].includes(r)) {
+    return 'collaboratore_ds'
+  }
+  if (r === 'collaboratore_scolastico') {
+    return 'collaboratore_scolastico'
+  }
+  if (['assistente_amministrativo', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico'].includes(r)) {
+    return 'assistente_amministrativo'
+  }
+  if (['teacher', 'docente', 'coordinator', 'coordinatore_classe', 'segretario_consiglio', 'referente_progetto', 'referente_inclusione', 'responsabile_dipartimento', 'tutor_orientatore', 'animatore_digitale'].includes(r)) {
+    return 'teacher'
+  }
+  if (['parent', 'genitore'].includes(r)) {
+    return 'parent'
+  }
+  if (['student', 'studente'].includes(r)) {
+    return 'student'
+  }
+  return 'student'
 })
 
 // Category definitions per role
 const roleCategoryKeys = {
+  principal: ['cat_direction', 'cat_personnel', 'cat_substitutions', 'cat_verbali', 'cat_strike'],
   teacher: ['cat_register', 'cat_grades', 'cat_attendance', 'cat_agenda', 'cat_settings'],
   student: ['cat_grades', 'cat_attendance', 'cat_homework', 'cat_documents', 'cat_settings'],
   parent: ['cat_monitoring', 'cat_communications', 'cat_meetings', 'cat_documents', 'cat_settings'],
   secretary: ['cat_students', 'cat_classes', 'cat_documents', 'cat_timetable', 'cat_reports'],
-  admin: ['cat_monitoring', 'cat_users', 'cat_schools', 'cat_security', 'cat_analytics']
+  admin: ['cat_monitoring', 'cat_users', 'cat_schools', 'cat_security', 'cat_analytics'],
+  assistente_amministrativo: ['cat_personnel_desk', 'cat_sidi', 'cat_attendance', 'cat_verbali', 'cat_certificates'],
+  collaboratore_ds: ['cat_substitutions', 'cat_emergency', 'cat_strike', 'cat_verbali', 'cat_timetable'],
+  collaboratore_scolastico: ['cat_visitors', 'cat_early_exits', 'cat_maintenance', 'cat_badge', 'cat_leaves'],
+  dsga: ['cat_dsga_overview', 'cat_personnel_desk', 'cat_sidi', 'cat_strike', 'cat_verbali']
 }
 
 const categoryIcons = {
+  cat_direction: 'account_balance',
+  cat_personnel: 'badge',
   cat_register: 'menu_book',
   cat_grades: 'grade',
   cat_attendance: 'event_available',
@@ -151,37 +187,57 @@ const categoryIcons = {
   cat_users: 'manage_accounts',
   cat_schools: 'school',
   cat_security: 'security',
-  cat_analytics: 'analytics'
+  cat_analytics: 'analytics',
+  cat_personnel_desk: 'forward_to_inbox',
+  cat_sidi: 'cloud_sync',
+  cat_verbali: 'gavel',
+  cat_certificates: 'workspace_premium',
+  cat_substitutions: 'swap_horiz',
+  cat_emergency: 'bolt',
+  cat_strike: 'how_to_reg',
+  cat_visitors: 'door_front',
+  cat_early_exits: 'logout',
+  cat_maintenance: 'build',
+  cat_badge: 'badge',
+  cat_leaves: 'calendar_month',
+  cat_dsga_overview: 'account_balance'
 }
 
 const categories = computed(() => {
   const role = userRole.value
   const keys = roleCategoryKeys[role] || []
-  return keys.map(key => ({
-    key,
-    label: t(`help.${role}.${key}`),
-    icon: categoryIcons[key] || 'help'
-  }))
+  return keys.map(key => {
+    const labelKey = `help.${role}.${key}`
+    return {
+      key,
+      label: te(labelKey) ? t(labelKey) : key,
+      icon: categoryIcons[key] || 'help'
+    }
+  })
 })
 
 const articles = computed(() => {
   const role = userRole.value
   const result = []
-  for (let i = 1; i <= 5; i++) {
-    const q = t(`help.${role}.q${i}`)
-    const a = t(`help.${role}.a${i}`)
-    if (q && a && !q.startsWith('help.')) {
-      // Find matching category (map i to category)
-      const catKeys = roleCategoryKeys[role] || []
-      const catIdx = Math.floor((i - 1) / 1) % catKeys.length
-      const catKey = catKeys[catIdx] || ''
-      result.push({
-        key: `${role}-q${i}`,
-        question: q,
-        answer: a,
-        categoryKey: catKey,
-        categoryIcon: categoryIcons[catKey] || 'help_outline'
-      })
+  for (let i = 1; i <= 10; i++) {
+    const qKey = `help.${role}.q${i}`
+    const aKey = `help.${role}.a${i}`
+    if (te(qKey) && te(aKey)) {
+      const q = t(qKey)
+      const a = t(aKey)
+      if (q && a && !q.startsWith('help.')) {
+        // Find matching category (map i to category)
+        const catKeys = roleCategoryKeys[role] || []
+        const catIdx = Math.floor((i - 1) / 1) % catKeys.length
+        const catKey = catKeys[catIdx] || ''
+        result.push({
+          key: `${role}-q${i}`,
+          question: q,
+          answer: a,
+          categoryKey: catKey,
+          categoryIcon: categoryIcons[catKey] || 'help_outline'
+        })
+      }
     }
   }
   return result

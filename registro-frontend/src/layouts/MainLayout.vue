@@ -30,25 +30,73 @@
 
         <q-space />
         
-        <!-- School Year Selector for Teachers (Desktop / Tablet) -->
-        <div v-if="isTeacherRole" class="gt-sm q-mr-sm row items-center" key="school-year-container">
-          <q-select
-            v-model="schoolYearStore.selectedSchoolYear"
-            :options="schoolYearStore.availableSchoolYears"
+        <!-- School Year Selector (Desktop/Tablet: q-select, Mobile: chip + dialog) -->
+        <template v-if="isSchoolDataRole">
+          <!-- Desktop / Tablet -->
+          <div class="gt-xs q-mr-sm row items-center" key="school-year-container-desk">
+            <q-select
+              v-model="schoolYearStore.selectedSchoolYear"
+              :options="schoolYearStore.availableSchoolYears"
+              dense
+              outlined
+              options-dense
+              :bg-color="$q.dark.isActive ? 'dark' : 'white'"
+              style="min-width: 140px"
+              :label="t('layout.schoolYear') || 'Anno Scolastico'"
+              key="school-year-select-desk"
+              :aria-label="t('layout.schoolYearSelect') || 'Seleziona anno scolastico'"
+            >
+              <template v-slot:prepend>
+                <q-icon name="event" color="primary" size="18px" />
+              </template>
+            </q-select>
+          </div>
+          <!-- Mobile: compact chip opens a dialog -->
+          <q-chip
+            class="lt-sm q-mr-xs cursor-pointer"
+            key="school-year-chip-mobile"
+            clickable
+            outline
+            color="primary"
+            icon="event"
+            :label="schoolYearStore.selectedSchoolYear"
+            @click="showSchoolYearDialog = true"
             dense
-            outlined
-            options-dense
-            :bg-color="$q.dark.isActive ? 'dark' : 'white'"
-            style="min-width: 140px"
-            :label="t('layout.schoolYear')"
-            key="school-year-select"
-            :aria-label="t('layout.schoolYearSelect')"
-          >
-            <template v-slot:prepend>
-              <q-icon name="event" color="primary" size="18px" />
-            </template>
-          </q-select>
-        </div>
+            :aria-label="'Anno: ' + schoolYearStore.selectedSchoolYear"
+          />
+        </template>
+        <!-- Mobile school year dialog (bottom sheet) -->
+        <q-dialog v-if="isSchoolDataRole" v-model="showSchoolYearDialog" position="bottom">
+          <q-card style="min-width: 280px; border-radius: 16px 16px 0 0">
+            <q-card-section class="row items-center q-pb-none">
+              <q-icon name="event" color="primary" class="q-mr-sm" />
+              <span class="text-subtitle1 text-weight-bold">{{ t('layout.schoolYear') || 'Anno Scolastico' }}</span>
+              <q-space />
+              <q-btn icon="close" flat round dense v-close-popup />
+            </q-card-section>
+            <q-card-section class="q-pt-sm">
+              <q-list separator>
+                <q-item
+                  v-for="yr in schoolYearStore.availableSchoolYears"
+                  :key="yr"
+                  clickable
+                  v-close-popup
+                  :active="schoolYearStore.selectedSchoolYear === yr"
+                  active-class="text-primary text-weight-bold"
+                  @click="schoolYearStore.setSchoolYear(yr)"
+                >
+                  <q-item-section avatar>
+                    <q-icon
+                      :name="schoolYearStore.selectedSchoolYear === yr ? 'check_circle' : 'radio_button_unchecked'"
+                      :color="schoolYearStore.selectedSchoolYear === yr ? 'primary' : 'grey-5'"
+                    />
+                  </q-item-section>
+                  <q-item-section>{{ yr }}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-card-section>
+          </q-card>
+        </q-dialog>
 
         <!-- Theme Selector Menu (Desktop / Tablet) -->
         <q-btn-dropdown
@@ -321,14 +369,17 @@
           flat
           dense
           color="primary"
-          icon="search"
-          class="q-mr-xs search-shortcut-btn"
-          :aria-label="t('common.search')"
+          class="q-mr-xs q-px-xs search-shortcut-btn"
+          :aria-label="t('common.search') + ' (Ctrl+K)'"
           @click="globalSearchRef?.open()"
           key="global-search-btn"
+          no-caps
         >
-          <q-tooltip>{{ t('common.search') }}</q-tooltip>
-          <q-badge floating transparent class="search-kbd-badge gt-xs">K</q-badge>
+          <q-tooltip>{{ t('common.search') }} (Ctrl+K)</q-tooltip>
+          <div class="row items-center no-wrap">
+            <q-icon name="search" size="20px" />
+            <span class="search-kbd-badge gt-xs">K</span>
+          </div>
         </q-btn>
 
         <!-- Offline Outbox Status Badge & Dialog Trigger -->
@@ -411,7 +462,16 @@
     >
       <div class="column full-height no-wrap">
         <!-- User Profile Section -->
-        <div class="q-pa-md bg-primary text-white relative-position overflow-hidden" v-if="userName" role="region" :aria-label="t('layout.userProfile')">
+        <div
+          class="q-pa-md bg-primary text-white relative-position overflow-hidden cursor-pointer user-profile-box"
+          v-if="userName"
+          role="button"
+          tabindex="0"
+          :aria-label="t('nav.profile') || 'Profilo utente'"
+          @click="navigateToProfile"
+          @keydown.enter.prevent="navigateToProfile"
+          @keydown.space.prevent="navigateToProfile"
+        >
           <div class="row items-center relative-position" style="z-index: 1">
             <q-avatar size="42px" color="white" text-color="primary" class="q-mr-md shadow-soft" aria-hidden="true">
               <q-icon name="person" size="24px" />
@@ -420,12 +480,14 @@
               <div class="text-subtitle1 text-weight-bold no-wrap ellipsis" :aria-label="t('layout.connectedUser', { name: userName })">{{ userName }}</div>
               <div class="text-caption opacity-80 text-uppercase letter-spacing-1" :aria-label="t('layout.userRole', { role: roleLabel })">{{ roleLabel }}</div>
             </div>
+            <q-icon name="chevron_right" size="20px" class="opacity-70 q-ml-xs" />
           </div>
           <div class="absolute-bottom-right q-mr-n-lg q-mb-n-lg" style="width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.1)" aria-hidden="true"></div>
+          <q-tooltip>{{ t('nav.profile') || 'Impostazioni Profilo' }}</q-tooltip>
         </div>
 
-        <!-- School Year Selector for Teachers on Mobile Drawer -->
-        <div v-if="isTeacherRole" class="lt-md q-pa-sm bg-slate-50 border-b border-slate-100">
+        <!-- School Year Selector on Mobile Drawer -->
+        <div v-if="isSchoolDataRole" class="lt-md q-pa-sm bg-slate-50 border-b border-slate-100">
           <q-select
             v-model="schoolYearStore.selectedSchoolYear"
             :options="schoolYearStore.availableSchoolYears"
@@ -445,10 +507,46 @@
         <!-- Menu Items -->
         <q-scroll-area class="col">
           <div class="q-pa-sm">
+
+            <!-- ── Accesso Rapido (voci quickAccess, sempre visibili) ───────── -->
+            <template v-if="quickAccessItems.length > 0">
+              <div class="text-overline text-grey-5 q-px-sm q-mb-xs q-mt-xs letter-spacing-2" aria-hidden="true">⚡ Accesso Rapido</div>
+              <q-list dense class="q-gutter-y-xs q-mb-sm" role="menu" :aria-label="'Accesso Rapido'">
+                <q-item
+                  v-for="item in quickAccessItems"
+                  :key="item.path"
+                  clickable
+                  :to="item.path"
+                  :exact="item.exact !== undefined ? item.exact : false"
+                  active-class="active-menu-item"
+                  class="rounded-lg transition-all quick-access-item"
+                  :aria-label="translateMenuLabel(item.label)"
+                  role="menuitem"
+                >
+                  <q-item-section avatar min-width="32px">
+                    <q-icon :name="item.icon" size="20px" aria-hidden="true" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold">{{ translateMenuLabel(item.label) }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side v-if="item.badge && getBadge(item.badge)">
+                    <q-badge
+                      :label="getBadge(item.badge) > 99 ? '99+' : String(getBadge(item.badge))"
+                      color="primary"
+                      rounded
+                      style="font-size:10px"
+                    />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+              <q-separator class="q-mb-sm q-mx-sm" />
+            </template>
+
+            <!-- ── Voci di navigazione principali ───────────────────────────── -->
             <div class="text-overline text-grey-5 q-px-sm q-mb-xs letter-spacing-2" aria-hidden="true">{{ t('common.mainMenu') }}</div>
             <q-list dense padding class="q-gutter-y-xs" :aria-label="t('layout.mainNav') || 'Navigazione principale'" role="menu">
-              <template v-for="(item, idx) in menuItems" :key="item.path || item.category || idx">
-                <!-- Group Category with children -->
+              <template v-for="(item, idx) in groupMenuItems" :key="item.path || item.category || idx">
+                <!-- Categoria espandibile con figli -->
                 <q-expansion-item
                   v-if="item.children"
                   group="menu-group"
@@ -459,6 +557,16 @@
                   :default-opened="isCategoryActive(item)"
                   role="menuitem"
                 >
+                  <!-- Badge categoria (somma dei badge dei figli) -->
+                  <template v-slot:header-side>
+                    <q-badge
+                      v-if="getCategoryBadgeTotal(item) > 0"
+                      :label="getCategoryBadgeTotal(item) > 99 ? '99+' : String(getCategoryBadgeTotal(item))"
+                      color="primary"
+                      rounded
+                      style="font-size:10px"
+                    />
+                  </template>
                   <q-list dense class="q-pl-sm q-gutter-y-xs">
                     <q-item
                       v-for="child in item.children"
@@ -477,11 +585,19 @@
                       <q-item-section>
                         <q-item-label class="text-weight-medium">{{ translateMenuLabel(child.label) }}</q-item-label>
                       </q-item-section>
+                      <q-item-section side v-if="child.badge && getBadge(child.badge)">
+                        <q-badge
+                          :label="getBadge(child.badge) > 99 ? '99+' : String(getBadge(child.badge))"
+                          color="primary"
+                          rounded
+                          style="font-size:10px"
+                        />
+                      </q-item-section>
                     </q-item>
                   </q-list>
                 </q-expansion-item>
 
-                <!-- Single Item -->
+                <!-- Voce singola (Dashboard, etc.) -->
                 <q-item
                   v-else
                   clickable
@@ -832,7 +948,7 @@
       </div>
       <router-view v-slot="{ Component }">
         <transition name="page-fade" mode="out-in">
-          <component :is="Component" :key="$route.path" />
+          <component :is="Component" :key="pageKey" />
         </transition>
       </router-view>
     </q-page-container>
@@ -883,8 +999,10 @@ import { useTeacherStore } from '@/stores/teacher'
 import { useClassesStore } from '@/stores/classes'
 import { useThemeStore, THEMES, getThemeName, getThemeDescription, getThemeRole } from '@/stores/theme'
 import { useSchoolYearStore } from '@/stores/schoolYear'
+import { useSchoolSettingsStore } from '@/stores/schoolSettings'
 import { useAuth } from '@/composables/useAuth'
 import { useMenuItems } from '@/composables/useMenuItems'
+import { useMenuBadges } from '@/composables/useMenuBadges'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
@@ -999,6 +1117,10 @@ const menuLabelToKeyMap = {
   'Coordinamento': 'coordination',
   'Orario Lezioni': 'timetable',
   'Orario Scolastico': 'timetable',
+  'Aule & Plessi': 'rooms',
+  'Vincoli Orario & Aule': 'timetableConstraints',
+  'Prenota Aula / Lab': 'roomBooking',
+  'Desiderata Orario': 'schedulePreferences',
   'Agenda': 'agenda',
   'Colloqui': 'colloqui',
   'Sostituzioni': 'substitutions',
@@ -1021,10 +1143,45 @@ const menuLabelToKeyMap = {
   'Fascicolo Documentale & Atti': 'documents',
   'Fascicolo Documentale': 'documents',
   'Compiti a casa': 'homework',
-  'Media Voti': 'averageGrade'
+  'Media Voti': 'averageGrade',
+  'Dashboard ATA': 'dashboardAta',
+  'Presenze Personale & Docenti': 'staffAttendanceDocenti',
+  'Presenze Personale': 'staffAttendance',
+  'Rilevazione Scioperi': 'strikeDetection',
+  'Cartellino & Piano Ferie': 'timecardLeave',
+  'Cartellino Presenze': 'timecard',
+  'Cartellino & Ferie': 'timecardShort',
+  'Anagrafica Personale': 'personnelRegistry',
+  'Sostituzioni Docenti': 'teacherSubstitutions',
+  'Sportello Personale': 'personnelDesk',
+  'Documenti & Atti': 'documentsActs',
+  'Documenti & Archivio': 'documentsArchive',
+  'Verbali & Modelli Riunioni': 'verbaliMeetings',
+  'Anagrafica Utenti': 'usersRegistry',
+  'Studenti & Fascicoli': 'studentsFiles',
+  'Certificati Alunni': 'studentCertificates',
+  'Flussi SIDI Alunni': 'sidiStudents',
+  'Scrutinio & Esami': 'scrutinyExams',
+  'Documenti & Mandati': 'documentsMandates',
+  'Certificati & Ricevute': 'certificatesReceipts',
+  'Registro Protocollo': 'protocolRegistry',
+  'Verbali & Delibere': 'verbaliResolutions',
+  'Comunicazioni & Circolari': 'commsCirculars',
+  'Sportello Utenza': 'deskUsers',
+  'Registro Visitatori': 'visitorRegistry',
+  'Rilascio Certificati': 'issueCertificates',
+  'Sportello Tecnico': 'technicalDesk',
+  'Emergenza Sostituzioni': 'emergencySubstitutions',
+  'Audit Logs & Sicurezza': 'auditSecurity',
+  'Impostazioni Privacy': 'privacySettings',
+  'Progetti & Finanziamenti': 'projectsFunding',
+  'Tutor Orientamento': 'orientationTutor',
+  'Inclusione (BES / DSA)': 'inclusionBesDsa',
+  'Team Digitale & E-Learning': 'digitalTeamELearning'
 }
 
 const categoryToKeyMap = {
+  // ── Vecchie chiavi (retrocompatibilità) ──
   'Anagrafiche & Classi': 'anagraficheClassi',
   'Atti & Certificati': 'attiCertificati',
   'Servizi & Report': 'serviziReport',
@@ -1034,7 +1191,43 @@ const categoryToKeyMap = {
   'Percorsi & Comunicazioni': 'percorsiComunicazioni',
   'Valutazione & Didattica': 'valutazioneDidattica',
   'Servizi & Orari': 'serviziOrari',
-  'Comunicazioni & Account': 'comunicazioniAccount'
+  'Comunicazioni & Account': 'comunicazioniAccount',
+  'Presenze & Personale': 'presenzePersonale',
+  'Atti & Gestione': 'attiGestione',
+  'Segreteria & Atti': 'segreteriaAtti',
+  'Didattica & Studenti': 'didatticaStudenti',
+  'Gestione Personale': 'gestionePersonale',
+  'Bilancio & Contabilità': 'bilancioContabilita',
+  'Protocollo & Archivi': 'protocolloArchivi',
+  'Front-Office & Sportello': 'frontOfficeSportello',
+  'Laboratori & Tecnologie': 'laboratoriTecnologie',
+  'Presenze & Organizzazione': 'presenzeOrganizzazione',
+  'Servizi di Sede': 'serviziSede',
+  'Gestione Servizio & Struttura': 'gestioneServizioStruttura',
+  'Gestione Documentale & Archivi': 'gestioneDocumentaleArchivi',
+  'Conservazione Digitale': 'conservazioneDigitale',
+  // ── Nuove chiavi (menu semplificato) ──
+  'Gestione Piattaforma': 'gestionePiattaforma',
+  'Analytics & Sicurezza': 'analyticsSicurezza',
+  'Istituto & Personale': 'istitutoPersonale',
+  'Report & Strumenti': 'reportStrumenti',
+  'Anagrafica & Organizzazione': 'anagraficaOrganizzazione',
+  'Registro & Classi': 'registroClassi',
+  'Orario & Agenda': 'orarioAgenda',
+  'Comunicazioni': 'comunicazioni',
+  'Presidenza': 'presidenza',
+  'Didattica (mia)': 'didatticaMia',
+  'Atti & Comunicazioni': 'attiComunicazioni',
+  'Scuola': 'scuola',
+  'Servizi & Profilo': 'serviziProfilo',
+  'Situazione Scolastica': 'situazioneScolastica',
+  'Servizi & Contatti': 'serviziContatti',
+  'Personale & Presenze': 'personalePresenze',
+  'Atti & Amministrazione': 'attiAmministrazione',
+  'Gestione Alunni': 'gestioneAlunni',
+  'Privacy & Sicurezza': 'privacySicurezza',
+  'Scrutinio & Valutazione': 'scrutinioValutazione',
+
 }
 
 function translateMenuLabel(label) {
@@ -1080,6 +1273,20 @@ const navigateToProfile = () => {
     router.push('/admin/settings')
   } else if (role === 'secretary' || role === 'principal' || role === 'vice_principal' || role === 'staff') {
     router.push('/secretary/settings')
+  } else if ([
+    'dsga',
+    'assistente_amministrativo',
+    'collaboratore_ds',
+    'collaboratore_scolastico',
+    'assistente_alunni',
+    'assistente_personale',
+    'assistente_contabilita',
+    'assistente_protocollo',
+    'assistente_sportello',
+    'assistente_tecnico',
+    'responsabile_servizio'
+  ].includes(role)) {
+    router.push('/ata/settings')
   } else {
     router.push('/dashboard')
   }
@@ -1120,6 +1327,8 @@ const breadcrumbs = computed(() => {
     items.push({ label: t('roles.admin') || 'Amministrazione', icon: 'admin_panel_settings', path: '/admin/dashboard' })
   } else if (route.path.startsWith('/secretary/') && route.path !== '/secretary') {
     items.push({ label: t('roles.secretary') || 'Segreteria', icon: 'badge', path: '/secretary' })
+  } else if (route.path.startsWith('/ata/') && route.path !== '/ata') {
+    items.push({ label: 'Pannello ATA', icon: 'badge', path: '/ata' })
   }
 
   items.push(current)
@@ -1141,13 +1350,37 @@ const roleLabel = computed(() => {
   if (te('roles.' + roleKey)) {
     return t('roles.' + roleKey)
   }
+  const ataRolesMap = {
+    dsga: 'DSGA',
+    assistente_amministrativo: 'Assistente Amministrativo',
+    collaboratore_ds: 'Collaboratore D.S.',
+    collaboratore_scolastico: 'Collaboratore Scolastico'
+  }
+  if (ataRolesMap[roleKey]) {
+    return ataRolesMap[roleKey]
+  }
   return userRole.value
+})
+// Roles that see year-filtered class/student data and need the school year selector
+const isSchoolDataRole = computed(() => {
+  const r = (userRole.value || '').toLowerCase()
+  return [
+    'superadmin',
+    'teacher', 'docente', 'coordinator', 'coordinatore_classe',
+    'vice_principal', 'collaboratore_vicario',
+    'secretary', 'principal', 'dirigente_scolastico', 'staff',
+    'admin',
+    'dsga', 'collaboratore_ds',
+    'assistente_amministrativo', 'assistente_alunni', 'assistente_personale',
+  ].includes(r)
 })
 
 const isTeacherRole = computed(() => {
   const r = (userRole.value || '').toLowerCase()
-  return r === 'teacher' || r === 'docente' || r === 'coordinator'
+  return r === 'teacher' || r === 'docente' || r === 'coordinator' || r === 'coordinatore_classe'
 })
+
+const showSchoolYearDialog = ref(false)
 
 const teacherStore = useTeacherStore()
 const classesStore = useClassesStore()
@@ -1164,15 +1397,18 @@ const isTeacherCoordinator = computed(() => {
   return false
 })
 
+const schoolSettingsStore = useSchoolSettingsStore()
+
 // Get menu items based on role
 const menuItems = ref([])
-watch([userRole, isTeacherCoordinator, () => classesStore.classes], ([newRole, isCoord]) => {
+watch([userRole, isTeacherCoordinator, () => classesStore.classes, () => authStore.user?.assignments, () => schoolSettingsStore.canteenEnabled], ([newRole, isCoord, _classes, assignments, isCanteen]) => {
   if (!newRole) {
     menuItems.value = []
     return
   }
-  let items = useMenuItems(newRole)
-  if (newRole === 'teacher' && !isCoord) {
+  let items = useMenuItems(newRole, assignments, isCanteen)
+  const isActuallyCoordinator = isCoord || (assignments || []).some(a => (a.assignment_type === 'coordinatore_classe' || a.assignment_type === 'coordinator') && a.is_active !== false)
+  if (newRole === 'teacher' && !isActuallyCoordinator) {
     items = items.map(cat => {
       if (!cat.children) return cat
       return {
@@ -1184,17 +1420,72 @@ watch([userRole, isTeacherCoordinator, () => classesStore.classes], ([newRole, i
   menuItems.value = items
 }, { immediate: true })
 
+// Badge dinamici per le voci menu
+const { getBadge } = useMenuBadges(userRole)
+
+// Voci di accesso rapido (sempre visibili, senza espansione)
+const quickAccessItems = computed(() =>
+  menuItems.value.filter(item => item.quickAccess && item.path)
+)
+
+// Voci raggruppate (tutto il resto: Dashboard + categorie)
+const groupMenuItems = computed(() =>
+  menuItems.value.filter(item => !item.quickAccess)
+)
+
+// Somma i badge dei figli di una categoria per il badge header
+function getCategoryBadgeTotal(category) {
+  if (!category?.children) return 0
+  return category.children.reduce((sum, child) => {
+    if (!child.badge) return sum
+    return sum + (getBadge(child.badge) ?? 0)
+  }, 0)
+}
+
 watch(() => authStore.user, (user) => {
   if (user) {
     schoolYearStore.initializeForUser(user)
   }
 }, { immediate: true })
 
-watch([userRole, () => schoolYearStore.selectedSchoolYear], ([newRole, newSY]) => {
-  if (newRole === 'teacher') {
-    classesStore.fetchAssignedClasses(newSY)
+const isSchoolYearDependentRoute = computed(() => {
+  const p = route.path
+  if (route.meta?.requiresSchoolYear) return true
+  if (isSchoolDataRole.value) {
+    if (
+      p === '/' ||
+      p.startsWith('/teacher') ||
+      p.startsWith('/secretary') ||
+      p.startsWith('/student') ||
+      p.startsWith('/parent') ||
+      p.startsWith('/ata')
+    ) {
+      return true
+    }
+  }
+  return false
+})
+
+const pageKey = computed(() => {
+  if (isSchoolYearDependentRoute.value && schoolYearStore.selectedSchoolYear) {
+    return `${route.fullPath}_${schoolYearStore.selectedSchoolYear}`
+  }
+  return route.fullPath
+})
+
+watch([userRole, () => schoolYearStore.selectedSchoolYear], async ([newRole, newSY]) => {
+  const r = (newRole || '').toLowerCase()
+  if (['teacher', 'docente', 'coordinator', 'coordinatore_classe', 'vice_principal', 'collaboratore_vicario'].includes(r)) {
+    await classesStore.fetchAssignedClasses(newSY, { force: true })
   }
 }, { immediate: true })
+
+watch(() => schoolYearStore.selectedSchoolYear, (newSY) => {
+  if (newSY) {
+    localStorage.setItem('selected_school_year', newSY)
+    localStorage.setItem('registro_selected_school_year', newSY)
+  }
+})
 
 const isCategoryActive = (category) => {
   if (!category || !category.children) return false
@@ -1233,6 +1524,15 @@ async function handleLogout() {
 
 onMounted(() => {
   themeStore.loadFromCloud()
+})
+
+defineExpose({
+  isTeacherRole,
+  isTeacherCoordinator,
+  navigateToProfile,
+  navigateToNotifications,
+  toggleLeftDrawer,
+  toggleRightDrawer
 })
 </script>
 
@@ -1273,20 +1573,38 @@ onMounted(() => {
 }
 
 .search-shortcut-btn {
-  position: relative;
+  border-radius: 8px;
 }
 
 .search-kbd-badge {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
-  background: rgba(99, 102, 241, 0.15) !important;
-  color: #6366f1 !important;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  font-family: inherit;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--q-primary, #4f46e5);
+  border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: 4px;
-  padding: 0 3px;
+  padding: 0 4px;
   line-height: 14px;
   height: 14px;
-  top: 2px;
-  right: 2px;
+  margin-left: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.body--dark .search-kbd-badge {
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+/* ── Quick Access section nel drawer ── */
+.quick-access-item {
+  background: rgba(99, 102, 241, 0.04);
+  border-left: 2px solid rgba(99, 102, 241, 0.25);
+}
+.quick-access-item.active-menu-item {
+  border-left-color: var(--q-primary);
 }
 </style>

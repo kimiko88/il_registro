@@ -176,13 +176,15 @@ func (h *Handler) ListPublic(c *gin.Context) {
 	}
 
 	type PublicSchoolInfo struct {
-		ID      string `json:"id"`
-		Name    string `json:"name"`
-		Code    string `json:"code"`
-		Email   string `json:"email"`
-		Phone   string `json:"phone"`
-		City    string `json:"city"`
-		Address string `json:"address"`
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Code        string `json:"code"`
+		SchoolLevel string `json:"school_level"`
+		Type        string `json:"type"`
+		Email       string `json:"email"`
+		Phone       string `json:"phone"`
+		City        string `json:"city"`
+		Address     string `json:"address"`
 	}
 
 	var list []PublicSchoolInfo
@@ -195,13 +197,15 @@ func (h *Handler) ListPublic(c *gin.Context) {
 			email = "segreteria@" + strings.ToLower(strings.ReplaceAll(s.Name, " ", "")) + ".it"
 		}
 		list = append(list, PublicSchoolInfo{
-			ID:      s.ID,
-			Name:    s.Name,
-			Code:    s.Code,
-			Email:   email,
-			Phone:   s.Phone,
-			City:    s.City,
-			Address: s.Address,
+			ID:          s.ID,
+			Name:        s.Name,
+			Code:        s.Code,
+			SchoolLevel: s.SchoolLevel,
+			Type:        s.Type,
+			Email:       email,
+			Phone:       s.Phone,
+			City:        s.City,
+			Address:     s.Address,
 		})
 	}
 
@@ -216,13 +220,42 @@ func (h *Handler) ListPublic(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// ListTiers returns all supported Italian school tiers and their normative rules
+// GET /schools/tiers
+func (h *Handler) ListTiers(c *gin.Context) {
+	tiers := h.service.ListTiers(c.Request.Context())
+	c.JSON(http.StatusOK, gin.H{"items": tiers, "total": len(tiers)})
+}
+
+// GetTierFeatures returns the normative feature set for a specific school
+// GET /schools/:id/tier-features
+func (h *Handler) GetTierFeatures(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "school ID is required"})
+		return
+	}
+	features, err := h.service.GetTierFeatures(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if features == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "school not found"})
+		return
+	}
+	c.JSON(http.StatusOK, features)
+}
+
 // RegisterRoutes registers all school routes
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	schools := router.Group("/schools")
 	{
+		schools.GET("/tiers", h.ListTiers)
 		schools.POST("/", h.Create)
 		schools.GET("/", h.List)
 		schools.GET("/:id", h.Get)
+		schools.GET("/:id/tier-features", h.GetTierFeatures)
 		schools.PATCH("/:id", h.Update)
 		schools.DELETE("/:id", h.Delete)
 	}

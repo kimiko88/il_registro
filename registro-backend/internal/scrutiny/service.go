@@ -135,7 +135,17 @@ func (s *Service) buildMatrix(ctx context.Context, classID string, semester int,
 	}
 
 	for _, sub := range subjects {
-		matrix.Subjects = append(matrix.Subjects, SubjectInfo{ID: sub.SubjectID, Name: sub.SubjectName})
+		matrix.Subjects = append(matrix.Subjects, SubjectInfo{
+			ID:             sub.SubjectID,
+			Name:           sub.SubjectName,
+			IsReligion:     sub.IsReligion,
+			IsJudgmentOnly: sub.IsJudgmentOnly,
+		})
+	}
+
+	var religionChoices map[string]string
+	if rcp, ok := s.repo.(ReligionChoiceProvider); ok {
+		religionChoices, _ = rcp.GetClassReligionChoices(ctx, classID)
 	}
 
 	// Fetch all grades for class once to avoid N+1 queries (N students * M subjects)
@@ -175,16 +185,25 @@ func (s *Service) buildMatrix(ctx context.Context, classID string, semester int,
 	statsMap, _ := s.attRepo.GetStatsBatch(ctx, studentIDs)
 
 	for _, stu := range allStudents {
+		relChoice := "avvalente"
+		if religionChoices != nil {
+			if c, ok := religionChoices[stu.ID]; ok && c != "" {
+				relChoice = c
+			}
+		}
+
 		row := StudentScrutinyRow{
-			StudentID:   stu.ID,
-			StudentName: stu.LastName + " " + stu.FirstName,
-			SubjectData: make(map[string]SubjectAverages),
+			StudentID:      stu.ID,
+			StudentName:    stu.LastName + " " + stu.FirstName,
+			ReligionChoice: relChoice,
+			SubjectData:    make(map[string]SubjectAverages),
 		}
 
 		for _, sub := range subjects {
 			avg := 0.0
 			proposed := 0.0
 			count := 0
+			proposedJudgment := ""
 			if smap, ok := gradeIndex[stu.ID]; ok {
 				if e, ok := smap[sub.SubjectID]; ok && e.count > 0 {
 					count = e.count
@@ -192,10 +211,20 @@ func (s *Service) buildMatrix(ctx context.Context, classID string, semester int,
 					proposed = math.Min(10, math.Max(1, math.Round(avg)))
 				}
 			}
+			if sub.IsReligion || sub.IsJudgmentOnly {
+				if relChoice == "non_avvalente" {
+					proposedJudgment = "Non avvalente"
+				} else if relChoice == "attivita_alternativa" {
+					proposedJudgment = "Attività alternativa"
+				} else if count > 0 {
+					proposedJudgment = mapGradeToReligionJudgment(avg)
+				}
+			}
 			row.SubjectData[sub.SubjectID] = SubjectAverages{
-				Average:    avg,
-				GradeCount: count,
-				Proposed:   proposed,
+				Average:          avg,
+				GradeCount:       count,
+				Proposed:         proposed,
+				ProposedJudgment: proposedJudgment,
 			}
 		}
 
@@ -251,8 +280,8 @@ type ClassReportStudentRow struct {
 // filters classes by schoolID to prevent cross-tenant data leaks.
 func (s *Service) GetOverview(ctx context.Context, actorID, actorRole, schoolID string, semester ...int) ([]ClassScrutinyOverview, error) {
 	if actorRole != "principal" && actorRole != "vice_principal" &&
-		actorRole != "admin" && actorRole != "superadmin" && actorRole != "coordinator" && actorRole != "secretary" {
-		return nil, errors.New("unauthorized: solo coordinatori, dirigenza, segreteria e admin possono vedere l'overview dello scrutinio")
+		actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "assistente_alunni" {
+		return nil, errors.New("unauthorized: solo dirigenza, segreteria e admin possono vedere l'overview dello scrutinio")
 	}
 	if schoolID == "" && actorRole != "superadmin" {
 		return nil, errors.New("unauthorized: school_id mancante per utente non superadmin")
@@ -423,7 +452,7 @@ func (s *Service) FinalizeClass(ctx context.Context, actorID, actorRole, classID
 
 // ExportAll exports scrutiny data for all classes in the actor's school as CSV.
 func (s *Service) ExportAll(ctx context.Context, actorID, actorRole, schoolID string, semester int) ([]byte, error) {
-	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" {
+	if actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "secretary" && actorRole != "assistente_alunni" {
 		return nil, errors.New("unauthorized: solo dirigenza e admin possono esportare tutti gli scrutini")
 	}
 	if semester <= 0 {
@@ -737,6 +766,22 @@ func (s *Service) GetClassDeficiencies(ctx context.Context, actorID, actorRole, 
 		return []StudentDeficiency{}, nil
 	}
 	return s.repo.GetDeficienciesByClass(ctx, classID, semester)
+}
+
+func mapGradeToReligionJudgment(val float64) string {
+	if val >= 9.5 {
+		return "Ottimo"
+	} else if val >= 7.5 {
+		return "Distinto"
+	} else if val >= 6.5 {
+		return "Buono"
+	} else if val >= 5.5 {
+		return "Sufficiente"
+	} else if val > 0 {
+		return "Insufficiente"
+	} else {
+		return "Non classificabile"
+	}
 }
 
 func (s *Service) SaveDeferredScrutiny(ctx context.Context, actorID, actorRole string, req *SaveDeferredScrutinyRequest) error {

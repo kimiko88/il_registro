@@ -15,36 +15,92 @@ const (
 
 // Role constants — single source of truth used by validator, service and middleware.
 const (
-	RoleSuperAdmin    = "superadmin"
-	RoleAdmin         = "admin"
-	RolePrincipal     = "principal"
-	RoleVicePrincipal = "vice_principal"
-	RoleSecretary     = "secretary"
-	RoleTeacher       = "teacher"
-	RoleCoordinator   = "coordinator"
-	RoleStudent       = "student"
-	RoleParent        = "parent"
-	RoleSystemAuditor = "system_auditor"
+	RoleSuperAdmin               = "superadmin"
+	RoleAdmin                    = "admin"
+	RolePrincipal                = "principal"
+	RoleVicePrincipal            = "vice_principal"
+	RoleSecretary                = "secretary"
+	RoleTeacher                  = "teacher"
+	RoleCoordinator              = "coordinator"
+	RoleStudent                  = "student"
+	RoleParent                   = "parent"
+	RoleSystemAuditor            = "system_auditor"
+	RoleDSGA                     = "dsga"
+	RoleAssistenteAmministrativo = "assistente_amministrativo"
+	RoleCollaboratoreDS          = "collaboratore_ds"
+	RoleCollaboratoreScolastico  = "collaboratore_scolastico"
+	// Ruoli specializzati segreteria
+	RoleAssistenteAlunni      = "assistente_alunni"
+	RoleAssistentePersonale   = "assistente_personale"
+	RoleAssistenteContabilita = "assistente_contabilita"
+	RoleAssistenteProtocollo  = "assistente_protocollo"
+	RoleAssistenteSportello   = "assistente_sportello"
+	// Ruoli ATA operativi
+	RoleAssistenteTecnico    = "assistente_tecnico"
+	RoleResponsabileServizio = "responsabile_servizio"
+	// Documenti e controllo
+	RoleResponsabileGestioneDocumentale = "responsabile_gestione_documentale"
+	RoleResponsabileConservazione       = "responsabile_conservazione"
+	RoleDPO                             = "dpo"
+	// Incarichi aggiuntivi docenti
+	RoleCoordinatoreClasse       = "coordinatore_classe"
+	RoleSegretarioConsiglio      = "segretario_consiglio"
+	RoleReferenteProgetto        = "referente_progetto"
+	RoleReferenteInclusione      = "referente_inclusione"
+	RoleResponsabileDipartimento = "responsabile_dipartimento"
+	RoleTutorOrientatore         = "tutor_orientatore"
+	RoleAnimatoreDigitale        = "animatore_digitale"
 )
 
 // allRoles is the exhaustive set of valid role strings.
 var allRoles = map[string]bool{
-	RoleSuperAdmin:    true,
-	RoleAdmin:         true,
-	RolePrincipal:     true,
-	RoleVicePrincipal: true,
-	RoleSecretary:     true,
-	RoleTeacher:       true,
-	RoleCoordinator:   true,
-	RoleStudent:       true,
-	RoleParent:        true,
-	RoleSystemAuditor: true,
+	RoleSuperAdmin:                      true,
+	RoleAdmin:                           true,
+	RolePrincipal:                       true,
+	RoleVicePrincipal:                   true,
+	RoleSecretary:                       true,
+	RoleTeacher:                         true,
+	RoleCoordinator:                     true,
+	RoleStudent:                         true,
+	RoleParent:                          true,
+	RoleSystemAuditor:                   true,
+	RoleDSGA:                            true,
+	RoleAssistenteAmministrativo:        true,
+	RoleCollaboratoreDS:                 true,
+	RoleCollaboratoreScolastico:         true,
+	RoleAssistenteAlunni:                true,
+	RoleAssistentePersonale:             true,
+	RoleAssistenteContabilita:           true,
+	RoleAssistenteProtocollo:            true,
+	RoleAssistenteSportello:             true,
+	RoleAssistenteTecnico:               true,
+	RoleResponsabileServizio:            true,
+	RoleResponsabileGestioneDocumentale: true,
+	RoleResponsabileConservazione:       true,
+	RoleDPO:                             true,
+	RoleCoordinatoreClasse:              true,
+	RoleSegretarioConsiglio:             true,
+	RoleReferenteProgetto:               true,
+	RoleReferenteInclusione:             true,
+	RoleResponsabileDipartimento:        true,
+	RoleTutorOrientatore:                true,
+	RoleAnimatoreDigitale:               true,
+}
+
+// IsValidRole returns true if the provided role string is a registered valid role.
+func IsValidRole(role string) bool {
+	return allRoles[role]
 }
 
 // IsStaffRole returns true if the given role belongs to staff/administration/teachers.
 func IsStaffRole(role string) bool {
 	switch role {
-	case RoleTeacher, RoleCoordinator, RoleAdmin, RoleSuperAdmin, RoleSecretary, RolePrincipal, RoleVicePrincipal, RoleSystemAuditor:
+	case RoleTeacher, RoleCoordinator, RoleAdmin, RoleSuperAdmin, RoleSecretary, RolePrincipal, RoleVicePrincipal, RoleSystemAuditor,
+		RoleDSGA, RoleAssistenteAmministrativo, RoleCollaboratoreDS, RoleCollaboratoreScolastico,
+		RoleAssistenteAlunni, RoleAssistentePersonale, RoleAssistenteContabilita, RoleAssistenteProtocollo, RoleAssistenteSportello,
+		RoleAssistenteTecnico, RoleResponsabileServizio, RoleResponsabileGestioneDocumentale, RoleResponsabileConservazione, RoleDPO,
+		RoleCoordinatoreClasse, RoleSegretarioConsiglio, RoleReferenteProgetto, RoleReferenteInclusione, RoleResponsabileDipartimento,
+		RoleTutorOrientatore, RoleAnimatoreDigitale:
 		return true
 	default:
 		return false
@@ -54,33 +110,129 @@ func IsStaffRole(role string) bool {
 // creatableRoles defines which roles each caller role is allowed to create.
 var creatableRoles = map[string]map[string]bool{
 	RoleSuperAdmin: {
-		RoleAdmin:         true,
-		RolePrincipal:     true,
-		RoleVicePrincipal: true,
-		RoleSecretary:     true,
-		RoleTeacher:       true,
-		RoleCoordinator:   true,
-		RoleStudent:       true,
-		RoleParent:        true,
-		RoleSystemAuditor: true,
+		RoleAdmin:                           true,
+		RolePrincipal:                       true,
+		RoleVicePrincipal:                   true,
+		RoleSecretary:                       true,
+		RoleTeacher:                         true,
+		RoleCoordinator:                     true,
+		RoleStudent:                         true,
+		RoleParent:                          true,
+		RoleSystemAuditor:                   true,
+		RoleDSGA:                            true,
+		RoleAssistenteAmministrativo:        true,
+		RoleCollaboratoreDS:                 true,
+		RoleCollaboratoreScolastico:         true,
+		RoleAssistenteAlunni:                true,
+		RoleAssistentePersonale:             true,
+		RoleAssistenteContabilita:           true,
+		RoleAssistenteProtocollo:            true,
+		RoleAssistenteSportello:             true,
+		RoleAssistenteTecnico:               true,
+		RoleResponsabileServizio:            true,
+		RoleResponsabileGestioneDocumentale: true,
+		RoleResponsabileConservazione:       true,
+		RoleDPO:                             true,
 	},
 	RoleAdmin: {
-		RoleAdmin:         true,
-		RolePrincipal:     true,
-		RoleVicePrincipal: true,
-		RoleSecretary:     true,
-		RoleTeacher:       true,
-		RoleCoordinator:   true,
-		RoleStudent:       true,
-		RoleParent:        true,
-		RoleSystemAuditor: true,
+		RoleAdmin:                           true,
+		RolePrincipal:                       true,
+		RoleVicePrincipal:                   true,
+		RoleSecretary:                       true,
+		RoleTeacher:                         true,
+		RoleCoordinator:                     true,
+		RoleStudent:                         true,
+		RoleParent:                          true,
+		RoleSystemAuditor:                   true,
+		RoleDSGA:                            true,
+		RoleAssistenteAmministrativo:        true,
+		RoleCollaboratoreDS:                 true,
+		RoleCollaboratoreScolastico:         true,
+		RoleAssistenteAlunni:                true,
+		RoleAssistentePersonale:             true,
+		RoleAssistenteContabilita:           true,
+		RoleAssistenteProtocollo:            true,
+		RoleAssistenteSportello:             true,
+		RoleAssistenteTecnico:               true,
+		RoleResponsabileServizio:            true,
+		RoleResponsabileGestioneDocumentale: true,
+		RoleResponsabileConservazione:       true,
+		RoleDPO:                             true,
+	},
+	RolePrincipal: {
+		RoleVicePrincipal:                   true,
+		RoleSecretary:                       true,
+		RoleTeacher:                         true,
+		RoleCoordinator:                     true,
+		RoleStudent:                         true,
+		RoleParent:                          true,
+		RoleDSGA:                            true,
+		RoleAssistenteAmministrativo:        true,
+		RoleCollaboratoreDS:                 true,
+		RoleCollaboratoreScolastico:         true,
+		RoleAssistenteAlunni:                true,
+		RoleAssistentePersonale:             true,
+		RoleAssistenteContabilita:           true,
+		RoleAssistenteProtocollo:            true,
+		RoleAssistenteSportello:             true,
+		RoleAssistenteTecnico:               true,
+		RoleResponsabileServizio:            true,
+		RoleResponsabileGestioneDocumentale: true,
+		RoleResponsabileConservazione:       true,
+		RoleDPO:                             true,
 	},
 	RoleSecretary: {
-		RoleTeacher:     true,
-		RoleCoordinator: true,
-		RoleStudent:     true,
-		RoleParent:      true,
+		RoleTeacher:                  true,
+		RoleCoordinator:              true,
+		RoleStudent:                  true,
+		RoleParent:                   true,
+		RoleCollaboratoreScolastico:  true,
+		RoleAssistenteAmministrativo: true,
+		RoleCollaboratoreDS:          true,
+		RoleAssistenteAlunni:         true,
+		RoleAssistentePersonale:      true,
+		RoleAssistenteContabilita:    true,
+		RoleAssistenteProtocollo:     true,
+		RoleAssistenteSportello:      true,
 	},
+	RoleDSGA: {
+		RoleAssistenteAmministrativo: true,
+		RoleAssistenteAlunni:         true,
+		RoleAssistentePersonale:      true,
+		RoleAssistenteContabilita:    true,
+		RoleAssistenteProtocollo:     true,
+		RoleAssistenteSportello:      true,
+		RoleCollaboratoreScolastico:  true,
+		RoleAssistenteTecnico:        true,
+		RoleResponsabileServizio:     true,
+	},
+}
+
+// CanAssignDuty checks if a caller role has authority to assign a given duty/assignment.
+func CanAssignDuty(actorRole string, dutyType string) bool {
+	switch actorRole {
+	case RoleSuperAdmin, RoleAdmin, RolePrincipal, RoleVicePrincipal, RoleCollaboratoreDS:
+		return true
+	case RoleDSGA:
+		// DSGA governs ATA staff duties and administrative assignments
+		return dutyType == RoleResponsabileServizio ||
+			dutyType == "responsabile_servizio" ||
+			dutyType == "addetto_sicurezza" ||
+			dutyType == RoleAssistenteAlunni ||
+			dutyType == RoleAssistentePersonale ||
+			dutyType == RoleAssistenteContabilita ||
+			dutyType == RoleAssistenteProtocollo ||
+			dutyType == RoleAssistenteSportello
+	case RoleSecretary, RoleAssistentePersonale:
+		// Secretary / Personnel staff can record class coordinator or meeting secretary assignments
+		return dutyType == RoleCoordinatoreClasse ||
+			dutyType == "coordinatore_classe" ||
+			dutyType == RoleCoordinator ||
+			dutyType == RoleSegretarioConsiglio ||
+			dutyType == "segretario_consiglio"
+	default:
+		return false
+	}
 }
 
 // PasswordValidator validates password strength

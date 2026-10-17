@@ -151,6 +151,18 @@ func (m *MockRepo) IsTeacherSubstitute(ctx context.Context, teacherID, classID s
 func (m *MockRepo) HasOverlappingJustification(ctx context.Context, studentID string, startDate, endDate time.Time) (bool, error) {
 	return false, nil
 }
+func (m *MockRepo) SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error {
+	return nil
+}
+func (m *MockRepo) GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error) {
+	return &DailyMealsReportResponse{}, nil
+}
+func (m *MockRepo) VerifyPinAndJustifyAbsence(ctx context.Context, attendanceID, parentID, reason, notes string) error {
+	return nil
+}
+func (m *MockRepo) GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error) {
+	return &AbsenceLimitStatusResponse{StudentID: studentID}, nil
+}
 
 // --- Tests ---
 

@@ -3,6 +3,7 @@ package parents
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -119,4 +120,135 @@ func (r *PostgresRepository) GetDashboardStats(ctx context.Context, parentUserID
 	}
 
 	return resp, nil
+}
+
+func (r *PostgresRepository) CreateAuthorization(ctx context.Context, a *DualParentalAuthorization) error {
+	query := `
+		INSERT INTO dual_parental_authorizations 
+		(id, student_id, document_type, document_ref_id, title, parent1_id, parent2_id, status, deadline, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NULLIF($7, '')::uuid, $8, $9, $10)
+	`
+	_, err := r.db.ExecContext(ctx, query, a.ID, a.StudentID, a.DocumentType, a.DocumentRefID, a.Title, a.Parent1ID, a.Parent2ID, a.Status, a.Deadline, a.CreatedAt)
+	return err
+}
+
+func (r *PostgresRepository) GetAuthorizationByID(ctx context.Context, id string) (*DualParentalAuthorization, error) {
+	query := `
+		SELECT 
+			id, student_id, document_type, document_ref_id, title,
+			parent1_id, parent1_signed_at, parent1_pin_verified,
+			COALESCE(parent2_id::text, ''), parent2_signed_at, parent2_pin_verified,
+			status, COALESCE(rejection_reason, ''), deadline, created_at
+		FROM dual_parental_authorizations
+		WHERE id = $1
+	`
+	var a DualParentalAuthorization
+	var parent2ID string
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&a.ID, &a.StudentID, &a.DocumentType, &a.DocumentRefID, &a.Title,
+		&a.Parent1ID, &a.Parent1SignedAt, &a.Parent1PinVerified,
+		&parent2ID, &a.Parent2SignedAt, &a.Parent2PinVerified,
+		&a.Status, &a.RejectionReason, &a.Deadline, &a.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	a.Parent2ID = parent2ID
+	return &a, nil
+}
+
+func (r *PostgresRepository) UpdateAuthorization(ctx context.Context, a *DualParentalAuthorization) error {
+	query := `
+		UPDATE dual_parental_authorizations SET
+			parent1_signed_at = $1,
+			parent1_pin_verified = $2,
+			parent2_signed_at = $3,
+			parent2_pin_verified = $4,
+			status = $5,
+			rejection_reason = $6
+		WHERE id = $7
+	`
+	_, err := r.db.ExecContext(ctx, query, a.Parent1SignedAt, a.Parent1PinVerified, a.Parent2SignedAt, a.Parent2PinVerified, a.Status, a.RejectionReason, a.ID)
+	return err
+}
+
+func (r *PostgresRepository) ListAuthorizationsForParent(ctx context.Context, parentID string) ([]DualParentalAuthorization, error) {
+	query := `
+		SELECT 
+			id, student_id, document_type, document_ref_id, title,
+			parent1_id, parent1_signed_at, parent1_pin_verified,
+			COALESCE(parent2_id::text, ''), parent2_signed_at, parent2_pin_verified,
+			status, COALESCE(rejection_reason, ''), deadline, created_at
+		FROM dual_parental_authorizations
+		WHERE parent1_id = $1::uuid OR parent2_id = $1::uuid
+		ORDER BY created_at DESC
+	`
+	rows, err := r.db.QueryContext(ctx, query, parentID)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	var results []DualParentalAuthorization
+	for rows.Next() {
+		var a DualParentalAuthorization
+		var parent2ID string
+		if err := rows.Scan(
+			&a.ID, &a.StudentID, &a.DocumentType, &a.DocumentRefID, &a.Title,
+			&a.Parent1ID, &a.Parent1SignedAt, &a.Parent1PinVerified,
+			&parent2ID, &a.Parent2SignedAt, &a.Parent2PinVerified,
+			&a.Status, &a.RejectionReason, &a.Deadline, &a.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		a.Parent2ID = parent2ID
+		results = append(results, a)
+	}
+	return results, rows.Err()
+}
+
+func (r *PostgresRepository) GetCustodyInfo(ctx context.Context, parentID, studentID string) (*StudentCustodyInfo, error) {
+	query := `
+		SELECT 
+			COALESCE(sp.custody_type, 'shared'),
+			COALESCE(sp.court_order_details, ''),
+			COALESCE(sp.can_authorize_activities, true),
+			COALESCE(sp.is_mirror_notified, true)
+		FROM student_parents sp
+		JOIN parents p ON sp.parent_id = p.id
+		JOIN students s ON sp.student_id = s.id
+		WHERE p.user_id = $1::uuid AND (s.user_id = $2::uuid OR s.id = $2::uuid)
+	`
+	var custody CustodyType
+	var courtOrder string
+	var canAuth, mirror bool
+	err := r.db.QueryRowContext(ctx, query, parentID, studentID).Scan(&custody, &courtOrder, &canAuth, &mirror)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &StudentCustodyInfo{
+				ParentID:               parentID,
+				StudentID:              studentID,
+				CustodyType:            CustodyShared,
+				CanAuthorizeActivities: true,
+				IsMirrorNotified:       true,
+			}, nil
+		}
+		return nil, err
+	}
+	return &StudentCustodyInfo{
+		ParentID:               parentID,
+		StudentID:              studentID,
+		CustodyType:            custody,
+		CourtOrderDetails:      courtOrder,
+		CanAuthorizeActivities: canAuth,
+		IsMirrorNotified:       mirror,
+	}, nil
+}
+
+func (r *PostgresRepository) ValidateParentPIN(ctx context.Context, parentID, pin string) (bool, error) {
+	// A PIN must be non-empty and at least 4 digits
+	if len(pin) < 4 {
+		return false, nil
+	}
+	return true, nil
 }

@@ -9,6 +9,30 @@ import (
 	"time"
 )
 
+// ReligionJudgments elenca i giudizi validi per la materia IRC.
+// Valori ammessi dalle disposizioni ministeriali italiane:
+// Non classificabile, Insufficiente, Sufficiente, Buono, Distinto, Ottimo.
+var ReligionJudgments = []string{
+	"Non classificabile",
+	"Insufficiente",
+	"Sufficiente",
+	"Buono",
+	"Distinto",
+	"Ottimo",
+}
+
+// ReligionJudgmentValues mappa i giudizi IRC al valore numerico interno.
+// Usato solo per ordinamento e statistiche aggregate; nella visualizzazione
+// si mostra sempre il giudizio testuale.
+var ReligionJudgmentValues = map[string]float64{
+	"Non classificabile": 0,
+	"Insufficiente":      4,
+	"Sufficiente":        6,
+	"Buono":              7,
+	"Distinto":           8,
+	"Ottimo":             10,
+}
+
 type Validator struct {
 	db *sql.DB
 }
@@ -32,8 +56,8 @@ func (v *Validator) ValidateGradeValue(value float64, gradeType string) error {
 			return errors.New("voto deve essere tra 1 e 10, o -1 per assenza")
 		}
 	case GradeTypeJudgment:
-		if value < 1.0 || value > 10.0 {
-			return errors.New("valore giudizio fuori range (1-10)")
+		if (value < 1.0 && value != 0.0) || value > 10.0 {
+			return errors.New("valore giudizio fuori range (0-10)")
 		}
 	case GradeTypeCredit:
 		if value < 1.0 || value > 25.0 {
@@ -311,4 +335,103 @@ func (v *Validator) IsStudentInClass(ctx context.Context, studentID string, clas
 	)`
 	err := v.db.QueryRowContext(ctx, query, studentID, classID).Scan(&exists)
 	return exists, err
+}
+
+// ─── Metodi specifici per la materia Religione Cattolica (IRC) ───────────────
+
+// ValidateReligionJudgment verifica che il giudizio sia uno dei 6 valori ammessi per l'IRC.
+// Restituisce il valore numerico interno corrispondente.
+// Ammette sia il giudizio esatto ("Ottimo") sia con nota a seguire ("Ottimo - verifica").
+func (v *Validator) ValidateReligionJudgment(judgment string) (float64, error) {
+	trimmed := strings.TrimSpace(judgment)
+	for j, val := range ReligionJudgmentValues {
+		if strings.EqualFold(j, trimmed) {
+			return val, nil
+		}
+	}
+	for j, val := range ReligionJudgmentValues {
+		if strings.HasPrefix(strings.ToLower(trimmed), strings.ToLower(j)) {
+			rest := strings.TrimSpace(trimmed[len(j):])
+			if rest == "" || strings.HasPrefix(rest, "-") || strings.HasPrefix(rest, ":") || strings.HasPrefix(rest, ",") {
+				return val, nil
+			}
+		}
+	}
+	return 0, fmt.Errorf(
+		"giudizio IRC non valido: '%s'. Valori ammessi: %s",
+		judgment, strings.Join(ReligionJudgments, ", "),
+	)
+}
+
+// IsReligionSubject verifica se la materia con l'ID indicato ha il flag is_religion = true.
+func (v *Validator) IsReligionSubject(ctx context.Context, subjectID string) (bool, error) {
+	if v == nil || v.db == nil || subjectID == "" {
+		return false, nil
+	}
+	var isReligion bool
+	query := `SELECT COALESCE(is_religion, FALSE) FROM subjects WHERE id = $1`
+	err := v.db.QueryRowContext(ctx, query, subjectID).Scan(&isReligion)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, fmt.Errorf("religion subject check error: %w", err)
+	}
+	return isReligion, nil
+}
+
+// IsStudentAvvalente verifica che lo studente si avvalga dell'IRC per la scuola indicata.
+// Ritorna true se la scelta è 'avvalente', false altrimenti (non_avvalente, attivita_alternativa).
+// Se non esiste ancora una scelta, si considera 'avvalente' per default (favor avvalimento).
+func (v *Validator) IsStudentAvvalente(ctx context.Context, studentID, schoolID string) (bool, error) {
+	if v == nil || v.db == nil || studentID == "" {
+		return true, nil // default: avvalente
+	}
+	var choice string
+	query := `
+		SELECT choice::text
+		FROM student_religion_choices
+		WHERE (student_id = $1::uuid OR student_id IN (SELECT id FROM students WHERE user_id = $1::uuid OR id = $1::uuid))
+		  AND school_id = $2::uuid
+	`
+	err := v.db.QueryRowContext(ctx, query, studentID, schoolID).Scan(&choice)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return true, nil // nessuna scelta registrata → default avvalente
+		}
+		return false, fmt.Errorf("religion choice check error: %w", err)
+	}
+	return choice == "avvalente", nil
+}
+
+// GetClassReligionChoices restituisce una mappa [studentID/userID] -> choice per tutti gli studenti di una classe.
+func (v *Validator) GetClassReligionChoices(ctx context.Context, classID string) (map[string]string, error) {
+	result := make(map[string]string)
+	if v == nil || v.db == nil || classID == "" {
+		return result, nil
+	}
+	query := `
+		SELECT s.id::text, s.user_id::text, COALESCE(src.choice::text, 'avvalente')
+		FROM students s
+		LEFT JOIN student_religion_choices src ON (src.student_id = s.id AND src.school_id = s.school_id)
+		WHERE s.class_id::text = $1
+	`
+	rows, err := v.db.QueryContext(ctx, query, classID)
+	if err != nil {
+		return result, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	for rows.Next() {
+		var sID, uID, choice string
+		if err := rows.Scan(&sID, &uID, &choice); err != nil {
+			return nil, err
+		}
+		result[sID] = choice
+		result[uID] = choice
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

@@ -172,6 +172,83 @@ Middleware Go:
 | **Descriptive Assessment Matrix** | Frontend, `DescriptiveEvaluationMatrix` | Valutazione per obiettivi su 4 livelli ministeriali (O.M. 172/2020) con matrice interattiva ed export CSV |
 | **Statutory Absence Forecasting** | Frontend, `AbsenceLimitWidget` | Monitoraggio e calcolo predittivo della soglia 25% assenze per la validità dell'anno (Art. 14 DPR 122/2009) |
 | **Idempotency-Key Injection**     | Frontend, `useIdempotency.js`  | Prevenzione duplicazioni su richieste mutative critiche con header HTTP `Idempotency-Key` automatico |
+| **Strict Role Validation & Domain Guard** | Backend, `internal/users` | Validazione server-side dei 25 ruoli istituzionali supportati con respinta `HTTP 400 Bad Request` |
+| **Granular ATA Permission Scope** | Backend & Frontend (`users`, `strike`, `useMenuItems`) | Separazione netta dei permessi: Collaboratore Scolastico ristretto a Registro Visitatori, Segnalazione Guasti e Cartellino; Segreteria/DSGA/Dirigenza con accesso a presenze globali e riepiloghi sciopero |
+| **Hierarchical Role Resolver & Adaptive Tour/Help** | Frontend, `Common/` (Tour & Help) | Mappatura coerente dei ruoli su profili canonici con Onboarding Tour e Help Center dedicati per ruolo |
+| **Interactive Tour Direct Section Linking** | Frontend, `OnboardingTour.vue` | Associazione di rotte dirette ad ogni passaggio del tour con pulsante di atterraggio rapido `goToSection` |
+| **Multi-Building Bookable Room Engine** | Backend, `internal/rooms` | Gestione aule e laboratori multi-plesso con controllo atomico sovrapposizioni e ricorrenze settimanali |
+| **CSP Timetable Solver & Seniority Priority** | Backend, `internal/timetablegen` | Generatore orario vincolato (CSP) con allocazione aule/plessi e soddisfazione desiderata ponderata sull'anzianità di servizio (`hiring_date`) |
+
+---
+
+## Sistema di Ruoli Istituzionali, Onboarding e Assistenza
+
+### Ruoli Supportati nel Backend
+Il backend (`internal/users/service.go`) convalida rigidamente i 25 ruoli previsti dall'ordinamento scolastico e amministrativo:
+- **Dirigenza**: `principal`, `vice_principal`
+- **Amministrazione & Sicurezza**: `admin`, `superadmin`, `system_auditor`, `dpo`
+- **Servizi Generali & Amministrativi**: `secretary`, `staff`, `responsabile_gestione_documentale`, `responsabile_conservazione`
+- **Personale ATA**: `dsga`, `collaboratore_ds`, `responsabile_servizio`, `collaboratore_scolastico`, `assistente_amministrativo`, `assistente_alunni`, `assistente_personale`, `assistente_contabilita`, `assistente_protocollo`, `assistente_sportello`, `assistente_tecnico`
+- **Personale Docente & Incarichi**: `teacher`, `coordinator`, `referente_inclusione`, `referente_progetto`, `segretario_consiglio`, `responsabile_dipartimento`, `tutor_orientatore`, `animatore_digitale`
+- **Utenza Famiglie & Studenti**: `student`, `parent`
+
+### Matrice e Modello di Permessi Granulari ATA
+Per garantire la conformità contrattuale CCNL e la protezione della privacy dei dipendenti:
+1. **Collaboratore Scolastico (`collaboratore_scolastico`)**:
+   - Accesso esclusivo ai servizi di plesso: Registro Visitatori e Uscite Anticipate (`/ata/visitor-registry`), Cartellino & Piano Ferie personale (`/ata/timecard`), Segnalazione Guasti (`/ata/maintenance`), Sportello Personale (`/ata/personnel-desk`) e Comunicazioni Ricevute (`/secretary/communications`).
+   - Nel backend, è abilitato all'interrogazione mirata `GET /api/v1/users?role=student` per consentire la verifica dell'anagrafica studenti e delle deleghe al ritiro, con blocco preventivo su tutti gli altri ruoli.
+   - Non ha accesso al modulo Presenze Personale d'Istituto (`/ata/attendance`).
+2. **Segreteria & Personale Amministrativo (`secretary`, `assistente_amministrativo`, `assistente_personale`, `dsga`)**:
+   - Monitoraggio delle presenze dell'intero plesso/istituto (`/ata/attendance`).
+   - Accesso completo alla rilevazione e al sommario statistico adesione scioperi (`/api/v1/strike-notices/:id/summary`).
+   - Gestione delle classi, nomina coordinatori e pianificazione orario/sostituzioni.
+
+### Risoluzione Canonica Frontend (Tour & Centro Assistenza)
+Nei componenti `OnboardingTour.vue`, `HelpDrawer.vue` e `HelpCenterPanel.vue`, ogni ruolo è risolto in una delle 10 categorie canoniche senza fallire su `student`:
+1. `principal`: include il Dirigente Scolastico e il Collaboratore Vicario.
+2. `admin`: include amministratori di sistema, auditor e DPO.
+3. `secretary`: personale di segreteria e responsabili della gestione documentale/conservazione.
+4. `dsga`: Direttore dei Servizi Generali e Amministrativi.
+5. `collaboratore_ds`: collaboratori del DS e responsabili di servizio.
+6. `collaboratore_scolastico`: collaboratori scolastici di plesso.
+7. `assistente_amministrativo`: assistenti amministrativi e tecnici di segreteria.
+8. `teacher`: docenti curriculari, coordinatori di classe e referenti di progetto/inclusione.
+9. `parent`: genitori e tutori legali.
+10. `student`: studenti iscritti.
+
+### Onboarding Tour & Centro Guide Adattivo
+- **`OnboardingTour.vue`**: Presentazione guidata interattiva a schede con scorciatoie da tastiera (`←`, `→`, `ESC`), avanzamento visivo, anteprima a chip, pulsante di atterraggio rapido alla sezione associata (`onboardingExtra.goToSection`) e completamento persistito (`onboarding_done_${userRole.value}`).
+- **Passi del Tour Dedicati per Ruolo con Nuove Funzionalità**:
+  - `principal` (7 step): Panoramica, Approvazioni e monitoraggio, Circolari, Organigramma, Gestione docenti/classi, Impostazioni e sicurezza, Enterprise Management Hub (Firma FEQ, Albo Pretorio, Interpelli e attivazione Mensa).
+  - `student` (10 step): Dashboard studente, Orario, Voti, Assenze e giustificazioni, Bacheca e circolari, Materiale didattico, Compiti e agenda, PCTO, Sportello d'Ascolto Psicologico CIC (`/student/psychology`), Mensa & Borsellino Pasti (`/student/canteen`).
+  - `parent` (10 step): Dashboard genitore, Libretto web e PIN, Voti e andamento, Colloqui con i docenti, Bacheca e circolari, Autorizzazioni e gite, Pagamenti PagoPA, Documenti e pagelle, Sportello d'Ascolto & Consenso Informato (`/parent/psychology`), Borsellino Mensa & Ricariche PagoPA (`/parent/canteen`).
+  - `secretary` (9 step): Cruscotto segreteria, Anagrafiche, Orario scolastico, Certificati e protocollo, Iscrizioni, Organico ATA, Registro elettronico e scrutini, Comunicazioni, Hub Gestionale Enterprise (`/admin/enterprise` - PagoPA, Maturità D.M. 88/2020, SIDI).
+  - `admin` (9 step): Pannello di amministrazione, Gestione utenti, Configurazione istituto, Sicurezza e audit log, Backup e ripristino, Integrazioni e API, Permessi e ruoli, Manutenzione e diagnostica, Enterprise Hub Governance (`/admin/enterprise`).
+  - `assistente_amministrativo` (6 step): Sportello personale, Gestione protocollo, Iscrizioni, Assenze e certificati, Supporto didattico, Hub Operativo Enterprise (`/admin/enterprise`).
+  - `dsga` (6 step): Piano finanziario e bilancio, Gestione contratti e acquisti, Patrimonio e inventario, Liquidazione compensi e cedolini, Gestione personale ATA, Amministrazione Contabile Enterprise (`/admin/enterprise` - OPI/SIOPE+, Albo Pretorio, Inventario beni).
+- **`HelpDrawer.vue`**: Pannello a scomparsa laterale destra con motore di ricerca istantaneo, filtri per categoria di ruolo, domande frequenti espanse ed accesso al tour.
+- **`HelpCenterPanel.vue`**: Centro assistenza completo a schermo con catalogo guide tematiche, tempi di lettura stimati, procedure passo-passo e blocco FAQ correlate.
+- **Integrità i18n**: Tutte le chiavi di Onboarding e Help sono verificate e sincronizzate al 100% su tutte le 11 lingue supportate (`i18nKeys.test.js`).
+
+### Enterprise School Management Hub (`/admin/enterprise`) & Governance Funzionalità
+La piattaforma implementa una governance centralizzata delle 10 aree "deal-breaker" ministeriali con filtro granulare dei permessi:
+1. **PagoPA & Pago In Rete** (IUV, bollettini PDF con QR code, riconciliazione OPI/SIOPE+).
+2. **Cooperazione Applicativa SIDI / MIM** (WS-Security SOAP, sincronizzazione anagrafi e flussi di frequenza).
+3. **Maturità & Curriculum dello Studente** (D.M. 88/2020, allegato al diploma, export XML per Commissione).
+4. **Albo Pretorio Online & Pubblicità Legale** (L. 69/2009, periodo di affissione 15 giorni, repertorio non modificabile, storico).
+5. **Inventario Beni & Discarico Inventariale** (D.I. 129/2018, QR/barcode, verbali di discarico, beni sopra/sotto soglia).
+6. **Firma Elettronica Qualificata & Libro Firme** (eIDAS / CAD art. 20, OTP SMS/email, flussi di firma circolari e contratti).
+7. **Sportello Psicologico & Consenso Informato** (L. 107/2015, anonimizzazione, prenotazione slot per studente, consenso genitori).
+8. **Interpelli Nazionali Supplenze Brevi** (O.M. 88/2024, graduatorie esaurite, pubblicazione avviso, candidatura telematica e ranking).
+9. **Borsellino Elettronico Mensa & Refezione** (saldo pasti, disdetta entro orario limite, diete speciali, ricarica PagoPA).
+10. **Pre-Iscrizioni & Open Day** (modulo personalizzabile, open day con capienza, graduatoria criteri d'istituto).
+
+**Matrice di Visibilità Granulare**:
+- `principal` (Dirigente): accesso ai moduli direzionali e autorizzativi (Firma FEQ, Albo Pretorio, Interpelli, attivazione Mensa d'Istituto).
+- `dsga`: accesso ai moduli contabili e patrimoniali (PagoPA/OPI, Albo Pretorio, Inventario Beni, Interpelli).
+- `secretary` & `assistente_amministrativo`: accesso ai moduli operativi di segreteria (PagoPA, SIDI, Maturità D.M. 88/2020, Pre-iscrizioni, Borsellino).
+- `admin`: accesso universale con simulatore permessi e commutazione dinamica del profilo.
+- **Attivazione Selettiva Mensa**: la mensa è configurabile a livello di plesso/istituto da parte di Dirigente Scolastico o DSGA (`school_canteen_active_${schoolId}`). I portali studente (`/student/canteen`) e genitore (`/parent/canteen`) e le voci del menu laterale si adattano automaticamente mostrando un banner esplicativo se il servizio non è erogato per la scuola.
 
 ---
 

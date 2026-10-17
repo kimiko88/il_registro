@@ -87,6 +87,18 @@ func (m *mockUserRepoForPdp) ChangePasswordTx(ctx context.Context, userID, newPa
 func (m *mockUserRepoForPdp) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
 	return 0, nil
 }
+func (m *mockUserRepoForPdp) GetAssignments(ctx context.Context, userID string) ([]users.UserAssignment, error) {
+	return nil, nil
+}
+func (m *mockUserRepoForPdp) CreateAssignment(ctx context.Context, assignment *users.UserAssignment) error {
+	return nil
+}
+func (m *mockUserRepoForPdp) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	return nil
+}
+func (m *mockUserRepoForPdp) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
+	return nil
+}
 
 type mockPdpRepoForSecTest struct {
 	plans map[string]*PdpPlan

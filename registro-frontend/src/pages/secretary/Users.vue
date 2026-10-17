@@ -40,6 +40,7 @@
         @export="exportUsers"
         @bulk-delete="bulkDelete"
         @manage-subjects="openManageSubjects"
+        @manage-assignments="openManageAssignments"
     />
 
     <!-- Create/Edit User Dialog -->
@@ -56,20 +57,22 @@
                     <div>
                         <div class="row q-col-gutter-lg">
                             <div class="col-6">
-                                <q-input v-model="userForm.first_name" :label="t('common.name') || 'Nome'" outlined :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
+                                <q-input for="user-first-name" v-model="userForm.first_name" :label="t('common.name') || 'Nome'" outlined autocomplete="given-name" :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
                             </div>
                             <div class="col-6">
-                                <q-input v-model="userForm.last_name" :label="t('common.surname') || 'Cognome'" outlined :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
+                                <q-input for="user-last-name" v-model="userForm.last_name" :label="t('common.surname') || 'Cognome'" outlined autocomplete="family-name" :rules="[val => !!val || (t('common.requiredField') || 'Campo richiesto')]" />
                             </div>
                         </div>
                     </div>
-                    <q-input v-model="userForm.email" :label="t('login.emailLabel') || 'Email Istituzionale'" outlined type="email" :rules="[val => !!val || (t('common.requiredField') || 'Inserire un email valida')]" />
+                    <q-input for="user-email" v-model="userForm.email" :label="t('login.emailLabel') || 'Email Istituzionale'" outlined type="email" autocomplete="email" :rules="[val => !!val || (t('common.requiredField') || 'Inserire un email valida')]" />
                     <q-input
+                      for="user-fiscal-code"
                       v-model="userForm.fiscal_code"
                       :label="t('classRegister.fiscalCode') || 'Codice Fiscale'"
                       outlined
                       maxlength="16"
                       class="uppercase-input"
+                      autocomplete="off"
                       :rules="[val => !val || /^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/i.test(val) || 'Formato Codice Fiscale non valido']"
                     />
                     
@@ -77,6 +80,7 @@
                         <div class="row q-col-gutter-lg">
                             <div :class="isSuperAdmin ? 'col-6' : 'col-12'">
                                 <q-select 
+                                    for="user-role"
                                     v-model="userForm.role" 
                                     :options="roleOptions"
                                     label="Ruolo"
@@ -87,6 +91,7 @@
                             </div>
                             <div v-if="isSuperAdmin" class="col-6">
                                 <q-select 
+                                    for="user-school-id"
                                     v-model="userForm.school_id" 
                                     :options="schoolOptions"
                                     label="Scuola"
@@ -105,6 +110,7 @@
                     <div v-if="userForm.role === 'student'" class="bg-indigo-50 q-px-lg q-pt-lg q-pb-md rounded-xl border border-indigo-100">
                          <div class="text-subtitle2 text-indigo-700 q-mb-md">Dettagli Studente</div>
                          <q-select
+                            for="user-class-id"
                             v-model="userForm.class_id"
                             :options="classOptions"
                             label="Classe di appartenenza"
@@ -145,10 +151,12 @@
                     
                      <q-input
                          v-if="!isEditing"
+                         for="user-password"
                          v-model="userForm.password"
                          label="Password Iniziale"
                          outlined
                          type="password"
+                         autocomplete="new-password"
                          :rules="[val => !!val || 'Campo obbligatorio', val => val.length >= 8 || 'La password deve contenere almeno 8 caratteri']"
                          :class="{ 'q-mt-md': userForm.role === 'student' }"
                     />
@@ -273,10 +281,12 @@
             <q-card-section class="q-pa-xl">
                 <q-form @submit="handleResetPwd" class="q-gutter-y-md">
                     <q-input
+                      for="reset-new-password"
                       v-model="newPassword"
                       label="Nuova Password"
                       type="password"
                       outlined
+                      autocomplete="new-password"
                       :rules="[
                         val => (!!val && val.length >= 8) || 'Inserire una password sicura di almeno 8 caratteri'
                       ]"
@@ -289,6 +299,180 @@
                     </div>
                 </q-form>
             </q-card-section>
+        </q-card>
+    </q-dialog>
+
+    <!-- Incarichi Aggiuntivi & Coordinamento Dialog -->
+    <q-dialog v-model="showAssignmentsDialog" class="premium-dialog">
+        <q-card style="width: min(700px, 95vw); max-width: 95vw; max-height: 90vh;" class="rounded-xl overflow-hidden shadow-24 bg-white column">
+            <q-card-section class="bg-gradient-primary text-white q-pa-lg row items-center justify-between">
+                <div>
+                    <div class="text-h5 text-weight-bold">{{ t('usersPage.assignmentsDialog.title') }}</div>
+                    <div class="text-subtitle2 opacity-80">
+                        {{ targetUserForAssignments?.last_name }} {{ targetUserForAssignments?.first_name }} 
+                        <span class="text-xs bg-white/20 px-2 py-0.5 rounded-full ml-2 uppercase">{{ t('roles.' + targetUserForAssignments?.role) || targetUserForAssignments?.role }}</span>
+                    </div>
+                </div>
+                <q-btn icon="close" flat round dense v-close-popup :aria-label="t('common.close') || 'Chiudi'" />
+            </q-card-section>
+
+            <q-card-section class="q-pa-lg scroll col">
+                <!-- Sezione Coordinamento Classi per Docente -->
+                <div v-if="targetUserForAssignments?.role === 'teacher'" class="q-mb-lg p-4 bg-purple-50 rounded-xl border border-purple-200">
+                    <div class="row items-center justify-between q-mb-sm">
+                        <div class="text-subtitle1 text-weight-bold text-purple-900">
+                            <q-icon name="co_present" size="20px" class="q-mr-xs" />
+                            {{ t('usersPage.assignmentsDialog.classCoordinationTitle') }}
+                        </div>
+                        <q-badge v-if="!canAssignCoordinator" color="warning" text-color="dark">
+                            {{ t('usersPage.assignmentsDialog.classCoordinationReserved') }}
+                        </q-badge>
+                    </div>
+                    <p class="text-caption text-purple-800 q-mb-md">
+                        {{ t('usersPage.assignmentsDialog.classCoordinationDesc') }}
+                    </p>
+                    <q-select
+                        v-model="selectedCoordinatedClasses"
+                        multiple
+                        use-chips
+                        outlined
+                        dense
+                        bg-color="white"
+                        :options="classOptions"
+                        emit-value
+                        map-options
+                        :label="t('usersPage.assignmentsDialog.coordinatedClassesLabel')"
+                        :disable="!canAssignCoordinator"
+                        :hint="t('usersPage.assignmentsDialog.coordinatedClassesHint')"
+                    />
+                    <div class="row justify-end q-mt-sm">
+                        <q-btn 
+                            :label="t('usersPage.assignmentsDialog.updateCoordinationBtn')" 
+                            color="purple" 
+                            size="sm" 
+                            unelevated 
+                            no-caps 
+                            :disable="!canAssignCoordinator || savingCoordinatedClasses"
+                            :loading="savingCoordinatedClasses"
+                            @click="saveCoordinatedClasses" 
+                        />
+                    </div>
+                </div>
+
+                <!-- Sezione Incarichi Didattici & Istituzionali -->
+                <div v-if="targetUserForAssignments?.role === 'teacher'" class="q-mb-lg p-4 bg-blue-50 rounded-xl border border-blue-200">
+                    <div class="text-subtitle1 text-weight-bold text-blue-900 q-mb-xs">
+                        <q-icon name="stars" size="20px" class="q-mr-xs" />
+                        {{ t('usersPage.assignmentsDialog.teacherDutiesTitle') }}
+                    </div>
+                    <p class="text-caption text-blue-800 q-mb-md">
+                        {{ t('usersPage.assignmentsDialog.teacherDutiesDesc') }}
+                    </p>
+                    <div class="row q-col-gutter-sm">
+                        <div v-for="duty in teacherDutyPresets" :key="duty.type" class="col-12 col-md-6">
+                            <q-card flat class="p-3 bg-white border border-blue-100 rounded-lg">
+                                <div class="row items-center justify-between">
+                                    <div class="col q-pr-sm">
+                                        <div class="text-weight-bold text-xs text-slate-800">{{ duty.label }}</div>
+                                        <div class="text-caption text-slate-500 text-xs">{{ duty.desc }}</div>
+                                    </div>
+                                    <div>
+                                        <q-btn
+                                            v-if="hasDuty(duty.type)"
+                                            size="sm"
+                                            color="negative"
+                                            flat
+                                            round
+                                            icon="cancel"
+                                            :disable="!canAssignThisDuty(duty.type)"
+                                            @click="removeDutyByType(duty.type)"
+                                        >
+                                            <q-tooltip>{{ t('usersPage.assignmentsDialog.revokeDutyTooltip') }}</q-tooltip>
+                                        </q-btn>
+                                        <q-btn
+                                            v-else
+                                            size="sm"
+                                            color="primary"
+                                            unelevated
+                                            no-caps
+                                            :label="t('usersPage.assignmentsDialog.assignDutyBtn')"
+                                            :disable="!canAssignThisDuty(duty.type)"
+                                            @click="assignDutyQuick(duty)"
+                                        />
+                                    </div>
+                                </div>
+                            </q-card>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sezione Incarichi ATA / Responsabile di Servizio -->
+                <div v-if="isATARole(targetUserForAssignments?.role)" class="q-mb-lg p-4 bg-teal-50 rounded-xl border border-teal-200">
+                    <div class="text-subtitle1 text-weight-bold text-teal-900 q-mb-xs">
+                        <q-icon name="build" size="20px" class="q-mr-xs" />
+                        {{ t('usersPage.assignmentsDialog.ataResponsibilitiesTitle') }}
+                    </div>
+                    <p class="text-caption text-teal-800 q-mb-md">
+                        {{ t('usersPage.assignmentsDialog.ataResponsibilitiesDesc') }}
+                    </p>
+                    <div class="row q-gutter-sm items-center">
+                        <q-input 
+                            v-model="newServiceTitle" 
+                            :label="t('usersPage.assignmentsDialog.serviceDepartmentLabel')" 
+                            outlined 
+                            dense 
+                            class="col bg-white"
+                            :disable="!canAssignService"
+                        />
+                        <q-btn 
+                            :label="t('usersPage.assignmentsDialog.assignServiceBtn')" 
+                            color="teal" 
+                            unelevated 
+                            no-caps 
+                            :disable="!canAssignService || !newServiceTitle"
+                            @click="assignServiceDuty" 
+                        />
+                    </div>
+                </div>
+
+                <!-- Elenco Incarichi Attualmente Assegnati -->
+                <div>
+                    <div class="text-subtitle2 text-weight-bold text-slate-700 q-mb-sm">
+                        {{ t('usersPage.assignmentsDialog.activeDutiesTitle', { count: currentTargetAssignments.length }) }}
+                    </div>
+                    <div v-if="currentTargetAssignments.length === 0" class="text-caption text-slate-400 italic">
+                        {{ t('usersPage.assignmentsDialog.noActiveDuties') }}
+                    </div>
+                    <q-list v-else separator class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50">
+                        <q-item v-for="assign in currentTargetAssignments" :key="assign.id" class="bg-white">
+                            <q-item-section avatar>
+                                <q-avatar color="indigo-50" text-color="indigo-700" icon="badge" size="32px" />
+                            </q-item-section>
+                            <q-item-section>
+                                <q-item-label class="text-weight-bold">{{ assign.title }}</q-item-label>
+                                <q-item-label caption>Tipo: {{ assign.assignment_type }} | Ambito: {{ assign.scope_type }} {{ assign.scope_id ? `(${assign.scope_id})` : '' }}</q-item-label>
+                            </q-item-section>
+                            <q-item-section side>
+                                <q-btn 
+                                    flat 
+                                    round 
+                                    icon="delete" 
+                                    color="negative" 
+                                    size="sm" 
+                                    :disable="!canAssignThisDuty(assign.assignment_type)"
+                                    @click="deleteSingleAssignment(assign.id)"
+                                >
+                                    <q-tooltip>{{ t('usersPage.assignmentsDialog.revokeDutyTooltip') }}</q-tooltip>
+                                </q-btn>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
+                </div>
+            </q-card-section>
+            
+            <q-card-actions align="right" class="q-pa-md bg-slate-100 border-t border-slate-200">
+                <q-btn flat :label="t('common.close') || 'Chiudi'" v-close-popup color="slate-600" no-caps />
+            </q-card-actions>
         </q-card>
     </q-dialog>
 
@@ -312,6 +496,7 @@ import adminService from '@/services/adminService';
 import { useAuthStore } from '@/stores/auth';
 import { usePermissions } from '@/composables/usePermissions';
 import { useTableExport } from '@/composables/useTableExport';
+import { canAssignDuty } from '@/composables/useUserAssignments';
 
 const $q = useQuasar();
 const { t } = useI18n();
@@ -451,15 +636,59 @@ const fetchSchools = async () => {
 
 const filteredUsers = computed(() => users.value);
 
-const roleOptions = [
-    { label: 'Studente', value: 'student' },
-    { label: 'Docente', value: 'teacher' },
-    { label: 'Genitore', value: 'parent' },
-    { label: 'Segreteria', value: 'secretary' },
-    { label: 'Vicepreside / Staff', value: 'vice_principal' },
-    { label: 'Preside / Dirigente', value: 'principal' },
-    { label: 'Amministratore', value: 'admin' }
-];
+const roleOptions = computed(() => {
+    const role = (authStore.userRole || authStore.user?.role || '').toLowerCase();
+    const isSuper = role === 'superadmin';
+    const isAdmin = isSuper || role === 'admin';
+    const isPrincipal = role === 'principal' || role === 'vice_principal';
+    const isDSGA = role === 'dsga';
+
+    const options = [
+        { label: t('roles.student') || 'Studente', value: 'student' },
+        { label: t('roles.teacher') || 'Docente', value: 'teacher' },
+        { label: t('roles.parent') || 'Genitore', value: 'parent' }
+    ];
+
+    if (isAdmin || isPrincipal || isDSGA) {
+        options.push(
+            { label: `${t('roles.assistente_amministrativo')}`, value: 'assistente_amministrativo' },
+            { label: t('roles.assistente_alunni'), value: 'assistente_alunni' },
+            { label: t('roles.assistente_personale'), value: 'assistente_personale' },
+            { label: t('roles.assistente_contabilita'), value: 'assistente_contabilita' },
+            { label: t('roles.assistente_protocollo'), value: 'assistente_protocollo' },
+            { label: t('roles.assistente_sportello'), value: 'assistente_sportello' },
+            { label: t('roles.assistente_tecnico'), value: 'assistente_tecnico' },
+            { label: t('roles.collaboratore_scolastico'), value: 'collaboratore_scolastico' },
+            { label: t('roles.responsabile_servizio'), value: 'responsabile_servizio' }
+        );
+    }
+
+    if (isAdmin || isPrincipal) {
+        options.push(
+            { label: t('roles.collaboratore_ds'), value: 'collaboratore_ds' },
+            { label: t('roles.vice_principal'), value: 'vice_principal' },
+            { label: t('roles.principal'), value: 'principal' },
+            { label: t('roles.dsga'), value: 'dsga' },
+            { label: t('roles.secretary'), value: 'secretary' },
+            { label: t('roles.responsabile_gestione_documentale'), value: 'responsabile_gestione_documentale' },
+            { label: t('roles.responsabile_conservazione'), value: 'responsabile_conservazione' },
+            { label: t('roles.dpo'), value: 'dpo' }
+        );
+    }
+
+    if (isAdmin) {
+        options.push(
+            { label: t('roles.admin'), value: 'admin' }
+        );
+    }
+    if (isSuper) {
+        options.push(
+            { label: t('roles.superadmin') || 'Super Amministratore', value: 'superadmin' }
+        );
+    }
+
+    return options;
+});
 
 const openCreate = () => {
     isEditing.value = false;
@@ -696,6 +925,155 @@ const removeTeacherSubject = async (subjectId) => {
          $q.notify({ type: 'negative', message: 'Errore nella rimozione della materia' })
     }
 }
+
+// Incarichi & Coordinamento State & Methods
+const showAssignmentsDialog = ref(false);
+const targetUserForAssignments = ref(null);
+const selectedCoordinatedClasses = ref([]);
+const savingCoordinatedClasses = ref(false);
+const currentTargetAssignments = ref([]);
+const newServiceTitle = ref('');
+
+const teacherDutyPresets = computed(() => [
+    { type: 'segretario_verbale', label: t('usersPage.assignmentsDialog.dutySecretaryLabel'), desc: t('usersPage.assignmentsDialog.dutySecretaryDesc') },
+    { type: 'referente_inclusione', label: t('usersPage.assignmentsDialog.dutyInclusionLabel'), desc: t('usersPage.assignmentsDialog.dutyInclusionDesc') },
+    { type: 'referente_progetto', label: t('usersPage.assignmentsDialog.dutyProjectsLabel'), desc: t('usersPage.assignmentsDialog.dutyProjectsDesc') },
+    { type: 'responsabile_dipartimento', label: t('usersPage.assignmentsDialog.dutyDeptHeadLabel'), desc: t('usersPage.assignmentsDialog.dutyDeptHeadDesc') },
+    { type: 'tutor_orientamento', label: t('usersPage.assignmentsDialog.dutyOrientationLabel'), desc: t('usersPage.assignmentsDialog.dutyOrientationDesc') },
+    { type: 'animatore_digitale', label: t('usersPage.assignmentsDialog.dutyDigitalAnimLabel'), desc: t('usersPage.assignmentsDialog.dutyDigitalAnimDesc') },
+    { type: 'referente_bullismo', label: t('usersPage.assignmentsDialog.dutyAntiBullyingLabel'), desc: t('usersPage.assignmentsDialog.dutyAntiBullyingDesc') }
+]);
+
+const actorRole = computed(() => (authStore.userRole || authStore.user?.role || '').toLowerCase());
+const canAssignCoordinator = computed(() => canAssignDuty(actorRole.value, 'coordinatore_classe'));
+const canAssignService = computed(() => canAssignDuty(actorRole.value, 'responsabile_servizio'));
+const canAssignThisDuty = (dutyType) => canAssignDuty(actorRole.value, dutyType);
+const hasDuty = (dutyType) => currentTargetAssignments.value.some(a => a.assignment_type === dutyType && a.is_active !== false);
+
+const isATARole = (role) => {
+    return [
+        'collaboratore_scolastico',
+        'assistente_amministrativo',
+        'assistente_alunni',
+        'assistente_personale',
+        'assistente_contabilita',
+        'assistente_protocollo',
+        'assistente_sportello',
+        'assistente_tecnico',
+        'responsabile_servizio'
+    ].includes(role);
+};
+
+const openManageAssignments = async (user) => {
+    targetUserForAssignments.value = user;
+    newServiceTitle.value = '';
+    selectedCoordinatedClasses.value = [];
+    showAssignmentsDialog.value = true;
+    await loadUserAssignments(user.id);
+};
+
+const loadUserAssignments = async (userId) => {
+    try {
+        const res = await userService.getAssignments(userId);
+        currentTargetAssignments.value = res.data?.assignments || res.data || [];
+        
+        // Populate selected coordinated classes
+        const coordIds = currentTargetAssignments.value
+            .filter(a => (a.assignment_type === 'coordinatore_classe' || a.assignment_type === 'coordinator') && a.scope_id && a.is_active !== false)
+            .map(a => a.scope_id);
+        
+        // Also check if any classes already have coordinator_id === userId
+        classes.value.forEach(c => {
+            if (c.coordinator_id === userId && !coordIds.includes(c.id)) {
+                coordIds.push(c.id);
+            }
+        });
+        selectedCoordinatedClasses.value = coordIds;
+    } catch (e) {
+        console.error('Errore nel caricamento incarichi:', e);
+        currentTargetAssignments.value = [];
+    }
+};
+
+const saveCoordinatedClasses = async () => {
+    if (!targetUserForAssignments.value) return;
+    savingCoordinatedClasses.value = true;
+    try {
+        await userService.setCoordinatedClasses(targetUserForAssignments.value.id, selectedCoordinatedClasses.value);
+        $q.notify({ type: 'positive', message: t('usersPage.assignmentsDialog.notifyCoordUpdated') });
+        await loadUserAssignments(targetUserForAssignments.value.id);
+        fetchUsers();
+    } catch (e) {
+        $q.notify({ type: 'negative', message: t('usersPage.assignmentsDialog.notifyCoordUpdateError'), caption: e.message });
+    } finally {
+        savingCoordinatedClasses.value = false;
+    }
+};
+
+const assignDutyQuick = async (duty) => {
+    if (!targetUserForAssignments.value) return;
+    try {
+        await userService.addAssignment(targetUserForAssignments.value.id, {
+            assignment_type: duty.type,
+            scope_type: 'school',
+            title: duty.label
+        });
+        $q.notify({ type: 'positive', message: t('usersPage.assignmentsDialog.notifyDutyAssigned', { duty: duty.label }) });
+        await loadUserAssignments(targetUserForAssignments.value.id);
+        fetchUsers();
+    } catch (e) {
+        $q.notify({ type: 'negative', message: t('usersPage.assignmentsDialog.notifyDutyAssignError'), caption: e.message });
+    }
+};
+
+const removeDutyByType = async (dutyType) => {
+    if (!targetUserForAssignments.value) return;
+    const target = currentTargetAssignments.value.find(a => a.assignment_type === dutyType);
+    if (target) {
+        await deleteSingleAssignment(target.id);
+    }
+};
+
+const assignServiceDuty = async () => {
+    if (!targetUserForAssignments.value || !newServiceTitle.value) return;
+    try {
+        await userService.addAssignment(targetUserForAssignments.value.id, {
+            assignment_type: 'responsabile_servizio',
+            scope_type: 'service',
+            title: `Responsabile ${newServiceTitle.value}`
+        });
+        $q.notify({ type: 'positive', message: t('usersPage.assignmentsDialog.notifyServiceAssigned') });
+        newServiceTitle.value = '';
+        await loadUserAssignments(targetUserForAssignments.value.id);
+        fetchUsers();
+    } catch (e) {
+        $q.notify({ type: 'negative', message: t('usersPage.assignmentsDialog.notifyServiceAssignError'), caption: e.message });
+    }
+};
+
+const deleteSingleAssignment = async (assignmentId) => {
+    if (!targetUserForAssignments.value) return;
+    try {
+        await userService.deleteAssignment(targetUserForAssignments.value.id, assignmentId);
+        $q.notify({ type: 'positive', message: t('usersPage.assignmentsDialog.notifyDutyRevoked') });
+        await loadUserAssignments(targetUserForAssignments.value.id);
+        fetchUsers();
+    } catch (e) {
+        $q.notify({ type: 'negative', message: t('usersPage.assignmentsDialog.notifyDutyRevokeError'), caption: e.message });
+    }
+};
+
+defineExpose({
+    openManageAssignments,
+    onManageAssignments: openManageAssignments,
+    saveCoordinatedClasses,
+    assignDutyQuick,
+    removeDutyByType,
+    showAssignmentsDialog,
+    targetUserForAssignments,
+    selectedCoordinatedClasses,
+    savingCoordinatedClasses
+});
 </script>
 
 <style scoped>

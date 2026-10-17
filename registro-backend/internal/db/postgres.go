@@ -11,7 +11,7 @@ import (
 	"registro-backend/internal/config"
 	"registro-backend/pkg/logger"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func Connect(cfg config.DatabaseConfig) (*sql.DB, error) {
@@ -22,7 +22,7 @@ func Connect(cfg config.DatabaseConfig) (*sql.DB, error) {
 			host, cfg.Port, cfg.User, cfg.Password, cfg.Name, cfg.SSLMode)
 	}
 
-	db, err := sql.Open("postgres", dsn)
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}

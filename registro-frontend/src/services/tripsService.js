@@ -19,6 +19,9 @@ export const tripsService = {
   signConsent(tripId, data = {}) {
     return api.post(`/trips/${tripId}/consent`, { trip_id: tripId, ...data })
   },
+  submitConsentWithDetails(tripId, data = {}) {
+    return this.signConsent(tripId, data)
+  },
   getConsents(tripId) {
     return api.get(`/trips/${tripId}/consents`)
   }

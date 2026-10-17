@@ -69,7 +69,7 @@ func (m *Middleware) RequireStaff() gin.HandlerFunc {
 			return
 		}
 
-		if role != "admin" && role != "superadmin" && role != "secretary" {
+		if role != "admin" && role != "superadmin" && role != "secretary" && role != "principal" && role != "vice_principal" && role != "dsga" {
 			c.JSON(http.StatusForbidden, ErrorResponse{
 				Error:   "forbidden",
 				Message: "staff access required",
@@ -87,8 +87,8 @@ func (m *Middleware) SetSchoolFilter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, _ := auth.GetUserRole(c)
 
-		// Filter for admin and secretary roles, not for superadmin
-		if role == "admin" || role == "secretary" {
+		// Filter for all tenant-scoped roles (non-superadmin)
+		if role != "superadmin" {
 			schoolID, exists := auth.GetSchoolID(c)
 			if exists && schoolID != "" {
 				c.Set("filter_school_id", schoolID)

@@ -2,10 +2,10 @@
   <q-page class="q-pa-lg bg-slate-50">
     <div class="row items-center justify-between q-mb-xl">
       <div>
-        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">Monitoraggio Sistema</h1>
-        <p class="text-subtitle1 text-slate-500 q-mt-sm q-mb-none">Stato in tempo reale dell'infrastruttura</p>
+        <h1 class="text-h3 text-weight-bold text-outfit q-my-none text-gradient-premium">{{ t('monitoring.title') }}</h1>
+        <p class="text-subtitle1 text-slate-500 q-mt-sm q-mb-none">{{ t('monitoring.subtitle') }}</p>
       </div>
-      <q-btn unelevated color="white" text-color="primary" icon="refresh" label="Aggiorna" class="rounded-lg shadow-soft q-px-md" @click="fetchHealth" :loading="loading" />
+      <q-btn unelevated color="white" text-color="primary" icon="refresh" :label="t('monitoring.refresh')" class="rounded-lg shadow-soft q-px-md" @click="fetchHealth" :loading="loading" />
     </div>
 
     <!-- Loading -->
@@ -18,9 +18,9 @@
     <!-- Error state -->
     <div v-else-if="fetchError" class="text-center q-pa-xl">
       <q-icon name="wifi_off" size="64px" color="red-4" class="q-mb-md" />
-      <div class="text-h6 text-slate-600">Impossibile raggiungere l'endpoint di monitoraggio</div>
-      <div class="text-caption text-slate-400 q-mt-sm">Endpoint richiesto: <code>GET /admin/system/health</code></div>
-      <q-btn class="q-mt-lg" color="primary" label="Riprova" @click="fetchHealth" unelevated />
+      <div class="text-h6 text-slate-600">{{ t('monitoring.fetchError') }}</div>
+      <div class="text-caption text-slate-400 q-mt-sm">{{ t('monitoring.endpointRequired', { endpoint: 'GET /admin/system/health' }) }}</div>
+      <q-btn class="q-mt-lg" color="primary" :label="t('monitoring.retry')" @click="fetchHealth" unelevated />
     </div>
 
     <div v-else-if="health">
@@ -33,9 +33,9 @@
           <q-icon :name="overallStatus === 'healthy' ? 'check_circle' : overallStatus === 'degraded' ? 'warning' : 'error'" size="32px" />
         </template>
         <div class="text-h6 text-weight-bold">
-          {{ overallStatus === 'healthy' ? 'Tutti i servizi operativi' : overallStatus === 'degraded' ? 'Servizi degradati' : 'Servizi critici offline' }}
+          {{ overallStatus === 'healthy' ? t('monitoring.statusHealthy') : overallStatus === 'degraded' ? t('monitoring.statusDegraded') : t('monitoring.statusCritical') }}
         </div>
-        <div class="text-caption">Ultimo aggiornamento: {{ lastChecked }}</div>
+        <div class="text-caption">{{ t('monitoring.lastUpdate', { time: lastChecked }) }}</div>
       </q-banner>
 
       <!-- Service Cards -->
@@ -68,7 +68,7 @@
         <div class="col-12 col-md-6">
           <q-card class="glass-card shadow-soft rounded-xl">
             <q-card-section class="q-pa-lg">
-              <div class="text-h6 text-weight-bold text-slate-800 q-mb-md">Risorse Server</div>
+              <div class="text-h6 text-weight-bold text-slate-800 q-mb-md">{{ t('monitoring.serverResources') }}</div>
               <div class="q-gutter-y-md">
                 <div v-for="metric in resourceMetrics" :key="metric.label">
                   <div class="row items-center justify-between text-caption text-slate-600 text-weight-medium q-mb-xs">
@@ -85,7 +85,7 @@
         <div class="col-12 col-md-6">
           <q-card class="glass-card shadow-soft rounded-xl">
             <q-card-section class="q-pa-lg">
-              <div class="text-h6 text-weight-bold text-slate-800 q-mb-md">Info Versione</div>
+              <div class="text-h6 text-weight-bold text-slate-800 q-mb-md">{{ t('monitoring.versionInfo') }}</div>
               <q-list dense>
                 <q-item v-for="info in versionInfo" :key="info.label">
                   <q-item-section>
@@ -97,14 +97,42 @@
             </q-card-section>
           </q-card>
         </div>
+
+        <!-- Codecov Component Coverage -->
+        <div class="col-12">
+          <q-card class="glass-card shadow-soft rounded-xl">
+            <q-card-section class="q-pa-lg">
+              <div class="row items-center justify-between q-mb-sm">
+                <div class="text-h6 text-weight-bold text-slate-800">
+                  <q-icon name="insights" color="primary" class="q-mr-sm" />{{ t('monitoring.codecovTitle') }}
+                </div>
+                <q-badge color="indigo-7" class="q-pa-xs">{{ t('monitoring.codecovBadge') }}</q-badge>
+              </div>
+              <p class="text-body2 text-slate-600 q-mb-md">
+                {{ t('monitoring.codecovDesc') }}
+              </p>
+              <div class="row items-center q-gutter-md">
+                <q-btn
+                  unelevated
+                  color="primary"
+                  icon="open_in_new"
+                  :label="t('monitoring.codecovBtn')"
+                  href="https://app.codecov.io/github/kimiko88/il_registro/components"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                />
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
       </div>
     </div>
 
     <!-- Empty state if endpoint not yet implemented -->
     <div v-else class="text-center q-pa-xl">
       <q-icon name="sensors" size="64px" color="grey-4" class="q-mb-md" />
-      <div class="text-h6 text-slate-600">Nessun dato disponibile</div>
-      <div class="text-caption text-slate-400 q-mt-sm">Implementa <code>GET /admin/system/health</code> nel backend</div>
+      <div class="text-h6 text-slate-600">{{ t('monitoring.noDataTitle') }}</div>
+      <div class="text-caption text-slate-400 q-mt-sm">{{ t('monitoring.noDataDesc', { endpoint: 'GET /admin/system/health' }) }}</div>
     </div>
   </q-page>
 </template>
@@ -114,7 +142,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '@/services/api'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const loading  = ref(false)
 const health   = ref(null)
 const fetchError = ref(false)
@@ -127,7 +155,7 @@ const fetchHealth = async () => {
   try {
     const res = await api.get('/admin/system/health')
     health.value = res.data
-    lastChecked.value = new Date().toLocaleTimeString('it-IT')
+    lastChecked.value = new Date().toLocaleTimeString(locale.value || 'it-IT')
   } catch (e) {
     console.error('Health check failed:', e)
     fetchError.value = true
@@ -167,10 +195,10 @@ const getServiceColor = (status) => {
 }
 
 const getServiceLabel = (status) => {
-  if (isOnline(status)) return 'ONLINE'
-  if (isDegraded(status)) return 'DEGRADATO'
-  if (isInMemory(status)) return 'IN-MEMORY'
-  return 'OFFLINE'
+  if (isOnline(status)) return t('monitoring.serviceStatus.online')
+  if (isDegraded(status)) return t('monitoring.serviceStatus.degraded')
+  if (isInMemory(status)) return t('monitoring.serviceStatus.inMemory')
+  return t('monitoring.serviceStatus.offline')
 }
 
 const overallStatus = computed(() => health.value?.status || 'unknown')
@@ -180,12 +208,12 @@ const services = computed(() => {
   const s = health.value.services || {}
   const redisDetail = s.redis_ping_ms != null
     ? `Ping: ${s.redis_ping_ms}ms`
-    : (isInMemory(s.redis) ? 'Modalità In-Memory' : null)
+    : (isInMemory(s.redis) ? t('monitoring.serviceNames.inMemoryMode') : null)
   return [
-    { name: 'api',      label: 'API Server',    icon: 'cloud',          color: 'indigo',  status: s.api      || 'unknown', detail: health.value.api_version ? `v${health.value.api_version}` : null },
-    { name: 'db',       label: 'Database',      icon: 'storage',        color: 'blue',    status: s.database || 'unknown', detail: s.db_ping_ms != null ? `Ping: ${s.db_ping_ms}ms` : null },
-    { name: 'redis',    label: 'Cache Redis',   icon: 'memory',         color: 'red',     status: s.redis    || 'unknown', detail: redisDetail },
-    { name: 'storage',  label: 'Storage',       icon: 'folder',         color: 'amber',   status: s.storage  || 'unknown', detail: null }
+    { name: 'api',      label: t('monitoring.serviceNames.api'),     icon: 'cloud',   color: 'indigo',  status: s.api      || 'unknown', detail: health.value.api_version ? `v${health.value.api_version}` : null },
+    { name: 'db',       label: t('monitoring.serviceNames.db'),      icon: 'storage', color: 'blue',    status: s.database || 'unknown', detail: s.db_ping_ms != null ? `Ping: ${s.db_ping_ms}ms` : null },
+    { name: 'redis',    label: t('monitoring.serviceNames.redis'),   icon: 'memory',  color: 'red',     status: s.redis    || 'unknown', detail: redisDetail },
+    { name: 'storage',  label: t('monitoring.serviceNames.storage'), icon: 'folder',  color: 'amber',   status: s.storage  || 'unknown', detail: null }
   ]
 })
 
@@ -193,28 +221,28 @@ const resourceMetrics = computed(() => {
   const m = health.value?.metrics || {}
   return [
     {
-      label: 'CPU',
+      label: t('monitoring.cpu'),
       display: m.cpu_percent != null ? m.cpu_percent + '%' : '-',
       ratio: (m.cpu_percent ?? 0) / 100,
       color: (m.cpu_percent ?? 0) > 80 ? 'negative' : 'indigo',
       valueClass: (m.cpu_percent ?? 0) > 80 ? 'text-red-600' : 'text-indigo-600'
     },
     {
-      label: 'RAM',
+      label: t('monitoring.ram'),
       display: m.memory_percent != null ? m.memory_percent + '%' : '-',
       ratio: (m.memory_percent ?? 0) / 100,
       color: (m.memory_percent ?? 0) > 85 ? 'negative' : 'teal',
       valueClass: (m.memory_percent ?? 0) > 85 ? 'text-red-600' : 'text-teal-600'
     },
     {
-      label: 'Disco',
+      label: t('monitoring.disk'),
       display: m.disk_percent != null ? m.disk_percent + '%' : '-',
       ratio: (m.disk_percent ?? 0) / 100,
       color: (m.disk_percent ?? 0) > 90 ? 'negative' : 'amber',
       valueClass: (m.disk_percent ?? 0) > 90 ? 'text-red-600' : 'text-amber-600'
     },
     {
-      label: 'Latenza API',
+      label: t('monitoring.apiLatency'),
       display: m.api_latency_ms != null ? m.api_latency_ms + 'ms' : '-',
       ratio: Math.min((m.api_latency_ms ?? 0) / 1000, 1),
       color: (m.api_latency_ms ?? 0) > 500 ? 'negative' : 'emerald',
@@ -223,14 +251,17 @@ const resourceMetrics = computed(() => {
   ]
 })
 
+const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0-beta'
+
 const versionInfo = computed(() => {
   const h = health.value || {}
   return [
-    { label: 'Versione API',      value: h.api_version      || '-' },
-    { label: 'Versione DB',       value: h.db_version       || '-' },
-    { label: 'Ambiente',          value: h.environment      || '-' },
-    { label: 'Uptime',            value: h.uptime           || '-' },
-    { label: 'Ultimo Deploy',     value: h.last_deploy      ? new Date(h.last_deploy).toLocaleString('it-IT') : '-' }
+    { label: t('monitoring.webUiVersion'), value: `v${appVersion}` },
+    { label: t('monitoring.apiGoVersion'), value: h.api_version ? `v${h.api_version}` : '-' },
+    { label: t('monitoring.dbVersion'),    value: h.db_version       || '-' },
+    { label: t('monitoring.environment'),  value: h.environment      || '-' },
+    { label: t('monitoring.uptime'),       value: h.uptime           || '-' },
+    { label: t('monitoring.lastDeploy'),   value: h.last_deploy      ? new Date(h.last_deploy).toLocaleString(locale.value || 'it-IT') : '-' }
   ]
 })
 </script>

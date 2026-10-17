@@ -13,6 +13,13 @@ vi.mock('quasar', async (importOriginal) => {
   }
 })
 
+vi.mock('@/services/api', () => ({
+  default: {
+    post: vi.fn()
+  },
+  getBaseURL: () => '/api/v1'
+}))
+
 describe('useWebSocketStore — Connection, Ticket & Reconnect Lifecycle', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -85,5 +92,21 @@ describe('useWebSocketStore — Connection, Ticket & Reconnect Lifecycle', () =>
     expect(mockNotification).toHaveBeenCalledWith('Registro Elettronico - Voti', expect.objectContaining({
       body: expect.stringContaining('Storia')
     }))
+  })
+
+  it('stops reconnection and disconnects if ticket acquisition fails with 401', async () => {
+    const api = (await import('@/services/api')).default
+    const error401 = new Error('Request failed with status code 401')
+    error401.response = { status: 401 }
+    api.post.mockRejectedValueOnce(error401)
+
+    const authStore = useAuthStore()
+    authStore.token = 'some-expired-token'
+
+    const wsStore = useWebSocketStore()
+    await wsStore.connect()
+
+    expect(wsStore.isConnected).toBe(false)
+    expect(wsStore.reconnectAttempts).toBe(0)
   })
 })

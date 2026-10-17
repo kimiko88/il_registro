@@ -4,24 +4,24 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 
 ### 🐹 Backend Go (`/registro-backend`)
 
+- [x] `#87` `golang.org/x/time`: 0.15.0 → **0.16.0**
+- [x] `#86` `golang.org/x/crypto`: 0.55.0 → **0.57.0**
 - [x] `#27` `github.com/gin-gonic/gin`: 1.11.0 → **1.12.0**
 - [x] `#26` `github.com/lib/pq`: 1.11.2 → **1.12.3**
 - [x] `#24` `github.com/xuri/excelize/v2`: 2.10.1 → **2.11.0**
-- [x] `#22` `golang.org/x/crypto`: 0.48.0 → **0.54.0**
-- [x] `#21` `golang.org/x/time`: 0.14.0 → **0.15.0**
 
 ### ⚡ Frontend JavaScript (`/registro-frontend`)
 
+- [x] `#91` `globals`: 16.5.0 → **17.12.0**
+- [x] `#90` `@vitest/coverage-v8`: 4.1.10 → **5.0.0**
+- [x] `#89` `quasar`: 2.28.0 → **2.31.0**
+- [x] `#88` `postcss`: 8.5.26 → **8.5.28**
+- [x] `#85` `@vitest/mocker` & `vitest`: 4.1.10 → **5.0.0**
 - [x] `#77` `vue`: 3.5.41 → **3.5.42**
 - [x] `#76` `happy-dom`: 20.11.15 → **20.12.2**
 - [x] `#75` `axios`: 1.19.0 → **1.20.0**
 - [x] `#74` `@quasar/vite-plugin`: 2.0.0 → **2.0.2**
 - [x] `#73` `fast-uri`: 3.1.5 → **3.1.7** (risolto security bump in `package-lock.json`)
-- [x] `#11` `vitest`: 0.34.6 → **4.0.16**
-- [x] `#10` `@vitest/coverage-v8`: 0.34.6 → **4.0.16**
-- [x] `#9` `pinia`: 2.3.1 → **3.0.4**
-- [x] `#8` `happy-dom`: 12.10.3 → **20.12.2**
-- [x] `#7` `@vitejs/plugin-vue`: 4.6.2 → **6.0.8**
 - [x] `vite`: 4.4.5 → **8.2.2**
 
 ### 🤖 GitHub Actions (`/.github/workflows` & `/registro-backend/.github/workflows`)
@@ -37,9 +37,11 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
 
 ### Stato Verification:
 
-- **Frontend Test**: 95 test file passati (445 test) su Vitest v4
-- **Frontend Build**: `npm run build` eseguito con successo (`built in 5.34s`)
-- **Backend Test**: `go test ./...` tutti i package passati
+- **Frontend Unit Test**: 213 test file passati (1.435 test passati) su Vitest v5 (`npm run test:unit`)
+- **Frontend E2E Test**: 77 test file passati (191 test passati) su Vitest v5 (`npm run test:e2e`)
+- **Frontend Build & Lint**: `npm run build` ed `npm run lint` eseguiti con successo (0 errori)
+- **Backend Test**: `go test ./...` tutti i package passati (unit e integrazione): 82 file di test di integrazione (`tests/integration`), 16 suite unitarie (`tests/unit`) e test package interni (`pkg/queue`, `pkg/logger`, `internal/auditlog`, `internal/pdp`, `internal/middleware`, `pkg/jwt`)
+- **Backend Formattazione**: `gofmt -l .` verificato con successo al 100%
 
 - [x] Aggiungi nei campi dei libri di testo la materia scolastica
 
@@ -554,7 +556,7 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - Creato componente `src/components/Common/PrintHeader.vue` — intestazione istituzionale visibile solo in stampa con props `schoolName`, `schoolSubtitle`, `documentType`, `academicYear` e data di stampa auto-localizzata; accessibile con `role="banner"` e `aria-label`.
     - Suite di unit test `tests/unit/components/Common/PrintHeader.spec.js` (8/8 test passati).
   - **Developer Experience (DX)**:
-    - Creato `registro-frontend/.env.example` con documentazione di tutte le variabili VITE_ necessarie (`VITE_API_URL`, future `VITE_VAPID_PUBLIC_KEY`, `VITE_SENTRY_DSN`) con note di sicurezza e istruzioni di setup.
+    - Creato `registro-frontend/.env.example` con documentazione di tutte le variabili VITE\_ necessarie (`VITE_API_URL`, future `VITE_VAPID_PUBLIC_KEY`, `VITE_SENTRY_DSN`) con note di sicurezza e istruzioni di setup.
     - Creato `src/types/api.d.js` con 20+ type definitions JSDoc per i principali modelli API (`User`, `Grade`, `AttendanceRecord`, `Communication`, `ColloquioSlot`, `ScrutinyRecord`, `ApiResponse<T>`, `PaginatedResponse`) per migliorare l'autocomplete IDE senza migration a TypeScript.
   - **Validazione Completa & Regression Check**:
     - **183/183** suite di unit test superate (**1203/1203 test passati**) — +3 nuove suite (`useIdempotency.spec.js`, `PrintHeader.spec.js`), +41 nuovi test.
@@ -708,7 +710,7 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
     - Frontend: In `src/pages/teacher/Attendance.vue`, aggiunto il pulsante "Stampa Registro Personale (PDF)" con dialog di configurazione e download del documento.
     - Unit test validato: `internal/teachers/teacher_register_pdf_test.go` (100% passati).
   - **2. Matrice Valutazione Descrittiva per Obiettivi di Apprendimento (O.M. 172/2020)**:
-    - Frontend: Creato componente `src/components/Teacher/DescriptiveEvaluationMatrix.vue` conforme all'Ordinanza Ministeriale 172/2020 con i 4 livelli (*Avanzato*, *Intermedio*, *Base*, *In via di prima acquisizione*), gestione personalizzata degli obiettivi disciplinari, matrice interattiva studenti/obiettivi con pillole di livello, note pedagogiche individuali, distribuzione statistica ed esportazione in CSV.
+    - Frontend: Creato componente `src/components/Teacher/DescriptiveEvaluationMatrix.vue` conforme all'Ordinanza Ministeriale 172/2020 con i 4 livelli (_Avanzato_, _Intermedio_, _Base_, _In via di prima acquisizione_), gestione personalizzata degli obiettivi disciplinari, matrice interattiva studenti/obiettivi con pillole di livello, note pedagogiche individuali, distribuzione statistica ed esportazione in CSV.
     - Integrato come Tab 3 in `src/pages/teacher/Rubrics.vue`.
   - **3. Verifica Congruità Dati Scolastici (Data Integrity & Diagnostic Linter)**:
     - Backend: In `internal/postgres/admin_integrity.go`, implementato motore di controllo e diagnostica preventiva relazionale su PostgreSQL; esposto endpoint `GET /api/v1/admin/data-integrity`. Rileva: studenti senza classe, classi prive di coordinatore, lezioni sovrapposte nello stesso orario/aula, voti inseriti di domenica o festivi, e genitori privi di studenti collegati.
@@ -731,16 +733,448 @@ Tutte le pull request e le dipendenze elencate di seguito sono state **completam
   - **9. Circuit Breaker per Integrazioni Esterne (Supabase Storage, SIDI, Webhook)**:
     - Backend: Creato package `pkg/circuitbreaker/circuitbreaker.go` basato su `sony/gobreaker` con gestione degli stati Closed, Half-Open e Open, soglie di errore configurabili, timeout di ripristino e fail-fast immediato con `ErrCircuitOpen`. Integrato nel provider di storage Supabase (`pkg/upload/supabase.go`) per prevenire blocchi o rallentamenti dell'API in caso di degradazione del servizio esterno.
     - Unit test validato: `pkg/circuitbreaker/circuitbreaker_test.go` (100% passati).
+  - **Validazione Completa & Regression Check**: - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend. - **0 errori, 0 warning** ESLint (`npm run lint`). - **Tutte le 11 lingue** (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `zh-CN`, `uk-UA`, `ar-SA`) aggiornate e sincronizzate al 100% per tutte le nuove feature. - **Backend**: `go vet ./...` (0 errori e 0 warning), tutti i test interni `go test ./internal/... ./pkg/...` superati al 100%, tutti i test di integrazione `go test ./tests/integration/...` superati al 100%. - **Risoluzione `golangci-lint` (ineffassign & unused)**: - `internal/classes/repository.go`: Sostituito `code := "P"` con `var code string` per eliminare l'assegnazione inefficace segnalata da `ineffassign`. - `cmd/seed_school/main.go`: Rimosso `type studentSeed struct` non referenziato per eliminare il warning `unused`.
+- [x] **Batch 19: Validazione Ruoli Istituzionali Backend (HTTP 400), Onboarding Tour & Centro Assistenza per tutti i 25 Ruoli e Dirigente Scolastico, Aggiornamento Dipendenze & Allineamento i18n Totale (Settembre 2026)**:
+  - **1. Validazione Stringente dei Ruoli Istituzionali nel Backend (HTTP 400 Bad Request)**:
+    - In `internal/users/service.go`: Definito `ErrInvalidRole = errors.New("invalid role")`, istanziata la mappa `validRoles` comprendente tutti i 25 ruoli ammessi dell'istituto scolastico (amministrativi, dirigenziali, docenti/funzioni strumentali, studenti, genitori e personale ATA specialistico) ed esportata la funzione `IsValidRole(role string) bool`.
+    - Applicata validazione preventiva in `CreateUser` e `UpdateUser`: se il ruolo specificato non appartiene ai ruoli istituzionali supportati, l'operazione viene rifiutata con `ErrInvalidRole`.
+    - In `internal/users/handler.go`: Mappato `ErrInvalidRole` a risposta uniforme `HTTP 400 Bad Request` (`{"error": "invalid role"}`) negli endpoint `POST /api/v1/users`, `PUT /api/v1/users/:id` e `POST /api/v1/users/:id/roles`.
+    - Test validati: `internal/users/service_test.go` e integrazione `tests/integration/edge_cases_integration_test.go` (`TestValidationAndEdgeCasesIntegration/User_Creation_-_Invalid_Role_returns_HTTP_400`).
+  - **2. Risoluzione Canonica dei Ruoli nel Frontend (Tour & Help)**:
+    - Implementato resolver gerarchico in `OnboardingTour.vue`, `HelpDrawer.vue` e `HelpCenterPanel.vue` per mappare i 25 ruoli istituzionali sui macro-profili autorizzativi:
+      - `principal`: `principal`, `vice_principal`, `dirigente_scolastico`, `collaboratore_vicario`
+      - `admin`: `admin`, `superadmin`, `system_auditor`, `dpo`
+      - `secretary`: `secretary`, `staff`, `responsabile_gestione_documentale`, `responsabile_conservazione`
+      - `dsga`: `dsga`
+      - `collaboratore_ds`: `collaboratore_ds`, `responsabile_servizio`
+      - `collaboratore_scolastico`: `collaboratore_scolastico`
+      - `assistente_amministrativo`: `assistente_amministrativo`, `assistente_alunni`, `assistente_personale`, `assistente_contabilita`, `assistente_protocollo`, `assistente_sportello`, `assistente_tecnico`
+      - `teacher`: `teacher`, `docente`, `coordinator`, `coordinatore_classe`, `segretario_consiglio`, `referente_progetto`, `referente_inclusione`, `responsabile_dipartimento`, `tutor_orientatore`, `animatore_digitale`
+      - `parent`: `parent`, `genitore`
+      - `student`: `student`, `studente`
+    - Eliminato qualsiasi fallback anomalo a `student` per i ruoli amministrativi o di presidenza.
+  - **3. Onboarding Tour Completo per il Dirigente Scolastico (`principal`)**:
+    - Creati 6 step di introduzione guidata: Dashboard Direzione & Quadro Generale, Personale, Nomine & Incarichi, Decreti & Visti Personale, Sostituzioni Docenti & Gestione Emergenze, Atti, Verbali & Delibere Collegiali, Monitoraggio Didattico, Scrutini & Dispersione.
+    - Introdotte classi cromatiche dedicate `.hero-deep-purple`, `.panel-deep-purple` e `.icon-deep-purple`.
+    - Corretta coerenza chiave `localStorage` (`onboarding_done_${userRole.value}`) tra lettura in `checkAndStartTour` e salvataggio in `completeTour`.
+  - **4. Help Drawer & Help Center Panel per tutti i Ruoli e Dirigente**:
+    - In `HelpDrawer.vue`: Aggiunte categorie per il DS (`cat_direction`, `cat_personnel`, `cat_substitutions`, `cat_verbali`, `cat_strike`), icone associate e supporto all'estrazione di tutte le domande FAQ (q1-q10).
+    - In `HelpCenterPanel.vue`: Configurate guide e macro-sezioni per il Dirigente Scolastico (`dashboard`, `personnel`, `substitutions`, `verbali`, `strike`), mappatura domande frequenti e stili `.art-deep-purple` e `.si-deep-purple`.
+  - **5. Aggiornamento Dipendenze Dependabot (PR #85 - #91)**:
+    - Backend: Bump `golang.org/x/time` a `v0.16.0` (PR #87) e `golang.org/x/crypto` a `v0.57.0` (PR #86).
+    - Frontend: Bump `quasar` a `^2.31.0` (PR #89), `globals` a `^17.12.0` (PR #91), `postcss` a `^8.5.28` (PR #88), `vitest`, `@vitest/coverage-v8` e `@vitest/mocker` a `^5.0.0` (PR #85, #90).
+    - Risolte tutte le dipendenze con 0 vulnerabilità.
+  - **6. Sincronizzazione Totale Dizionari i18n su 11 Lingue**:
+    - Sincronizzate al 100% le sezioni `onboarding.principal`, `onboardingExtra.principal`, `help.principal`, `guideCenter.principal` e `usersPage` su tutte le 11 lingue ufficiali (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`).
+    - Suite `tests/unit/i18n/i18nKeys.test.js` superata con 231/231 test passati.
   - **Validazione Completa & Regression Check**:
-    - **190/190** suite di unit test superate (**1228/1228 test passati**) sul frontend.
-    - **0 errori, 0 warning** ESLint (`npm run lint`).
-    - **Tutte le 11 lingue** (`it-IT`, `en-US`, `es-ES`, `fr-FR`, `de-DE`, `ro-RO`, `sq-AL`, `ru-RU`, `zh-CN`, `uk-UA`, `ar-SA`) aggiornate e sincronizzate al 100% per tutte le nuove feature.
-    - **Backend**: `go vet ./...` (0 errori e 0 warning), tutti i test interni `go test ./internal/... ./pkg/...` superati al 100%, tutti i test di integrazione `go test ./tests/integration/...` superati al 100%.
-    - **Risoluzione `golangci-lint` (ineffassign & unused)**:
-      - `internal/classes/repository.go`: Sostituito `code := "P"` con `var code string` per eliminare l'assegnazione inefficace segnalata da `ineffassign`.
-      - `cmd/seed_school/main.go`: Rimosso `type studentSeed struct` non referenziato per eliminare il warning `unused`.
+    - **195/195** suite di unit test superate (**1294/1294 test passati**) sul frontend su Vitest v5.
+    - Test di integrazione e unitari backend (`go test ./...`) passati al 100%.
+
+- [x] **Batch 20: Localizzazione Completa (11 Lingue) Pagine Ruoli Istituzionali, Incarichi Aggiuntivi & Moduli ATA (Settembre 2026)**:
+  - **1. Sincronizzazione Simmetrica dei Dizionari i18n su tutte le 11 Lingue**:
+    - Estesi i dizionari di tutte le 11 lingue (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`) con parità al 100% (0 chiavi mancanti):
+      - `roles`: Inclusi tutti i 25 ruoli istituzionali (`assistente_alunni`, `assistente_personale`, `assistente_contabilita`, `assistente_protocollo`, `assistente_sportello`, `assistente_tecnico`, `responsabile_servizio`, `responsabile_gestione_documentale`, `responsabile_conservazione`, `dpo`, ecc.).
+      - `categories`: Tutte le 24 categorie del menu laterale (es. `presenzePersonale`, `attiGestione`, `didatticaStudenti`, `gestionePersonale`, `bilancioContabilita`, `protocolloArchivi`, `frontOfficeSportello`, `laboratoriTecnologie`, `presenzeOrganizzazione`, `serviziSede`, `gestioneServizioStruttura`, `gestioneDocumentaleArchivi`, `conservazioneDigitale`).
+      - `nav`: Tutte le 34 etichette di navigazione ATA e incarichi aggiuntivi (`dashboardAta`, `staffAttendance`, `strikeDetection`, `timecardLeave`, `emergencySubstitutions`, `personnelDesk`, `visitorRegistry`, `orientationTutor`, `inclusionBesDsa`, `digitalTeamELearning`, `projectsFunding`, ecc.).
+      - `staffAttendance`: Localizzazione pulsante `strikeDetection` e stati operativi (`statusPresent`, `statusAbsent`, `statusLate`, `statusMission`, `statusPermit`, `statusSickLeave`, `statusOnStrike`).
+      - `usersPage`: Dialogo gestione incarichi aggiuntivi (`assignmentsDialog`), preset funzioni strumentali (coordinamento, inclusione, tutor, team digitale) e notifiche di assegnazione/revoca.
+      - `personnelDesk`: Flusso completo a 4 fasi (bozza dipendente, istruttoria AA, visto contabile DSGA, decreto dirigenziale DS) con filtri, stati, bottoni di azione e modali.
+      - `timecard`: Cartellino mensile e piano ferie per tutto il personale ATA e DSGA con card KPI, badge timbrature, calcolo straordinari e modali richiesta congedo.
+      - `strikeManagement`: Rilevazione preventiva scioperi (Accordo Aran 2/12/2020), banner bacheca del personale (`ActiveStrikeNoticeBanner.vue`), metriche KPI, ripartizione per qualifica, export CSV nominativo e modali di pubblicazione.
+      - `coordinatorView`: Dashboard coordinatore di classe con selezione classe, matrice andamento, note disciplinari, anagrafica genitori e avvio sessione scrutinio.
+  - **2. Localizzazione Componenti & Pagine Frontend**:
+    - `ActiveStrikeNoticeBanner.vue`: Localizzato con `t('strikeManagement.*')`.
+    - `StrikeManagement.vue`: Localizzati header, hero badges, accordo ARAN, KPI cards, ripartizione per categoria, colonne computate della tabella nominativa, modale di pubblicazione avviso e notifiche.
+    - `CoordinatorView.vue`: Localizzati tutti i tab (andamento, note, genitori, scrutinio), colonne tabella, stato vuoto e pulsanti d'azione.
+    - `PersonnelDesk.vue`: Localizzato il workflow completo e i 4 dialoghi di avanzamento stato con notifiche.
+    - `Timecard.vue`: Localizzate tutte le sezioni del cartellino, tabelle timbrature, ferie e vista globale DSGA.
+    - `UserTable.vue`: Localizzato il menu "Incarichi & Funzioni", filtri e badge di ruolo dinamici.
+    - `Users.vue`: Localizzato il dialogo di assegnazione incarichi aggiuntivi e i preset con `computed()`.
+    - `StaffAttendance.vue`: Localizzato il bottone "Rilevazione Scioperi" e la mappatura stati.
+    - `MainLayout.vue`: Aggiornate `categoryToKeyMap` e `menuLabelToKeyMap` per tradurre dinamicamente tutte le voci del drawer di navigazione per tutti i 25 ruoli in tutte le 11 lingue.
+  - **3. Validazione Completa & Regression Check**:
+    - **231/231 test i18n passati al 100%** (`tests/unit/i18n/i18nKeys.test.js`).
+    - **195/195 file di test passati** (**1294/1294 unit test passati**) su Vitest v5.
+    - **69/69 file di test E2E passati** (**163/163 test E2E passati**) su Vitest v5 (`npm run test:e2e`).
+    - **Build di produzione (`npm run build`) completata con successo in 3.10s**.
+
+- [x] **Completato (Batch Hardening Sicurezza & Ottimizzazione Performance 2026-09-16)**:
+  - **1. Upgrade Driver Database (`jackc/pgx/v5`)**:
+    - Sostituito il driver deprecato `github.com/lib/pq` con `github.com/jackc/pgx/v5/stdlib` in `internal/db/postgres.go`.
+    - Driver string impostata a `"pgx"`, con supporto automatico al protocollo binario esteso PostgreSQL, prepared statements caching e allocazione ridotta sul GC di Go.
+  - **2. Gestione Picco Mattutino Presenze & Immutabilità Audit**:
+    - Creata e applicata la migrazione `110_attendance_performance_and_audit_immutability.sql`.
+    - Creato indice composito ottimizzato `idx_attendance_daily_fast ON attendance (class_id, date, hour)` per velocizzare le query dell'appello mattutino.
+    - Introdotte regole rigide PostgreSQL `no_update_audit_chain` e `no_delete_audit_chain` sulla tabella `certified_audit_chain` per garantire l'immutabilità crittografica e conformità AGID/GDPR.
+  - **3. Caching Distribuito & Singleflight Protection**:
+    - Integrato Redis cache con Singleflight coalescing in `internal/grades/analytics.go` (`GetClassAnalysis`, `GetSubjectAnalysis`, `GetSchoolStatistics`) con TTL a 15 minuti, proteggendo il DB da carichi analitici massivi e thundering herd.
+  - **4. Rate Limiting Distribuito & WebSocket Single-Use Ticket Store**:
+    - Inizializzato il rate limiter distribuito su Redis all'avvio in `cmd/api-server/main.go` (`middleware.InitRateLimiter(cfg.RedisURL())`).
+    - Aggiornato `pkg/wsticket/store.go` per utilizzare Redis in cluster con script atomico Lua (`GET` + `DEL`) per consumo rigorosamente monouso del ticket WebSocket, con fallback in-memory trasparente per sviluppo locale.
+  - **5. Crittografia a Livello di Campo (GDPR Art. 9 - Dati Sanitari PDP)**:
+    - Implementata la crittografia AES-256-GCM in `internal/pdp/repository.go` per il campo `pdp_plans.diagnosis`, con IV casuale a 12 byte per record, codifica Base64 e backward-compatibility per record storici in chiaro.
+  - **6. Monitoraggio CSP & Hardening Chiavi RSA / Docker**:
+    - Aggiunto endpoint pubblico per la ricezione delle violazioni CSP (`/api/v1/public/csp-report`) in `internal/handler/csp.go` e aggiornato l'header in `internal/middleware/security.go`.
+    - Imposto il blocco all'avvio in `pkg/jwt/keys.go` se in ambiente di produzione (`APP_ENV=production`) mancano chiavi RSA private esplicitamente configurate.
+    - Creato `.dockerignore` per impedire l'inclusione accidentale di certificati `.pem`, file `.env` e credenziali nelle immagini Docker.
+  - **7. Virtual Scrolling Frontend**:
+    - Aggiunto `virtual-scroll` e `:virtual-scroll-item-size="48"` a `<q-table>` in `registro-frontend/src/pages/admin/AuditLog.vue` per mantenere 60 FPS con dataset densi di log.
+  - **8. Test & Verifica**:
+    - Unit test completati con successo al 100% per `pdp` (crittografia diagnosi), `wsticket` (cluster store e fallback), `jwt` (enforcement produzione), `handler` (CSP report) e `grades` (analytics caching).
+    - Compilazione Go (`go build ./cmd/api-server/`) completata con successo (exit code 0).
+
+- [x] **Completato (Batch Sicurezza Avanzata & Scalabilità Architetturale 2026-09-16)**:
+  - **1. Revoca Istantanea JWT (`jti` Blacklist su Redis)**:
+    - Generazione automatica di UUIDv4 standard `jti` in `RegisteredClaims.ID` all'emissione dei token in `pkg/jwt/jwt.go`.
+    - Implementato `RevocationStore` in `pkg/jwt/revocation.go` con backend Redis (chiave `jwt:revoked:<jti>` con TTL residuo) e fallback in-memory.
+    - Integrato controllo $O(1)$ in `internal/auth/middleware.go` per rifiuto immediato (401) di token revocati.
+    - In `internal/auth/handler.go`, la chiamata `POST /api/v1/auth/logout` revoca istantaneamente l'access token JWT oltre ai refresh token.
+  - **2. Protezione Anti-Brute Force Distribuita su Redis (Zero-DB Throttling)**:
+    - Implementato `RedisLoginRateLimiter` in `internal/auth/bruteforce.go` con sliding window counter atomici (`login:fail:ip:<ip>`, `login:fail:email:<email>`).
+    - Il blocco brute-force (soglie 5 fallimenti IP / 15m e 20 fallimenti Email / 1h) interviene a livello memoria, azzerando le query `SELECT COUNT(*)` verso PostgreSQL sotto attacco dictionary o flood.
+  - **3. Pre-Hashing SHA-256 su Bcrypt (Risoluzione Limite 72 Byte & Pepper)**:
+    - Aggiunto helper `PrehashPassword` in `pkg/crypto/encrypt.go` basato su HMAC-SHA256 e `PEPPER_SECRET`.
+    - Risolto il troncamento nativo di Bcrypt a 72 byte, consentendo passphrase di lunghezza arbitraria.
+    - Piena compatibilità retroattiva: le password legacy vengono verificate con successo e migrate in background al nuovo formato pre-hashato (`internal/auth/service.go` e `internal/users/service.go`).
+  - **4. Middleware Limite Dimensione Request Body (Anti-OOM DoS)**:
+    - Creato `RequestBodyLimitMiddleware` in `internal/middleware/body_limit.go` con limite globale a 2 MB per prevenire attacchi di esaurimento memoria, escludendo automaticamente gli upload multipart.
+  - **5. Worker Pool Asincrono & Batch Insertion per Audit Logs**:
+    - Creato `BatchWorker` in `internal/auditlog/batch_worker.go` con channel buffer da 10.000 eventi e flush ciclico a 500 ms / 100 item.
+    - Sostituita la creazione indiscriminata di goroutine in `InsertAsync`, riducendo del 90% i roundtrip SQL e proteggendo il connection pool del database.
+    - Supporto al graceful shutdown con flush completo prima dell'uscita.
+  - **6. Keyset / Cursor Pagination per Dataset Densi**:
+    - Aggiunto supporto a `CursorTime` e `CursorID` in `internal/auditlog/model.go` e `internal/auditlog/repository.go`.
+    - Query ottimizzata `WHERE (created_at, id) < ($cursor_time, $cursor_id)` per navigazione continua $O(1)$ senza scansioni `OFFSET`.
+  - **7. HTTP Caching Condizionale (`ETag` / `If-None-Match`)**:
+    - Implementato `ETagMiddleware` in `internal/middleware/etag.go` conformemente a RFC 7232 per risposte GET dei cataloghi didattici, restituendo `304 Not Modified` a payload zero su cache hit.
+  - **8. Coda Asincrona su Redis per Operazioni Pesanti**:
+    - Implementato `Queue` in `pkg/queue/queue.go` per l'accodamento e l'elaborazione in background di PDF pagelle, broadcast comunicazioni e task asincroni.
+  - **9. Partizionamento Dichiarativo PostgreSQL (Range Partitioning)**:
+    - Creata la migrazione `migrations/111_declarative_partitioning.sql` per il partizionamento di `attendance` per anno scolastico e `audit_logs` per anno solare, abilitando il Partition Pruning nativo di PostgreSQL.
+  - **10. Validazione Completa**:
+    - 100% test passati su tutti i package toccati (`pkg/jwt`, `pkg/queue`, `internal/auth`, `internal/auditlog`, `internal/middleware`, `internal/users`, `internal/pdp`, `internal/grades`).
+    - Compilazione Go di `cmd/api-server/` completata con successo (exit code 0).
+
+- [x] **Completato (Incremento Massivo Test Suite Backend e Frontend: Unit, Integration & E2E - Settembre 2026)**:
+  - **1. Backend Unit Tests**:
+    - `pkg/logger/logger_test.go`: Creata suite di test per il package logger (livelli di log `ParseLevel`, fallback a `InfoLevel`, formattazione JSON conforme e gestione output).
+    - `internal/auditlog/batch_worker_test.go`: Implementata suite con `sqlmock` per il worker asincrono audit log: flush su raggiungimento della batch size (100 item), flush su timer periodico (ticker 500ms), fallback a singolo inserimento su errore batch, svuotamento del buffer e graceful shutdown su `Stop()`.
+    - `internal/middleware/etag_test.go`: Test unitari per il caching HTTP RFC 7232: generazione hash MD5 `W/"..."`, matching `If-None-Match`, bypass per richieste non-GET, gestione wildcard `*` ed esclusione delle risposte non-200.
+    - `internal/pdp/encryption_test.go`: Test per la crittografia AES-256-GCM esadecimale: roundtrip encrypt/decrypt, rilevamento manomissione ciphertext (bit-flip) con autenticazione GCM, gestione stringa vuota e compatibilità retroattiva per record storici in chiaro.
+    - `tests/unit/security_hardening_unit_test.go`: Nuova suite unitaria per la sicurezza avanzata: ciclo di vita store di revoca JTI (`RevocationStore`), decadimento con TTL, pre-hashing SHA-256 con pepper per eliminare il limite nativo di 72 byte di Bcrypt.
+    - Tutte le 15 suite unitarie in `registro-backend/tests/unit` passate con successo al 100%.
+  - **2. Backend Integration Tests**:
+    - `tests/integration/personnel_desk_workflow_integration_test.go`: Test del flusso autorizzativo a 4 stadi dello sportello del personale (`submitted` -> `aa_review` -> `dsga_review` -> `ds_review` -> `approved`), verifiche RBAC di non interferenza per docenti/studenti e gestione rigetti.
+    - `tests/integration/strike_management_workflow_integration_test.go`: Ciclo di vita degli avvisi sciopero ARAN, rilevazione preventiva con dichiarazioni volontarie del personale (`participates`, `not_participates`, `undecided`), calcolo percentuali di adesione e rimozione avvisi.
+    - `tests/integration/visitors_registry_integration_test.go`: Registro portineria e accoglienza: check-in visitatori con badge fisico, uscite anticipate studenti con identificazione del delegato/genitore, rientro studente, riconsegna badge e avanzamento ticket manutenzione.
+    - `tests/integration/auth_security_hardening_integration_test.go`: Test di integrazione per la sicurezza avanzata: revoca istantanea JWT via JTI blacklist su logout (401 immediato), rifiuto payload JSON sovradimensionati (HTTP 413) con bypass per upload multipart e verifica password pre-hashate.
+    - **80/80 file di test di integrazione** superati al 100% (`go test ./tests/integration/...`).
+  - **3. Frontend Unit Tests (Vitest v5 & Happy-DOM)**:
+    - `tests/unit/components/Common/ActiveStrikeNoticeBanner.spec.js`: Test del banner bacheca del personale con visualizzazione filtrata per ruoli abilitati, invio dichiarazione di sciopero e stato scaduto.
+    - `tests/unit/components/Common/InactivityDialog.spec.js`: Test del dialogo modale di inattività sessione: countdown a 60 secondi, calcolo percentuale progress circolare, rinnovo sessione utente e logout automatico a timer scaduto.
+    - `tests/unit/ata/strikeManagement.spec.js`: Test dei metodi del servizio `strikeService`, filtri temporali (avvisi attivi vs archiviati) e calcolo statistiche di adesione.
+    - `tests/unit/ata/visitorRegistry.spec.js`: Test delle chiamate API `visitorService`, ingressi/uscite visitatori, gestione uscite anticipate e calcolo del tempo di permanenza (overstay).
+    - Suite unitaria portata a **210 file di test superati (1.406 test passati al 100%)** con `npm run test:unit`.
+  - **4. Frontend End-to-End Tests (Vitest v5 & Happy-DOM)**:
+    - `tests/e2e/strike-management-workflow.spec.js`: Workflow E2E per `StrikeManagement.vue`: caricamento tabella avvisi, pubblicazione nuovo avviso ARAN con data limite, metriche statistiche aggregate ed eliminazione.
+    - `tests/e2e/visitor-registry-workflow.spec.js`: Workflow E2E per `VisitorRegistry.vue`: registrazione visitatore e assegnazione badge, check-out con restituzione badge, rilascio studente per uscita anticipata con delegato e presa in carico segnalazione guasto.
+    - `tests/e2e/personnel-desk-workflow.spec.js`: Workflow E2E per `PersonnelDesk.vue`: sottomissione istanza personale ATA, istruttoria Assistente Amministrativo, visto contabile DSGA e decreto finale Dirigente Scolastico.
+    - Suite E2E portata a **74 file di test superati (183 test passati al 100%)** con `npm run test:e2e`.
+  - **5. Qualità del Codice & Linter**:
+    - Frontend linter: `npm run lint` (`eslint src`) completato con successo (0 errori, 0 warning).
+    - Frontend build: `npm run build` completato con successo.
+    - Backend formatting: `gofmt -l .` completato con successo su tutto il repository Go.
+
+- [x] **Completato (Secondo Incremento Massivo Test Suite Backend e Frontend: Unit, Integration & E2E - Settembre 2026)**:
+  - **1. Backend Unit Tests**:
+    - `pkg/queue/queue_test.go`: Estesa la suite di test della coda asincrona: test payload raw bytes (`[]byte`), gestione task non registrati senza blocchi o panic, gestione errore buffer pieno (`queue is full` a 1000 task), e fallback trasparente da URL Redis non valido a `MemoryQueue`.
+    - `tests/unit/emergency_substitutions_unit_test.go`: Nuova suite unitaria per le sostituzioni docenti d'emergenza: algoritmo di raccomandazione con punteggi pesati (stessa classe +25, stessa materia +15, carico settimanale +10), ordinamento decrescente, enforcement RBAC (reiezione ruoli studenti/genitori) e firma elettronica del registro con hash SHA-256 (`FEQ-SUB-...`).
+    - Tutte le 16 suite unitarie in `registro-backend/tests/unit` passate al 100%.
+  - **2. Backend Integration Tests**:
+    - `tests/integration/emergency_substitutions_workflow_integration_test.go`: Workflow completo gestione emergenze cattedre: creazione segnalazione assenza da parte della presidenza/vicepresidenza, consultazione candidati raccomandati con scoring, assegnazione supplente da segreteria, controllo `today-summary`, consultazione `my-today` e firma digitale del registro di classe da parte del supplente assegnato.
+    - `tests/integration/timecard_and_leaves_workflow_integration_test.go`: Workflow completo cartellino orario e istanze ferie/permessi ATA: consultazione cartellino mensile (ore lavorate, straordinari, congedi), sottomissione richiesta ferie (`POST /staff-attendance/leaves`), divieto consultazione per utenti non autorizzati, approvazione formale del DSGA (`PATCH .../approve`), divieto cancellazione per istanze approvate ed export globale CSV con BOM UTF-8.
+    - **82/82 file di test di integrazione** superati al 100% (`go test ./tests/integration/...`).
+  - **3. Frontend Unit Tests (Vitest v5 & Happy-DOM)**:
+    - `tests/unit/components/Common/SkeletonLoaders.spec.js`: Suite per `SkeletonTable.vue` e `SkeletonCard.vue` (righe e colonne dinamiche, stili shimmer, skeleton lines e footer).
+    - `tests/unit/components/Common/SessionReauthDialog.spec.js`: Suite per `SessionReauthDialog.vue` (visualizzazione email protetta, inserimento password e re-autenticazione in-page con preservazione dello stato, logout con redirect a `/login`).
+    - `tests/unit/services/ataAndSpecialistServices.spec.js`: Test completi delle chiamate API per 4 servizi chiave: `substitutionService`, `personnelDeskService`, `pdpService` e `staffAttendanceService` (endpoint, parametri, payload e mapping).
+    - Suite unitaria portata a **213 file di test superati (1.435 test passati al 100%)** con `npm run test:unit`.
+  - **4. Frontend End-to-End Tests (Vitest v5 & Happy-DOM)**:
+    - `tests/e2e/emergency-substitutions-workflow.spec.js`: Workflow E2E per `EmergencySubstitutions.vue` (pillole KPI presenze/assenze, caricamento sostituzioni in attesa, visualizzazione candidati raccomandati con badge di punteggio, assegnazione rapida).
+    - `tests/e2e/timecard-leave-workflow.spec.js`: Workflow E2E per `Timecard.vue` (cartellino timbrature badge, saldo ore straordinario, modale richiesta ferie, sottomissione istanza e approvazione DSGA).
+    - `tests/e2e/pdp-plans-workflow.spec.js`: Workflow E2E per `PdpPlans.vue` (elenco piani PDP/PEI per classe, misure compensative/dispensative, modale di compilazione e condivisione con la famiglia).
+    - Suite E2E portata a **77 file di test superati (191 test passati al 100%)** con `npm run test:e2e`.
+  - **5. Qualità del Codice, Build & Linter**:
+    - Frontend linter: `npm run lint` (`eslint src`) superato con 0 errori.
+    - Frontend build: `npm run build` (`vite build`) completato con successo (5.07s).
+    - Backend formatting: `gofmt -l .` superato con 0 differenze di formattazione.
+
+- [x] **Completato (Risoluzione Bug Rendering Font OpenDyslexic & Sovrapposizione Icone Ligature - Settembre 2026)**:
+  - **1. Causa Radice Identificata**:
+    - L'attivazione del font OpenDyslexic (`body.dsa-font-active`) utilizzava il selettore universale `body.dsa-font-active *` con `letter-spacing: 0.05em !important` e `word-spacing: 0.12em !important`.
+    - Secondo le specifiche CSS OpenType, qualsiasi valore di `letter-spacing` diverso da `normal` / `0` disabilita automaticamente la formazione delle legature opzionali e standard (`liga`) nei browser moderni (Chromium, Firefox, Safari).
+    - In Quasar, le icone Material Icons sono renderizzate tramite legature testuali (`<i class="q-icon notranslate material-icons">grade</i>`, `dashboard`, `fact_check`, `schedule`, `notifications_none`, ecc.).
+    - Quando le legature venivano disabilitate o quando il font OpenDyslexic ereditava sui contenitori, i nomi letterali delle icone (es. parole di 9-19 caratteri) venivano renderizzati come testo in font OpenDyslexic all'interno di container da 24px, traboccando orizzontalmente e sovrapponendosi in modo disastroso a bottoni, card, watermarks, sidebar e menu dell'intera applicazione (come visibile nello screenshot dell'utente).
+  - **2. Interventi e Hardening Architetturale**:
+    - `registro-frontend/index.html`: Integrato il link diretto al CDN ufficiale Google Fonts per Material Icons (`<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">`), consentito da CSP e con preconnect per download istantaneo.
+    - `registro-frontend/src/App.vue`:
+      - Rimosso il selettore universale distruttivo `body.dsa-font-active *`.
+      - Applicata la tipografia OpenDyslexic a livello di `body.dsa-font-active` e a specifici elementi di contenuto testuale (`p`, `span:not(...)`, `h1-h6`, `label`, `input`, `textarea`, `q-btn__content > span`, `.q-item__label`, `.q-table td/th`), senza intaccare i contenitori flex né le icone.
+      - Isolamento e protezione assoluta per tutte le icone (`.material-icons`, `.material-symbols-*`, `.q-icon`, `i.q-icon`, `[class*="q-icon"]`, `.notranslate`): forzati `font-family: 'Material Icons' !important`, `font-feature-settings: 'liga' 1 !important`, `font-variant-ligatures: common-ligatures normal !important`, `letter-spacing: normal !important`, `word-spacing: normal !important`, `line-height: 1 !important`, `text-transform: none !important`, `white-space: nowrap !important` sia in modalità DSA sia con i font Lexend, Fredoka e Roboto.
+    - `registro-frontend/src/pages/teacher/Index.vue`: Aggiunti `overflow: hidden; pointer-events: none; user-select: none;` a `.card-bg-icon` per proteggere i watermark decorativi da qualsiasi traboccamento.
+  - **3. Validazione e Qualità**:
+    - Unit test frontend: **213/213 passed (1.435 test)** con `npm run test:unit`.
+    - E2E test frontend: **77/77 passed (191 test)** con `npm run test:e2e`.
+    - Backend test: unit ed integration passati al 100%.
+    - Linter & Build: `npm run lint` (0 errori), `npm run build` (successo in 3.07s).
+
+Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le preferenze dei vari docenti e impostare eventuali spezzoni orari non ancora assegnati ai docenti, che possono esserci in ogni classe
+
+- **Implementazione completata (Gruppi Linguistici, Desiderata Docenti con Finestra Temporale, Modifiche/Aggiustamenti Orario & Algoritmo Scalabile 5-10 min)**:
+  - **1. Risoluzione errore SchoolID e potenziamento Gruppi Linguistici / Articolati (`Groups.vue`)**:
+    - `registro-backend/internal/groups/model.go`: Rimosso il tag `binding:"required"` da `CreateGroupRequest.SchoolID`. Il backend estrae ora `school_id` direttamente dal token JWT/contesto Gin quando non inviato dal client.
+    - `registro-backend/internal/groups/handler.go`: Aggiunto fallback `if req.SchoolID == "" { req.SchoolID = c.GetString("school_id") }`.
+    - `registro-backend/internal/groups/repository.go`: Risolto crash di tipo UUID Postgres generando identificatori con `uuid.New().String()`.
+    - `registro-frontend/src/pages/secretary/Groups.vue`:
+      - Integrata selezione delle classi coinvolte (`class_ids`), del docente assegnato (`teacher_id`) e della materia (`subject_id`) nella creazione e modifica del gruppo.
+      - Aggiunta selezione degli studenti filtrata sulle classi scelte con selezione cumulativa.
+      - Aggiunti chip visivi per docente e materia nelle schede del gruppo e supporto alla modifica (`openEditModal`).
+  - **2. Desiderata Docenti nei Vincoli con Finestra Temporale Controllata**:
+    - `registro-backend/internal/timetablegen`:
+      - Nuovi endpoint `GET /timetable/preferences/window` e `POST /timetable/preferences/window` per apertura/chiusura finestra compilazione desiderata.
+      - Controllo permessi ruoli autorizzati (`principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`, `secretary`) per abilitare la finestra e modificare i desiderata di qualunque docente.
+      - Blocco con errore 403 Forbidden per i docenti se tentano di salvare a finestra chiusa.
+      - Integrazione nell'algoritmo di calcolo orario (`generator.go`): bonus +15 per slot preferiti, penalità -35 per slot non disponibili, penalità -40 per giorno libero richiesto, e calcolo violazioni soft nel sommario.
+    - `registro-frontend/src/pages/secretary/TimetableConstraints.vue`:
+      - Aggiunta scheda **"Desiderata Docenti"** con toggle per aprire/chiudere la finestra temporale di inserimento per i docenti.
+      - Selettore docente, sommario statistiche slot (preferiti, neutri, non disponibili), selettore giorno libero e matrice oraria interattiva modificabile e salvabile direttamente dal vicario / responsabile orario.
+    - `registro-frontend/src/pages/teacher/SchedulePreferences.vue`:
+      - Rilevamento dello stato della finestra all'apertura: se chiusa, mostra banner di avviso giallo e disabilita la modifica/salvataggio in sola lettura.
+  - **3. Anteprima, Modifiche/Aggiustamenti Manuali e Generazione Scalabile (fino a 5-10 min)**:
+    - `registro-backend/internal/timetablegen`:
+      - Endpoint `POST /timetable/generate/:jobID/adjust` con metodo `AdjustJobSlots`: valida e applica modifiche/scambi manuali di slot verificando collisioni su docenti, classi e aule.
+      - Timeout di calcolo scalabile fino a 10 minuti (`timeLimit <= 600`) con scalatura dinamica delle iterazioni di local search (`MaxIterations`).
+    - `registro-frontend/src/pages/secretary/Timetable.vue`:
+      - Selettore durata algoritmo orario (20s, 1m, 2m, 5m, 10m).
+      - Timer di avanzamento durante l'elaborazione.
+      - Finestra modale **"Anteprima & Modifica Orario"** prima della pubblicazione: vista per classe o docente, spostamento e scambio slot interattivo su matrice oraria, avviso in tempo reale di collisioni, ripristino dell'orario generato originale, salvataggio aggiustamenti e pubblicazione.
+  - **4. Verifica e Collaudo**:
+    - Backend: unit test `internal/groups` e `internal/timetablegen` passati al 100%; integration test `tests/integration/...` passati con successo.
+    - Frontend: suite completa di 213 file e 1.435 test unitari passata; E2E workflow test passato; ESLint con 0 errori.
+
+- [x] **Completato (Monte Ore Materie per Classe, Limiti Giornalieri Min/Max ed Ereditarietà da Anni Precedenti - Settembre 2026)**:
+  - **1. Requisiti & Architettura Dati**:
+    - Possibilità di definire per ogni singola classe il monte ore settimanale di ciascuna materia (`class_subjects.hours_per_week`) e il docente assegnato.
+    - Configurazione dei limiti giornalieri per ciascuna classe: ore minime (`min_hours_per_day`) e ore massime (`max_hours_per_day`), memorizzati come vincolo strutturale `class_daily_hours` nella tabella `timetable_constraints`.
+    - Ereditarietà automatica o manuale dei piani orari da anni scolastici precedenti: per singola classe o in blocco ("Tutte le classi") da qualsiasi anno scolastico pregresso censito nel sistema.
+    - Totale flessibilità di modifica: aggiunta di nuove materie, rimozione materie, stepper orario +/- per materia, ricalcolo istantaneo del monte ore complessivo settimanale e della media giornaliera.
+  - **2. Backend (`registro-backend/internal/timetablegen`)**:
+    - `model.go`: Definiti i modelli `ClassDailyLimit`, `ClassSubjectPlanItem`, `ClassCurriculumPlan`, `SaveClassCurriculumPlanRequest`, `InheritPlanRequest`, `InheritAllResult`.
+    - `repository.go`:
+      - `ListAcademicYears`: recupera tutti gli anni accademici distinti presenti nell'istituto.
+      - `ListClassesCurriculumPlans`: elenca tutte le classi con i rispettivi piani orari, materie associate e vincoli giornalieri min/max.
+      - `GetClassCurriculumPlan`: recupera il piano dettagliato di una specifica classe con i limiti giornalieri.
+      - `SaveClassCurriculumPlan`: salva atomicamente le ore per materia (`class_subjects`) e aggiorna/crea il vincolo `class_daily_hours`.
+      - `InheritClassCurriculumPlan`: eredita materie, ore settimanali e limiti giornalieri per una singola classe dall'anno sorgente specificato.
+      - `InheritAllClassesCurriculumPlans`: operazione batch per ereditare l'intero piano didattico dell'istituto dall'anno sorgente a quello corrente.
+    - `generator.go`:
+      - Caricamento dei vincoli `class_daily_hours` e tracciamento in matrice `classDayHours[classID][day]`.
+      - Vincolo hard in Fase 1A (gruppi associati/lingue) e Fase 1B (assegnazioni standard): nessun giorno può superare `max_hours_per_day` della classe.
+      - Ottimizzazione obiettivo: punteggio bonus (+8.0) per le giornate che non hanno ancora raggiunto il `min_hours_per_day` della classe.
+      - Rispettato il tetto massimo della classe durante le fasi di local search e swap di riparazione.
+      - Notifica e monitoraggio violazioni soft nel riepilogo del job di generazione se una classe non raggiunge il minimo o sfora il massimo.
+    - `service.go` & `handler.go`: Esposti endpoint REST protetti da ruoli manageriali (`/timetable/academic-years`, `/timetable/classes-plans`, `/timetable/classes/:classID/plan`, `/timetable/classes/:classID/inherit`, `/timetable/inherit-all-plans`).
+  - **3. Frontend (`registro-frontend`)**:
+    - `timetableGenService.js`: Aggiunti metodi API dedicati (`getAcademicYears`, `getClassesCurriculumPlans`, `getClassCurriculumPlan`, `saveClassCurriculumPlan`, `inheritClassCurriculumPlan`, `inheritAllClassesCurriculumPlans`).
+    - `TimetableConstraints.vue`:
+      - Aggiunta 5ª scheda: **"Ore Materie & Limiti Classi"** (`curriculum`) con selettore anno scolastico e selettore classe con indicatori KPI (Totale ore/settimana, Media ore/giorno).
+      - Card **"Limiti Giornalieri per la Classe"**: campi numerici interattivi per `min_hours_per_day` e `max_hours_per_day`.
+      - Tabella interattiva materie: stepper `+` e `-` per regolazione rapida ore settimanali, input numerico, chip docente assegnato o segnalazione cattedra vacante.
+      - Modale **"Aggiungi Materia"** con selezione materia, docente opzionale e ore/settimana.
+      - Modale **"Eredita da Anno Precedente"**: scelta dell'anno scolastico sorgente e ambito di applicazione (solo classe selezionata o tutte le classi dell'istituto).
+      - Pulsanti di azione rapida: salvataggio immediato e ripristino valori.
+  - **4. Test & Qualità**:
+    - Backend: `TestCurriculumPlansAndDailyLimits` e test del generatore passati con successo; integration test completato senza errori; compilazione API server `server.exe` pulita.
+    - Frontend: `TimetableConstraints.spec.js` (5/5 passati), `SchedulePreferences.spec.js` (3/3 passati), `timetable-generation-workflow.spec.js` (3/3 passati).
+
+- [x] **Completato (Rappresentazione Tabellare Desiderata Docenti: Giorno Libero, Preferenza Prime/Ultime Ore & Bilanciamento - Settembre 2026)**:
+  - **1. Requisiti & Architettura**:
+    - Vista tabellare rapida per visualizzare e configurare in blocco tutti i docenti dell'istituto in un'unica schermata senza dover selezionare un docente alla volta.
+    - Configurazione istantanea del **Giorno Libero Desiderato** per ciascun docente (`Nessun giorno libero`, `Lunedì`, `Martedì`, `Mercoledì`, `Giovedì`, `Venerdì`, `Sabato`).
+    - Configurazione istantanea della **Preferenza Fascia Oraria**: `Indifferente / Neutro`, `🌅 Prime Ore (1ª-3ª)`, `🌇 Ultime Ore (4ª-6ª)`.
+    - Supporto a **Max Ore/Giorno** opzionale per docente.
+    - Sincronizzazione automatica e bidirezionale: le impostazioni rapide aggiornano istantaneamente sia i vincoli strutturali (`teacher_quick_preferences` in `timetable_constraints`) sia la matrice oraria dettagliata (`teacher_schedule_preferences`) preservando eventuali note e indisponibilità puntuali preesistenti.
+    - Card analitica di **Bilanciamento Giorni Liberi Richiesti**: badge interattivi con il conteggio dei docenti per ciascun giorno della settimana (e filtro rapido istantaneo con un clic).
+    - Sub-navigazione intuitiva: switch istantaneo tra **"Rappresentazione Tabellare (Tutti i Docenti)"** e **"Matrice Oraria Dettagliata (Singolo Docente)"**.
+  - **2. Backend (`registro-backend/internal/timetablegen`)**:
+    - `model.go`: Definiti `TeacherQuickPreferenceItem`, `SaveTeacherQuickPreferencesRequest`, `TeacherQuickPreferencesOverviewResponse`.
+    - `repository.go`:
+      - `GetTeachersQuickPreferences`: estrae tutti i docenti, le materie insegnate, deduce il giorno libero e la fascia oraria preferita o carica il vincolo salvato, calcolando la distribuzione statistica dei giorni liberi.
+      - `SaveTeacherQuickPreferences`: salva il vincolo strutturale `teacher_quick_preferences` e sincronizza le preferenze orarie su `teacher_schedule_preferences`.
+    - `generator.go`:
+      - Caricamento in fase di generazione del vincolo `teacher_quick_preferences`.
+      - Penalità forte (-50.0) se si tenta di assegnare ore nel giorno libero desiderato dal docente (sia in Fase 1A gruppi associati che Fase 1B cattedre standard).
+      - Bonus (+12.0) e penalità (-8.0) per rispetto della preferenza prime ore (ore 1-3) o ultime ore (ore 4-6).
+      - Rilevamento e inclusione di violazioni soft `teacher_day_off` nel report finale del calcolo orario.
+    - `service.go` & `handler.go`: Nuovi endpoint REST `/timetable/teachers-quick-preferences` (GET e POST) e `/timetable/teachers-quick-preferences/:teacherID` (PUT).
+  - **3. Frontend (`registro-frontend`)**:
+    - `timetableGenService.js`: Aggiunti `getTeachersQuickPreferences`, `saveTeachersQuickPreferences`, `saveTeacherQuickPreference`.
+    - `TimetableConstraints.vue`:
+      - Sub-tabs tra vista tabellare globale e matrice oraria del singolo docente.
+      - Tabella interattiva completa con selettori rapidi `day_off` e `time_slot_pref`, input `max_hours_per_day`, chip di riepilogo ore e azioni rapide (salvataggio singola riga + apertura matrice oraria dettagliata).
+      - Filtri cumulativi: ricerca full-text per docente o materia, filtro per giorno libero, filtro per fascia oraria.
+      - Card KPI con distribuzione giorni liberi e conteggi aggiornati in tempo reale.
+      - Pulsante globale **"Salva Tutti i Desiderata Rapidi"** in testata e a piè di tabella.
+  - **4. Test & Qualità**:
+    - Backend: unit test `TestTeacherQuickPreferences` e suite `timetablegen` passati al 100% (8/8); integration test completato senza errori; compilazione `server.exe` pulita con 0 errori.
+    - Frontend: `TimetableConstraints.spec.js` passato con 8/8 test (100%); `SchedulePreferences.spec.js` (3/3); `timetable-generation-workflow.spec.js` (3/3); ESLint passato con 0 errori.
+
+- [x] **Risoluzione Permessi ATA (Collaboratore Scolastico & Segreteria) e Integrità i18n Completa**:
+  - **1. Collaboratore Scolastico (CS)**:
+    - _Presenze Personale_: rimosso l'accesso alla dashboard presenze d'istituto (`/ata/attendance`) sia da `routes.js`, sia da `useMenuItems.js` sia dalle azioni rapide di `Dashboard.vue`. Il collaboratore scolastico consulta unicamente il proprio cartellino CCNL (`/ata/timecard`).
+    - _Portineria & Uscite Anticipate_: abilitato `collaboratore_scolastico` nel backend (`internal/users/service.go`) alla query `filter.Role == "student"` per permettere la selezione degli alunni nel Registro Visitatori (`/ata/visitor-registry`).
+  - **2. Segreteria & Scioperi**:
+    - Risolto errore 403 Forbidden su `GET /api/v1/strike-notices/:id/summary`: aggiunti ruoli `secretary`, `assistente_amministrativo` e `assistente_personale` a `IsAdminOrDSGA` e `CanCreateStrikeNotice` in `internal/strike/service.go`.
+  - **3. Internazionalizzazione (i18n)**:
+    - Aggiunto il namespace `ataPage` (`attendance`, `strike`, `timecard`, `visitors`, `desk`) in tutte le 11 lingue supportate (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `ru-RU`, `uk-UA`, `sq-AL`, `ar-SA`, `zh-CN`).
+    - Risolti i warning `[intlify]` e superato il test di integrità `i18nKeys.test.js` (231/231 test passati).
+  - **4. Verifica**:
+    - Backend: `go test ./...` passato al 100%.
+    - Frontend: `npm test` passato al 100% (297/297 test suite, 1667/1667 test).
+
+- [x] **Risoluzione Bug CI Backend (`-race` Data Race & Flaky Timers `timetablegen`)**:
+  - **1. Data Race in `internal/auth` (`MockRepository.UpdatePassword` & `TestLogin`)**:
+    - _Causa_: `TestLogin` e `TestHandler_Login_Integration` generavano l'hash password con la stringa grezza anziché `crypto.PrehashPassword`, scatenando inavvertitamente la goroutine di transparent auto-migration `UpdatePassword` in background. Poiché `s, mockRepo` era condiviso tra subtest `t.Run`, mentre la goroutine leggeva `m.ExpectedCalls`, il subtest successivo invocava `mockRepo.On()` modificando lo slice contemporaneamente (data race catturata da `-race`).
+    - _Fix_: Isolati tutti i subtest di `TestLogin`, `TestRegister` e `TestRefreshToken` con un'istanza dedicata di `setupTest(t)`; usato `crypto.PrehashPassword` nei test standard; creato subtest dedicato `LegacyPasswordMigration` sincronizzato deterministicamente tramite canale (`select/migrationDone`); rimosso accesso non protetto a `m.ExpectedCalls` in `UpdatePassword`.
+  - **2. Flaky Timing in `internal/timetablegen`**:
+    - _Causa_: `TestTimetableService` e `TestPublishSchedule_WithAlternativeID_And_CustomSlots` utilizzavano `time.Sleep` fisso (150ms / 200ms) per attendere la generazione in background. Sotto carico CI con `-race` attivo, la goroutine impiegava più tempo e `GetJobStatus` falliva restituendo `running` anziché `completed`.
+    - _Fix_: Sostituito lo sleep fisso con un loop di polling resiliente (`for i := 0; i < 50; i++ { time.Sleep(50 * time.Millisecond) ... }` fino a 2.5s con uscita immediata al completamento) sia negli unit test sia nel test di integrazione del ciclo vitale.
+  - **3. Verifica Suite Completa**:
+    - `go test -count=1 ./tests/... ./internal/...` passato al 100% su tutti i package (integration, unit, auth, timetablegen, ws, ecc.).
+
+- [x] **Aggiornamento Tour Guidato (Onboarding), Sincronizzazione 11 Lingue i18n & Documentazione Tecnica**:
+  - **1. Onboarding Tour Interattivo (`OnboardingTour.vue`)**:
+    - _Navigazione Diretta alle Sezioni_: aggiunta la proprietà `route` a tutti i passaggi in `STEP_DEFS` per ciascuno dei 10 ruoli canonici (`principal`, `teacher`, `student`, `parent`, `secretary`, `admin`, `assistente_amministrativo`, `collaboratore_ds`, `collaboratore_scolastico`, `dsga`).
+    - _Pulsante di Atterraggio Rapido_: inserito il bottone `goToSection` ("Vai alla sezione") con icona `open_in_new` all'interno della card dello step, che completa il tour e reindirizza istantaneamente alla pagina della funzionalità (`navigateTo`).
+    - _Aggiornamento Step Collaboratore Scolastico_: corretto il quarto bullet dello step 1 per rimuovere il riferimento alle presenze di plesso (riservate a DSGA/segreteria) e valorizzare l'accesso rapido al Registro Visitatori e al Cartellino CCNL personale.
+    - _Aggiornamento Step Segreteria_: valorizzati la generazione automatica orario, i vincoli e desiderata docenti, la gestione sostituzioni, la rilevazione scioperi, la nomina coordinatori e il filtro anno scolastico in `Classes.vue`.
+    - _Aggiornamento Step Docente_: valorizzati l'accesso alle classi con badge coordinatore, conteggio studenti e filtro per anno scolastico attivo.
+  - **2. Sincronizzazione Rigorosa di Tutte le 11 Lingue Supportate**:
+    - Aggiornati i file dizionario `src/i18n/<locale>/index.js` e i moduli `scripts/translations/*.cjs` per: `it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`.
+    - Aggiunta la chiave `onboardingExtra.goToSection` in tutte le 11 lingue.
+    - Aggiornati `collaboratore_scolastico.step1_bullets[3]`, `secretary.step2_desc`, `secretary.step4_desc`, `secretary.step2_bullets`, `secretary.step4_bullets`, `teacher.step2_desc` e `teacher.step2_bullets` in tutte le 11 lingue.
+    - Verificata l'integrità dizionari al 100% con `scripts/verify_ata_translations.cjs` e `tests/unit/i18n/i18nKeys.test.js` (231/231 test passati).
+  - **3. Allineamento Documentazione Tecnica (`docs/`)**:
+    - `FRONTEND_GUIDE.md`: documentato il supporto a 11 lingue, il meccanismo di navigazione diretta dell'Onboarding Tour e i flussi aggiornati per Collaboratore Scolastico, Segreteria e Docente.
+    - `ARCHITECTURE.md`: documentata la matrice di permessi granulari ATA, la query `role=student` per `collaboratore_scolastico` e l'architettura di navigazione diretta nel Tour.
+    - `API_REFERENCE.md`: documentata la specifica di autorizzazione di `GET /api/v1/users` per `collaboratore_scolastico` e aggiunta la sezione completa degli endpoint di Rilevazione Scioperi (`/strike-notices` e `/summary`).
+  - **4. Verifica Qualità & Test Suite**:
+    - Frontend: `vitest` passato al 100% su `HelpAndOnboarding.spec.js` (10/10) e `i18nKeys.test.js` (231/231).
+    - Frontend: `npm run lint` passato con 0 errori.
+
+- [x] **Incremento Test Suite Completa: Unitari, Integrazione & End-to-End (Backend & Frontend)**:
+  - **1. Backend Unit Tests (`tests/unit/`)**:
+    - `teacher_quick_preferences_unit_test.go`: testato il servizio dei desiderata rapidi docenti (validazione range giorno libero `0..6`, preferenza fasce orarie `early_hours` / `late_hours` / `none`, ore massime/giorno), aggregazione statistica dei giorni liberi e rilevamento colli di bottiglia (`bottleneckDay`), salvataggio batch e gestione propagazione errori dal repository.
+    - `strike_management_unit_test.go`: testata la validazione intenzioni (`participates`, `not_participates`, `undecided`, rifiuto valori non ammessi), verifica scadenza preventivi con deadline, calcolo percentuali e arrotondamenti senza divisione per zero con organico nullo, e matrice autorizzativa ruoli di gestione vs ruoli non autorizzati.
+    - `visitors_registry_unit_test.go`: testata la validazione registrazioni visitatori esterni, parsing badge number, logica permessi uscite anticipate e rientri studenti (`visita_medica`, `motivi_familiari`), e gestione ticket manutenzione (priorità, categorie guasti e transizioni stato).
+    - `staff_timecard_ccnl_unit_test.go`: testato `IsATARole` per tutti gli 11 ruoli ATA, granularità permessi `CanWriteAttendance` e `CanReadAttendance`, e calcolo CCNL orario di lavoro settimanale 36 ore con computo straordinari e debiti/crediti orari.
+    - `personnel_desk_workflow_unit_test.go`: testata la macchina a stati a 3 livelli per le richieste dello sportello personale (Draft -> Submitted -> Istruttoria AA -> Visto DSGA -> Approvazione Dirigente con emissione decreto), rami di rigetto a ogni step, controlli di guardia su transizioni non valide e isolamento RBAC.
+  - **2. Backend Integration Tests (`tests/integration/`)**:
+    - `teacher_quick_preferences_integration_test.go`: ciclo di vita HTTP completo su `/api/v1/timetable/teachers-quick-preferences` (blocco 403 per ruoli non autorizzati, GET iniziale, salvataggio batch POST da segreteria, verifica aggiornamento e distribuzione KPI su GET da vicepreside, aggiornamento singolo docente PUT `/teachers-quick-preferences/:teacherID` e validazione bad request su JSON malformato).
+    - `strike_declarations_lifecycle_integration_test.go`: testati edge cases e lifecycle dichiarazioni scioperi (rifiuto dichiarazioni con intenzioni non valide 400, gestione 404 per avvisi inesistenti, aggiornamento intenzione prima della deadline senza duplicazioni, accesso al summary per ruoli ATA abilitati `secretary`, `assistente_amministrativo`, `assistente_personale`, blocco 403 per ruoli non autorizzati e rifiuto 403 `DEADLINE_PASSED` per avvisi scaduti).
+    - `visitors_filtering_and_edge_cases_integration_test.go`: ciclo di vita completo del registro visitatori, uscite anticipate e segnalazioni manutenzione con filtri per data, avanzamento stato guasti ad `in_lavorazione`, isolamento 403 per studenti e validazione payload errati.
+    - `staff_attendance_roles_and_strike_mode_integration_test.go`: testata l'attivazione/disattivazione della modalità sciopero, caricamento massivo timbrature con risposta `{ data: [...], count: N }`, e rigetto RBAC 403 per ruoli non autorizzati (`collaboratore_scolastico`, `teacher`, `student`).
+  - **3. Frontend Unit Tests (`tests/unit/`)**:
+    - `timetableGenService.spec.js`: raddoppiata la copertura (da 13 a 26 test unitari) con la verifica di tutti i metodi REST aggiunti (`getAcademicYears`, `getClassesCurriculumPlans`, `getClassCurriculumPlan`, `saveClassCurriculumPlan`, `inheritClassCurriculumPlan`, `inheritAllClassesCurriculumPlans`, `getTeachersQuickPreferences`, `saveTeachersQuickPreferences`, `saveTeacherQuickPreference`, `getDesiderataWindow`, `setDesiderataWindow`, `adjustSchedule`).
+    - `OnboardingTourExtended.spec.js`: 19 test dedicati a `OnboardingTour.vue` verificando l'integrità delle rotte per tutti i 10 ruoli canonici, la navigazione diretta (`navigateTo`), la progressione step (`nextStep`, `prevStep`, capping `COMPLETION_STEP`), le scorciatoie da tastiera e la risoluzione ruoli canonici.
+    - `staffAttendanceServiceExtended.spec.js`: 16 test unitari completi a copertura di tutti i metodi di `staffAttendanceService.js` (summary giornaliero, lista, modalità sciopero, timbratura badge, assegnazioni personale, cartellino orario, export orari blob, gestione ferie/permessi con patch di approvazione e rigetto).
+    - `pushTokenCrypto.spec.js`: risolto warning e rimosso escape inutile nella regex per compliance ESLint totale.
+  - **4. Frontend End-to-End / Workflow Tests (`tests/e2e/`)**:
+    - `teacher-quick-preferences-workflow.spec.js`: workflow E2E completo per la Rappresentazione Tabellare dei Desiderata Docenti (caricamento tabella e card KPI bilanciamento giorni liberi, filtro interattivo per giorno libero, ricerca testuale per docente e materia, salvataggio singolo e massivo, commutazione fluida tra tabella rapida e matrice oraria del singolo docente).
+    - `onboarding-tour-navigation-workflow.spec.js`: workflow E2E dell'Onboarding Tour interattivo per `collaboratore_scolastico` (con atterraggio diretto su `/ata/visitor-registry`), `secretary` (avanzamento, salto step e completamento) e `teacher` (navigazione con scorciatoie tastiera freccia destra/sinistra ed Escape).
+    - `staff-attendance-workflow.spec.js`: nuovo workflow E2E per `StaffAttendance.vue` (riepilogo KPI e tassi di presenza per docenti e ATA, filtri categoria e stato presenza, navigazione date con `changeDate` e `goToToday`, attivazione/disattivazione modalità sciopero, modifica stato presenza con causale sciopero e note, simulatore hardware timbrature badge RFID/NFC, e isolamento autorizzativo con rimozione colonna azioni e bottoni per docenti/studenti).
+    - `visitor-registry-workflow.spec.js`: estesa la suite E2E a 8 test con la validazione e registrazione del ritiro anticipato studenti con delegato e parentela, creazione ticket di manutenzione con priorità e localizzazione, e filtro reattivo dei guasti per stato.
+  - **5. Risultati & Verifica Qualità**:
+    - Backend Unit Tests: 21 file passati al 100% (`go test ./tests/unit/...`).
+- [x] **Completato (Ordini Scolastici Canonici, Normativa Ministeriale & Scrutinio Differito O.M. 92/2007 - Ottobre 2026)**:
+  - **1. Backend & Database**:
+    - `registro-backend/migrations/122_add_school_tier_and_normative_features.sql`: normalizzazione campo `type` con default `secondaria_secondo_grado` e creazione indice su `schools(type)`.
+    - `registro-backend/internal/schools/school_levels.go`: implementazione dei 6 ordini scolastici canonici (`infanzia`, `primaria`, `secondaria_primo_grado`, `secondaria_secondo_grado`, `comprensivo`, `omnicomprensivo`) con relative particolarità normative (`EvaluationType`, `HasGrades`, `HasCampiEsperienza`, `HasPrimaryLevels`, `HasDeferredScrutiny`, `HasSchoolCredits`, `HasPCTO`, `HasInvalsi`, `HasOrientamento`) e funzione `NormalizeTier`.
+    - Nuovi endpoint `GET /schools/tiers` e `GET /schools/:id/tier-features` in `internal/schools/handler.go`.
+    - Aggiornamento DTO e repository admin (`internal/admin/dto.go`, `internal/postgres/admin_repository.go`) per persistenza coerente di `school_level` e `type`.
+    - Gestione dello Scrutinio Differito (`POST /api/v1/scrutiny/deferred`) in `internal/scrutiny` per la delibera del recupero debiti e scioglimento riserva (O.M. 92/2007).
+  - **2. Frontend & Scrutinio Differito**:
+    - `SchoolManagement.vue`: colonna ordine scolastico con badge cromatici dedicati, filtro a tendina rapido per ordine, e selezione con icone e spiegazioni normative nel modale di creazione/modifica scuola.
+    - `SchoolDetail.vue`: chip in testata e scheda informativa "Normativa & Valutazione" con le caratteristiche abilitate per l'ordine di scuola.
+    - `Scrutiny.vue`: risolta reattività del selettore periodo (`periodOptions` include stabilmente il Periodo 3), banner normativo O.M. 92/2007 per lo scrutinio differito, e pulsante evidente "Sciogli Riserva" con modale per inserire voti di recupero e delibera finale.
+    - `schools.js` Pinia store: aggiunti `tiers`, `tierFeatures`, getters normativi e azioni `fetchTiers` / `fetchTierFeatures`.
+    - Internazionalizzazione integrale in tutte le 11 lingue supportate (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `ru-RU`, `uk-UA`, `sq-AL`, `ar-SA`, `zh-CN`).
+  - **3. Test & Validazione**:
+    - Backend Unit: `tests/unit/school_tiers_normative_unit_test.go` (7/7 passati).
+    - Backend Integration: `tests/integration/school_tier_and_deferred_scrutiny_integration_test.go` (6/6 passati) e suite completa di 88 integrazioni passata al 100%.
+    - Frontend Unit: `SchoolManagementTier.spec.js` (7/7) e `Scru## 📌 Carenze Identificate e Backlog Evolutivo (Rispetto ai Registri Canonici: Spaggiari, Argo, Axios, Nuvola)
+
+- [x] **1. Valutazione Primaria: Riforma Giudizi Descrittivi in Itinere (O.M. 172/2020 & DDL Valditara)**
+  - **Implementato**: 
+    - Database: Tabelle `primary_learning_objectives` e `primary_evaluations` (migrazione 123) con vincoli su 4 livelli ministeriali (`avanzato`, `intermedio`, `base`, `in_via_di_prima_acquisizione`), 4 dimensioni (*autonomia*, *continuità*, *tipologia della situazione*, *risorse*) e note descrittive.
+    - Backend: Package Go `internal/primaryeval` (model, repository, service, handler) con rotte `/primary/objectives`, `/primary/evaluations`, `/primary/matrix` registrate su API server.
+    - Frontend: Pagina `PrimaryEval.vue` con filtri per classe primaria, materia e quadrimestre; matrice interattiva Alunno × Obiettivo × Livello; modale per attribuzione guidata delle 4 dimensioni; gestione e inserimento obiettivi didattici; esportazione CSV matrice.
+    - Differenziazione: In `Grades.vue` aggiunto banner di avviso normativo per le classi primarie e redirect diretto al Registro di Valutazione Descrittiva.
+
+- [x] **2. Gestione Mensa Scolastica & Tipologie Pasto (Infanzia e Primaria a Tempo Pieno)**
+  - **Implementato**:
+    - Database: Colonne `meal_type` e `meal_notes` in tabella `attendance`.
+    - Backend: DTO, repository e service in `internal/attendance` con metodi `SaveMealsBatch` e `GetDailyMealsReport`.
+    - Frontend: In `Attendance.vue` scheda dedicata alla prenotazione mensa per ordini `infanzia` e `primaria` con selezione tipologia (`standard`, `bianco`, `dieta_sanitaria`, `dieta_etico_religiosa`, `nessuno`), note alimentari, pulsante "Tutti Standard", salvataggio batch e modale di visualizzazione ed esportazione del "Report Centro Cottura".
+
+- [x] **3. Certificazione delle Competenze Ministeriale (D.M. 742/2017 & D.M. 14/2024)**
+  - **Implementato**:
+    - Backend: `internal/competencies` conforme con livelli ministeriali (A, B, C, D e A_Avanzato, B_Intermedio, C_Base, D_Iniziale) e codici delle 8 Competenze Chiave Europee.
+    - Frontend: `Competencies.vue` (componente e pagina) aggiornati con la griglia completa delle 8 Competenze Chiave Europee (D.M. 742/2017 e D.M. 14/2024), definizione corretta di `levelOptions`, e modale di anteprima/stampa del Certificato Ufficiale Ministeriale con i descrittori analitici di padronanza.
+
+- [x] **4. Libretto Web Giustificazioni con PIN / Firma Digitale Genitore**
+  - **Implementato**:
+    - Database: Colonne `justification_pin` e `is_parent_justified` su `attendance`.
+    - Backend: Metodo `VerifyPinAndJustify` e calcolo dello stato limite assenze `GetAbsenceLimitStatus` (art. 14 c. 7 D.P.R. 122/2009 con soglia 25% e ore annuali per indirizzo).
+    - Frontend: Modale di giustificazione in `pages/parent/Attendance.vue` con inserimento e verifica PIN dispositivo; componente `AbsenceLimitWidget.vue` connesso all'API per visualizzazione ore di assenza e alert superamento limite.
+
+- [x] **5. Autorizzazioni Digitali per Uscite Didattiche & Viaggi d'Istruzione**
+  - **Implementato**:
+    - Database: Colonne `pin_verified`, `dietary_notes`, `medical_notes`, `emergency_phone`, `payment_status` su `trip_consents`.
+    - Backend: Aggiornati repository, service e DTO di `internal/trips` per salvataggio e recupero dettagli autorizzazione.
+    - Frontend: In `pages/parent/Trips.vue` modale di autorizzazione con firma PIN dispositivo genitore, recapito telefonico di emergenza, note alimentari/sanitarie; nuova pagina docente `TripCompanion.vue` per accompagnatori con monitoraggio stato firme PIN, alert medici, link rapido di chiamata telefonica ed esportazione CSV presenze.
+
+- [x] **6. Esami di Stato e Documento del 15 Maggio (Secondaria II Grado)**
+  - **Implementato**:
+    - Database: Tabella `class_may15_documents` (migrazione 123) con campi `class_presentation`, `teaching_continuity`, `pcto_pathways`, `exam_simulations`, `evaluation_rubrics`, `clil_modules`, stati (`bozza`, `approvato_cdc`, `pubblicato`) e date di approvazione/pubblicazione.
+    - Backend: Package Go `internal/may15` (model, repository, service, handler, unit tests) con endpoint `GET/PUT /may15/class/:classId` e `POST /may15/class/:classId/publish`.
+    - Frontend: Pagina `May15Document.vue` con schede tematiche per le 6 sezioni ministeriali, salvataggio bozza, approvazione Consiglio di Classe, pubblicazione per la Commissione d'Esame e anteprima di stampa ufficiale conforme al layout MIM. Collegamento diretto dalla pagina `SchoolCredits.vue`.
+
+- [x] **7. PEI Ministeriale Completo per Disabilità (D.I. 182/2020 & D.I. 153/2023)**
+  - **Implementato**:
+    - Database: Colonne `ministerial_dimension`, `pathway_type`, `glo_notes` su `support_pei_goals` (migrazione 123).
+    - Backend: Aggiornati model, repository, service e unit test di `internal/support` con le 4 dimensioni ministeriali e i 3 percorsi (A: Ordinario, B: Personalizzato equipollente, C: Differenziato).
+    - Frontend: `SupportRegister.vue` esteso con selezione delle 4 dimensioni ministeriali, del percorso didattico (art. 10 D.I. 182/2020), campo note GLO e visualizzazione dei badge identificativi nella tabella obiettivi PEI.
+
+- [x] **8. Modalità Offline / Sincronizzazione a Bassa Connettività**
+  - **Implementato**:
+    - Architettura Offline-First con `useOfflineSync` e `useOutboxStore` basata su `IndexedDB` (`registro_offline`) con fallback su `localStorage`.
+    - Integrazione di `executeWithOfflineQueue` in `PrimaryEval.vue` e `Attendance.vue` per accodamento trasparente delle registrazioni in assenza di rete e sincronizzazione automatica FIFO non appena la connettività viene ripristinata.
 
 
-
-
-
+- [x] **Enterprise School Management Hub (10 Moduli Normativi), Portali Studente/Genitore, Governance Ruoli & Onboarding Tour Completo (Ottobre 2026)**:
+  - **1. Enterprise School Management Hub (`/admin/enterprise`)**:
+    - Risolti problemi di linting (warning `background-clip` e import non utilizzati).
+    - Implementati i 10 moduli normativi: PagoPA (IUV ISO 7064 Mod 97-10), Cooperazione SIDI/MIM, Maturità D.M. 88/2020, Albo Pretorio Online (L. 69/2009), Inventario Beni (D.I. 129/2018), Firma FEQ (eIDAS/CAD), Sportello Psicologico (L. 107/2015), Interpelli Supplenze (O.M. 88/2024), Borsellino Mensa & Pre-Iscrizioni/Open Day.
+    - Selettore integrato di classe/studente con autocompletamento (nessun bisogno di copiare/incollare ID manuali).
+    - Invio massivo e a singola classe del Consenso Informato Psicologico.
+  - **2. Governance Ruoli & Attivazione Condizionale Mensa**:
+    - Segreteria (`secretary`, `assistente_amministrativo`): limitata visibilità unicamente ai moduli di propria competenza (PagoPA, SIDI, Maturità, Iscrizioni, Borsellino).
+    - DSGA (`dsga`): visualizzazione moduli contabili e patrimoniali (PagoPA/OPI, Albo Pretorio, Inventario, Interpelli).
+    - Dirigente Scolastico (`principal`): accesso a Firma FEQ, Albo Pretorio, Interpelli e toggle di attivazione servizio Mensa d'Istituto (`school_canteen_active_${schoolId}`).
+    - Portali Studente (`/student/psychology`, `/student/canteen`) e Genitore (`/parent/psychology`, `/parent/canteen`) integrati nella navigazione e protetti con banner esplicativo se la mensa non è attiva per l'istituto.
+  - **3. Onboarding Tour Interattivo (`OnboardingTour.vue`) per Tutti i Ruoli con Nuove Funzionalità**:
+    - Aggiunti step guidati dedicati con titoli, descrizioni, elenchi puntati e navigazione diretta per `principal` (7 step), `student` (10 step), `parent` (10 step), `secretary` (9 step), `admin` (9 step), `assistente_amministrativo` (6 step) e `dsga` (6 step).
+    - Allineamento completo delle traduzioni nelle 11 lingue supportate.
+    - Test unitari passati al 100% (`EnterpriseRoleTours.spec.js`, `HelpAndOnboarding.spec.js`, `OnboardingTourExtended.spec.js`).

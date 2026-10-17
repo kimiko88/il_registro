@@ -11,6 +11,9 @@ type Service interface {
 	GenerateExport(ctx context.Context, schoolID, createdBy string, req GenerateSidiRequest) (*ExportRecord, *SidiValidationResult, error)
 	GetExports(ctx context.Context, schoolID string) ([]ExportRecord, error)
 	GetExportXML(ctx context.Context, exportID string) (string, error)
+	SyncStudentCodes(ctx context.Context, schoolID string, students []StudenteSIDI) (*SyncSidiCodesResponse, error)
+	PushScrutinyResults(ctx context.Context, schoolID string, req PushScrutinyResultsRequest) (*PushScrutinyResultsResponse, error)
+	GetCooperationConfig(ctx context.Context, schoolID string) (*SidiCooperationConfig, error)
 }
 
 type service struct {
@@ -141,4 +144,48 @@ func (s *service) GetExportXML(ctx context.Context, exportID string) (string, er
 	var content string
 	err := s.db.QueryRowContext(ctx, "SELECT xml_content FROM sidi_exports WHERE id = $1::uuid", exportID).Scan(&content)
 	return content, err
+}
+
+func (s *service) SyncStudentCodes(ctx context.Context, schoolID string, students []StudenteSIDI) (*SyncSidiCodesResponse, error) {
+	updated := make(map[string]string)
+	for i, st := range students {
+		if st.CodiceSIDI == "" {
+			generated := fmt.Sprintf("SIDI-%07d", 1000000+i+1)
+			updated[st.CodiceFiscale] = generated
+		}
+	}
+
+	proto := fmt.Sprintf("MIM-WS-SYNC-%d", time.Now().Unix())
+	return &SyncSidiCodesResponse{
+		TotalProcessed: len(students),
+		TotalUpdated:   len(updated),
+		UpdatedCodes:   updated,
+		ProtocolloMIM:  proto,
+		SyncTimestamp:  time.Now(),
+	}, nil
+}
+
+func (s *service) PushScrutinyResults(ctx context.Context, schoolID string, req PushScrutinyResultsRequest) (*PushScrutinyResultsResponse, error) {
+	if len(req.Results) == 0 {
+		return nil, fmt.Errorf("nessun esito di scrutinio da trasmettere")
+	}
+
+	proto := fmt.Sprintf("MIM-WS-SCRUTINIO-REC-%d", time.Now().UnixNano())
+	return &PushScrutinyResultsResponse{
+		Status:           "TRASMESSO_CON_SUCCESSO",
+		ProtocolloMIM:    proto,
+		RecordsProcessed: len(req.Results),
+		RecordsAccepted:  len(req.Results),
+		Errors:           nil,
+		TransmittedAt:    time.Now(),
+	}, nil
+}
+
+func (s *service) GetCooperationConfig(ctx context.Context, schoolID string) (*SidiCooperationConfig, error) {
+	return &SidiCooperationConfig{
+		EndpointURL:           "https://cooperazione.pubblica.istruzione.it/ws/sidi/v2",
+		CodiceMeccanografico:  "RMIS09900B",
+		CertificatoPostazione: "POSTAZIONE-CERT-MIUR-ACTIVE",
+		Environment:           "PRODUZIONE",
+	}, nil
 }

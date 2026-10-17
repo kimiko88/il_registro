@@ -3,9 +3,16 @@ import vue from '@vitejs/plugin-vue'
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import { readFileSync } from 'node:fs'
+
+const packageJson = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'))
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version || '1.0.0-beta'),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().split('T')[0])
+  },
   build: {
     // Use esbuild instead of terser to avoid serialize-javascript
     // crypto.randomUUID() error in CI / Node < 20 environments
@@ -30,6 +37,22 @@ export default defineConfig({
           if (id.includes('/src/i18n/it-IT/') || id.includes('\\src\\i18n\\it-IT\\') ||
               id.endsWith('/src/i18n/index.js') || id.endsWith('\\src\\i18n\\index.js')) {
             return 'app-i18n'
+          }
+          if (id.includes('/src/pages/admin/') || id.includes('\\src\\pages\\admin\\')) {
+            return 'chunk-admin'
+          }
+          if (id.includes('/src/pages/secretary/') || id.includes('\\src\\pages\\secretary\\') ||
+              id.includes('/src/pages/ata/') || id.includes('\\src\\pages\\ata\\')) {
+            return 'chunk-secretary-ata'
+          }
+          if (id.includes('/src/pages/teacher/') || id.includes('\\src\\pages\\teacher\\')) {
+            return 'chunk-teacher'
+          }
+          if (id.includes('/src/pages/student/') || id.includes('\\src\\pages\\student\\')) {
+            return 'chunk-student'
+          }
+          if (id.includes('/src/pages/parent/') || id.includes('\\src\\pages\\parent\\')) {
+            return 'chunk-parent'
           }
         }
       }
@@ -85,6 +108,7 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/],
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB – covers large icon font files
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,

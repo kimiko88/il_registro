@@ -35,17 +35,17 @@
 
     <!-- Filters Row -->
     <div class="row q-col-gutter-sm q-mb-md items-center">
-      <div class="col-12 col-sm-auto">
-        <q-input dense outlined v-model="date" type="date" :label="$t('classRegister.dateLabel')" bg-color="white" style="min-width: 150px" @update:model-value="fetchData" />
+      <div class="col-7 col-sm-auto">
+        <q-input dense outlined v-model="date" type="date" :label="$t('classRegister.dateLabel')" bg-color="white" style="min-width: 140px" @update:model-value="fetchData" />
       </div>
-      <div class="col-12 col-sm-auto">
+      <div class="col-5 col-sm-auto">
         <q-select
            dense outlined
            v-model="selectedHour"
            :options="[1,2,3,4,5,6,7,8]"
            :label="$t('classRegister.hourLabel')"
            bg-color="white"
-           style="min-width: 100px"
+           style="min-width: 90px"
            @update:model-value="fetchData"
         />
       </div>
@@ -306,77 +306,328 @@
         </div>
     </q-card>
 
+    <!-- School Meals Section (Mensa Scolastica per Infanzia e Primaria) -->
+    <q-card v-if="isInfanziaOrPrimaria && selectedClass" class="q-mb-md shadow-2 rounded-xl border border-teal-200">
+      <q-card-section class="bg-teal-8 text-white row items-center justify-between q-py-sm wrap q-gutter-y-xs">
+        <div class="row items-center q-gutter-x-sm col-12 col-md-auto">
+          <q-icon name="restaurant" size="22px" />
+          <span class="text-subtitle2 text-weight-bold">
+            Prenotazione Mensa Scolastica — Data: {{ date }}
+          </span>
+          <q-chip dense color="teal-6" text-color="white" class="text-weight-bold">
+            {{ mealsCount }} Pasti Prenotati
+          </q-chip>
+        </div>
+        <div class="row q-gutter-sm items-center col-12 col-md-auto justify-end">
+          <q-btn
+            unelevated dense
+            icon="auto_fix_high"
+            label="Tutti Standard"
+            color="teal-9"
+            class="q-px-sm rounded-lg"
+            @click="setAllMeals('standard')"
+            :disable="isReadOnly"
+          />
+          <q-btn
+            unelevated dense
+            icon="receipt_long"
+            label="Report Centro Cottura"
+            color="white"
+            text-color="teal-9"
+            class="q-px-sm rounded-lg text-weight-bold"
+            @click="openMealsReportModal"
+          />
+          <q-btn
+            unelevated dense
+            icon="save"
+            label="Salva Pasti"
+            color="positive"
+            class="q-px-md rounded-lg text-weight-bold shadow-soft"
+            :loading="savingMeals"
+            @click="saveMealsBatch"
+            :disable="isReadOnly"
+          />
+        </div>
+      </q-card-section>
+
+      <q-card-section class="q-pa-sm">
+        <q-expansion-item
+          v-model="mealsExpanded"
+          icon="fastfood"
+          :label="'Dettaglio Pasti Alunni (' + mealsCount + ' presenti a mensa)'"
+          caption="Configura pasti in bianco, diete sanitarie e diete etico-religiose"
+          header-class="text-weight-bold text-teal-10 bg-teal-50 rounded-borders"
+        >
+          <div class="row q-col-gutter-sm q-mt-xs">
+            <div v-for="student in students" :key="student.id" class="col-12 col-md-6 col-lg-4">
+              <q-card flat bordered class="q-pa-sm rounded-lg" :class="getMealCardClass(studentMealMap[student.id])" v-if="studentMealMap[student.id]">
+                <div class="row items-center justify-between no-wrap">
+                  <div class="text-weight-bold text-caption ellipsis" style="max-width: 140px;">
+                    {{ student.last_name }} {{ student.first_name }}
+                  </div>
+                  <q-select
+                    v-model="studentMealMap[student.id].meal_type"
+                    :options="mealTypeOptions"
+                    emit-value map-options
+                    dense outlined
+                    style="min-width: 130px;"
+                    options-dense
+                    :disable="isReadOnly"
+                  />
+                </div>
+                <div v-if="studentMealMap[student.id].meal_type === 'dieta_sanitaria' || studentMealMap[student.id].meal_type === 'dieta_etico_religiosa'" class="q-mt-xs">
+                  <q-input
+                    v-model="studentMealMap[student.id].meal_notes"
+                    placeholder="Specificare allergia / intolleranza / richiesta..."
+                    dense outlined
+                    class="text-caption"
+                    :disable="isReadOnly"
+                  />
+                </div>
+              </q-card>
+            </div>
+          </div>
+        </q-expansion-item>
+      </q-card-section>
+    </q-card>
+
     <!-- Section 2: Attendance Table with Hourly Timeline Column -->
     <q-card class="shadow-2 rounded-xl">
-        <q-toolbar class="bg-grey-2 text-grey-9">
-            <q-toolbar-title class="text-subtitle2 row items-center">
-                <q-icon name="how_to_reg" class="q-mr-xs" color="primary" />
-                <span>{{ $t('classRegister.attendanceSectionTitle') }} — {{ $t('classRegister.hourLabel') }} {{ selectedHour }}</span>
-                <q-chip dense :color="markedCountChipColor" text-color="white" class="q-ml-sm">
+        <q-toolbar class="bg-grey-2 text-grey-9 attendance-toolbar q-py-xs wrap">
+            <div class="row items-center q-gutter-x-sm col-12 col-sm-auto">
+                <q-icon name="how_to_reg" class="q-mr-xs" color="primary" size="22px" />
+                <span class="text-subtitle2 text-weight-bold">{{ $t('classRegister.attendanceSectionTitle') }} — {{ $t('classRegister.hourLabel') }} {{ selectedHour }}</span>
+                <q-chip dense :color="markedCountChipColor" text-color="white" class="text-weight-bold">
                     {{ markedCount }}/{{ students.length }}
                 </q-chip>
-                <q-chip v-if="lastAutosaveTime" dense color="grey-7" text-color="white" icon="cloud_done" class="q-ml-sm text-caption">
+                <q-chip v-if="lastAutosaveTime" dense color="grey-7" text-color="white" icon="cloud_done" class="text-caption gt-xs">
                     Bozza {{ lastAutosaveTime }}
                 </q-chip>
-            </q-toolbar-title>
-            <q-btn flat dense icon="check_circle" :label="$t('classRegister.markAllPresent')" color="primary" @click="markAllPresent" :disable="loading || isReadOnly" />
+            </div>
+            <q-space class="gt-xs" />
+            <div class="col-12 col-sm-auto q-mt-xs q-mt-sm-none text-right">
+                <q-btn
+                    unelevated
+                    dense
+                    icon="check_circle"
+                    :label="$t('classRegister.markAllPresent')"
+                    color="primary"
+                    class="q-px-md rounded-lg text-weight-bold full-width-xs"
+                    @click="markAllPresent"
+                    :disable="loading || isReadOnly"
+                />
+            </div>
         </q-toolbar>
 
         <div v-if="loading" class="q-pa-md">
             <SkeletonTable :rows="8" :cols="4" />
         </div>
 
-        <q-list separator v-else>
-            <q-item v-for="student in students" :key="student.id" class="q-py-sm transition-bg" :class="getRowClass(student.status)">
-                <q-item-section avatar style="min-width: 42px">
+        <q-list separator v-else class="attendance-students-list">
+            <q-item
+                v-for="student in students"
+                :key="student.id"
+                class="attendance-student-item q-py-sm transition-bg"
+                :class="[getRowClass(student.status), { 'mobile-card-mode': $q.screen.lt.md }]"
+            >
+                <!-- Mobile Layout (< 768px): Ergonomic card structure -->
+                <div v-if="$q.screen.lt.md" class="column full-width q-gutter-y-xs">
+                    <!-- Row 1: Avatar + Name + Note button -->
+                    <div class="row items-center justify-between no-wrap">
+                        <div class="row items-center no-wrap ellipsis" style="gap: 10px; min-width: 0; flex: 1;">
+                            <q-avatar
+                                size="38px"
+                                color="indigo-1"
+                                text-color="indigo-9"
+                                class="text-weight-bold shadow-soft cursor-pointer flex-shrink-0"
+                                @click="openStudentPanel(student)"
+                            >
+                                {{ student.first_name ? student.first_name.charAt(0) : '?' }}
+                                <q-tooltip>{{ $t('classRegister.studentInfo') }}</q-tooltip>
+                            </q-avatar>
+                            <div class="ellipsis">
+                                <div class="text-weight-bold text-subtitle2 ellipsis text-slate-800">
+                                    {{ student.last_name }} {{ student.first_name }}
+                                    <q-icon
+                                      v-if="student.hasUnjustified"
+                                      name="warning"
+                                      color="negative"
+                                      size="16px"
+                                      class="q-ml-xs"
+                                    >
+                                      <q-tooltip>{{ $t('classRegister.unjustifiedBanner', { count: 1 }) }}</q-tooltip>
+                                    </q-icon>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row items-center no-wrap flex-shrink-0">
+                            <q-btn
+                                round
+                                flat
+                                dense
+                                icon="note_add"
+                                color="grey-7"
+                                size="md"
+                                @click="openNoteDialog(student)"
+                            >
+                                <q-tooltip>{{ $t('classRegister.addDisciplinaryNote') }}</q-tooltip>
+                            </q-btn>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Timeline 1-8 + Status Pill -->
+                    <div class="row items-center justify-between q-py-xs" style="gap: 6px;">
+                        <div class="row items-center q-gutter-xs">
+                            <q-badge
+                                v-for="h in 8"
+                                :key="h"
+                                :color="getHourBadgeColor(student, h)"
+                                :text-color="getHourBadgeTextColor(student, h)"
+                                :label="String(h)"
+                                class="text-weight-bold hour-badge-pill"
+                                :class="{ 'current-hour-pill': h === Number(selectedHour) }"
+                            >
+                                <q-tooltip>{{ getHourLabel(student, h) }}</q-tooltip>
+                            </q-badge>
+                        </div>
+                        <div>
+                            <q-badge v-if="student.status === 'Present'" color="positive" class="q-px-sm q-py-xs text-weight-bold">
+                                <q-icon name="check_circle" class="q-mr-xs" size="12px" /> {{ $t('classRegister.present') }}
+                            </q-badge>
+                            <q-badge v-else-if="student.status === 'OutOfClass'" color="teal" class="q-px-sm q-py-xs text-weight-bold">
+                                <q-icon name="meeting_room" class="q-mr-xs" size="12px" /> {{ $t('classRegister.outOfClass') }}
+                            </q-badge>
+                            <q-badge v-else-if="student.status === 'Absent'" color="negative" class="q-px-sm q-py-xs text-weight-bold">
+                                <q-icon name="cancel" class="q-mr-xs" size="12px" /> {{ $t('classRegister.absent') }}
+                            </q-badge>
+                            <q-badge v-else-if="student.status === 'Late'" color="warning" text-color="black" class="q-px-sm q-py-xs text-weight-bold">
+                                <q-icon name="schedule" class="q-mr-xs" size="12px" />
+                                {{ student.entry_time ? `${$t('classRegister.tableHeaderEntryTime')} ${student.entry_time}` : $t('classRegister.late') }}
+                            </q-badge>
+                            <q-badge v-else-if="student.status === 'LeftEarly'" color="purple" class="q-px-sm q-py-xs text-weight-bold">
+                                <q-icon name="output" class="q-mr-xs" size="12px" />
+                                {{ student.exit_time ? `${$t('classRegister.tableHeaderExitTime')} ${student.exit_time}` : $t('classRegister.earlyExit') }}
+                            </q-badge>
+                            <q-badge v-else color="grey-3" text-color="grey-7" class="q-px-sm q-py-xs">
+                                <q-icon name="help_outline" class="q-mr-xs" size="12px" /> {{ $t('classRegister.notMarked') || 'Da segnare' }}
+                            </q-badge>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Segmented Toggle (Spread 100% on mobile with touch targets) -->
+                    <div class="full-width q-pt-xs">
+                        <q-btn-toggle
+                            v-model="student.status"
+                            spread
+                            unelevated
+                            no-caps
+                            dense
+                            :disable="isReadOnly"
+                            :toggle-color="getStatusToggleColor(student.status)"
+                            :toggle-text-color="student.status === 'Late' ? 'black' : 'white'"
+                            class="attendance-segmented-toggle full-width"
+                            :options="statusToggleOptions"
+                            @update:model-value="(val) => handleStatusChange(student, val)"
+                        >
+                            <template v-slot:present><q-tooltip>{{ $t('classRegister.present') }}</q-tooltip></template>
+                            <template v-slot:outofclass><q-tooltip>{{ $t('classRegister.outOfClass') }}</q-tooltip></template>
+                            <template v-slot:absent><q-tooltip>{{ $t('classRegister.absent') }}</q-tooltip></template>
+                            <template v-slot:late><q-tooltip>{{ $t('classRegister.late') }}</q-tooltip></template>
+                            <template v-slot:early><q-tooltip>{{ $t('classRegister.earlyExit') }}</q-tooltip></template>
+                        </q-btn-toggle>
+                    </div>
+
+                    <!-- Row 4: Conditional Time Input Row (Late / EarlyExit) with Quick "Ora attuale" Button -->
+                    <div v-if="student.status === 'Late' || student.status === 'LeftEarly'" class="full-width q-pt-xs time-input-row">
+                        <div class="row items-center q-gutter-sm no-wrap">
+                            <q-icon :name="student.status === 'Late' ? 'schedule' : 'logout'" :color="student.status === 'Late' ? 'warning' : 'purple'" size="20px" />
+                            <q-input
+                                v-if="student.status === 'Late'"
+                                v-model="student.entry_time"
+                                type="time"
+                                dense
+                                outlined
+                                :label="$t('classRegister.tableHeaderEntryTime')"
+                                bg-color="white"
+                                class="col"
+                            />
+                            <q-input
+                                v-else
+                                v-model="student.exit_time"
+                                type="time"
+                                dense
+                                outlined
+                                :label="$t('classRegister.tableHeaderExitTime')"
+                                bg-color="white"
+                                class="col"
+                            />
+                            <q-btn
+                                outline
+                                dense
+                                color="primary"
+                                icon="schedule"
+                                label="Ora attuale"
+                                class="rounded-borders text-caption q-px-sm"
+                                style="height: 40px; white-space: nowrap;"
+                                @click="setNowTime(student, student.status === 'Late' ? 'entry_time' : 'exit_time')"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Layout (>= 768px): Streamlined Horizontal Row -->
+                <div v-else class="row items-center full-width no-wrap" style="gap: 16px;">
+                    <!-- Avatar -->
                     <q-avatar
                         size="38px"
                         color="indigo-1"
                         text-color="indigo-9"
-                        class="text-weight-bold shadow-soft cursor-pointer"
+                        class="text-weight-bold shadow-soft cursor-pointer flex-shrink-0"
                         @click="openStudentPanel(student)"
                     >
                         {{ student.first_name ? student.first_name.charAt(0) : '?' }}
                         <q-tooltip>{{ $t('classRegister.studentInfo') }}</q-tooltip>
                     </q-avatar>
-                </q-item-section>
 
-                <!-- Name + badges column -->
-                <q-item-section style="min-width: 160px">
-                    <q-item-label class="text-weight-bold text-body2">
-                        {{ student.last_name }} {{ student.first_name }}
-                        <q-icon
-                          v-if="student.hasUnjustified"
-                          name="warning"
-                          color="negative"
-                          size="16px"
-                          class="q-ml-xs"
-                        >
-                          <q-tooltip>{{ $t('classRegister.unjustifiedBanner', { count: 1 }) }}</q-tooltip>
-                        </q-icon>
-                    </q-item-label>
-                    <!-- Hourly presence indicator (mini timeline) -->
-                    <div class="row items-center q-gutter-xs q-mt-xs">
-                        <q-badge
-                          v-for="h in 8"
-                          :key="h"
-                          :color="getHourBadgeColor(student, h)"
-                          :label="String(h)"
-                          class="text-weight-bold"
-                          style="min-width: 18px; font-size: 10px; padding: 2px 4px"
-                        >
-                          <q-tooltip>{{ getHourLabel(student, h) }}</q-tooltip>
-                        </q-badge>
+                    <!-- Name + Mini Timeline -->
+                    <div class="col" style="min-width: 180px;">
+                        <div class="text-weight-bold text-body2 ellipsis text-slate-800">
+                            {{ student.last_name }} {{ student.first_name }}
+                            <q-icon
+                              v-if="student.hasUnjustified"
+                              name="warning"
+                              color="negative"
+                              size="16px"
+                              class="q-ml-xs"
+                            >
+                              <q-tooltip>{{ $t('classRegister.unjustifiedBanner', { count: 1 }) }}</q-tooltip>
+                            </q-icon>
+                        </div>
+                        <div class="row items-center q-gutter-xs q-mt-xs">
+                            <q-badge
+                                v-for="h in 8"
+                                :key="h"
+                                :color="getHourBadgeColor(student, h)"
+                                :text-color="getHourBadgeTextColor(student, h)"
+                                :label="String(h)"
+                                class="text-weight-bold hour-badge-pill"
+                                :class="{ 'current-hour-pill': h === Number(selectedHour) }"
+                            >
+                                <q-tooltip>{{ getHourLabel(student, h) }}</q-tooltip>
+                            </q-badge>
+                        </div>
                     </div>
-                    <!-- Status / time badges -->
-                    <div class="row items-center q-gutter-xs q-mt-xs">
-                        <q-badge v-if="student.status === 'Present'" color="positive" class="q-px-sm q-py-xs">
+
+                    <!-- Status Badge -->
+                    <div style="min-width: 120px;" class="text-center flex-shrink-0">
+                        <q-badge v-if="student.status === 'Present'" color="positive" class="q-px-sm q-py-xs text-weight-bold">
                             <q-icon name="check_circle" class="q-mr-xs" size="12px" /> {{ $t('classRegister.present') }}
                         </q-badge>
-                        <q-badge v-else-if="student.status === 'OutOfClass'" color="teal" class="q-px-sm q-py-xs">
+                        <q-badge v-else-if="student.status === 'OutOfClass'" color="teal" class="q-px-sm q-py-xs text-weight-bold">
                             <q-icon name="meeting_room" class="q-mr-xs" size="12px" /> {{ $t('classRegister.outOfClass') }}
                         </q-badge>
-                        <q-badge v-else-if="student.status === 'Absent'" color="negative" class="q-px-sm q-py-xs">
+                        <q-badge v-else-if="student.status === 'Absent'" color="negative" class="q-px-sm q-py-xs text-weight-bold">
                             <q-icon name="cancel" class="q-mr-xs" size="12px" /> {{ $t('classRegister.absent') }}
                         </q-badge>
                         <q-badge v-else-if="student.status === 'Late'" color="warning" text-color="black" class="q-px-sm q-py-xs text-weight-bold">
@@ -387,58 +638,75 @@
                             <q-icon name="output" class="q-mr-xs" size="12px" />
                             {{ student.exit_time ? `${$t('classRegister.tableHeaderExitTime')} ${student.exit_time}` : $t('classRegister.earlyExit') }}
                         </q-badge>
+                        <q-badge v-else color="grey-3" text-color="grey-7" class="q-px-sm q-py-xs">
+                            <q-icon name="help_outline" class="q-mr-xs" size="12px" /> {{ $t('classRegister.notMarked') || 'Da segnare' }}
+                        </q-badge>
                     </div>
-                </q-item-section>
 
-                <!-- Status toggle -->
-                <q-item-section>
-                    <q-btn-toggle
-                        v-model="student.status"
-                        flat dense no-caps
-                        :disable="isReadOnly"
-                        :options="[
-                            {icon: 'check', value: 'Present', slot: 'present'},
-                            {icon: 'meeting_room', value: 'OutOfClass', slot: 'outofclass'},
-                            {icon: 'close', value: 'Absent', slot: 'absent'},
-                            {icon: 'schedule', value: 'Late', slot: 'late'},
-                            {icon: 'logout', value: 'LeftEarly', slot: 'early'}
-                        ]"
-                    >
-                        <template v-slot:present><q-tooltip>{{ $t('classRegister.present') }}</q-tooltip></template>
-                        <template v-slot:outofclass><q-tooltip>{{ $t('classRegister.outOfClass') }}</q-tooltip></template>
-                        <template v-slot:absent><q-tooltip>{{ $t('classRegister.absent') }}</q-tooltip></template>
-                        <template v-slot:late><q-tooltip>{{ $t('classRegister.late') }}</q-tooltip></template>
-                        <template v-slot:early><q-tooltip>{{ $t('classRegister.earlyExit') }}</q-tooltip></template>
-                    </q-btn-toggle>
-                </q-item-section>
+                    <!-- Segmented Toggle -->
+                    <div class="flex-shrink-0">
+                        <q-btn-toggle
+                            v-model="student.status"
+                            unelevated
+                            dense
+                            no-caps
+                            :disable="isReadOnly"
+                            :toggle-color="getStatusToggleColor(student.status)"
+                            :toggle-text-color="student.status === 'Late' ? 'black' : 'white'"
+                            class="attendance-segmented-toggle"
+                            :options="statusToggleOptions"
+                            @update:model-value="(val) => handleStatusChange(student, val)"
+                        >
+                            <template v-slot:present><q-tooltip>{{ $t('classRegister.present') }}</q-tooltip></template>
+                            <template v-slot:outofclass><q-tooltip>{{ $t('classRegister.outOfClass') }}</q-tooltip></template>
+                            <template v-slot:absent><q-tooltip>{{ $t('classRegister.absent') }}</q-tooltip></template>
+                            <template v-slot:late><q-tooltip>{{ $t('classRegister.late') }}</q-tooltip></template>
+                            <template v-slot:early><q-tooltip>{{ $t('classRegister.earlyExit') }}</q-tooltip></template>
+                        </q-btn-toggle>
+                    </div>
 
-                <!-- Late Entry Time -->
-                <q-item-section v-if="student.status === 'Late'" side style="min-width: 130px">
-                     <q-input
-                        v-model="student.entry_time"
-                        type="time"
-                        dense outlined
-                        :label="$t('classRegister.tableHeaderEntryTime')"
-                        bg-color="white"
-                     />
-                </q-item-section>
+                    <!-- Late Entry / Early Exit Time with Quick Button -->
+                    <div v-if="student.status === 'Late' || student.status === 'LeftEarly'" class="row items-center q-gutter-xs flex-shrink-0" style="min-width: 155px;">
+                        <q-input
+                            v-if="student.status === 'Late'"
+                            v-model="student.entry_time"
+                            type="time"
+                            dense
+                            outlined
+                            :label="$t('classRegister.tableHeaderEntryTime')"
+                            bg-color="white"
+                            style="width: 120px"
+                        />
+                        <q-input
+                            v-else
+                            v-model="student.exit_time"
+                            type="time"
+                            dense
+                            outlined
+                            :label="$t('classRegister.tableHeaderExitTime')"
+                            bg-color="white"
+                            style="width: 120px"
+                        />
+                        <q-btn
+                            flat
+                            round
+                            dense
+                            size="sm"
+                            color="primary"
+                            icon="schedule"
+                            @click="setNowTime(student, student.status === 'Late' ? 'entry_time' : 'exit_time')"
+                        >
+                            <q-tooltip>Ora attuale</q-tooltip>
+                        </q-btn>
+                    </div>
 
-                <!-- Early Exit Time -->
-                <q-item-section v-if="student.status === 'LeftEarly'" side style="min-width: 130px">
-                     <q-input
-                        v-model="student.exit_time"
-                        type="time"
-                        dense outlined
-                        :label="$t('classRegister.tableHeaderExitTime')"
-                        bg-color="white"
-                     />
-                </q-item-section>
-
-                <q-item-section side>
-                    <q-btn round flat icon="note_add" color="grey-7" @click="openNoteDialog(student)">
-                        <q-tooltip>{{ $t('classRegister.addDisciplinaryNote') }}</q-tooltip>
-                    </q-btn>
-                </q-item-section>
+                    <!-- Disciplinary Note button -->
+                    <div class="flex-shrink-0">
+                        <q-btn round flat icon="note_add" color="grey-7" @click="openNoteDialog(student)">
+                            <q-tooltip>{{ $t('classRegister.addDisciplinaryNote') }}</q-tooltip>
+                        </q-btn>
+                    </div>
+                </div>
             </q-item>
 
             <q-item v-if="students.length === 0" class="text-center text-grey">
@@ -446,27 +714,27 @@
             </q-item>
         </q-list>
 
-        <q-card-actions align="between" class="bg-grey-1 q-pa-md">
-            <div>
+        <q-card-actions align="between" class="bg-grey-1 q-pa-md wrap q-gutter-y-sm">
+            <div class="col-12 col-sm-auto">
                 <q-btn
                     v-if="canDeleteCurrentSignature"
                     :label="$t('classRegister.deleteSignatureAndAttendance')"
                     color="negative"
                     unelevated
                     icon="delete_outline"
-                    class="rounded-lg text-weight-bold"
+                    class="rounded-lg text-weight-bold full-width-xs"
                     @click="deleteUnifiedRecord"
                     :loading="saving"
                 />
             </div>
-            <div class="row items-center q-gutter-sm">
+            <div class="col-12 col-sm-auto row items-center justify-end q-gutter-sm">
                 <q-btn-dropdown
                   split
                   :label="isReadOnly ? $t('classRegister.readOnlySaveBtn') : (currentHourLesson ? $t('classRegister.updateSaveBtn') : $t('classRegister.saveBtn'))"
                   :color="isReadOnly ? 'grey-6' : isSubstitutionMode ? 'deep-orange' : 'primary'"
                   size="md"
                   :icon="isReadOnly ? 'lock' : 'cloud_done'"
-                  class="rounded-lg text-weight-bold shadow-soft"
+                  class="rounded-lg text-weight-bold shadow-soft full-width-xs"
                   @click="saveUnifiedRecord"
                   :loading="saving"
                   :disable="!selectedClass || isReadOnly"
@@ -511,6 +779,84 @@
         :all-today-attendance="allTodayAttendance"
     />
 
+    <!-- Meals Report Dialog (Centro Cottura) -->
+    <q-dialog v-model="showMealsReportDialog">
+      <q-card style="width: min(650px, 95vw)" class="rounded-xl">
+        <q-card-section class="bg-teal-8 text-white row items-center justify-between">
+          <div class="row items-center">
+            <q-icon name="soup_kitchen" class="q-mr-sm" size="24px" />
+            <div class="text-subtitle1 text-weight-bold">
+              Report Giornaliero Centro Cottura — {{ date }}
+            </div>
+          </div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md" v-if="mealsReport">
+          <!-- Summary Cards -->
+          <div class="row q-col-gutter-sm q-mb-md">
+            <div class="col-6 col-sm-3">
+              <q-card flat bordered class="bg-teal-50 border-teal-200 text-center q-pa-sm rounded-lg">
+                <div class="text-h5 text-weight-bold text-teal-9">{{ mealsReport.total_meals }}</div>
+                <div class="text-caption text-grey-8">Totale Pasti</div>
+              </q-card>
+            </div>
+            <div class="col-6 col-sm-3">
+              <q-card flat bordered class="bg-blue-50 border-blue-200 text-center q-pa-sm rounded-lg">
+                <div class="text-h5 text-weight-bold text-blue-9">{{ mealsReport.standard_count }}</div>
+                <div class="text-caption text-grey-8">Standard</div>
+              </q-card>
+            </div>
+            <div class="col-6 col-sm-3">
+              <q-card flat bordered class="bg-grey-1 border-grey-3 text-center q-pa-sm rounded-lg">
+                <div class="text-h5 text-weight-bold text-grey-8">{{ mealsReport.white_count }}</div>
+                <div class="text-caption text-grey-8">In Bianco</div>
+              </q-card>
+            </div>
+            <div class="col-6 col-sm-3">
+              <q-card flat bordered class="bg-amber-50 border-amber-200 text-center q-pa-sm rounded-lg">
+                <div class="text-h5 text-weight-bold text-amber-9">{{ mealsReport.health_diet_count + mealsReport.ethic_diet_count }}</div>
+                <div class="text-caption text-grey-8">Diete Speciali</div>
+              </q-card>
+            </div>
+          </div>
+
+          <!-- Special Diets Table -->
+          <div class="text-subtitle2 text-weight-bold text-slate-800 q-mb-xs">
+            Dettaglio Diete Speciali & Note Alimentari (Allergie / Intolleranze)
+          </div>
+          <q-list bordered separator class="rounded-borders" v-if="mealsReport.special_diets_details && mealsReport.special_diets_details.length > 0">
+            <q-item v-for="diet in mealsReport.special_diets_details" :key="diet.student_id" class="q-py-sm">
+              <q-item-section avatar>
+                <q-icon name="warning" color="warning" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-weight-bold">{{ diet.student_name }} ({{ diet.class_name }})</q-item-label>
+                <q-item-label caption class="text-negative font-bold">
+                  {{ diet.meal_type === 'dieta_sanitaria' ? 'Dieta Sanitaria' : 'Dieta Etico-Religiosa' }}: {{ diet.meal_notes || 'Nessuna specifica' }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <div v-else class="text-caption text-grey-6 q-pa-sm text-center bg-grey-1 rounded-borders">
+            Nessuna richiesta di dieta speciale per questa data.
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md bg-grey-1">
+          <q-btn flat label="Chiudi" v-close-popup />
+          <q-btn
+            color="teal"
+            unelevated
+            icon="print"
+            label="Stampa Ordine Cottura"
+            class="q-px-md font-bold"
+            @click="printMealsReport"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -529,6 +875,7 @@ import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
 import StudentAttendanceDetailDialog from '@/components/Teacher/StudentAttendanceDetailDialog.vue'
 import SkeletonTable from '@/components/Common/SkeletonTable.vue'
 import { useSchoolYearStore } from '@/stores/schoolYear'
+import { useSchoolStore } from '@/stores/schools'
 import { useOfflineSync } from '@/composables/useOfflineSync'
 
 const $q = useQuasar()
@@ -545,10 +892,113 @@ const classesStore = useClassesStore()
 const gradesStore = useGradesStore()
 const authStore = useAuthStore()
 const schoolYearStore = useSchoolYearStore()
+const schoolStore = useSchoolStore()
 const { executeWithOfflineQueue } = useOfflineSync()
 
 // Current teacher ID from auth token
 const currentTeacherId = computed(() => authStore.user?.id || null)
+
+const isInfanziaOrPrimaria = computed(() => {
+  const currentClassObj = typeof selectedClass.value === 'object'
+    ? selectedClass.value
+    : classesStore.classes.find(c => c.id === selectedClass.value)
+  if (currentClassObj?.school_level === 'infanzia' || currentClassObj?.school_level === 'primaria') return true
+  const name = (currentClassObj?.name || currentClassObj?.label || '').toLowerCase()
+  if (name.includes('infanzia') || name.includes('primaria')) return true
+  if (schoolStore.hasCampiEsperienza || schoolStore.hasPrimaryLevels) return true
+  return false
+})
+
+const studentMealMap = ref({})
+const mealsExpanded = ref(false)
+const savingMeals = ref(false)
+const showMealsReportDialog = ref(false)
+const mealsReport = ref(null)
+
+const mealTypeOptions = [
+  { label: 'Standard', value: 'standard' },
+  { label: 'In Bianco', value: 'bianco' },
+  { label: 'Dieta Sanitaria (Allergie)', value: 'dieta_sanitaria' },
+  { label: 'Dieta Etico-Religiosa', value: 'dieta_etico_religiosa' },
+  { label: 'Non usufruisce', value: 'nessuno' }
+]
+
+const mealsCount = computed(() => {
+  let count = 0
+  for (const st of students.value) {
+    const m = studentMealMap.value[st.id]
+    if (m && m.meal_type && m.meal_type !== 'nessuno') {
+      count++
+    }
+  }
+  return count
+})
+
+function setAllMeals(type) {
+  for (const st of students.value) {
+    if (!studentMealMap.value[st.id]) {
+      studentMealMap.value[st.id] = { meal_type: type, meal_notes: '' }
+    } else {
+      studentMealMap.value[st.id].meal_type = type
+    }
+  }
+}
+
+async function saveMealsBatch() {
+  const classId = typeof selectedClass.value === 'object' ? selectedClass.value.id : selectedClass.value
+  if (!classId) return
+  savingMeals.value = true
+  try {
+    const meals = students.value.map(st => ({
+      student_id: st.id,
+      meal_type: studentMealMap.value[st.id]?.meal_type || 'standard',
+      meal_notes: studentMealMap.value[st.id]?.meal_notes || ''
+    }))
+    await attendanceService.saveMealsBatch({
+      class_id: classId,
+      date: date.value,
+      meals
+    })
+    $q.notify({
+      type: 'positive',
+      message: 'Prenotazione pasti registrata con successo!'
+    })
+  } catch (err) {
+    console.error('Error saving meals batch', err)
+    $q.notify({
+      type: 'negative',
+      message: err.response?.data?.error || 'Errore salvataggio prenotazione pasti'
+    })
+  } finally {
+    savingMeals.value = false
+  }
+}
+
+async function openMealsReportModal() {
+  try {
+    const res = await attendanceService.getDailyMealsReport(date.value)
+    mealsReport.value = res.data?.data || res.data
+    showMealsReportDialog.value = true
+  } catch (err) {
+    console.error('Error loading meals report', err)
+    $q.notify({
+      type: 'negative',
+      message: 'Impossibile recuperare il report pasti'
+    })
+  }
+}
+
+function printMealsReport() {
+  window.print()
+}
+
+function getMealCardClass(m) {
+  if (!m || m.meal_type === 'standard') return 'bg-white'
+  if (m.meal_type === 'bianco') return 'bg-grey-2 border-grey-4'
+  if (m.meal_type === 'dieta_sanitaria') return 'bg-teal-50 border-teal-300'
+  if (m.meal_type === 'dieta_etico_religiosa') return 'bg-amber-50 border-amber-300'
+  return 'bg-grey-1'
+}
 
 const date = ref(new Date().toISOString().split('T')[0])
 const selectedClass = ref(null)
@@ -759,6 +1209,53 @@ const getHourLabel = (student, hour) => {
     return t('studentDetail.hourStatus', { hour, status: statusLabels[rec.status] || rec.status })
 }
 
+// Status toggle options with semantic labels
+const statusToggleOptions = [
+    { icon: 'check', value: 'Present', slot: 'present' },
+    { icon: 'meeting_room', value: 'OutOfClass', slot: 'outofclass' },
+    { icon: 'close', value: 'Absent', slot: 'absent' },
+    { icon: 'schedule', value: 'Late', slot: 'late' },
+    { icon: 'logout', value: 'LeftEarly', slot: 'early' }
+]
+
+// Distinct active colors for each attendance status
+const getStatusToggleColor = (status) => {
+    switch (status) {
+        case 'Present': return 'positive'
+        case 'OutOfClass': return 'teal'
+        case 'Absent': return 'negative'
+        case 'Late': return 'warning'
+        case 'LeftEarly': return 'purple'
+        default: return 'primary'
+    }
+}
+
+// High-contrast text color for mini-timeline badges
+const getHourBadgeTextColor = (student, hour) => {
+    const color = getHourBadgeColor(student, hour)
+    if (color === 'grey-3') return 'grey-8'
+    if (color === 'warning') return 'black'
+    return 'white'
+}
+
+// Quick helper to fill current time (HH:mm)
+const setNowTime = (student, field) => {
+    const now = new Date()
+    const hh = String(now.getHours()).padStart(2, '0')
+    const mm = String(now.getMinutes()).padStart(2, '0')
+    student[field] = `${hh}:${mm}`
+}
+
+// Auto-fill time on selecting Late or LeftEarly if empty
+const handleStatusChange = (student, newStatus) => {
+    student.status = newStatus
+    if (newStatus === 'Late' && !student.entry_time) {
+        setNowTime(student, 'entry_time')
+    } else if (newStatus === 'LeftEarly' && !student.exit_time) {
+        setNowTime(student, 'exit_time')
+    }
+}
+
 const toggleSubstitutionMode = async () => {
   isSubstitutionMode.value = !isSubstitutionMode.value
   if (isSubstitutionMode.value) {
@@ -895,9 +1392,21 @@ const fetchData = async () => {
                 status: existing ? existing.status : null,
                 entry_time: existing?.entry_time || '',
                 exit_time: existing?.exit_time || '',
+                meal_type: existing?.meal_type || 'standard',
+                meal_notes: existing?.meal_notes || '',
                 hasUnjustified: unjustifiedSet.has(s.id),
             }
         })
+
+        // Sync meal map for infanzia / primaria
+        const newMealMap = {}
+        students.value.forEach(st => {
+            newMealMap[st.id] = {
+                meal_type: st.meal_type || 'standard',
+                meal_notes: st.meal_notes || ''
+            }
+        })
+        studentMealMap.value = newMealMap
 
         // 5. Fetch Daily Lessons for Timeline
         try {
@@ -1337,5 +1846,57 @@ const printPersonalRegister = async () => {
 }
 .shadow-soft {
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.attendance-student-item {
+    border-radius: 10px;
+    margin: 4px 0;
+    transition: all 0.2s ease;
+}
+.attendance-student-item.mobile-card-mode {
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    padding: 10px 12px;
+}
+.attendance-segmented-toggle {
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 2px;
+    border: 1px solid #e2e8f0;
+}
+.attendance-segmented-toggle :deep(.q-btn) {
+    border-radius: 6px;
+    min-height: 40px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.attendance-segmented-toggle :deep(.q-btn--active) {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+.hour-badge-pill {
+    min-width: 22px;
+    height: 20px;
+    font-size: 11px;
+    padding: 1px 4px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.current-hour-pill {
+    outline: 2px solid #2563eb;
+    outline-offset: 1px;
+    font-weight: 800;
+    box-shadow: 0 0 4px rgba(37, 99, 235, 0.4);
+}
+.time-input-row {
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 8px;
+    padding: 6px 8px;
+    border: 1px dashed rgba(0, 0, 0, 0.15);
+}
+@media (max-width: 599px) {
+    .full-width-xs {
+        width: 100% !important;
+    }
 }
 </style>

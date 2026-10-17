@@ -103,6 +103,20 @@ L'orario scolastico si basa sulla tabella `class_schedules` in PostgreSQL come u
 - **Vista Classe (`ScheduleGrid.vue`)**: organizza l'orario per ora (1ª-8ª) e giorno (Lunedì-Sabato), abbinando materia, docente ed aula.
 - **Vista Docente (`TeacherScheduleGrid.vue`)**: ricava l'orario individuale del docente unendo `class_schedules` con `classes` (`JOIN classes c ON cs.class_id = c.id`).
 - **Sincronizzazione Bidirezionale**: quando la Segreteria o un docente modifica l'orario settimanale del docente, le modifiche si riflettono istantaneamente sulle classi coinvolte e viceversa, mantenendo una consistenza atomica dei dati.
+- **Generatore Automatico CSP & Priorità Anzianità (`internal/timetablegen`)**:
+  - Motore di Constraint Satisfaction Problem in Go per il calcolo dell'orario completo in < 30 secondi.
+  - **Vincoli Hard**: Nessuna sovrapposizione docente, nessuna sovrapposizione classe, nessuna sovrapposizione aula/laboratorio, coerenza del plesso aula-classe.
+  - **Vincoli Soft & Euristica Anzianità**: I desiderata dei docenti (giorno libero, fasce orarie) sono pesati in base alla data di assunzione (`hiring_date`), garantendo priorità algoritmica ai docenti più anziani.
+  - **Workflow Asincrono**: Avvio job asincrono (`POST /timetable/generate`), polling di stato (`GET /timetable/generate/:jobID`) con fitness score e violazioni soft, e pubblicazione atomica in `class_schedules` (`POST /timetable/generate/:jobID/publish`).
+
+### E. Gestione Aule Prenotabili e Multi-Plesso (`internal/rooms`)
+
+- **Anagrafica Plessi (`school_buildings`)**: Ogni istituto può configurare molteplici sedi/plessi con indirizzo e codice identificativo.
+- **Aule e Laboratori (`bookable_rooms`)**: Configurazione della tipologia (`lab_computer`, `lab_science`, `gym`, `auditorium`), capienza massima e flag di prenotabilità.
+- **Prenotazioni Atomiche (`room_bookings`)**:
+  - Supporto a prenotazioni spot o ricorrenti settimanali per classe e ora di lezione.
+  - Controllo transazionale anti-sovrapposizione per prevenire collisioni orarie tra docenti.
+  - RLS Supabase conforme: lettura pubblica o autenticata, mutazioni riservate al personale autorizzato.
 
 ---
 

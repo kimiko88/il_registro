@@ -25,18 +25,21 @@ type SupportDiaryEntry struct {
 }
 
 type SupportPeiGoal struct {
-	ID             string    `json:"id"`
-	SchoolID       string    `json:"school_id"`
-	StudentID      string    `json:"student_id"`
-	StudentName    string    `json:"student_name,omitempty"`
-	PeiType        string    `json:"pei_type"` // 'equipollente', 'differenziato'
-	Axis           string    `json:"axis"`     // 'autonomia', 'cognitiva', 'comunicazionale', 'relazionale', 'linguistica', 'sensoriale'
-	Title          string    `json:"title"`
-	Description    string    `json:"description"`
-	ExpectedTerm   string    `json:"expected_term"`   // 'q1', 'q2', 'annuale'
-	ProgressStatus string    `json:"progress_status"` // 'non_avviato', 'iniziale', 'intermedio', 'avanzato', 'raggiunto'
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID                   string    `json:"id"`
+	SchoolID             string    `json:"school_id"`
+	StudentID            string    `json:"student_id"`
+	StudentName          string    `json:"student_name,omitempty"`
+	PeiType              string    `json:"pei_type"`              // 'equipollente', 'differenziato'
+	Axis                 string    `json:"axis"`                  // 'autonomia', 'cognitiva', 'comunicazionale', 'relazionale', 'linguistica', 'sensoriale'
+	MinisterialDimension string    `json:"ministerial_dimension"` // 'dimensione_relazione', 'dimensione_comunicazione', 'dimensione_autonomia', 'dimensione_cognitiva' (D.I. 182/2020)
+	PathwayType          string    `json:"pathway_type"`          // 'percorso_a_ordinario', 'percorso_b_personalizzato', 'percorso_c_differenziato'
+	Title                string    `json:"title"`
+	Description          string    `json:"description"`
+	ExpectedTerm         string    `json:"expected_term"`   // 'q1', 'q2', 'annuale'
+	ProgressStatus       string    `json:"progress_status"` // 'non_avviato', 'iniziale', 'intermedio', 'avanzato', 'raggiunto'
+	GloNotes             string    `json:"glo_notes"`       // Note e decisioni del GLO (Gruppo di Lavoro Operativo)
+	CreatedAt            time.Time `json:"created_at"`
+	UpdatedAt            time.Time `json:"updated_at"`
 }
 
 type CreateDiaryEntryRequest struct {
@@ -53,11 +56,14 @@ type CreateDiaryEntryRequest struct {
 }
 
 type CreatePeiGoalRequest struct {
-	StudentID      string `json:"student_id" binding:"required"`
-	PeiType        string `json:"pei_type" binding:"required"`
-	Axis           string `json:"axis" binding:"required"`
-	Title          string `json:"title" binding:"required"`
-	Description    string `json:"description"`
-	ExpectedTerm   string `json:"expected_term"`
-	ProgressStatus string `json:"progress_status"`
+	StudentID            string `json:"student_id" binding:"required"`
+	PeiType              string `json:"pei_type" binding:"required"`
+	Axis                 string `json:"axis" binding:"required"`
+	MinisterialDimension string `json:"ministerial_dimension"`
+	PathwayType          string `json:"pathway_type"`
+	Title                string `json:"title" binding:"required"`
+	Description          string `json:"description"`
+	ExpectedTerm         string `json:"expected_term"`
+	ProgressStatus       string `json:"progress_status"`
+	GloNotes             string `json:"glo_notes"`
 }

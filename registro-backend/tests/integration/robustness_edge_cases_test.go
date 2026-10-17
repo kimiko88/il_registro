@@ -41,6 +41,30 @@ func (m *mockTextbookRepo) RemoveFromClass(ctx context.Context, assignmentID str
 func (m *mockTextbookRepo) ListByClass(ctx context.Context, classID string) ([]textbooks.ClassTextbook, error) {
 	return nil, nil
 }
+func (m *mockTextbookRepo) UpsertAIECatalog(ctx context.Context, books []textbooks.AIECatalogBook) (int, error) {
+	return 0, nil
+}
+func (m *mockTextbookRepo) SearchAIECatalog(ctx context.Context, query, subject, schoolOrder string, limit int) ([]textbooks.AIECatalogBook, error) {
+	return nil, nil
+}
+func (m *mockTextbookRepo) GetSpendingLimit(ctx context.Context, schoolID string, classYear int, schoolOrder, academicYear string) (*textbooks.SpendingLimit, error) {
+	return nil, nil
+}
+func (m *mockTextbookRepo) UpsertSpendingLimit(ctx context.Context, limit *textbooks.SpendingLimit) error {
+	return nil
+}
+func (m *mockTextbookRepo) ListClassAdoptions(ctx context.Context, classID string) ([]textbooks.ClassAdoptionItem, error) {
+	return nil, nil
+}
+func (m *mockTextbookRepo) SaveClassAdoption(ctx context.Context, item *textbooks.ClassAdoptionItem) error {
+	return nil
+}
+func (m *mockTextbookRepo) DeleteClassAdoption(ctx context.Context, id string) error {
+	return nil
+}
+func (m *mockTextbookRepo) GetClassInfo(ctx context.Context, classID string) (int, string, string, string, string, error) {
+	return 0, "", "", "", "", nil
+}
 
 func TestRobustnessAndBoundaryEdgeCases(t *testing.T) {
 	gin.SetMode(gin.TestMode)

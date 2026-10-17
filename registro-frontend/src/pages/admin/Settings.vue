@@ -101,6 +101,7 @@
               label="Password Attuale *"
               :type="showCurrentPassword ? 'text' : 'password'"
               outlined dense bg-color="white"
+              autocomplete="current-password"
               :rules="[val => !!val || 'Campo obbligatorio']"
             >
               <template v-slot:append>
@@ -117,6 +118,7 @@
               label="Nuova Password *"
               :type="showNewPassword ? 'text' : 'password'"
               outlined dense bg-color="white"
+              autocomplete="new-password"
               :rules="[
                 val => !!val || 'Campo obbligatorio',
                 val => val.length >= 10 || 'Almeno 10 caratteri'
@@ -136,6 +138,7 @@
               label="Conferma Nuova Password *"
               :type="showConfirmPassword ? 'text' : 'password'"
               outlined dense bg-color="white"
+              autocomplete="new-password"
               :rules="[
                 val => !!val || 'Campo obbligatorio',
                 val => val === passwordForm.new_password || 'Le password non coincidono'

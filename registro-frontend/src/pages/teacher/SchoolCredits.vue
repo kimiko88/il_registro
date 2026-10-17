@@ -34,6 +34,15 @@
           rounded
           @click="openCalculatorDialog"
         />
+        <q-btn
+          color="deep-purple-7"
+          icon="menu_book"
+          :label="$t('may15.navBtn') || 'Documento 15 Maggio (5ª)'"
+          unelevated
+          no-caps
+          rounded
+          to="/teacher/may15"
+        />
       </div>
     </div>
 

@@ -139,4 +139,112 @@ describe('GradeEntry.vue', () => {
         expect(wrapper.vm.loading).toBe(false)
         expect(mockNotify).toHaveBeenCalled()
     })
+
+    it('recognizes religion subject and exempts non-avvalente students', async () => {
+        const religionWrapper = mount(GradeEntry, {
+            global: {
+                plugins: [
+                    [Quasar, {}],
+                    createTestingPinia({
+                        createSpy: vi.fn,
+                        initialState: {
+                            grades: {
+                                grades: {
+                                    is_religion_subject: true,
+                                    students: [
+                                        { student_id: 'S1', full_name: 'Mario Rossi', religion_choice: 'avvalente', absences: 0, grades: [] },
+                                        { student_id: 'S2', full_name: 'Luigi Verdi', religion_choice: 'non_avvalente', absences: 0, grades: [] },
+                                        { student_id: 'S3', full_name: 'Sara Neri', religion_choice: 'attivita_alternativa', absences: 0, grades: [] }
+                                    ]
+                                }
+                            }
+                        }
+                    })
+                ],
+                stubs: {
+                    'q-card': { template: '<div><slot /></div>' },
+                    'q-table': { template: '<div class="q-table-stub"><slot /></div>' },
+                    'q-tr': { template: '<tr><slot /></tr>' },
+                    'q-th': { template: '<th><slot /></th>' },
+                    'q-td': { template: '<td><slot /></td>' },
+                    'q-input': true,
+                    'q-select': true,
+                    'q-btn': true,
+                    'q-badge': true,
+                    'q-tooltip': true,
+                    'q-icon': true
+                }
+            },
+            props: {
+                classId: 'C1',
+                subject: 'Religione Cattolica',
+                isReligion: true,
+                date: '2025-01-20',
+                type: 'Oral'
+            }
+        })
+
+        expect(religionWrapper.vm.isReligionSubject).toBe(true)
+
+        // S1 is avvalente -> not exempt
+        expect(religionWrapper.vm.isStudentExemptFromReligion({ religion_choice: 'avvalente' })).toBe(false)
+
+        // S2 is non_avvalente -> exempt
+        expect(religionWrapper.vm.isStudentExemptFromReligion({ religion_choice: 'non_avvalente' })).toBe(true)
+
+        // S3 is attivita_alternativa -> exempt
+        expect(religionWrapper.vm.isStudentExemptFromReligion({ religion_choice: 'attivita_alternativa' })).toBe(true)
+    })
+
+    it('saves religion judgment as grade_type: judgment with mapped numerical value', async () => {
+        const religionWrapper = mount(GradeEntry, {
+            global: {
+                plugins: [
+                    [Quasar, {}],
+                    createTestingPinia({
+                        createSpy: vi.fn,
+                        initialState: {
+                            grades: {
+                                grades: {
+                                    is_religion_subject: true,
+                                    students: [
+                                        { student_id: 'S1', full_name: 'Mario Rossi', religion_choice: 'avvalente', absences: 0, grades: [] }
+                                    ]
+                                }
+                            }
+                        }
+                    })
+                ],
+                stubs: {
+                    'q-card': true,
+                    'q-table': true,
+                    'q-tr': true,
+                    'q-th': true,
+                    'q-td': true,
+                    'q-input': true,
+                    'q-select': true,
+                    'q-btn': true,
+                    'q-badge': true,
+                    'q-tooltip': true,
+                    'q-icon': true
+                }
+            },
+            props: {
+                classId: 'C1',
+                subject: 'Religione',
+                isReligion: true,
+                date: '2025-01-20',
+                type: 'Oral'
+            }
+        })
+
+        religionWrapper.vm.entryData['S1'].value = 'Ottimo'
+        await religionWrapper.vm.saveLine('S1')
+
+        expect(gradeService.saveGrade).toHaveBeenCalledWith(expect.objectContaining({
+            grade_value: 10,
+            grade_type: 'judgment',
+            description: expect.stringContaining('Ottimo')
+        }))
+    })
 })

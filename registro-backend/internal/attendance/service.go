@@ -56,6 +56,11 @@ type Service interface {
 	GetChildUnjustified(ctx context.Context, parentID, studentID string) ([]Attendance, error)
 	JustifyChildAbsence(ctx context.Context, parentID, studentID, attendanceID string, req JustifyAbsenceRequest) error
 	GetChildAttendanceStats(ctx context.Context, parentID, studentID string) (*AttendanceStats, error)
+
+	SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error
+	GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error)
+	VerifyPinAndJustify(ctx context.Context, parentID string, req VerifyPinAndJustifyRequest) error
+	GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error)
 }
 
 type service struct {
@@ -273,8 +278,16 @@ func (s *service) MarkBulk(ctx context.Context, teacherID, schoolID string, req 
 		atts = append(atts, att)
 	}
 
-	if err := s.repo.BatchCreate(atts); err != nil {
-		return err
+	if cr, ok := s.repo.(interface {
+		BatchCreateWithContext(context.Context, []*Attendance) error
+	}); ok {
+		if err := cr.BatchCreateWithContext(ctx, atts); err != nil {
+			return err
+		}
+	} else {
+		if err := s.repo.BatchCreate(atts); err != nil {
+			return err
+		}
 	}
 
 	if s.broadcaster != nil {
@@ -372,9 +385,9 @@ func (s *service) DeleteClassAttendanceHour(ctx context.Context, actorID, actorR
 		}
 	}
 	switch actorRole {
-	case "admin", "superadmin", "secretary", "principal", "vice_principal":
+	case "admin", "superadmin", "secretary", "principal", "vice_principal", "collaboratore_ds":
 		// authorised unconditionally within their school
-	case "teacher":
+	case "teacher", "coordinator", "coordinatore_classe":
 		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
 		if err != nil {
 			return fmt.Errorf("errore verifica docente per classe: %w", err)
@@ -396,12 +409,12 @@ func (s *service) GetClassAttendance(ctx context.Context, actorID, actorRole, sc
 	if actorRole == "" {
 		return nil, fmt.Errorf("unauthorized: missing actorRole")
 	}
-	if actorRole == "teacher" {
+	if actorRole == "teacher" || actorRole == "coordinator" || actorRole == "coordinatore_classe" {
 		isAssigned, err := s.repo.IsTeacherAssignedToClass(ctx, actorID, classID)
 		if err != nil || !isAssigned {
 			return nil, fmt.Errorf("forbidden: docente non assegnato alla classe")
 		}
-	} else if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" {
+	} else if actorRole != "admin" && actorRole != "superadmin" && actorRole != "secretary" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
 		return nil, fmt.Errorf("forbidden: ruolo non autorizzato alla lettura delle presenze di classe")
 	}
 
@@ -1116,4 +1129,51 @@ func countWeekdays(start, end time.Time) int {
 		}
 	}
 	return weekdays
+}
+
+func (s *service) SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error {
+	if classID == "" || date == "" {
+		return errors.New("classe e data sono campi obbligatori per la prenotazione pasti")
+	}
+	validTypes := map[string]bool{
+		"standard":              true,
+		"bianco":                true,
+		"dieta_sanitaria":       true,
+		"dieta_etico_religiosa": true,
+		"nessuno":               true,
+	}
+	for _, m := range meals {
+		if !validTypes[m.MealType] {
+			return fmt.Errorf("tipologia pasto non valida: %s (consentiti: standard, bianco, dieta_sanitaria, dieta_etico_religiosa, nessuno)", m.MealType)
+		}
+	}
+	return s.repo.SaveMealsBatch(ctx, classID, date, meals)
+}
+
+func (s *service) GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error) {
+	if schoolID == "" || date == "" {
+		return nil, errors.New("scuola e data obbligatorie per il report centro cottura")
+	}
+	return s.repo.GetDailyMealsReport(ctx, schoolID, date)
+}
+
+func (s *service) VerifyPinAndJustify(ctx context.Context, parentID string, req VerifyPinAndJustifyRequest) error {
+	if len(req.Pin) < 4 {
+		return errors.New("PIN dispositivo non valido: deve contenere almeno 4 cifre")
+	}
+	if req.AttendanceID == "" {
+		return errors.New("ID record presenza mancante")
+	}
+	reason := req.Reason
+	if reason == "" {
+		reason = "Giustificato da genitore con PIN dispositivo"
+	}
+	return s.repo.VerifyPinAndJustifyAbsence(ctx, req.AttendanceID, parentID, reason, req.Notes)
+}
+
+func (s *service) GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error) {
+	if studentID == "" {
+		return nil, errors.New("ID studente obbligatorio")
+	}
+	return s.repo.GetAbsenceLimitStatus(ctx, studentID)
 }

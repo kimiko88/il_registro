@@ -190,6 +190,7 @@ func (r *AdminRepository) ListSchools(ctx context.Context, req *admin.SchoolList
 			s.id,
 			s.name,
 			COALESCE(s.code, '') as code,
+			COALESCE(s.type, 'secondaria_secondo_grado') as type,
 			COALESCE(s.address, '') as address,
 			COALESCE(s.city, '') as city,
 			COALESCE(s.province, '') as province,
@@ -254,6 +255,7 @@ func (r *AdminRepository) ListSchools(ctx context.Context, req *admin.SchoolList
 			&school.ID,
 			&school.Name,
 			&school.Code,
+			&school.Type,
 			&school.Address,
 			&school.City,
 			&school.Province,
@@ -270,6 +272,7 @@ func (r *AdminRepository) ListSchools(ctx context.Context, req *admin.SchoolList
 		if err != nil {
 			return nil, 0, err
 		}
+		school.SchoolLevel = school.Type
 		schools = append(schools, school)
 	}
 
@@ -283,6 +286,7 @@ func (r *AdminRepository) GetSchool(ctx context.Context, schoolID string) (*admi
 			s.id,
 			s.name,
 			COALESCE(s.code, '') as code,
+			COALESCE(s.type, 'secondaria_secondo_grado') as type,
 			COALESCE(s.address, '') as address,
 			COALESCE(s.city, '') as city,
 			COALESCE(s.province, '') as province,
@@ -304,6 +308,7 @@ func (r *AdminRepository) GetSchool(ctx context.Context, schoolID string) (*admi
 		&school.ID,
 		&school.Name,
 		&school.Code,
+		&school.Type,
 		&school.Address,
 		&school.City,
 		&school.Province,
@@ -324,21 +329,32 @@ func (r *AdminRepository) GetSchool(ctx context.Context, schoolID string) (*admi
 	if err != nil {
 		return nil, err
 	}
+	school.SchoolLevel = school.Type
 
 	return &school, nil
 }
 
 // CreateSchool creates a new school
 func (r *AdminRepository) CreateSchool(ctx context.Context, req *admin.CreateSchoolRequest) (*admin.SchoolResponse, error) {
+	tier := req.SchoolLevel
+	if tier == "" {
+		tier = req.Type
+	}
+	if tier == "" {
+		tier = "secondaria_secondo_grado"
+	}
+
 	query := `
-		INSERT INTO schools (name, code, address, city, province, zip_code, phone, email, website, is_active)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true)
+		INSERT INTO schools (name, code, type, address, city, province, zip_code, phone, email, website, is_active)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true)
 		RETURNING id, created_at, updated_at
 	`
 
 	var school admin.SchoolResponse
 	school.Name = req.Name
 	school.Code = req.Code
+	school.SchoolLevel = tier
+	school.Type = tier
 	school.Address = req.Address
 	school.City = req.City
 	school.Province = req.Province
@@ -351,6 +367,7 @@ func (r *AdminRepository) CreateSchool(ctx context.Context, req *admin.CreateSch
 	err := r.db.QueryRowContext(ctx, query,
 		req.Name,
 		req.Code,
+		tier,
 		req.Address,
 		req.City,
 		req.Province,
@@ -376,6 +393,15 @@ func (r *AdminRepository) UpdateSchool(ctx context.Context, schoolID string, req
 	if req.Name != "" {
 		query += fmt.Sprintf(", name = $%d", argCount)
 		args = append(args, req.Name)
+		argCount++
+	}
+	tierVal := req.SchoolLevel
+	if tierVal == nil {
+		tierVal = req.Type
+	}
+	if tierVal != nil && *tierVal != "" {
+		query += fmt.Sprintf(", type = $%d", argCount)
+		args = append(args, *tierVal)
 		argCount++
 	}
 	if req.Address != "" {

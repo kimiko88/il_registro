@@ -8,15 +8,15 @@
     <q-card style="min-width: 380px; max-width: 480px;" class="rounded-xl">
       <q-card-section class="bg-amber-8 text-white row items-center">
         <q-icon name="security" size="28px" class="q-mr-sm" />
-        <div class="text-h6 text-weight-bold">{{ t('common.confirm') || 'Conferma Ricarica Pagina' }}</div>
+        <div class="text-h6 text-weight-bold">{{ t('common.reloadConfirmTitle') || 'Conferma Ricarica Pagina' }}</div>
       </q-card-section>
 
       <q-card-section class="q-pa-lg text-body1 text-slate-800">
         <p class="q-mb-sm text-weight-medium">
-          {{ t('settingsPage.security') || 'Sei sicuro di voler ricaricare la pagina?' }}
+          {{ t('common.reloadConfirmMessage') || 'Sei sicuro di voler ricaricare la pagina?' }}
         </p>
         <p class="text-caption text-grey-8 q-mb-none">
-          {{ t('settingsPage.subtitle') || 'Per ragioni di sicurezza i dati non salvati andranno persi.' }}
+          {{ t('common.reloadConfirmSubtitle') || 'Per ragioni di sicurezza i dati non salvati andranno persi.' }}
         </p>
       </q-card-section>
 
@@ -24,7 +24,7 @@
         <q-btn flat :label="t('common.cancel') || 'Annulla'" color="grey-8" v-close-popup no-caps />
         <q-btn 
           color="amber-9" 
-          :label="t('common.confirm') || 'Conferma e Ricarica'" 
+          :label="t('common.reloadConfirmBtn') || 'Conferma e Ricarica'" 
           icon="refresh" 
           no-caps 
           unelevated 
@@ -128,45 +128,140 @@ watch(() => authStore.isAuthenticated, (val) => {
   font-display: swap;
 }
 
-/* Accessibility DSA Font — applies to all elements EXCEPT icon fonts */
-body.dsa-font-active,
-body.dsa-font-active *:not(.material-icons):not(.material-symbols-outlined):not(.material-symbols-rounded):not(.material-symbols-sharp):not([class*="q-icon"]):not(i.q-icon):not(.notranslate) {
+/* Accessibility DSA Font (OpenDyslexic & Atkinson Hyperlegible) */
+body.dsa-font-active {
   font-family: 'OpenDyslexic', 'Atkinson Hyperlegible', 'Trebuchet MS', sans-serif !important;
-  letter-spacing: 0.05em !important;
-  word-spacing: 0.12em !important;
-  line-height: 1.65 !important;
 }
 
-/* Ensure Material Icons always keep their font regardless of DSA mode */
+/* Apply dyslexic-friendly typography to text elements strictly without touching icon containers */
+body.dsa-font-active p,
+body.dsa-font-active h1,
+body.dsa-font-active h2,
+body.dsa-font-active h3,
+body.dsa-font-active h4,
+body.dsa-font-active h5,
+body.dsa-font-active h6,
+body.dsa-font-active a:not(.q-btn),
+body.dsa-font-active label,
+body.dsa-font-active input,
+body.dsa-font-active textarea,
+body.dsa-font-active select,
+body.dsa-font-active .q-item__section--main .q-item__label,
+body.dsa-font-active .q-btn__content > span:not(.q-icon):not(.material-icons):not([class*="q-icon"]):not(.notranslate),
+body.dsa-font-active .q-table td:not(:has(.q-icon)),
+body.dsa-font-active .q-table th,
+body.dsa-font-active .q-field__native,
+body.dsa-font-active .q-field__label,
+body.dsa-font-active .q-chip__content,
+body.dsa-font-active .text-caption,
+body.dsa-font-active .text-subtitle1,
+body.dsa-font-active .text-subtitle2,
+body.dsa-font-active .text-body1,
+body.dsa-font-active .text-body2 {
+  font-family: 'OpenDyslexic', 'Atkinson Hyperlegible', 'Trebuchet MS', sans-serif !important;
+  letter-spacing: 0.02em;
+  word-spacing: 0.05em;
+  line-height: 1.6;
+}
+
+/* Reset spacing on avatar and button layout containers to prevent ligature breakage */
+.q-btn__content,
+.q-item__section--avatar,
+.q-avatar,
+.card-bg-icon,
+body.dsa-font-active .q-btn__content,
+body.dsa-font-active .q-item__section--avatar,
+body.dsa-font-active .q-avatar,
+body.dsa-font-active .card-bg-icon {
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+}
+
+/* Bulletproof Protection: Keep Material Icons, Material Symbols & Quasar Icons strictly preserved */
+.material-icons,
+.material-icons-outlined,
+.material-symbols-outlined,
+.material-symbols-rounded,
+.material-symbols-sharp,
+.q-icon,
+i.q-icon,
+[class*="q-icon"],
+.notranslate,
+.card-bg-icon,
+.q-btn .q-icon,
+.q-item .q-icon,
+.q-item__section--avatar .q-icon,
 body.dsa-font-active .material-icons,
+body.dsa-font-active .material-icons-outlined,
 body.dsa-font-active .material-symbols-outlined,
 body.dsa-font-active .material-symbols-rounded,
 body.dsa-font-active .material-symbols-sharp,
-body.dsa-font-active i.q-icon,
 body.dsa-font-active .q-icon,
-body.dsa-font-active .notranslate {
-  font-family: 'Material Icons', 'Material Symbols Outlined', 'Material Symbols Rounded', 'Material Symbols Sharp' !important;
-  letter-spacing: normal !important;
-  word-spacing: normal !important;
+body.dsa-font-active i.q-icon,
+body.dsa-font-active [class*="q-icon"],
+body.dsa-font-active .notranslate,
+body.dsa-font-active .card-bg-icon,
+body.dsa-font-active .q-btn .q-icon,
+body.dsa-font-active .q-item .q-icon,
+body.dsa-font-active .q-item__section--avatar .q-icon,
+body.font-family-lexend .material-icons,
+body.font-family-lexend .q-icon,
+body.font-family-fredoka .material-icons,
+body.font-family-fredoka .q-icon,
+body.font-family-roboto .material-icons,
+body.font-family-roboto .q-icon {
+  font-family: 'Material Icons', 'Material Icons Outlined', 'Material Symbols Outlined', 'Material Symbols Rounded' !important;
+  font-weight: normal !important;
+  font-style: normal !important;
   line-height: 1 !important;
-  font-feature-settings: 'liga' !important;
-  -webkit-font-feature-settings: 'liga' !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  direction: ltr !important;
+  font-feature-settings: 'liga' on !important;
+  -webkit-font-feature-settings: 'liga' on !important;
+  font-variant-ligatures: common-ligatures !important;
   text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
 }
 
-/* Additional Font Families */
-body.font-family-lexend,
-body.font-family-lexend * {
+/* Additional Font Families without breaking icon ligatures */
+body.font-family-lexend {
+  font-family: 'Lexend', sans-serif !important;
+}
+body.font-family-lexend p,
+body.font-family-lexend h1, body.font-family-lexend h2, body.font-family-lexend h3,
+body.font-family-lexend h4, body.font-family-lexend h5, body.font-family-lexend h6,
+body.font-family-lexend a:not(.q-btn), body.font-family-lexend label,
+body.font-family-lexend .q-btn__content > span:not(.q-icon):not(.material-icons):not([class*="q-icon"]):not(.notranslate),
+body.font-family-lexend .q-item__section--main .q-item__label, body.font-family-lexend .q-table td, body.font-family-lexend .q-table th {
   font-family: 'Lexend', sans-serif !important;
 }
 
-body.font-family-fredoka,
-body.font-family-fredoka * {
+body.font-family-fredoka {
+  font-family: 'Fredoka', cursive, sans-serif !important;
+}
+body.font-family-fredoka p,
+body.font-family-fredoka h1, body.font-family-fredoka h2, body.font-family-fredoka h3,
+body.font-family-fredoka h4, body.font-family-fredoka h5, body.font-family-fredoka h6,
+body.font-family-fredoka a:not(.q-btn), body.font-family-fredoka label,
+body.font-family-fredoka .q-btn__content > span:not(.q-icon):not(.material-icons):not([class*="q-icon"]):not(.notranslate),
+body.font-family-fredoka .q-item__section--main .q-item__label, body.font-family-fredoka .q-table td, body.font-family-fredoka .q-table th {
   font-family: 'Fredoka', cursive, sans-serif !important;
 }
 
-body.font-family-roboto,
-body.font-family-roboto * {
+body.font-family-roboto {
+  font-family: 'Roboto', sans-serif !important;
+}
+body.font-family-roboto p,
+body.font-family-roboto h1, body.font-family-roboto h2, body.font-family-roboto h3,
+body.font-family-roboto h4, body.font-family-roboto h5, body.font-family-roboto h6,
+body.font-family-roboto a:not(.q-btn), body.font-family-roboto label,
+body.font-family-roboto .q-btn__content > span:not(.q-icon):not(.material-icons):not([class*="q-icon"]):not(.notranslate),
+body.font-family-roboto .q-item__section--main .q-item__label, body.font-family-roboto .q-table td, body.font-family-roboto .q-table th {
   font-family: 'Roboto', sans-serif !important;
 }
 

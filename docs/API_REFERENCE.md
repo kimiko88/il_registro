@@ -19,7 +19,10 @@ Questo documento descrive gli endpoint REST e le connessioni WebSocket del backe
 - [Utenti & Fascicolo](#utenti--fascicolo)
 - [Lezioni e Agenda](#lezioni-e-agenda)
 - [Orario Scolastico](#orario-scolastico)
+- [Plessi e Aule Prenotabili](#plessi-e-aule-prenotabili)
+- [Generatore Orario Scolastico & Desiderata Docenti](#generatore-orario-scolastico--desiderata-docenti)
 - [Sostituzioni Docenti](#sostituzioni-docenti)
+- [Rilevazione Scioperi (Strike Notices & Summary)](#rilevazione-scioperi-strike-notices--summary)
 - [Colloqui e Ricevimento Famiglie](#colloqui-e-ricevimento-famiglie)
 - [Voti, Rubriche ed Educazione Civica](#voti-rubriche-ed-educazione-civica)
 - [Piani Didattici Personalizzati (PDP / PEI)](#piani-didattici-personalizzati-pdp--pei)
@@ -141,6 +144,32 @@ Crea una nuova classe. Per il ruolo `superadmin`, accetta lo `school_id` all'int
 
 ## Utenti & Fascicolo
 
+### `POST /api/v1/users`
+Crea una nuova utenza nel sistema.
+- **Autorizzazione**: `superadmin`, `admin`, `secretary`.
+- **Validazione Ruoli**: Il campo `role` deve contenere uno dei 25 ruoli istituzionali validi. Se il ruolo non è riconosciuto, il server risponde con `HTTP 400 Bad Request` (`{"error": "invalid role"}`).
+- **Restrizioni**: Solo `superadmin` può creare altri `superadmin` o `admin`. La segreteria può creare docenti, studenti, genitori e personale ATA autorizzato.
+
+### `PUT /api/v1/users/:id`
+Aggiorna le informazioni anagrafiche e/o il ruolo primario dell'utente.
+- **Autorizzazione**: `superadmin`, `admin`, `secretary`.
+- **Validazione Ruoli**: Se `role` viene modificato, deve rispettare l'elenco dei ruoli validi, altrimenti restituisce `HTTP 400 Bad Request`.
+
+### `POST /api/v1/users/:id/roles`
+Assegna incarichi o ruoli multipli secondari all'utente (es. coordinatore di classe, referente inclusione, tutor orientatore).
+- **Autorizzazione**: `superadmin`, `admin`, `principal`, `secretary`.
+- **Validazione Ruoli**: Restituisce `HTTP 400 Bad Request` se uno qualsiasi dei ruoli forniti non è valido.
+
+### `GET /api/v1/users`
+Recupera l'elenco degli utenti con filtri anagrafici e di ruolo.
+- **Autorizzazione Standard**: `superadmin`, `admin`, `secretary`, `principal`, `vice_principal`, `dsga`, `assistente_amministrativo`, `assistente_personale`.
+- **Autorizzazione Speciale Collaboratore Scolastico**: Il ruolo `collaboratore_scolastico` è autorizzato ad interrogare questo endpoint **esclusivamente** con parametro `role=student` (es. `GET /api/v1/users?role=student&search=Rossi`), per consentire l'identificazione tempestiva dell'alunno e la verifica dei tutori delegati al ritiro anticipato nel Registro Visitatori (`/ata/visitor-registry`). Qualsiasi richiesta effettuata da un collaboratore scolastico senza specificare `role=student` viene respinta con `HTTP 403 Forbidden`.
+- **Query Parameters**:
+  - `role`: filtro per ruolo istituzionale (es. `student`, `teacher`, `parent`).
+  - `school_id`: filtro per scuola (per ruoli multi-tenant).
+  - `search`: stringa di ricerca per nome, cognome o codice fiscale.
+  - `page`, `limit`: paginazione dei risultati.
+
 ### `GET /api/v1/students/:id/fascicolo`
 Restituisce lo storico completo dello studente (valutazioni, presenze, note, PDP, attestati PCTO).
 - **Autorizzazione**: Accessibile da docenti, personale di segreteria, dirigente, dallo studente stesso o dai genitori con tutela legale verificata.
@@ -179,6 +208,163 @@ Imposta o modifica l'orario scolastico del docente (sincronizzazione bidireziona
 
 ---
 
+## Plessi e Aule Prenotabili
+
+Gestione multi-plesso e aule speciali/laboratori prenotabili dai docenti (con supporto a prenotazioni spot o ricorrenti per classe/ora e verifica preventiva anti-sovrapposizione).
+
+### `GET /api/v1/rooms/buildings`
+Restituisce l'elenco dei plessi/sedi dell'istituto scolastico dell'utente autenticato.
+**Query Parameters**: `school_id` (opzionale per amministratori).
+
+### `POST /api/v1/rooms/buildings`
+Crea una nuova sede o plesso scolastico.
+**Ruoli ammessi**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`, `secretary`.
+**Request Body**:
+```json
+{
+  "school_id": "uuid",
+  "name": "Sede Succursale Nord",
+  "address": "Via Roma 123",
+  "code": "SUCC-N"
+}
+```
+
+### `GET /api/v1/rooms`
+Lista le aule della scuola con supporto ai filtri per sede, tipologia e disponibilità alla prenotazione.
+**Query Parameters**:
+- `building_id`: filtra per plesso specifico
+- `room_type`: filtra per tipologia (`standard`, `lab_computer`, `lab_science`, `lab_languages`, `gym`, `auditorium`)
+- `only_bookable`: `true` per mostrare solo le aule prenotabili dai docenti
+
+### `POST /api/v1/rooms`
+Crea una nuova aula o laboratorio assegnato a un plesso.
+**Ruoli ammessi**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`, `secretary`.
+**Request Body**:
+```json
+{
+  "building_id": "uuid",
+  "name": "Laboratorio di Informatica 1",
+  "room_type": "lab_computer",
+  "capacity": 28,
+  "is_bookable": true,
+  "equipment": ["30 PC", "Lavagna Interattiva Touch", "Rete LAN Gigabit"]
+}
+```
+
+### `GET /api/v1/rooms/:id/availability`
+Verifica la disponibilità di una specifica aula per una determinata data e ora di lezione.
+**Query Parameters**:
+- `date`: data nel formato `YYYY-MM-DD`
+- `time_slot`: ora di lezione (es. `1`, `2`, `3`)
+
+### `GET /api/v1/rooms/bookings`
+Recupera le prenotazioni attive delle aule con filtri cronologici e per risorsa.
+**Query Parameters**: `room_id`, `teacher_id`, `class_id`, `from`, `to`.
+
+### `POST /api/v1/rooms/bookings`
+Effettua la prenotazione di un'aula da parte di un docente per una specifica classe ed ora. Supporta prenotazioni spot oppure ricorrenti settimanali fino a una data limite. Il server effettua un controllo atomico anti-sovrapposizione.
+**Ruoli ammessi**: `teacher`, `principal`, `vice_principal`, `admin`, `superadmin`, `secretary`.
+**Request Body**:
+```json
+{
+  "room_id": "uuid",
+  "class_id": "uuid",
+  "date": "2026-10-05",
+  "time_slot": 3,
+  "reason": "Attività laboratoriale coding con robot educativi",
+  "is_recurring": true,
+  "recurrence_rule": "weekly",
+  "recurrence_end_date": "2026-12-22"
+}
+```
+
+### `DELETE /api/v1/rooms/bookings/:id`
+Annulla una prenotazione esistente. I docenti possono cancellare solo le proprie prenotazioni; la Segreteria e la Dirigenza possono cancellare qualsiasi prenotazione.
+
+---
+
+## Generatore Orario Scolastico & Desiderata Docenti
+
+Motore intelligente basato su Constraint Satisfaction Problem (CSP) con euristica pesata per la generazione automatica dell'orario scolastico per il Dirigente/Vicario/Collaboratore DS.
+Prioritizza i desiderata dei docenti con maggiore anzianità di servizio (`hiring_date`), accoppia classi e docenti nei rispettivi plessi e assegna laboratori/palestre evitando sovrapposizioni e trasferimenti impossibili. Il tempo di calcolo è ottimizzato per completarsi in meno di 30 secondi.
+
+### `POST /api/v1/timetable/generate`
+Avvia in background il job di generazione dell'orario scolastico dell'istituto.
+**Ruoli ammessi**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`.
+**Request Body**:
+```json
+{
+  "academic_year": "2026/2027",
+  "school_id": "uuid",
+  "max_computation_seconds": 25,
+  "seniority_weight": 2.5
+}
+```
+**Response `202 Accepted`**:
+```json
+{
+  "job_id": "uuid-job",
+  "status": "running",
+  "message": "Generazione orario avviata in background"
+}
+```
+
+### `GET /api/v1/timetable/generate/:jobID`
+Interroga lo stato di avanzamento del calcolo dell'orario (polling).
+**Response `200 OK`**:
+```json
+{
+  "job_id": "uuid-job",
+  "status": "completed",
+  "fitness_score": 94.8,
+  "execution_time_ms": 1420,
+  "soft_violations": [
+    "Docente Bianchi: giorno libero assegnato Mercoledì anziché Venerdì per evitare ora buca classe 3B"
+  ],
+  "proposed_schedule": [
+    {
+      "class_id": "uuid-classe",
+      "teacher_id": "uuid-docente",
+      "subject_id": "uuid-materia",
+      "room_id": "uuid-lab",
+      "day_of_week": 1,
+      "time_slot": 2
+    }
+  ]
+}
+```
+
+### `POST /api/v1/timetable/generate/:jobID/publish`
+Pubblica l'orario calcolato, scrivendolo in modo atomico nella tabella ufficiale `class_schedules` per tutte le classi e i docenti coinvolti.
+**Ruoli ammessi**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`.
+
+### `GET /api/v1/timetable/preferences`
+Recupera i desiderata del docente autenticato (o per un docente specifico passando `teacher_id` con ruolo amministrativo/presidenza).
+
+### `POST /api/v1/timetable/preferences`
+Salva o aggiorna i desiderata orari del docente.
+**Ruoli ammessi**: `teacher`, `principal`, `vice_principal`, `admin`, `superadmin`.
+**Request Body**:
+```json
+{
+  "preferred_free_day": 5,
+  "preferred_slots": [1, 2, 3],
+  "avoid_slots": [6],
+  "max_hours_per_day": 4,
+  "notes": "Preferenza orario antimeridiano nei primi giorni della settimana"
+}
+```
+
+### `GET /api/v1/timetable/constraints` e `POST /api/v1/timetable/constraints`
+Lettura e configurazione dei vincoli orari di istituto e di plesso (giorni scolastici settimanali 5 o 6 giorni, ore per giorno, limite ore buche consentite per docente, pesatura desiderata per anzianità di servizio).
+**Ruoli ammessi per POST**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`.
+
+### `GET /api/v1/timetable/room-requirements` e `POST /api/v1/timetable/room-requirements`
+Gestione dei requisiti speciali di aula per materia/classe (ad es. Scienze Motorie richiede `gym`, Chimica richiede `lab_science`), garantendo che il generatore orario allochi l'aula nel medesimo plesso della classe.
+**Ruoli ammessi per POST**: `principal`, `vice_principal`, `collaboratore_ds`, `admin`, `superadmin`.
+
+---
+
 ## Sostituzioni Docenti
 
 ### `GET /api/v1/substitutions`
@@ -187,6 +373,52 @@ Lista le sostituzioni docenti programmate per la scuola o per il docente.
 ### `POST /api/v1/substitutions`
 Crea una nuova richiesta di sostituzione per un docente assente.
 **Ruoli ammessi**: `superadmin`, `admin`, `secretary`, `principal`
+
+---
+
+## Rilevazione Scioperi (Strike Notices & Summary)
+
+Modulo per la gestione delle comunicazioni di sciopero, delle dichiarazioni volontarie del personale e del calcolo dei contingenti minimi essenziali (L. 146/90).
+
+### `POST /api/v1/strike-notices`
+Crea una nuova comunicazione di sciopero per l'istituto scolastico.
+- **Ruoli ammessi**: `principal`, `vice_principal`, `dsga`, `admin`, `superadmin`, `collaboratore_ds`, `secretary`, `assistente_amministrativo`, `assistente_personale`.
+- **Request Body**:
+```json
+{
+  "title": "Sciopero Generale Comparto Istruzione",
+  "start_date": "2026-10-15T00:00:00Z",
+  "end_date": "2026-10-15T23:59:59Z",
+  "organization": "Sigla Sindacale",
+  "essential_services": "Sorveglianza ingressi plesso centrale",
+  "notes": "Circolare informativa preventiva alle famiglie"
+}
+```
+
+### `GET /api/v1/strike-notices`
+Elenco di tutte le comunicazioni di sciopero attive per l'istituto dell'utente autenticato.
+
+### `GET /api/v1/strike-notices/:id`
+Dettaglio della singola comunicazione di sciopero.
+
+### `DELETE /api/v1/strike-notices/:id`
+Elimina la comunicazione di sciopero specificata.
+- **Ruoli ammessi**: `principal`, `vice_principal`, `dsga`, `admin`, `superadmin`.
+
+### `POST /api/v1/strike-notices/:id/declare`
+Invio della dichiarazione preventiva individuale e volontaria da parte del dipendente (docente o ATA).
+- **Ruoli ammessi**: qualsiasi dipendente della scuola (`teacher`, `collaboratore_scolastico`, `assistente_amministrativo`, `dsga`, ecc.).
+- **Request Body**:
+```json
+{
+  "status": "adhere"
+}
+```
+Valori supportati per `status`: `"adhere"` (aderisce), `"not_adhere"` (non aderisce), `"undecided"` (non si pronuncia).
+
+### `GET /api/v1/strike-notices/:id/summary`
+Restituisce il riepilogo statistico e aggregato delle dichiarazioni pervenute, con conteggio delle adesioni distinte per docenti e personale ATA e monitoraggio dei contingenti minimi essenziali.
+- **Ruoli ammessi**: `principal`, `vice_principal`, `dsga`, `admin`, `superadmin`, `collaboratore_ds`, `secretary`, `assistente_amministrativo`, `assistente_personale`.
 
 ---
 

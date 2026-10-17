@@ -59,6 +59,31 @@ func (m *mockTextbooksRepo) ListByClass(ctx context.Context, classID string) ([]
 	return args.Get(0).([]textbooks.ClassTextbook), args.Error(1)
 }
 
+func (m *mockTextbooksRepo) UpsertAIECatalog(ctx context.Context, books []textbooks.AIECatalogBook) (int, error) {
+	return len(books), nil
+}
+func (m *mockTextbooksRepo) SearchAIECatalog(ctx context.Context, queryStr, subject, schoolOrder string, limit int) ([]textbooks.AIECatalogBook, error) {
+	return nil, nil
+}
+func (m *mockTextbooksRepo) GetSpendingLimit(ctx context.Context, schoolID string, classYear int, schoolOrder, academicYear string) (*textbooks.SpendingLimit, error) {
+	return nil, nil
+}
+func (m *mockTextbooksRepo) UpsertSpendingLimit(ctx context.Context, limit *textbooks.SpendingLimit) error {
+	return nil
+}
+func (m *mockTextbooksRepo) ListClassAdoptions(ctx context.Context, classID string) ([]textbooks.ClassAdoptionItem, error) {
+	return nil, nil
+}
+func (m *mockTextbooksRepo) SaveClassAdoption(ctx context.Context, item *textbooks.ClassAdoptionItem) error {
+	return nil
+}
+func (m *mockTextbooksRepo) DeleteClassAdoption(ctx context.Context, id string) error {
+	return nil
+}
+func (m *mockTextbooksRepo) GetClassInfo(ctx context.Context, classID string) (int, string, string, string, string, error) {
+	return 1, "secondaria_2", "2026/2027", "RMPS010004", "1A", nil
+}
+
 func buildTextbooksEngine(repo textbooks.Repository, userID, role, schoolID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

@@ -17,6 +17,7 @@ import (
 	"registro-backend/internal/accessibility"
 	"registro-backend/internal/admin"
 	"registro-backend/internal/agenda"
+	"registro-backend/internal/albopretorio"
 	"registro-backend/internal/attendance"
 	"registro-backend/internal/auditlog"
 	"registro-backend/internal/auth"
@@ -32,13 +33,23 @@ import (
 	"registro-backend/internal/didactic_materials"
 	"registro-backend/internal/documents"
 	"registro-backend/internal/elearning"
+	"registro-backend/internal/elections"
+	"registro-backend/internal/enrollment"
 	"registro-backend/internal/extracurricular"
+	"registro-backend/internal/family_desk"
 	"registro-backend/internal/general_meetings"
 	"registro-backend/internal/grades"
 	"registro-backend/internal/groups"
 	"registro-backend/internal/handler"
+	"registro-backend/internal/helpdesk"
+	"registro-backend/internal/interpelli"
+	"registro-backend/internal/inventory"
 	"registro-backend/internal/lessons"
 	"registro-backend/internal/mailer"
+	"registro-backend/internal/maturita"
+	"registro-backend/internal/may15"
+	"registro-backend/internal/meals"
+	"registro-backend/internal/middleschoolexam"
 	"registro-backend/internal/middleware"
 	"registro-backend/internal/notes"
 	"registro-backend/internal/notifications"
@@ -46,12 +57,19 @@ import (
 	"registro-backend/internal/parents"
 	"registro-backend/internal/payments"
 	"registro-backend/internal/pcto"
+	"registro-backend/internal/pcto_tutor"
 	"registro-backend/internal/pdfworker"
 	"registro-backend/internal/pdp"
-
+	"registro-backend/internal/personnel_desk"
 	"registro-backend/internal/postgres"
+	"registro-backend/internal/primaryeval"
+	"registro-backend/internal/privacy"
+	"registro-backend/internal/protocol"
+	"registro-backend/internal/psychology"
 	"registro-backend/internal/recovery"
+	"registro-backend/internal/religion_alternative"
 	"registro-backend/internal/reports"
+	"registro-backend/internal/rooms"
 	"registro-backend/internal/rubrics"
 	"registro-backend/internal/scheduling"
 	"registro-backend/internal/schoolcalendar"
@@ -61,6 +79,8 @@ import (
 	"registro-backend/internal/search"
 	"registro-backend/internal/sidi"
 	"registro-backend/internal/signatures"
+	"registro-backend/internal/staff_attendance"
+	"registro-backend/internal/strike"
 	"registro-backend/internal/student_goals"
 	"registro-backend/internal/students"
 	"registro-backend/internal/subjects"
@@ -70,15 +90,19 @@ import (
 	"registro-backend/internal/teachers"
 	"registro-backend/internal/tenants"
 	"registro-backend/internal/textbooks"
+	"registro-backend/internal/timetablegen"
 	"registro-backend/internal/timetables"
 	"registro-backend/internal/trips"
 	"registro-backend/internal/uda"
 	"registro-backend/internal/users"
 	"registro-backend/internal/verbali"
+	"registro-backend/internal/visitors"
 	"registro-backend/internal/ws"
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
+	"registro-backend/pkg/queue"
 	"registro-backend/pkg/upload"
+	"registro-backend/pkg/version"
 	"registro-backend/pkg/wsticket"
 )
 
@@ -95,9 +119,10 @@ func main() {
 	// 2. Init Logger
 	logger.Init(cfg.Server.Mode)
 
-	// 2a. Init rate limiter backend (Redis-backed if REDIS_URL is set, in-memory otherwise).
+	// 2a. Init rate limiter backend (Redis-backed if configured, in-memory otherwise).
 	// Must be called before the first request, so we do it right after logging is up.
-	middleware.InitRateLimiter(os.Getenv("REDIS_URL"))
+	redisURL := cfg.RedisURL()
+	middleware.InitRateLimiter(redisURL)
 
 	// 3. Connect DB
 	database, err := db.Connect(cfg.Database)
@@ -114,9 +139,9 @@ func main() {
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
 	mfaService := auth.NewMFAService("RegistroElettronico")
-	wsHub := ws.NewHub(os.Getenv("REDIS_URL"))
+	wsHub := ws.NewHub(redisURL)
 	go wsHub.Run(ctx)
-	appCache := cache.NewCache(os.Getenv("REDIS_URL"))
+	appCache := cache.NewCache(redisURL)
 	defer func() { _ = appCache.Close() }()
 
 	// 5. Setup Repositories
@@ -147,7 +172,16 @@ func main() {
 	// Repository FEQ — firma qualificata con valore legale (CAD art. 21 / eIDAS)
 	feqRepo := signatures.NewFEQRepository(database)
 
-	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo)
+	revocationStore := jwt.NewRevocationStore(redisURL)
+	defer func() { _ = revocationStore.Close() }()
+
+	loginLimiter := auth.NewLoginRateLimiter(redisURL)
+
+	authMiddleware := auth.NewMiddleware(tokenManager, usersRepo, revocationStore)
+
+	taskQueue := queue.NewQueue(redisURL)
+	taskQueue.Start()
+	defer taskQueue.Stop()
 
 	// 6. Setup Services
 	mailerCfg := mailer.MailConfig{
@@ -164,10 +198,12 @@ func main() {
 	schoolCalendarSvc := schoolcalendar.NewService(schoolCalendarRepo)
 
 	authSvc := auth.NewService(authRepo, tokenManager, mfaService, mailerSvc)
+	authSvc.SetRevocationStore(revocationStore)
+	authSvc.SetLoginRateLimiter(loginLimiter)
 	usersSvc := users.NewService(usersRepo)
 	classesSvc := classes.NewService(classesRepo)
 	gradesSvc := grades.NewService(gradesRepo, usersRepo, database, wsHub)
-	gradesAnalytics := grades.NewAnalyticsService(gradesRepo)
+	gradesAnalytics := grades.NewAnalyticsService(gradesRepo, appCache)
 	attendanceSvc := attendance.NewService(attendanceRepo, usersRepo, wsHub, schoolCalendarSvc)
 	docsSvc := documents.NewService(docsRepo)
 	schedSvc := scheduling.NewService(schedRepo, teachersRepo, nil, nil, nil)
@@ -196,7 +232,8 @@ func main() {
 
 	rubricsSvc := rubrics.NewService(rubricsRepo, usersRepo)
 
-	wsTicketStore := wsticket.NewStore()
+	wsTicketStore := wsticket.NewStore(redisURL)
+	defer func() { _ = wsTicketStore.Close() }()
 
 	// 7. Setup Handlers
 	authH := auth.NewHandler(authSvc, wsTicketStore)
@@ -224,6 +261,14 @@ func main() {
 	rubricsH := rubrics.NewHandler(rubricsSvc)
 	schoolCalendarH := schoolcalendar.NewHandler(schoolCalendarSvc)
 
+	roomsRepo := rooms.NewRepository(database)
+	roomsSvc := rooms.NewService(roomsRepo)
+	roomsH := rooms.NewHandler(roomsSvc)
+
+	timetableGenRepo := timetablegen.NewRepository(database)
+	timetableGenSvc := timetablegen.NewService(timetableGenRepo, nil)
+	timetableGenH := timetablegen.NewHandler(timetableGenSvc)
+
 	a11yRepo := accessibility.NewRepository(database)
 	a11ySvc := accessibility.NewService(a11yRepo)
 	a11yH := accessibility.NewHandler(a11ySvc)
@@ -233,8 +278,47 @@ func main() {
 
 	wsHandler := ws.NewHandler(wsHub)
 
+	staffAttRepo := staff_attendance.NewRepository(database)
+	staffAttSvc := staff_attendance.NewService(staffAttRepo)
+	staffAttH := staff_attendance.NewHandler(staffAttSvc)
+	staffAttLeaveH := staff_attendance.NewLeaveHandler(staffAttRepo)
+
+	strikeRepo := strike.NewRepository(database)
+	strikeSvc := strike.NewService(strikeRepo)
+	strikeH := strike.NewHandler(strikeSvc)
+
+	visitorsRepo := visitors.NewRepository(database)
+	visitorsSvc := visitors.NewService(visitorsRepo)
+	visitorsH := visitors.NewHandler(visitorsSvc)
+
+	deskRepo := personnel_desk.NewRepository(database)
+	deskSvc := personnel_desk.NewService(deskRepo)
+	deskH := personnel_desk.NewHandler(deskSvc)
+
 	adminMiddleware := admin.NewMiddleware()
 	healthH := handler.NewHealthHandler(database)
+
+	// Nuovi Moduli Enterprise Dealbreaker
+	interpelliSvc := interpelli.NewService(nil)
+	interpelliH := interpelli.NewHandler(interpelliSvc)
+
+	alboSvc := albopretorio.NewService(nil)
+	alboH := albopretorio.NewHandler(alboSvc)
+
+	maturitaSvc := maturita.NewService(nil)
+	maturitaH := maturita.NewHandler(maturitaSvc)
+
+	mealsSvc := meals.NewService(nil)
+	mealsH := meals.NewHandler(mealsSvc)
+
+	inventorySvc := inventory.NewService(nil)
+	inventoryH := inventory.NewHandler(inventorySvc)
+
+	privacySvc := privacy.NewService(nil)
+	privacyH := privacy.NewHandler(privacySvc)
+
+	psychologySvc := psychology.NewService(nil)
+	psychologyH := psychology.NewHandler(psychologySvc)
 
 	// 8. Setup Router
 	r := gin.New()
@@ -248,6 +332,10 @@ func main() {
 	r.Use(middleware.TimeoutMiddleware(30 * time.Second))
 	// Compress JSON/text responses (60-80% size reduction). Excluded: /metrics (Prometheus plain text).
 	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPaths([]string{"/metrics"})))
+	// 2MB request body size limit to prevent memory exhaustion DoS (skips multipart uploads)
+	r.Use(middleware.RequestBodyLimitMiddleware(2 * 1024 * 1024))
+	// HTTP conditional caching (ETag / 304 Not Modified)
+	r.Use(middleware.ETagMiddleware())
 
 	middleware.InitCircuitBreaker()
 
@@ -335,6 +423,13 @@ func main() {
 		authH.RegisterRoutes(api, authMiddleware)
 		api.GET("/public/schools", schoolsH.ListPublic)
 		api.POST("/public/accessibility-feedback", a11yH.SubmitPublic)
+		api.POST("/public/csp-report", handler.HandleCSPReport)
+		r.POST("/public/csp-report", handler.HandleCSPReport)
+
+		// Public Routes per Interpelli, Albo Pretorio e Timbro Digitale
+		interpelliH.RegisterPublicRoutes(api)
+		alboH.RegisterPublicRoutes(api)
+		signaturesH.RegisterPublicRoutes(api)
 
 		api.GET("/ws", authMiddleware.AuthenticateWSTicket(wsTicketStore), func(c *gin.Context) {
 			wsHandler.Listen(c)
@@ -377,6 +472,10 @@ func main() {
 				usersGroup.DELETE("/:id/guardians/:guardianId", usersH.RemoveGuardian)
 				usersGroup.POST("/me/switch-child/:studentId", usersH.SwitchChild)
 				usersGroup.GET("/students/:id/fascicolo", usersH.GetFascicolo)
+				usersGroup.GET("/:id/assignments", usersH.GetAssignments)
+				usersGroup.POST("/:id/assignments", usersH.AddAssignment)
+				usersGroup.DELETE("/:id/assignments/:assignmentId", usersH.DeleteAssignment)
+				usersGroup.PUT("/:id/coordinated-classes", usersH.SetCoordinatedClasses)
 			}
 
 			classesH.RegisterRoutes(protected)
@@ -386,6 +485,8 @@ func main() {
 			docsH.RegisterRoutes(uploadLimited)
 			schedH.RegisterRoutes(protected)
 			timetablesH.RegisterRoutes(protected)
+			roomsH.RegisterRoutes(protected)
+			timetableGenH.RegisterRoutes(protected)
 			agendaH.RegisterRoutes(protected)
 			colloquiH.RegisterRoutes(protected)
 			verbaliH.RegisterRoutes(protected)
@@ -452,6 +553,9 @@ func main() {
 			studentsFascicoloH := students.NewFascicoloHandler(database)
 			studentsFascicoloH.RegisterRoutes(protected)
 
+			studentsReligionH := students.NewReligionHandler(database)
+			studentsReligionH.RegisterRoutes(protected)
+
 			subsRepo := substitutions.NewRepository(database)
 			subsSvc := substitutions.NewService(subsRepo)
 			subsH := substitutions.NewHandler(subsSvc)
@@ -489,6 +593,12 @@ func main() {
 			parentsRepo := parents.NewRepository(database)
 			parentsSvc := parents.NewService(parentsRepo, usersRepo, gradesRepo, attendanceRepo, commsRepo)
 			parentsH := parents.NewHandler(parentsSvc)
+			if pgRepo, ok := parentsRepo.(parents.DualSignatureRepository); ok {
+				dualSvc := parents.NewDualSignatureService(pgRepo)
+				accessGuard := parents.NewAccessGuard(pgRepo)
+				parentsH.SetDualSignatureService(dualSvc)
+				parentsH.SetAccessGuard(accessGuard)
+			}
 			parentsH.RegisterRoutes(protected)
 
 			creditsRepo := credits.NewRepository(database)
@@ -514,6 +624,16 @@ func main() {
 			tenantsSvc := tenants.NewService(tenantsRepo)
 			tenantsH := tenants.NewHandler(tenantsSvc)
 			tenantsH.RegisterRoutes(protected)
+
+			enrollmentRepo := enrollment.NewRepository(database)
+			enrollmentSvc := enrollment.NewService(enrollmentRepo)
+			enrollmentH := enrollment.NewHandler(enrollmentSvc)
+			enrollmentH.RegisterRoutes(protected)
+
+			examRepo := middleschoolexam.NewRepository(database)
+			examSvc := middleschoolexam.NewService(examRepo)
+			examH := middleschoolexam.NewHandler(examSvc)
+			examH.RegisterRoutes(protected)
 
 			certRepo := certificates.NewRepository(database)
 			certSvc := certificates.NewService(certRepo, usersRepo)
@@ -557,6 +677,76 @@ func main() {
 			sidiH := sidi.NewHandler(sidiSvc)
 			sidiH.RegisterRoutes(protected)
 
+			// Presenze Personale (Docenti in sciopero + Personale ATA)
+			staffAttH.RegisterRoutes(protected)
+			staffAttLeaveH.RegisterLeaveRoutes(protected)
+
+			// Rilevazione Preventiva Scioperi
+			strikeH.RegisterRoutes(protected)
+
+			// Registro Visitatori, Uscite Anticipate & Segnalazioni Guasti
+			visitorsH.RegisterRoutes(protected)
+
+			// Sportello Digitale Personale
+			deskH.RegisterRoutes(protected)
+
+			// Valutazione Primaria (O.M. 172/2020 — Giudizi Descrittivi & Obiettivi di Apprendimento)
+			primaryEvalRepo := primaryeval.NewRepository(database)
+			primaryEvalSvc := primaryeval.NewService(primaryEvalRepo)
+			primaryEvalH := primaryeval.NewHandler(primaryEvalSvc)
+			primaryEvalH.RegisterRoutes(protected)
+
+			// Documento del 15 Maggio (Art. 17 D.Lgs. 62/2017 - Esami di Stato Classe 5ª)
+			may15Repo := may15.NewRepository(database)
+			may15Svc := may15.NewService(may15Repo)
+			may15H := may15.NewHandler(may15Svc)
+			may15H.RegisterRoutes(protected)
+
+			// Materia Alternativa all'IRC (Architettura Nativa a Gruppi)
+			religionAltRepo := religion_alternative.NewPostgresRepository(database)
+			religionAltSvc := religion_alternative.NewService(religionAltRepo)
+			religionAltH := religion_alternative.NewHandler(religionAltSvc)
+			religionAltH.RegisterRoutes(protected)
+
+			// Sportello Digitale Istanze Famiglie & Delegati Permanenti
+			familyDeskRepo := family_desk.NewPostgresRepository(database)
+			familyDeskSvc := family_desk.NewService(familyDeskRepo)
+			familyDeskH := family_desk.NewHandler(familyDeskSvc)
+			familyDeskH.RegisterRoutes(protected)
+
+			// Portale Esterno Tutor Aziendale PCTO
+			pctoTutorRepo := pcto_tutor.NewPostgresRepository(database)
+			pctoTutorSvc := pcto_tutor.NewService(pctoTutorRepo)
+			pctoTutorH := pcto_tutor.NewHandler(pctoTutorSvc)
+			pctoTutorH.RegisterRoutes(api)
+
+			// Elezioni Organi Collegiali (Urna Digitale & Voto Online Anonimo)
+			electionsRepo := elections.NewPostgresRepository(database)
+			electionsSvc := elections.NewService(electionsRepo)
+			electionsH := elections.NewHandler(electionsSvc)
+			electionsH.RegisterRoutes(protected)
+
+			// Sportello Help Didattico Pomeridiano e Rendicontazione FIS
+			helpDeskRepo := helpdesk.NewPostgresRepository(database)
+			helpDeskSvc := helpdesk.NewService(helpDeskRepo)
+			helpDeskH := helpdesk.NewHandler(helpDeskSvc)
+			helpDeskH.RegisterRoutes(protected)
+
+			// Titolario & Protocollo Ufficiale AgID
+			protocolRepo := protocol.NewPostgresRepository(database)
+			protocolSvc := protocol.NewService(protocolRepo)
+			protocolH := protocol.NewHandler(protocolSvc)
+			protocolH.RegisterRoutes(protected)
+
+			// 10 Nuovi Moduli Enterprise Dealbreaker
+			interpelliH.RegisterProtectedRoutes(protected)
+			alboH.RegisterProtectedRoutes(protected)
+			maturitaH.RegisterRoutes(protected)
+			mealsH.RegisterRoutes(protected)
+			inventoryH.RegisterRoutes(protected)
+			privacyH.RegisterRoutes(protected)
+			psychologyH.RegisterRoutes(protected)
+
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}
 	}
@@ -568,7 +758,7 @@ func main() {
 	}
 
 	go func() {
-		logger.Log.Infof("Server starting on port %s", cfg.Server.Port)
+		logger.Log.Infof("il_registro API Server %s starting on port %s", version.String(), cfg.Server.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Log.Fatalf("Server error: %v", err)
 		}

@@ -3,7 +3,9 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"io"
@@ -110,4 +112,16 @@ func DecryptString(ciphertextHex string) (string, error) {
 	}
 
 	return string(plainBytes), nil
+}
+
+// PrehashPassword computes a 32-byte HMAC-SHA256 of the password using the PEPPER_SECRET env var.
+// This resolves the 72-byte truncation limit of bcrypt and protects against rainbow tables with a server pepper.
+func PrehashPassword(password string) []byte {
+	pepper := os.Getenv("PEPPER_SECRET")
+	if pepper == "" {
+		pepper = "default_pepper_secret_registrov2"
+	}
+	h := hmac.New(sha256.New, []byte(pepper))
+	h.Write([]byte(password))
+	return h.Sum(nil)
 }

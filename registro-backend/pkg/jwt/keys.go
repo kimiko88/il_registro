@@ -138,7 +138,13 @@ func GetOrGenerateKeys(privatePath, publicPath string) (*rsa.PrivateKey, *rsa.Pu
 		return LoadRSAKeys(privatePath, publicPath)
 	}
 
-	// 3. Otherwise generate new keys in memory
+	// 3. In production, ephemeral in-memory generated keys are strictly forbidden
+	// as they invalidate existing tokens across server restarts and cluster replicas.
+	if os.Getenv("APP_ENV") == "production" {
+		return nil, nil, errors.New("security error: RSA_PRIVATE_KEY or JWT_PRIVATE_KEY environment variable is strictly required in production (cannot use ephemeral in-memory keys)")
+	}
+
+	// 4. Otherwise generate new keys in memory for development/testing
 	priv, pub, err := GenerateRSAKeys()
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to generate RSA keys: %w", err)

@@ -68,7 +68,23 @@ func (r *PostgresRepository) List(ctx context.Context, userID, schoolID string) 
 		       COALESCE(c.requires_signature, false), c.signature_deadline, c.created_at,
 		       EXISTS(SELECT 1 FROM communication_signatures cs WHERE cs.communication_id = c.id AND cs.user_id = NULLIF($1, '')::uuid) AS is_signed
 		FROM communications c
-		WHERE (c.sender_id = NULLIF($1, '')::uuid OR $1::text = ANY(c.receiver_ids))
+		WHERE (
+		    c.sender_id = NULLIF($1, '')::uuid 
+		    OR $1::text = ANY(c.receiver_ids)
+		    OR EXISTS (
+		        SELECT 1 FROM users u
+		        WHERE u.id = NULLIF($1, '')::uuid
+		          AND (
+		              u.role = ANY(c.receiver_ids)
+		              OR (c.receiver_ids && ARRAY['all', 'tutti'])
+		              OR (u.role IN ('teacher', 'coordinator', 'coordinatore_classe', 'docente') AND (c.receiver_ids && ARRAY['teachers', 'docenti']))
+		              OR (u.role IN ('dsga', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_amministrativo', 'assistente_tecnico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio') AND (c.receiver_ids && ARRAY['ata', 'staff', 'personale', 'dipendenti']))
+		              OR (u.role IN ('teacher', 'coordinator', 'coordinatore_classe', 'docente', 'dsga', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_amministrativo', 'assistente_tecnico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio', 'secretary', 'principal', 'vice_principal', 'admin', 'superadmin') AND (c.receiver_ids && ARRAY['staff', 'personale', 'dipendenti']))
+		              OR (u.role = 'parent' AND (c.receiver_ids && ARRAY['parents', 'genitori', 'famiglie']))
+		              OR (u.role = 'student' AND (c.receiver_ids && ARRAY['students', 'studenti']))
+		          )
+		    )
+		)
 		  AND (c.school_id = NULLIF($2, '')::uuid OR $2 = '')
 		ORDER BY c.created_at DESC
 	`
@@ -125,7 +141,25 @@ func (r *PostgresRepository) ListBacheca(ctx context.Context, schoolID, userID s
 		FROM communications c
 		WHERE (c.type IN ('circular', 'notice', 'bacheca'))
 		  AND ($1 = '' OR c.school_id IS NULL OR c.school_id = NULLIF($1, '')::uuid)
-		  AND (array_length(c.receiver_ids, 1) IS NULL OR array_length(c.receiver_ids, 1) = 0 OR $2::text = ANY(c.receiver_ids) OR c.sender_id = NULLIF($2, '')::uuid)
+		  AND (
+		      array_length(c.receiver_ids, 1) IS NULL 
+		      OR array_length(c.receiver_ids, 1) = 0 
+		      OR $2::text = ANY(c.receiver_ids) 
+		      OR c.sender_id = NULLIF($2, '')::uuid
+		      OR EXISTS (
+		          SELECT 1 FROM users u
+		          WHERE u.id = NULLIF($2, '')::uuid
+		            AND (
+		                u.role = ANY(c.receiver_ids)
+		                OR (c.receiver_ids && ARRAY['all', 'tutti'])
+		                OR (u.role IN ('teacher', 'coordinator', 'coordinatore_classe', 'docente') AND (c.receiver_ids && ARRAY['teachers', 'docenti']))
+		                OR (u.role IN ('dsga', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_amministrativo', 'assistente_tecnico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio') AND (c.receiver_ids && ARRAY['ata', 'staff', 'personale', 'dipendenti']))
+		                OR (u.role IN ('teacher', 'coordinator', 'coordinatore_classe', 'docente', 'dsga', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_amministrativo', 'assistente_tecnico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio', 'secretary', 'principal', 'vice_principal', 'admin', 'superadmin') AND (c.receiver_ids && ARRAY['staff', 'personale', 'dipendenti']))
+		                OR (u.role = 'parent' AND (c.receiver_ids && ARRAY['parents', 'genitori', 'famiglie']))
+		                OR (u.role = 'student' AND (c.receiver_ids && ARRAY['students', 'studenti']))
+		            )
+		      )
+		  )
 		ORDER BY c.created_at DESC
 	`
 	rows, err := r.db.QueryContext(ctx, query, schoolID, userID)
@@ -351,7 +385,23 @@ func (r *PostgresRepository) GetUnreadCount(ctx context.Context, userID string) 
 		SELECT COUNT(*)
 		FROM communications c
 		LEFT JOIN communication_read_receipts crr ON crr.communication_id = c.id AND crr.user_id = $1::uuid
-		WHERE ($1 = ANY(c.receiver_ids) OR ARRAY_LENGTH(c.receiver_ids, 1) IS NULL)
+		WHERE (
+		    $1 = ANY(c.receiver_ids) 
+		    OR ARRAY_LENGTH(c.receiver_ids, 1) IS NULL
+		    OR EXISTS (
+		        SELECT 1 FROM users u
+		        WHERE u.id = NULLIF($1, '')::uuid
+		          AND (
+		              u.role = ANY(c.receiver_ids)
+		              OR (c.receiver_ids && ARRAY['all', 'tutti'])
+		              OR (u.role IN ('teacher', 'coordinator', 'coordinatore_classe', 'docente') AND (c.receiver_ids && ARRAY['teachers', 'docenti']))
+		              OR (u.role IN ('dsga', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_amministrativo', 'assistente_tecnico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio') AND (c.receiver_ids && ARRAY['ata', 'staff', 'personale', 'dipendenti']))
+		              OR (u.role IN ('teacher', 'coordinator', 'coordinatore_classe', 'docente', 'dsga', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_amministrativo', 'assistente_tecnico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'responsabile_servizio', 'secretary', 'principal', 'vice_principal', 'admin', 'superadmin') AND (c.receiver_ids && ARRAY['staff', 'personale', 'dipendenti']))
+		              OR (u.role = 'parent' AND (c.receiver_ids && ARRAY['parents', 'genitori', 'famiglie']))
+		              OR (u.role = 'student' AND (c.receiver_ids && ARRAY['students', 'studenti']))
+		          )
+		    )
+		)
 		  AND crr.read_at IS NULL
 	`
 	var count int

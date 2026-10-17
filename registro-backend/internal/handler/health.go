@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"registro-backend/internal/metrics"
+	"registro-backend/pkg/version"
 )
 
 type ComponentHealth struct {
@@ -40,13 +41,17 @@ func NewHealthHandler(db *sql.DB, redisClient ...*redis.Client) *HealthHandler {
 
 // Health provides basic health status
 func (h *HealthHandler) Health(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "UP"})
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "UP",
+		"version": version.Version,
+	})
 }
 
 // Live is Kubernetes liveness probe: verifies the process is responsive
 func (h *HealthHandler) Live(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":    "alive",
+		"version":   version.Version,
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 	})
 }

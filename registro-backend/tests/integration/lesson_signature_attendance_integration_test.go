@@ -255,6 +255,18 @@ func (m *mockAttendanceRepoForLesson) GetMonthlyBreakdown(ctx context.Context, s
 func (m *mockAttendanceRepoForLesson) GetStudentAttendanceStats(studentID string) (*attendance.AttendanceStats, error) {
 	return &attendance.AttendanceStats{}, nil
 }
+func (m *mockAttendanceRepoForLesson) SaveMealsBatch(_ context.Context, _ string, _ string, _ []attendance.StudentMealItem) error {
+	return nil
+}
+func (m *mockAttendanceRepoForLesson) GetDailyMealsReport(_ context.Context, _ string, _ string) (*attendance.DailyMealsReportResponse, error) {
+	return &attendance.DailyMealsReportResponse{}, nil
+}
+func (m *mockAttendanceRepoForLesson) VerifyPinAndJustifyAbsence(_ context.Context, _, _, _, _ string) error {
+	return nil
+}
+func (m *mockAttendanceRepoForLesson) GetAbsenceLimitStatus(_ context.Context, _ string) (*attendance.AbsenceLimitStatusResponse, error) {
+	return &attendance.AbsenceLimitStatusResponse{MaxLimitRate: 25.0}, nil
+}
 
 type mockUserRepoForLessonAttendance struct {
 	users.Repository

@@ -44,6 +44,9 @@
       </template>
       <div class="text-weight-bold text-subtitle1">{{ $t('help.teacher.scrutiny.deferredBannerTitle') }}</div>
       <div class="text-body2">{{ $t('help.teacher.scrutiny.deferredBannerBody') }}</div>
+      <div class="text-caption text-deep-orange-9 q-mt-xs text-weight-medium">
+        Normativa: O.M. 92/2007 (Sessione di recupero debiti formativi estivi e scioglimento della riserva).
+      </div>
     </q-banner>
 
     <div v-if="!selectedClassId" class="flex flex-center" style="height: 60vh">
@@ -108,11 +111,34 @@
               <!-- Subject Averages -->
               <q-td v-for="sub in matrix.subjects" :key="sub.id" align="center" class="subject-cell">
                 <div class="text-caption text-slate-400 q-mb-xs">
-                  {{ props.row.subject_data[sub.id]?.average?.toFixed(1) || '-' }}
+                  {{ (sub.is_religion || sub.is_judgment_only) ? (props.row.subject_data[sub.id]?.proposed_judgment || '-') : (props.row.subject_data[sub.id]?.average?.toFixed(1) || '-') }}
                 </div>
                 
+                <!-- Studente non avvalente o con attività alternativa -->
+                <template v-if="sub.is_religion && props.row.religion_choice && props.row.religion_choice !== 'avvalente'">
+                  <q-badge
+                    :color="props.row.religion_choice === 'attivita_alternativa' ? 'teal-7' : 'grey-6'"
+                    class="q-py-xs q-px-sm text-caption text-weight-bold"
+                  >
+                    {{ props.row.religion_choice === 'attivita_alternativa' ? 'Att. Alternativa' : 'Non Avvalente' }}
+                  </q-badge>
+                </template>
+
+                <!-- Materia IRC / solo giudizi: select con i 6 giudizi ministeriali -->
+                <template v-else-if="sub.is_religion || sub.is_judgment_only">
+                  <q-select
+                    v-if="scrutinyData[props.row.student_id]"
+                    v-model="scrutinyData[props.row.student_id].grades[sub.id]"
+                    :options="RELIGION_JUDGMENT_OPTIONS"
+                    dense outlined
+                    options-dense
+                    class="grade-input rounded-lg overflow-hidden"
+                  />
+                </template>
+
+                <!-- Materie standard con voto numerico -->
                 <q-input
-                  v-if="scrutinyData[props.row.student_id]"
+                  v-else-if="scrutinyData[props.row.student_id]"
                   v-model.number="scrutinyData[props.row.student_id].grades[sub.id]"
                   type="number"
                   dense outlined
@@ -157,7 +183,27 @@
                 <q-btn flat round dense icon="warning" color="amber-9" @click="openDeficiencyModal(props.row)">
                   <q-tooltip>{{ $t('scrutinyPage.deficiencySubtitle') }}</q-tooltip>
                 </q-btn>
-                <q-btn v-if="period === 2 || period === 3 || ['Sospeso', 'Giudizio Sospeso'].includes(props.row.record?.final_decision)" flat round dense icon="event_repeat" color="deep-orange" @click="openDeferredModal(props.row)">
+                <q-btn
+                  v-if="period === 3"
+                  color="deep-orange-8"
+                  icon="how_to_reg"
+                  :label="$t('scrutinyPage.resolveReservation') || 'Sciogli Riserva'"
+                  unelevated
+                  dense
+                  class="q-px-sm rounded-borders text-weight-bold"
+                  @click="openDeferredModal(props.row)"
+                >
+                  <q-tooltip>{{ $t('help.teacher.scrutiny.deferredAction') }}</q-tooltip>
+                </q-btn>
+                <q-btn
+                  v-else-if="period === 2 || ['Sospeso', 'Giudizio Sospeso'].includes(props.row.record?.final_decision)"
+                  flat
+                  round
+                  dense
+                  icon="event_repeat"
+                  color="deep-orange"
+                  @click="openDeferredModal(props.row)"
+                >
                   <q-tooltip>{{ $t('help.teacher.scrutiny.deferredScrutiny') }}</q-tooltip>
                 </q-btn>
               </q-td>
@@ -315,6 +361,7 @@ import { scrutinyService } from '@/services/scrutinyService'
 import { useAuthStore } from '@/stores/auth'
 import { useClassesStore } from '@/stores/classes'
 import { useSchoolYearStore } from '@/stores/schoolYear'
+import { RELIGION_JUDGMENT_OPTIONS, RELIGION_JUDGMENT_MAP } from '@/utils/gradeUtils'
 
 const $q = useQuasar()
 const { t } = useI18n()
@@ -324,11 +371,27 @@ const schoolYearStore = useSchoolYearStore()
 
 const selectedClassId = ref(null)
 const period = ref(1)
-const periodOptions = computed(() => [
-  { label: t('help.teacher.scrutiny.period1'), value: 1 },
-  { label: t('help.teacher.scrutiny.period2'), value: 2 },
-  { label: t('help.teacher.scrutiny.deferredScrutiny'), value: 3 }
-])
+const calendarPeriods = ref([])
+const periodOptions = computed(() => {
+  const base = calendarPeriods.value.length > 0
+    ? calendarPeriods.value.map((p, index) => ({
+        label: p.name || `Periodo ${index + 1}`,
+        value: p.period || p.value || (index + 1)
+      }))
+    : [
+        { label: t('help.teacher.scrutiny.period1') || 'Scrutinio 1° Semestre', value: 1 },
+        { label: t('help.teacher.scrutiny.period2') || 'Scrutinio 2° Semestre / Finale', value: 2 }
+      ]
+
+  // Normativa O.M. 92/2007: Scrutinio Differito (Debiti formativi) è il Periodo 3
+  if (!base.some(p => p.value === 3)) {
+    base.push({
+      label: t('help.teacher.scrutiny.deferredScrutiny') || 'Scrutinio Differito (Debiti)',
+      value: 3
+    })
+  }
+  return base
+})
 const loading = ref(false)
 const saving = ref(false)
 const matrix = ref({})
@@ -406,10 +469,7 @@ onMounted(async () => {
   try {
     const res = await api.get('/school-calendar/periods')
     if (res.data && res.data.length > 0) {
-      periodOptions.value = res.data.map((p, index) => ({
-        label: p.name,
-        value: p.period || p.value || (index + 1)
-      }))
+      calendarPeriods.value = res.data
     }
   } catch { /* fallback */ }
 })
@@ -440,7 +500,16 @@ const fetchMatrix = async () => {
       }
       subjects.forEach(sub => {
         const existing = s.record?.grades?.find(g => g.subject_id === sub.id)
-        newScrutinyData[s.student_id].grades[sub.id] = existing ? existing.final_grade : Math.round(s.subject_data[sub.id]?.average || 6)
+        if (sub.is_religion || sub.is_judgment_only) {
+          if (existing) {
+            const entry = Object.entries(RELIGION_JUDGMENT_MAP).find(([, v]) => v === Math.round(existing.final_grade))
+            newScrutinyData[s.student_id].grades[sub.id] = entry ? entry[0] : (s.subject_data[sub.id]?.proposed_judgment || 'Sufficiente')
+          } else {
+            newScrutinyData[s.student_id].grades[sub.id] = s.subject_data[sub.id]?.proposed_judgment || 'Sufficiente'
+          }
+        } else {
+          newScrutinyData[s.student_id].grades[sub.id] = existing ? existing.final_grade : Math.round(s.subject_data[sub.id]?.average || 6)
+        }
       })
     })
 
@@ -469,10 +538,25 @@ const saveStudentScrutiny = async (studentId, silent = false) => {
       semester: period.value,
       conduct_grade: data.conduct_grade,
       final_decision: data.final_decision,
-      grades: Object.keys(data.grades).map(sid => ({
-        subject_id: sid,
-        final_grade: data.grades[sid]
-      }))
+      grades: Object.keys(data.grades)
+        .filter(sid => {
+          const sub = matrix.value.subjects?.find(s => s.id === sid)
+          const student = matrix.value.students?.find(st => st.student_id === studentId)
+          if (sub?.is_religion && student?.religion_choice && student.religion_choice !== 'avvalente') {
+            return false // Esonerato: non salvare voto di religione
+          }
+          return true
+        })
+        .map(sid => {
+          let val = data.grades[sid]
+          if (typeof val === 'string' && RELIGION_JUDGMENT_MAP[val] !== undefined) {
+            val = RELIGION_JUDGMENT_MAP[val]
+          }
+          return {
+            subject_id: sid,
+            final_grade: typeof val === 'number' ? val : Number(val) || 6
+          }
+        })
     }
     await scrutinyService.save(payload)
     if (!silent) {

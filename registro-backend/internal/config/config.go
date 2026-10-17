@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -158,4 +159,20 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return config, nil
+}
+
+// RedisURL resolves the Redis connection string, preferring REDIS_URL if set,
+// or constructing redis://host:port from the host and port config.
+func (c *Config) RedisURL() string {
+	if url := os.Getenv("REDIS_URL"); url != "" {
+		return url
+	}
+	if c.Redis.Host != "" {
+		port := c.Redis.Port
+		if port == "" {
+			port = "6379"
+		}
+		return fmt.Sprintf("redis://%s:%s", c.Redis.Host, port)
+	}
+	return ""
 }

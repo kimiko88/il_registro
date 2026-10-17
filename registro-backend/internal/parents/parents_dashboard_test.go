@@ -102,6 +102,18 @@ func (m *mockUserRepoForParentTest) ChangePasswordTx(ctx context.Context, userID
 func (m *mockUserRepoForParentTest) ApplyDataRetention(ctx context.Context, schoolID *string, cutoffDate time.Time) (int, error) {
 	return 0, nil
 }
+func (m *mockUserRepoForParentTest) GetAssignments(ctx context.Context, userID string) ([]users.UserAssignment, error) {
+	return nil, nil
+}
+func (m *mockUserRepoForParentTest) CreateAssignment(ctx context.Context, assignment *users.UserAssignment) error {
+	return nil
+}
+func (m *mockUserRepoForParentTest) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	return nil
+}
+func (m *mockUserRepoForParentTest) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
+	return nil
+}
 
 type mockGradesRepoForParentTest struct{ mock.Mock }
 
@@ -284,6 +296,18 @@ func (m *mockAttRepoForParentTest) JustifyAbsenceByParent(attendanceID, studentI
 }
 func (m *mockAttRepoForParentTest) GetStudentAttendanceStats(studentID string) (*attendance.AttendanceStats, error) {
 	return &attendance.AttendanceStats{DaysPresent: 50, DaysAbsent: 2}, nil
+}
+func (m *mockAttRepoForParentTest) SaveMealsBatch(_ context.Context, _ string, _ string, _ []attendance.StudentMealItem) error {
+	return nil
+}
+func (m *mockAttRepoForParentTest) GetDailyMealsReport(_ context.Context, _ string, _ string) (*attendance.DailyMealsReportResponse, error) {
+	return &attendance.DailyMealsReportResponse{}, nil
+}
+func (m *mockAttRepoForParentTest) VerifyPinAndJustifyAbsence(_ context.Context, _, _, _, _ string) error {
+	return nil
+}
+func (m *mockAttRepoForParentTest) GetAbsenceLimitStatus(_ context.Context, _ string) (*attendance.AbsenceLimitStatusResponse, error) {
+	return &attendance.AbsenceLimitStatusResponse{MaxLimitRate: 25.0}, nil
 }
 
 type mockCommsRepoForParentTest struct{ mock.Mock }

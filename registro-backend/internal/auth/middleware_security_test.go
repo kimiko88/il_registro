@@ -89,6 +89,18 @@ func (m *DummyUserRepo) ApplyDataRetention(ctx context.Context, schoolID *string
 func (m *DummyUserRepo) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
 	return nil
 }
+func (m *DummyUserRepo) GetAssignments(ctx context.Context, userID string) ([]users.UserAssignment, error) {
+	return nil, nil
+}
+func (m *DummyUserRepo) CreateAssignment(ctx context.Context, assignment *users.UserAssignment) error {
+	return nil
+}
+func (m *DummyUserRepo) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	return nil
+}
+func (m *DummyUserRepo) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
+	return nil
+}
 
 func TestMiddleware_ActiveCache_CachesDisabledUserAndInvalidates(t *testing.T) {
 	gin.SetMode(gin.TestMode)

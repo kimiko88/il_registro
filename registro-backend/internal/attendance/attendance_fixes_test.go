@@ -156,6 +156,19 @@ func (m *MockServiceForFixes) GetChildAttendanceStats(ctx context.Context, paren
 	return args.Get(0).(*AttendanceStats), args.Error(1)
 }
 
+func (m *MockServiceForFixes) SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error {
+	return nil
+}
+func (m *MockServiceForFixes) GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error) {
+	return &DailyMealsReportResponse{}, nil
+}
+func (m *MockServiceForFixes) VerifyPinAndJustify(ctx context.Context, parentID string, req VerifyPinAndJustifyRequest) error {
+	return nil
+}
+func (m *MockServiceForFixes) GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error) {
+	return &AbsenceLimitStatusResponse{StudentID: studentID}, nil
+}
+
 func TestDeleteClassAttendanceHour_ForbiddenReturns403(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	mockSvc := new(MockServiceForFixes)

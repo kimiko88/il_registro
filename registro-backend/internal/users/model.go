@@ -29,6 +29,9 @@ type User struct {
 	ClassID   *string `json:"class_id,omitempty" db:"class_id"`
 	ClassName *string `json:"class_name,omitempty" db:"class_name"`
 
+	// Incarichi aggiuntivi / funzionali
+	Assignments []UserAssignment `json:"assignments,omitempty"`
+
 	// Audit & Lifecycle
 	CreatedAt time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at" db:"updated_at"`

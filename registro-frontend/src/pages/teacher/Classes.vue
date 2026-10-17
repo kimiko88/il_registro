@@ -4,7 +4,7 @@
       <div class="text-h4">{{ $t('classRegister.myClasses') }}</div>
       <q-select
         v-model="selectedClass"
-        :options="classesStore.classes"
+        :options="displayedClasses"
         option-label="label"
         :label="$t('classRegister.selectClass')"
         outlined
@@ -35,8 +35,13 @@
       <div class="col-12 col-md-3">
         <q-list bordered class="bg-white rounded-borders">
           <q-item-label header class="text-weight-bold bg-grey-2">{{ $t('classRegister.classList') }}</q-item-label>
+          <q-item v-if="displayedClasses.length === 0">
+            <q-item-section class="text-grey text-caption text-center q-pa-md">
+              {{ $t('classRegister.noClassesFound') }}
+            </q-item-section>
+          </q-item>
           <q-item 
-            v-for="cls in classesStore.classes" 
+            v-for="cls in displayedClasses" 
             :key="cls.id" 
             clickable 
             v-ripple
@@ -222,17 +227,34 @@ const notes = ref([])
 const loadingNotes = ref(false)
 const filterNoteType = ref('')
 
+const displayedClasses = computed(() => {
+  const currentSY = (schoolYearStore.selectedSchoolYear || '').replace('-', '/').trim()
+  if (!currentSY) return classesStore.classes
+  return classesStore.classes.filter(c => {
+    if (!c.academic_year) return true
+    return c.academic_year.replace('-', '/').trim() === currentSY
+  })
+})
+
+watch(displayedClasses, (newList) => {
+  if (newList.length === 0) {
+    selectedClass.value = null
+  } else if (!selectedClass.value || !newList.some(c => c.id === selectedClass.value.id)) {
+    selectClass(newList[0])
+  }
+})
+
 onMounted(async () => {
-  await classesStore.fetchAssignedClasses(schoolYearStore.selectedSchoolYear)
-  if (classesStore.classes.length > 0) {
-    selectClass(classesStore.classes[0])
+  await classesStore.fetchAssignedClasses(schoolYearStore.selectedSchoolYear, { force: true })
+  if (displayedClasses.value.length > 0) {
+    selectClass(displayedClasses.value[0])
   }
 })
 
 watch(() => schoolYearStore.selectedSchoolYear, async (newYear) => {
-  await classesStore.fetchAssignedClasses(newYear)
-  if (classesStore.classes.length > 0) {
-    selectClass(classesStore.classes[0])
+  await classesStore.fetchAssignedClasses(newYear, { force: true })
+  if (displayedClasses.value.length > 0) {
+    selectClass(displayedClasses.value[0])
   } else {
     selectedClass.value = null
   }

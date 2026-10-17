@@ -168,6 +168,18 @@ func (m *MockAttendanceRepo) GetStudentAttendanceStats(studentID string) (*Atten
 	}
 	return args.Get(0).(*AttendanceStats), args.Error(1)
 }
+func (m *MockAttendanceRepo) SaveMealsBatch(ctx context.Context, classID, date string, meals []StudentMealItem) error {
+	return nil
+}
+func (m *MockAttendanceRepo) GetDailyMealsReport(ctx context.Context, schoolID, date string) (*DailyMealsReportResponse, error) {
+	return &DailyMealsReportResponse{}, nil
+}
+func (m *MockAttendanceRepo) VerifyPinAndJustifyAbsence(ctx context.Context, attendanceID, parentID, reason, notes string) error {
+	return nil
+}
+func (m *MockAttendanceRepo) GetAbsenceLimitStatus(ctx context.Context, studentID string) (*AbsenceLimitStatusResponse, error) {
+	return &AbsenceLimitStatusResponse{StudentID: studentID}, nil
+}
 
 type MockUserRepo struct {
 	mock.Mock
@@ -247,6 +259,18 @@ func (m *MockUserRepo) ApplyDataRetention(ctx context.Context, schoolID *string,
 	return 0, nil
 }
 func (m *MockUserRepo) ChangePasswordTx(ctx context.Context, userID, newPasswordHash string) error {
+	return nil
+}
+func (m *MockUserRepo) GetAssignments(ctx context.Context, userID string) ([]users.UserAssignment, error) {
+	return nil, nil
+}
+func (m *MockUserRepo) CreateAssignment(ctx context.Context, assignment *users.UserAssignment) error {
+	return nil
+}
+func (m *MockUserRepo) DeleteAssignment(ctx context.Context, assignmentID string) error {
+	return nil
+}
+func (m *MockUserRepo) SetCoordinatedClasses(ctx context.Context, schoolID, teacherUserID string, classIDs []string) error {
 	return nil
 }
 

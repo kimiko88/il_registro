@@ -122,16 +122,16 @@ func (r *repository) DeleteDiaryEntry(ctx context.Context, id, teacherID string)
 func (r *repository) CreatePeiGoal(ctx context.Context, g *SupportPeiGoal) error {
 	query := `
 		INSERT INTO support_pei_goals (
-			id, school_id, student_id, pei_type, axis, title, description,
-			expected_term, progress_status, created_at, updated_at
+			id, school_id, student_id, pei_type, axis, ministerial_dimension, pathway_type, title, description,
+			expected_term, progress_status, glo_notes, created_at, updated_at
 		) VALUES (
-			COALESCE(NULLIF($1, '')::uuid, gen_random_uuid()), $2, $3, $4, $5, $6, $7,
-			$8, $9, NOW(), NOW()
+			COALESCE(NULLIF($1, '')::uuid, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8, $9,
+			$10, $11, $12, NOW(), NOW()
 		) RETURNING id
 	`
 	return r.db.QueryRowContext(ctx, query,
-		g.ID, g.SchoolID, g.StudentID, g.PeiType, g.Axis, g.Title, g.Description,
-		g.ExpectedTerm, g.ProgressStatus,
+		g.ID, g.SchoolID, g.StudentID, g.PeiType, g.Axis, g.MinisterialDimension, g.PathwayType, g.Title, g.Description,
+		g.ExpectedTerm, g.ProgressStatus, g.GloNotes,
 	).Scan(&g.ID)
 }
 
@@ -144,7 +144,11 @@ func (r *repository) ListPeiGoals(ctx context.Context, schoolID, studentID strin
 	query := `
 		SELECT pg.id, pg.school_id, pg.student_id,
 		       TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')) as student_name,
-		       pg.pei_type, pg.axis, pg.title, pg.description, pg.expected_term, pg.progress_status,
+		       pg.pei_type, pg.axis,
+		       COALESCE(pg.ministerial_dimension, 'dimensione_autonomia') as ministerial_dimension,
+		       COALESCE(pg.pathway_type, 'percorso_b_personalizzato') as pathway_type,
+		       pg.title, pg.description, pg.expected_term, pg.progress_status,
+		       COALESCE(pg.glo_notes, '') as glo_notes,
 		       pg.created_at, pg.updated_at
 		FROM support_pei_goals pg
 		JOIN students s ON pg.student_id = s.id
@@ -163,8 +167,9 @@ func (r *repository) ListPeiGoals(ctx context.Context, schoolID, studentID strin
 		var g SupportPeiGoal
 		if err := rows.Scan(
 			&g.ID, &g.SchoolID, &g.StudentID, &g.StudentName,
-			&g.PeiType, &g.Axis, &g.Title, &g.Description, &g.ExpectedTerm, &g.ProgressStatus,
-			&g.CreatedAt, &g.UpdatedAt,
+			&g.PeiType, &g.Axis, &g.MinisterialDimension, &g.PathwayType,
+			&g.Title, &g.Description, &g.ExpectedTerm, &g.ProgressStatus,
+			&g.GloNotes, &g.CreatedAt, &g.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}

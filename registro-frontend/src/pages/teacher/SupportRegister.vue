@@ -145,6 +145,24 @@
               </q-td>
             </template>
 
+            <template #body-cell-ministerial_dimension="props">
+              <q-td :props="props">
+                <q-chip dense color="teal-1" text-color="teal-9">
+                  {{ formatDimension(props.value) }}
+                </q-chip>
+              </q-td>
+            </template>
+
+            <template #body-cell-pathway_type="props">
+              <q-td :props="props">
+                <q-badge
+                  :color="getPathwayColor(props.value)"
+                  :label="formatPathway(props.value)"
+                  rounded
+                />
+              </q-td>
+            </template>
+
             <template #body-cell-axis="props">
               <q-td :props="props">
                 <span class="text-weight-bold text-capitalize">{{ props.value }}</span>
@@ -357,6 +375,31 @@
               </div>
             </div>
 
+            <div class="row q-col-gutter-sm">
+              <div class="col-12 col-md-6">
+                <q-select
+                  v-model="goalForm.ministerial_dimension"
+                  :options="dimensionOptions"
+                  emit-value
+                  map-options
+                  :label="$t('support.form.dimension') || 'Dimensione PEI (D.I. 182/2020)'"
+                  outlined
+                  dense
+                />
+              </div>
+              <div class="col-12 col-md-6">
+                <q-select
+                  v-model="goalForm.pathway_type"
+                  :options="pathwayOptions"
+                  emit-value
+                  map-options
+                  :label="$t('support.form.pathway') || 'Tipologia Percorso'"
+                  outlined
+                  dense
+                />
+              </div>
+            </div>
+
             <q-input
               v-model="goalForm.title"
               :label="$t('support.form.goalTitle')"
@@ -370,6 +413,16 @@
               type="textarea"
               rows="2"
               :label="$t('support.form.goalDescription')"
+              outlined
+              dense
+            />
+
+            <q-input
+              v-model="goalForm.glo_notes"
+              type="textarea"
+              rows="2"
+              :label="$t('support.form.gloNotes') || 'Note e Deliberazioni GLO'"
+              placeholder="Indicazioni del Gruppo di Lavoro Operativo per l'Inclusione..."
               outlined
               dense
             />
@@ -469,6 +522,19 @@ const progressStatusOptions = computed(() => [
   { label: t('support.progressStatuses.raggiunto') || 'Raggiunto', value: 'raggiunto' }
 ])
 
+const dimensionOptions = computed(() => [
+  { label: t('support.dimensions.relazione') || '1. Relazione, Interazione e Socializzazione', value: 'dimensione_relazione' },
+  { label: t('support.dimensions.comunicazione') || '2. Comunicazione e Linguaggio', value: 'dimensione_comunicazione' },
+  { label: t('support.dimensions.autonomia') || '3. Autonomia e Orientamento', value: 'dimensione_autonomia' },
+  { label: t('support.dimensions.cognitiva') || '4. Cognitiva, Neuropsicologica e Apprendimento', value: 'dimensione_cognitiva' }
+])
+
+const pathwayOptions = computed(() => [
+  { label: t('support.pathways.a_ordinario') || 'Percorso A - Ordinario (Ministeriale)', value: 'percorso_a_ordinario' },
+  { label: t('support.pathways.b_personalizzato') || 'Percorso B - Personalizzato (Equipollente)', value: 'percorso_b_personalizzato' },
+  { label: t('support.pathways.c_differenziato') || 'Percorso C - Differenziato (Attestato Crediti)', value: 'percorso_c_differenziato' }
+])
+
 const diaryForm = ref({
   student_id: '',
   class_id: '',
@@ -486,10 +552,13 @@ const goalForm = ref({
   student_id: '',
   pei_type: 'equipollente',
   axis: 'autonomia',
+  ministerial_dimension: 'dimensione_autonomia',
+  pathway_type: 'percorso_b_personalizzato',
   title: '',
   description: '',
   expected_term: 'annuale',
-  progress_status: 'non_avviato'
+  progress_status: 'non_avviato',
+  glo_notes: ''
 })
 
 const diaryColumns = computed(() => [
@@ -505,12 +574,40 @@ const diaryColumns = computed(() => [
 
 const peiColumns = computed(() => [
   { name: 'student_name', label: t('support.columns.student') || 'Studente', field: 'student_name', align: 'left', sortable: true },
-  { name: 'pei_type', label: t('support.columns.peiType') || 'Tipo PEI', field: 'pei_type', align: 'center' },
-  { name: 'axis', label: t('support.columns.axis') || 'Asse di Sviluppo', field: 'axis', align: 'left' },
+  { name: 'ministerial_dimension', label: t('support.columns.dimension') || 'Dimensione PEI (D.I. 182)', field: 'ministerial_dimension', align: 'left' },
+  { name: 'pathway_type', label: t('support.columns.pathway') || 'Percorso', field: 'pathway_type', align: 'center' },
   { name: 'title', label: t('support.columns.goal') || 'Obiettivo', field: 'title', align: 'left' },
   { name: 'expected_term', label: t('support.columns.term') || 'Termine', field: 'expected_term', align: 'center' },
   { name: 'progress_status', label: t('support.columns.progress') || 'Avanzamento', field: 'progress_status', align: 'center' }
 ])
+
+function formatDimension(dim) {
+  switch (dim) {
+    case 'dimensione_relazione': return '1. Relazione & Socialità'
+    case 'dimensione_comunicazione': return '2. Comunicazione & Linguaggio'
+    case 'dimensione_autonomia': return '3. Autonomia & Orientamento'
+    case 'dimensione_cognitiva': return '4. Cognitiva & Apprendimento'
+    default: return dim || '3. Autonomia'
+  }
+}
+
+function formatPathway(p) {
+  switch (p) {
+    case 'percorso_a_ordinario': return 'Percorso A (Ordinario)'
+    case 'percorso_b_personalizzato': return 'Percorso B (Equipollente)'
+    case 'percorso_c_differenziato': return 'Percorso C (Differenziato)'
+    default: return 'Percorso B'
+  }
+}
+
+function getPathwayColor(p) {
+  switch (p) {
+    case 'percorso_a_ordinario': return 'positive'
+    case 'percorso_b_personalizzato': return 'primary'
+    case 'percorso_c_differenziato': return 'purple'
+    default: return 'primary'
+  }
+}
 
 function extractList(response) {
   if (!response) return []

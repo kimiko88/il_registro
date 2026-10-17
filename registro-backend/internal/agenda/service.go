@@ -107,7 +107,7 @@ func (s *Service) UpdateAgendaItem(ctx context.Context, actorID, actorRole, acto
 		if actorSchoolID == "" || item.SchoolID != actorSchoolID {
 			return nil, ErrUnauthorized
 		}
-		if actorRole != "admin" && item.TeacherID != actorID {
+		if actorRole != "admin" && actorRole != "principal" && actorRole != "vice_principal" && item.TeacherID != actorID {
 			return nil, ErrUnauthorized
 		}
 	}
@@ -170,7 +170,7 @@ func (s *Service) DeleteAgendaItem(ctx context.Context, actorID, actorRole, acto
 		if actorSchoolID == "" || item.SchoolID != actorSchoolID {
 			return ErrUnauthorized
 		}
-		if actorRole != "admin" && item.TeacherID != actorID {
+		if actorRole != "admin" && actorRole != "principal" && actorRole != "vice_principal" && item.TeacherID != actorID {
 			return ErrUnauthorized
 		}
 	}

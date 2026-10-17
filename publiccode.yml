@@ -1,0 +1,95 @@
+publiccodeYmlVersion: "0.2"
+name: il_registro
+url: "https://github.com/kimiko88/il_registro"
+softwareVersion: 1.0.0-beta
+releaseDate: "2026-09-11"
+platforms:
+  - web
+  - android
+  - ios
+categories:
+  - school
+  - education
+  - school-management
+developmentStatus: beta
+softwareType: standalone/web
+landingURL: "https://registro-scuola.netlify.app"
+isBasedOn: ""
+hardwareRequirements: "Server Linux/Docker Compose: Minimo 4 GB RAM (8 GB raccomandati in produzione), 2 vCPU, 20 GB SSD/NVMe (supporta l’intero stack di produzione: registro-backend Go API, stack Supabase self-hosted con PostgreSQL/Auth/Storage/Realtime/Kong e Redis)"
+legal:
+  license: PolyForm-Noncommercial-1.0.0
+  mainCopyrightOwner: "Docenti e Sviluppatori per la Scuola Pubblica Italiana"
+  repoOwner: "il_registro Open Source Project"
+maintenance:
+  type: community
+  contractors: []
+  contacts:
+    - name: kimiko88
+      email: chimien@libero.it
+      nameURL: "https://github.com/kimiko88/il_registro"
+localisation:
+  localizationReady: true
+  availableLanguages:
+    - it
+    - en
+    - de
+    - fr
+    - es
+    - ro
+    - sq
+    - ru
+    - zh
+    - uk
+    - ar
+description:
+  it:
+    title: il_registro — Registro Elettronico Scolastico Open Source
+    shortDescription: Registro Elettronico scolastico gratuito e aperto per la scuola italiana e la PA.
+    longDescription: |
+      il_registro è una piattaforma aperta e gratuita per la gestione del Registro Elettronico Scolastico, ideata per garantire la sovranità dei dati della Scuola Pubblica Italiana.
+
+      Funzionalità principali:
+      - Registro Docenti: Rilevamento presenze/assenze 1-click, registro lezioni, voti e valutazioni (con tastiera rapida e supporto misure compensative BES/DSA).
+      - Scrutini e Pagelle: Matrice di scrutinio in tempo reale, calcolo medie per materia, proposte voto, tabelloni e stampa pagelle in PDF.
+      - Portale Genitori e Studenti: Consultazione voti, assenze, compiti, presa visione circolari con firma digitale, libretto web e PWA mobile.
+      - Moduli ATA Specialistici: Emergenza sostituzioni docente, registro visitatori e portineria, cartellino mensile presenze e sportello digitale pratiche dipendenti.
+      - Integrazioni PA: Autenticazione SPID / CIE, esportazione flussi ministeriali SIDI / ANS, protocollo interoperabilità e sicurezza GDPR compliant.
+    features:
+      - "Registro lezioni e firme 1-click"
+      - "Rilevamento presenze, assenze e ritardi"
+      - "Matrice di scrutinio e calcolo medie per materia"
+      - "Stampa pagelle e fascicolo dello studente in PDF"
+      - "Portale Genitori e Studenti responsive PWA"
+      - "Moduli ATA specialistici (Sostituzioni, Portineria, Cartellino, Sportello)"
+      - "Autenticazione SPID / CIE e flussi SIDI"
+      - "Compliance GDPR e DPR 122/2009 art. 14"
+    screenshots:
+      - "https://raw.githubusercontent.com/kimiko88/il_registro/main/docs/images/01_dashboard_teacher.png"
+      - "https://raw.githubusercontent.com/kimiko88/il_registro/main/docs/images/02_grade_matrix_input.png"
+      - "https://raw.githubusercontent.com/kimiko88/il_registro/main/docs/images/03_attendance_1click.png"
+      - "https://raw.githubusercontent.com/kimiko88/il_registro/main/docs/images/04_scrutiny_matrix.png"
+      - "https://raw.githubusercontent.com/kimiko88/il_registro/main/docs/images/05_classes_multisite.png"
+  en:
+    title: il_registro — Open Source School Electronic Register
+    shortDescription: Free and open-source electronic register platform for public schools and public administrations.
+    longDescription: |
+      il_registro is an open-source electronic school register platform designed to empower public schools with full data sovereignty, zero licensing costs, and comprehensive management capabilities.
+    features:
+      - "Lesson register and 1-click attendance"
+      - "Grade matrix input and student evaluations"
+      - "Scrutiny matrix, averages calculation and report cards PDF"
+      - "Parents and Students Portal with PWA support"
+      - "ATA Staff specialist modules"
+      - "GDPR compliance and minister data export"
+
+intendedAudience:
+  scope:
+    - education
+    - local
+    - national
+  technicalFramework:
+    - Go
+    - Supabase (PostgreSQL, GoTrue Auth, Storage, Realtime)
+    - Redis
+    - Vue.js 3
+    - Quasar Framework

@@ -48,7 +48,7 @@
     <q-card class="glass-card q-mb-xl shadow-soft">
       <q-card-section class="q-pa-lg">
         <div class="row q-col-gutter-lg">
-          <div class="col-12 col-md-6">
+          <div class="col-12 col-md-5">
             <q-input
               ref="searchInput"
               v-model="filters.search"
@@ -65,6 +65,19 @@
           </div>
           <div class="col-12 col-md-3">
             <q-select
+              v-model="filters.tier"
+              :options="tierFilterOptions"
+              label="Ordine Scolastico"
+              outlined
+              bg-color="white"
+              clearable
+              emit-value
+              map-options
+              @update:model-value="fetchSchools"
+            />
+          </div>
+          <div class="col-12 col-md-2">
+            <q-select
               v-model="filters.status"
               :options="statusOptions"
               label="Stato Istituto"
@@ -76,7 +89,7 @@
               @update:model-value="fetchSchools"
             />
           </div>
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-md-2">
             <q-btn
               unelevated
               color="indigo-50"
@@ -121,6 +134,18 @@
           <q-td :props="props">
             <div v-if="props.row">{{ props.row.city }}, {{ props.row.province }}</div>
             <div v-if="props.row" class="text-caption text-grey-7">{{ props.row.address }}</div>
+          </q-td>
+        </template>
+
+        <template v-slot:body-cell-school_level="props">
+          <q-td :props="props" align="center">
+            <q-badge
+              v-if="props.row"
+              :color="getSchoolTierBadgeColor(props.row.school_level || props.row.type)"
+              class="q-px-sm q-py-xs text-weight-bold"
+            >
+              {{ getSchoolTierLabel(props.row.school_level || props.row.type) }}
+            </q-badge>
           </q-td>
         </template>
 
@@ -208,6 +233,27 @@
               outlined
               :rules="[val => !!val || 'Campo obbligatorio']"
             />
+            <q-select
+              v-model="schoolForm.school_level"
+              :options="tierSelectOptions"
+              label="Ordine Scolastico (Normativa Ministeriale) *"
+              outlined
+              emit-value
+              map-options
+              :hint="selectedTierHint"
+            >
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section avatar>
+                    <q-icon :name="scope.opt.icon" :color="scope.opt.color" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-bold">{{ scope.opt.label }}</q-item-label>
+                    <q-item-label caption>{{ scope.opt.caption }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
             <q-input
               v-model="schoolForm.address"
               label="Indirizzo *"
@@ -278,7 +324,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useQuasar, debounce } from 'quasar'
@@ -307,7 +353,8 @@ const searchInput = ref(null)
 
 const filters = reactive({
   search: '',
-  status: null
+  status: null,
+  tier: null
 })
 
 const pagination = ref({
@@ -319,6 +366,7 @@ const pagination = ref({
 const schoolForm = reactive({
   name: '',
   code: '',
+  school_level: 'secondaria_secondo_grado',
   address: '',
   city: '',
   province: '',
@@ -342,6 +390,13 @@ const columns = [
     label: 'Località',
     align: 'left',
     field: 'city',
+    sortable: true
+  },
+  {
+    name: 'school_level',
+    label: 'Ordine',
+    align: 'center',
+    field: row => row.school_level || row.type || 'secondaria_secondo_grado',
     sortable: true
   },
   {
@@ -378,6 +433,90 @@ const statusOptions = [
   { label: 'Disattive', value: 'inactive' }
 ]
 
+const tierFilterOptions = computed(() => [
+  { label: 'Tutti gli ordini', value: null },
+  { label: t('schoolLevels.infanzia') || "Scuola dell'Infanzia", value: 'infanzia' },
+  { label: t('schoolLevels.primaria') || 'Scuola Primaria', value: 'primaria' },
+  { label: t('schoolLevels.secondaria_primo_grado') || 'Secondaria I Grado', value: 'secondaria_primo_grado' },
+  { label: t('schoolLevels.secondaria_secondo_grado') || 'Secondaria II Grado', value: 'secondaria_secondo_grado' },
+  { label: t('schoolLevels.comprensivo') || 'Istituto Comprensivo', value: 'comprensivo' },
+  { label: t('schoolLevels.omnicomprensivo') || 'Istituto Omnicomprensivo', value: 'omnicomprensivo' }
+])
+
+const tierSelectOptions = computed(() => [
+  {
+    label: t('schoolLevels.infanzia') || "Scuola dell'Infanzia (3-6 anni)",
+    value: 'infanzia',
+    icon: 'child_care',
+    color: 'pink-7',
+    caption: t('schoolLevels.infanziaDesc') || "Campi d'Esperienza (D.M. 254/2012) e osservazioni senza voti"
+  },
+  {
+    label: t('schoolLevels.primaria') || 'Scuola Primaria (6-11 anni)',
+    value: 'primaria',
+    icon: 'menu_book',
+    color: 'amber-9',
+    caption: t('schoolLevels.primariaDesc') || 'Obiettivi di apprendimento e 4 livelli di giudizio (O.M. 172/2020)'
+  },
+  {
+    label: t('schoolLevels.secondaria_primo_grado') || 'Scuola Secondaria I Grado (11-14 anni)',
+    value: 'secondaria_primo_grado',
+    icon: 'school',
+    color: 'blue-8',
+    caption: t('schoolLevels.secondariaPrimoDesc') || 'Voti decimali 1-10, INVALSI e orientamento superiore'
+  },
+  {
+    label: t('schoolLevels.secondaria_secondo_grado') || 'Scuola Secondaria II Grado (14-19 anni)',
+    value: 'secondaria_secondo_grado',
+    icon: 'account_balance',
+    color: 'indigo-8',
+    caption: t('schoolLevels.secondariaSecondoDesc') || 'Voti 1-10, crediti triennio, PCTO e Scrutinio Differito (O.M. 92/2007)'
+  },
+  {
+    label: t('schoolLevels.comprensivo') || 'Istituto Comprensivo (Infanzia + Primaria + I Grado)',
+    value: 'comprensivo',
+    icon: 'hub',
+    color: 'teal-8',
+    caption: t('schoolLevels.comprensivoDesc') || 'Gestione integrata primo ciclo con continuità pedagogica'
+  },
+  {
+    label: t('schoolLevels.omnicomprensivo') || 'Istituto Omnicomprensivo (Tutti gli ordini)',
+    value: 'omnicomprensivo',
+    icon: 'apartment',
+    color: 'purple-8',
+    caption: t('schoolLevels.omnicomprensivoDesc') || 'Gestione completa dall\'Infanzia alle Scuole Superiori'
+  }
+])
+
+const selectedTierHint = computed(() => {
+  const selected = tierSelectOptions.value.find(o => o.value === schoolForm.school_level)
+  return selected ? selected.caption : ''
+})
+
+const getSchoolTierLabel = (tier) => {
+  const map = {
+    infanzia: t('schoolLevels.infanzia') || "Scuola dell'Infanzia",
+    primaria: t('schoolLevels.primaria') || 'Scuola Primaria',
+    secondaria_primo_grado: t('schoolLevels.secondaria_primo_grado') || 'Secondaria I Grado',
+    secondaria_secondo_grado: t('schoolLevels.secondaria_secondo_grado') || 'Secondaria II Grado',
+    comprensivo: t('schoolLevels.comprensivo') || 'Ist. Comprensivo',
+    omnicomprensivo: t('schoolLevels.omnicomprensivo') || 'Ist. Omnicomprensivo'
+  }
+  return map[tier] || tier || 'Secondaria II Grado'
+}
+
+const getSchoolTierBadgeColor = (tier) => {
+  const map = {
+    infanzia: 'pink-7',
+    primaria: 'amber-9',
+    secondaria_primo_grado: 'blue-8',
+    secondaria_secondo_grado: 'indigo-8',
+    comprensivo: 'teal-8',
+    omnicomprensivo: 'purple-8'
+  }
+  return map[tier] || 'indigo-8'
+}
+
 const fetchSchools = async () => {
   loading.value = true
   
@@ -390,8 +529,12 @@ const fetchSchools = async () => {
     }
 
     const response = await adminService.getSchools(params)
-    schools.value = response.data.items
-    pagination.value.rowsNumber = response.data.total
+    let items = response.data.items || []
+    if (filters.tier) {
+      items = items.filter(s => (s.school_level || s.type) === filters.tier)
+    }
+    schools.value = items
+    pagination.value.rowsNumber = filters.tier ? items.length : response.data.total
   } catch (error) {
     $q.notify({
       type: 'negative',
@@ -416,7 +559,19 @@ const viewSchool = (school) => {
 
 const editSchool = (school) => {
   editingSchool.value = school
-  Object.assign(schoolForm, school)
+  Object.assign(schoolForm, {
+    name: school.name,
+    code: school.code,
+    school_level: school.school_level || school.type || 'secondaria_secondo_grado',
+    address: school.address,
+    city: school.city,
+    province: school.province,
+    zip_code: school.zip_code,
+    phone: school.phone,
+    email: school.email,
+    website: school.website,
+    is_active: school.is_active
+  })
   showCreateDialog.value = true
 }
 
@@ -532,6 +687,7 @@ const closeDialog = () => {
   Object.assign(schoolForm, {
     name: '',
     code: '',
+    school_level: 'secondaria_secondo_grado',
     address: '',
     city: '',
     province: '',
@@ -548,6 +704,7 @@ const openCreate = () => {
   Object.assign(schoolForm, {
     name: '',
     code: '',
+    school_level: 'secondaria_secondo_grado',
     address: '',
     city: '',
     province: '',

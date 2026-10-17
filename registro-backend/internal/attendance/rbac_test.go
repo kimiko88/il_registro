@@ -133,6 +133,18 @@ func (m *mockRepo) GetMonthlyBreakdown(_ context.Context, _ string, _ string) ([
 func (m *mockRepo) GetStudentAttendanceStats(_ string) (*AttendanceStats, error) {
 	return &AttendanceStats{}, nil
 }
+func (m *mockRepo) SaveMealsBatch(_ context.Context, _ string, _ string, _ []StudentMealItem) error {
+	return nil
+}
+func (m *mockRepo) GetDailyMealsReport(_ context.Context, _ string, _ string) (*DailyMealsReportResponse, error) {
+	return &DailyMealsReportResponse{}, nil
+}
+func (m *mockRepo) VerifyPinAndJustifyAbsence(_ context.Context, _, _, _, _ string) error {
+	return nil
+}
+func (m *mockRepo) GetAbsenceLimitStatus(_ context.Context, _ string) (*AbsenceLimitStatusResponse, error) {
+	return &AbsenceLimitStatusResponse{MaxLimitRate: 25.0}, nil
+}
 
 // mockUserRepo satisfies users.Repository with configurable stubs.
 type mockUserRepo struct {
@@ -198,6 +210,18 @@ func (m *mockUserRepo) IsActive(_ context.Context, _ string) (bool, error)    { 
 func (m *mockUserRepo) ChangePasswordTx(_ context.Context, _, _ string) error { return nil }
 func (m *mockUserRepo) ApplyDataRetention(_ context.Context, _ *string, _ time.Time) (int, error) {
 	return 0, nil
+}
+func (m *mockUserRepo) GetAssignments(_ context.Context, _ string) ([]users.UserAssignment, error) {
+	return nil, nil
+}
+func (m *mockUserRepo) CreateAssignment(_ context.Context, _ *users.UserAssignment) error {
+	return nil
+}
+func (m *mockUserRepo) DeleteAssignment(_ context.Context, _ string) error {
+	return nil
+}
+func (m *mockUserRepo) SetCoordinatedClasses(_ context.Context, _, _ string, _ []string) error {
+	return nil
 }
 
 // ---------------------------------------------------------------------------

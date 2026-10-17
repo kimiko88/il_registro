@@ -66,6 +66,10 @@ func (m *mockAuditlogRepo) List(_ context.Context, p auditlog.FilterParams) ([]a
 	return filtered[start:end], total, nil
 }
 
+func (m *mockAuditlogRepo) Close() error {
+	return nil
+}
+
 // ─── Router Setup Helper ───────────────────────────────────────────────────
 
 func setupAuditlogRouter(repo *mockAuditlogRepo, role, schoolID string) *gin.Engine {

@@ -13,6 +13,14 @@
           <div class="text-subtitle1 text-grey-7">{{ school.code }} - {{ school.city }} ({{ school.province }})</div>
         </div>
         <q-space />
+        <q-chip
+          :color="getSchoolTierBadgeColor(school.school_level || school.type)"
+          text-color="white"
+          class="q-mr-sm text-weight-bold"
+        >
+          <q-icon :name="getSchoolTierIcon(school.school_level || school.type)" class="q-mr-xs" />
+          {{ getSchoolTierLabel(school.school_level || school.type) }}
+        </q-chip>
         <q-chip :color="school.is_active ? 'positive' : 'negative'" text-color="white">
           {{ school.is_active ? 'Attiva' : 'Disattiva' }}
         </q-chip>
@@ -62,7 +70,7 @@
         </div>
 
         <div class="col-12 col-md-4">
-          <q-card class="h-100">
+          <q-card class="q-mb-md">
             <q-card-section>
               <div class="text-h6 q-mb-md">Statistiche</div>
               <div class="row q-col-gutter-sm">
@@ -77,6 +85,35 @@
                     <div class="text-h4 text-secondary text-weight-bold">{{ school.teacher_count || 0 }}</div>
                     <div class="text-caption text-grey">Docenti</div>
                   </q-card>
+                </div>
+              </div>
+            </q-card-section>
+          </q-card>
+
+          <q-card v-if="tierFeatures">
+            <q-card-section>
+              <div class="text-subtitle1 text-weight-bold row items-center text-slate-800">
+                <q-icon name="gavel" color="primary" class="q-mr-xs" />
+                Normativa & Valutazione
+              </div>
+              <div class="text-caption text-slate-500 q-mb-sm">{{ tierFeatures.normative_reference }}</div>
+              <q-separator class="q-my-sm" />
+              <div class="text-body2 q-gutter-y-xs">
+                <div class="row justify-between items-center">
+                  <span class="text-slate-600">Modalità:</span>
+                  <q-badge color="indigo">{{ tierFeatures.evaluation_type }}</q-badge>
+                </div>
+                <div class="row justify-between items-center">
+                  <span class="text-slate-600">Voti numerici (1-10):</span>
+                  <q-badge :color="tierFeatures.has_grades ? 'positive' : 'grey'">{{ tierFeatures.has_grades ? 'Sì' : 'No' }}</q-badge>
+                </div>
+                <div class="row justify-between items-center">
+                  <span class="text-slate-600">Scrutinio differito (Debiti):</span>
+                  <q-badge :color="tierFeatures.has_deferred_scrutiny ? 'deep-orange' : 'grey'">{{ tierFeatures.has_deferred_scrutiny ? 'Attivo' : 'Non previsto' }}</q-badge>
+                </div>
+                <div class="row justify-between items-center" v-if="tierFeatures.has_school_credits">
+                  <span class="text-slate-600">Credito scolastico:</span>
+                  <q-badge color="purple">Max 40 punti</q-badge>
                 </div>
               </div>
             </q-card-section>
@@ -100,14 +137,6 @@
                     <q-tab name="users" label="Utenti" />
                 </q-tabs>
                 <div v-if="tab === 'classes'" class="row items-center q-gutter-sm">
-                    <q-select
-                        v-model="selectedAcademicYear"
-                        :options="academicYearOptions"
-                        label="Anno Scolastico"
-                        outlined
-                        dense
-                        style="min-width: 160px"
-                    />
                     <q-btn 
                         color="primary" 
                         icon="add" 
@@ -307,36 +336,54 @@ import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { useSchoolYearStore } from '@/stores/schoolYear'
 import adminService from '@/services/adminService'
 
 const route = useRoute()
 const $q = useQuasar()
 const { t } = useI18n()
+const schoolYearStore = useSchoolYearStore()
 
 const school = ref(null)
+const tierFeatures = ref(null)
 const loading = ref(true)
 const tab = ref('classes')
 
-const getCurrentAcademicYear = () => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth() + 1
-  if (month >= 9) {
-    return `${year}/${year + 1}`
-  } else {
-    return `${year - 1}/${year}`
+const getSchoolTierLabel = (tier) => {
+  const map = {
+    infanzia: t('schoolLevels.infanzia') || "Scuola dell'Infanzia",
+    primaria: t('schoolLevels.primaria') || 'Scuola Primaria',
+    secondaria_primo_grado: t('schoolLevels.secondaria_primo_grado') || 'Secondaria I Grado',
+    secondaria_secondo_grado: t('schoolLevels.secondaria_secondo_grado') || 'Secondaria II Grado',
+    comprensivo: t('schoolLevels.comprensivo') || 'Ist. Comprensivo',
+    omnicomprensivo: t('schoolLevels.omnicomprensivo') || 'Ist. Omnicomprensivo'
   }
+  return map[tier] || tier || 'Secondaria II Grado'
 }
 
-const currentYearStr = getCurrentAcademicYear()
-const selectedAcademicYear = ref(currentYearStr)
-const currentStart = parseInt(currentYearStr.split('/')[0])
-const academicYearOptions = [
-  'Tutti gli anni',
-  `${currentStart - 1}/${currentStart}`,
-  currentYearStr,
-  `${currentStart + 1}/${currentStart + 2}`
-]
+const getSchoolTierBadgeColor = (tier) => {
+  const map = {
+    infanzia: 'pink-7',
+    primaria: 'amber-9',
+    secondaria_primo_grado: 'blue-8',
+    secondaria_secondo_grado: 'indigo-8',
+    comprensivo: 'teal-8',
+    omnicomprensivo: 'purple-8'
+  }
+  return map[tier] || 'indigo-8'
+}
+
+const getSchoolTierIcon = (tier) => {
+  const map = {
+    infanzia: 'child_care',
+    primaria: 'menu_book',
+    secondaria_primo_grado: 'school',
+    secondaria_secondo_grado: 'account_balance',
+    comprensivo: 'hub',
+    omnicomprensivo: 'apartment'
+  }
+  return map[tier] || 'school'
+}
 
 // Classes Data
 const classes = ref([])
@@ -354,7 +401,7 @@ const classForm = ref({ name: '', section: '', academic_year: '' })
 
 const openClassDialog = () => {
     editingClass.value = null
-    classForm.value = { name: '', section: '', academic_year: '2024/2025', school_id: school.value.id }
+    classForm.value = { name: '', section: '', academic_year: schoolYearStore.selectedSchoolYear || '2025/2026', school_id: school.value.id }
     showClassDialog.value = true
 }
 
@@ -474,6 +521,15 @@ const fetchSchool = async () => {
         const id = route.params.id
         const response = await adminService.getSchool(id)
         school.value = response.data
+
+        // Load tier features
+        try {
+            const featRes = await adminService.getTierFeatures(id)
+            tierFeatures.value = featRes.data
+        } catch {
+            tierFeatures.value = null
+        }
+
         // Load additional data
         fetchClasses(id)
         fetchUsers(id) // Pre-load or load lazy? Pre-load fine for now
@@ -492,7 +548,7 @@ const fetchClasses = async (schoolId) => {
     loadingClasses.value = true
     try {
         const id = schoolId && typeof schoolId === 'string' ? schoolId : school.value?.id
-        const yearParam = (!selectedAcademicYear.value || selectedAcademicYear.value === 'Tutti gli anni') ? null : selectedAcademicYear.value
+        const yearParam = schoolYearStore.selectedSchoolYear || null
         const response = await adminService.getSchoolClasses(id, yearParam)
         classes.value = response.data || []
     } catch (e) {
@@ -521,7 +577,7 @@ watch(userRoleFilter, () => {
     if (school.value) fetchUsers(school.value.id)
 })
 
-watch(selectedAcademicYear, () => {
+watch(() => schoolYearStore.selectedSchoolYear, () => {
     if (school.value) fetchClasses(school.value.id)
 })
 

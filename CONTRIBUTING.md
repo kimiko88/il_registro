@@ -195,6 +195,15 @@ go vet ./...
 
 ---
 
+## Licenza e Diritti dei Contributi
+
+Tutti i contributi inviati a questo repository (via Pull Request, patch o issue) si intendono rilasciati sotto i medesimi termini della licenza del progetto: **[PolyForm Noncommercial License 1.0.0](./LICENSE)**.
+
+Contribuendo al progetto garantisci che le tue modifiche sono di tua proprietà o licenziate in modo compatibile per l'utilizzo gratuito e illimitato da parte di tutte le Istituzioni Scolastiche e la Pubblica Amministrazione.
+
+---
+
 ## Vulnerabilità di sicurezza
 
 Non aprire issue pubbliche per vulnerabilità. Usa il canale privato descritto in [SECURITY.md](./SECURITY.md).
+

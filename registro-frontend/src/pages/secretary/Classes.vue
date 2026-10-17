@@ -6,15 +6,6 @@
         <p class="text-subtitle1 text-slate-500 q-mb-none">Pianificazione classi, cattedre e adozioni libri</p>
       </div>
       <div class="row items-center q-gutter-sm">
-        <q-select
-          v-model="selectedYear"
-          :options="academicYearOptions"
-          label="Anno Accademico"
-          outlined
-          dense
-          class="rounded-lg min-width-150"
-          @update:model-value="onYearChange"
-        />
         <q-btn
           color="indigo-7"
           icon="published_with_changes"
@@ -85,7 +76,7 @@
       v-model="showDialog"
       :is-edit="isEdit"
       :initial-data="form"
-      :academic-year-options="academicYearOptions"
+      :academic-year-options="schoolYearStore.availableSchoolYears"
       :teacher-user-options="teacherUserOptions"
       @saved="refreshClasses"
     />
@@ -142,6 +133,15 @@
               autofocus
               :rules="[val => (!!val && val.trim().length > 0) || (t('common.requiredField') || 'Campo obbligatorio')]"
             />
+            <q-checkbox
+              v-model="newSubjectIsReligion"
+              label="Materia IRC (Religione Cattolica) - Solo giudizi"
+              color="indigo"
+              class="q-mt-sm"
+            />
+            <div v-if="newSubjectIsReligion" class="text-caption text-indigo-7 q-mt-xs">
+              Questa materia accetta esclusivamente giudizi ministeriali (Non classificabile, Insufficiente, Sufficiente, Buono, Distinto, Ottimo) e gestisce l'avvalimento degli studenti.
+            </div>
           </q-card-section>
           <q-card-actions align="right" class="q-pa-lg bg-slate-50">
             <q-btn flat label="Annulla" v-close-popup color="slate-400" no-caps />
@@ -157,8 +157,8 @@
     <!-- Academic Year Migration Wizard Dialog -->
     <ClassYearMigrationDialog
       v-model="showMigrationDialog"
-      :academic-year-options="academicYearOptions"
-      :current-year-str="selectedYear || currentYearStr"
+      :academic-year-options="schoolYearStore.availableSchoolYears"
+      :current-year-str="schoolYearStore.selectedSchoolYear || currentYearStr"
       :classes="classesStore.classes"
       :school-id="authStore.user?.school_id || ''"
       @migrated="onMigrationComplete"
@@ -180,11 +180,13 @@ import ClassStudentsDialog from '@/components/Secretary/ClassStudentsDialog.vue'
 import ClassTextbooksDialog from '@/components/Secretary/ClassTextbooksDialog.vue'
 import ClassScheduleDialog from '@/components/Secretary/ClassScheduleDialog.vue'
 import ClassYearMigrationDialog from '@/components/Secretary/ClassYearMigrationDialog.vue'
+import { useSchoolYearStore } from '@/stores/schoolYear'
 
 const $q = useQuasar()
 const { t } = useI18n()
 const classesStore = useClassesStore()
 const authStore = useAuthStore()
+const schoolYearStore = useSchoolYearStore()
 
 const filter = ref('')
 const showDialog = ref(false)
@@ -203,14 +205,6 @@ const getCurrentAcademicYear = () => {
 }
 
 const currentYearStr = getCurrentAcademicYear();
-const selectedYear = ref(currentYearStr);
-
-const currentStart = parseInt(currentYearStr.split('/')[0]);
-const academicYearOptions = [
-  `${currentStart - 1}/${currentStart}`,
-  currentYearStr,
-  `${currentStart + 1}/${currentStart + 2}`
-]
 
 // Students Management State
 const showStudentsDialog = ref(false)
@@ -271,10 +265,16 @@ onMounted(() => {
 
 const refreshClasses = () => {
   classesStore.fetchClasses({ 
-    school_id: authStore.user.school_id,
-    academic_year: selectedYear.value
-  })
+    school_id: authStore.user?.school_id,
+    academic_year: schoolYearStore.selectedSchoolYear
+  }, { force: true })
 }
+
+watch(() => schoolYearStore.selectedSchoolYear, (newYear) => {
+  if (authStore.user?.school_id && newYear) {
+    refreshClasses()
+  }
+})
 
 // Watch subject selection to filter teachers
 watch(() => assignForm.subject_id, async (newVal) => {
@@ -292,9 +292,7 @@ watch(() => assignForm.subject_id, async (newVal) => {
     }
 })
 
-const onYearChange = () => {
-  refreshClasses()
-}
+
 
 const fetchSchoolData = async () => {
     try {
@@ -321,7 +319,7 @@ const openDialog = (row = null) => {
       section: '',
       articolazione: '',
       location: '',
-      academic_year: selectedYear.value,
+      academic_year: schoolYearStore.selectedSchoolYear || currentYearStr,
       coordinator_id: ''
     })
   }
@@ -403,7 +401,10 @@ const removeAssignment = async (row) => {
     }
 }
 
+const newSubjectIsReligion = ref(false)
+
 const openCreateSubject = () => {
+    newSubjectIsReligion.value = false
     showSubjectDialog.value = true
 }
 
@@ -412,12 +413,15 @@ const createSubject = async () => {
     try {
         const payload = {
             name: newSubjectName.value,
-            school_id: authStore.user.school_id
+            school_id: authStore.user.school_id,
+            is_religion: newSubjectIsReligion.value,
+            is_judgment_only: newSubjectIsReligion.value
         }
         await adminService.createSubject(payload)
         $q.notify({ type: 'positive', message: 'Materia creata' })
         showSubjectDialog.value = false
         newSubjectName.value = ''
+        newSubjectIsReligion.value = false
         fetchSchoolData()
     } catch(e) {
         $q.notify({ type: 'negative', message: 'Errore creazione materia' })

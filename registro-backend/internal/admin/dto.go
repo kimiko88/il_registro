@@ -17,6 +17,8 @@ type SchoolResponse struct {
 	ID           string    `json:"id"`
 	Name         string    `json:"name"`
 	Code         string    `json:"code"`
+	SchoolLevel  string    `json:"school_level"`
+	Type         string    `json:"type"`
 	Address      string    `json:"address"`
 	City         string    `json:"city"`
 	Province     string    `json:"province"`
@@ -42,28 +44,32 @@ type SchoolListResponse struct {
 
 // CreateSchoolRequest represents the request to create a school
 type CreateSchoolRequest struct {
-	Name     string `json:"name" binding:"required,min=2,max=200"`
-	Code     string `json:"code" binding:"required,min=2,max=50"`
-	Address  string `json:"address" binding:"required"`
-	City     string `json:"city" binding:"required"`
-	Province string `json:"province" binding:"required,len=2"`
-	ZipCode  string `json:"zip_code" binding:"required"`
-	Phone    string `json:"phone"`
-	Email    string `json:"email" binding:"omitempty,email"`
-	Website  string `json:"website"`
+	Name        string `json:"name" binding:"required,min=2,max=200"`
+	Code        string `json:"code" binding:"required,min=2,max=50"`
+	SchoolLevel string `json:"school_level"`
+	Type        string `json:"type"`
+	Address     string `json:"address" binding:"required"`
+	City        string `json:"city" binding:"required"`
+	Province    string `json:"province" binding:"required,len=2"`
+	ZipCode     string `json:"zip_code" binding:"required"`
+	Phone       string `json:"phone"`
+	Email       string `json:"email" binding:"omitempty,email"`
+	Website     string `json:"website"`
 }
 
 // UpdateSchoolRequest represents the request to update a school
 type UpdateSchoolRequest struct {
-	Name     string `json:"name" binding:"omitempty,min=2,max=200"`
-	Address  string `json:"address"`
-	City     string `json:"city"`
-	Province string `json:"province" binding:"omitempty,len=2"`
-	ZipCode  string `json:"zip_code"`
-	Phone    string `json:"phone"`
-	Email    string `json:"email" binding:"omitempty,email"`
-	Website  string `json:"website"`
-	IsActive *bool  `json:"is_active"`
+	Name        string  `json:"name" binding:"omitempty,min=2,max=200"`
+	SchoolLevel *string `json:"school_level"`
+	Type        *string `json:"type"`
+	Address     string  `json:"address"`
+	City        string  `json:"city"`
+	Province    string  `json:"province" binding:"omitempty,len=2"`
+	ZipCode     string  `json:"zip_code"`
+	Phone       string  `json:"phone"`
+	Email       string  `json:"email" binding:"omitempty,email"`
+	Website     string  `json:"website"`
+	IsActive    *bool   `json:"is_active"`
 }
 
 // AdminUserResponse represents an admin user in responses

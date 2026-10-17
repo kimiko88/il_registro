@@ -9,6 +9,8 @@ import { getSavedLocale, getQuasarLang, applyLocale } from './utils/locale'
 
 // Import Quasar css
 import '@quasar/extras/material-icons/material-icons.css'
+import '@quasar/extras/material-icons-outlined/material-icons-outlined.css'
+import '@quasar/extras/material-symbols-outlined/material-symbols-outlined.css'
 import 'quasar/src/css/index.sass'
 
 // Global styles
@@ -16,6 +18,16 @@ import './assets/styles/globals.css'
 
 import { useErrorStore } from './stores/error'
 import { useOutboxStore } from './stores/outbox'
+// Ensure passive event listeners for touch events to eliminate browser performance violations
+if (typeof EventTarget !== 'undefined' && typeof window !== 'undefined') {
+  const originalAddEventListener = EventTarget.prototype.addEventListener
+  EventTarget.prototype.addEventListener = function (type, fn, options) {
+    if (['touchstart', 'touchmove'].includes(type) && (options === undefined || options === false)) {
+      options = { passive: true }
+    }
+    return originalAddEventListener.call(this, type, fn, options)
+  }
+}
 
 const savedLang = getSavedLocale(true)
 
@@ -79,7 +91,8 @@ app.use(Quasar, {
             positive: '#10B981', // Emerald 500
             negative: '#EF4444', // Red 500
             info: '#3B82F6',     // Blue 500
-            warning: '#F59E0B'   // Amber 500
+            warning: '#F59E0B',  // Amber 500
+            emerald: '#059669'   // Emerald School 600
         }
     }
 })

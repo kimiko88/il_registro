@@ -21,6 +21,14 @@ type SchoolPayment struct {
 	CreatedAt     time.Time  `json:"created_at" db:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at" db:"updated_at"`
 
+	// PagoPA & OPI Enterprise Fields
+	IUV                  string     `json:"iuv,omitempty" db:"iuv"`
+	QRCodePayload        string     `json:"qr_code_payload,omitempty" db:"qr_code_payload"`
+	CheckoutSessionToken string     `json:"checkout_session_token,omitempty" db:"checkout_session_token"`
+	ReconciledAt         *time.Time `json:"reconciled_at,omitempty" db:"reconciled_at"`
+	SollecitoCount       int        `json:"sollecito_count" db:"sollecito_count"`
+	UltimoSollecitoAt    *time.Time `json:"ultimo_sollecito_at,omitempty" db:"ultimo_sollecito_at"`
+
 	// Enriched fields for responses
 	StudentName string `json:"student_name,omitempty"`
 }
@@ -42,4 +50,62 @@ type PaymentSummaryResponse struct {
 	PendingCount int              `json:"pending_count"`
 	PaidCount    int              `json:"paid_count"`
 	Payments     []*SchoolPayment `json:"payments"`
+}
+
+type BollettinoNotice struct {
+	PaymentID         string    `json:"payment_id"`
+	IUV               string    `json:"iuv"`
+	SchoolCF          string    `json:"school_cf"`
+	SchoolName        string    `json:"school_name"`
+	StudentName       string    `json:"student_name"`
+	Title             string    `json:"title"`
+	Amount            float64   `json:"amount"`
+	DueDate           time.Time `json:"due_date"`
+	QRCodePayload     string    `json:"qr_code_payload"`
+	Barcode128        string    `json:"barcode_128"`
+	CausaleVersamento string    `json:"causale_versamento"`
+	GeneratedAt       time.Time `json:"generated_at"`
+}
+
+type CheckoutSession struct {
+	PaymentID    string    `json:"payment_id"`
+	SessionToken string    `json:"session_token"`
+	RedirectURL  string    `json:"redirect_url"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	Amount       float64   `json:"amount"`
+	IUV          string    `json:"iuv"`
+}
+
+type OPIQuietanza struct {
+	CodiceFlusso    string    `json:"codice_flusso" xml:"codiceFlusso"`
+	NumeroQuietanza string    `json:"numero_quietanza" xml:"numeroQuietanza"`
+	IUV             string    `json:"iuv" xml:"iuv"`
+	Importo         float64   `json:"importo" xml:"importo"`
+	DataAccredito   time.Time `json:"data_accredito" xml:"dataAccredito"`
+	CodiceDebitore  string    `json:"codice_debitore" xml:"codiceDebitore"`
+	NomeDebitore    string    `json:"nome_debitore" xml:"nomeDebitore"`
+	Esito           string    `json:"esito" xml:"esito"`
+}
+
+type ReconciliationReport struct {
+	CodiceFlusso       string           `json:"codice_flusso"`
+	TotalProcessed     int              `json:"total_processed"`
+	TotalReconciled    int              `json:"total_reconciled"`
+	TotalUnmatched     int              `json:"total_unmatched"`
+	TotalAmount        float64          `json:"total_amount"`
+	ReconciledPayments []*SchoolPayment `json:"reconciled_payments"`
+	UnmatchedQuietanze []OPIQuietanza   `json:"unmatched_quietanze"`
+}
+
+type PaymentSollecito struct {
+	PaymentID      string    `json:"payment_id"`
+	StudentID      string    `json:"student_id"`
+	StudentName    string    `json:"student_name"`
+	ParentEmail    string    `json:"parent_email"`
+	Title          string    `json:"title"`
+	Amount         float64   `json:"amount"`
+	DueDate        time.Time `json:"due_date"`
+	DaysOverdue    int       `json:"days_overdue"`
+	SollecitoCount int       `json:"sollecito_count"`
+	SollecitoText  string    `json:"sollecito_text"`
 }

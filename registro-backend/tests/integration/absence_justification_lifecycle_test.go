@@ -131,3 +131,15 @@ func (m *mockAbsenceRepoForLifecycle) GetStudentAttendanceStats(studentID string
 func (m *mockAbsenceRepoForLifecycle) HasOverlappingJustification(ctx context.Context, studentID string, startDate, endDate time.Time) (bool, error) {
 	return false, nil
 }
+func (m *mockAbsenceRepoForLifecycle) SaveMealsBatch(_ context.Context, _ string, _ string, _ []attendance.StudentMealItem) error {
+	return nil
+}
+func (m *mockAbsenceRepoForLifecycle) GetDailyMealsReport(_ context.Context, _ string, _ string) (*attendance.DailyMealsReportResponse, error) {
+	return &attendance.DailyMealsReportResponse{}, nil
+}
+func (m *mockAbsenceRepoForLifecycle) VerifyPinAndJustifyAbsence(_ context.Context, _, _, _, _ string) error {
+	return nil
+}
+func (m *mockAbsenceRepoForLifecycle) GetAbsenceLimitStatus(_ context.Context, _ string) (*attendance.AbsenceLimitStatusResponse, error) {
+	return &attendance.AbsenceLimitStatusResponse{MaxLimitRate: 25.0}, nil
+}

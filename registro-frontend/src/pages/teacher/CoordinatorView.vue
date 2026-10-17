@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="row items-center q-mb-lg">
       <div>
-        <h1 class="text-h4 text-weight-bold text-primary q-my-none">{{ t('roleDashboards.teacherPanel') || 'Dashboard Coordinatore di Classe' }}</h1>
-        <div class="text-subtitle2 text-grey-7">Panoramica andamento, note disciplinari, genitori e gestione scrutini</div>
+        <h1 class="text-h4 text-weight-bold text-primary q-my-none">{{ t('coordinatorView.title') }}</h1>
+        <div class="text-subtitle2 text-grey-7">{{ t('coordinatorView.subtitle') }}</div>
       </div>
       <q-space />
       <q-select
@@ -14,7 +14,7 @@
         option-label="label"
         emit-value
         map-options
-        :label="t('udaPage.classLabel') || 'Seleziona Classe Coordinata'"
+        :label="t('coordinatorView.selectClass')"
         outlined
         dense
         style="min-width: 250px"
@@ -24,7 +24,7 @@
 
     <div v-if="!selectedClassId" class="q-pa-xl text-center">
       <q-icon name="co_present" size="4rem" color="grey-5" />
-      <div class="text-h6 text-grey-6 q-mt-md">Non risulti coordinatore di alcuna classe per l'anno scolastico in corso.</div>
+      <div class="text-h6 text-grey-6 q-mt-md">{{ t('coordinatorView.notCoordinator') }}</div>
     </div>
 
     <div v-else>
@@ -37,10 +37,10 @@
         align="left"
         narrow-indicator
       >
-        <q-tab name="academic" icon="trending_up" :label="t('gradesPage.title') || 'Andamento Classe'" />
-        <q-tab name="notes" icon="report_problem" :label="t('notesPage.title') || 'Note & Richiami Disciplinari'" />
-        <q-tab name="guardians" icon="contacts" :label="t('nav.children') || 'Anagrafica Genitori'" />
-        <q-tab name="scrutiny" icon="gavel" label="Scrutinio di Classe" />
+        <q-tab name="academic" icon="trending_up" :label="t('coordinatorView.tabAcademic')" />
+        <q-tab name="notes" icon="report_problem" :label="t('coordinatorView.tabNotes')" />
+        <q-tab name="guardians" icon="contacts" :label="t('coordinatorView.tabGuardians')" />
+        <q-tab name="scrutiny" icon="gavel" :label="t('coordinatorView.tabScrutiny')" />
       </q-tabs>
 
       <q-separator class="q-mb-md" />
@@ -49,13 +49,13 @@
         <!-- Tab 1: Andamento Classe -->
         <q-tab-panel name="academic" class="q-pa-none">
           <q-card class="shadow-2 rounded-borders q-pa-md">
-            <div class="text-h6 text-weight-bold q-mb-md">Matrice Andamento Accademico</div>
+            <div class="text-h6 text-weight-bold q-mb-md">{{ t('coordinatorView.academicMatrixTitle') }}</div>
             <q-spinner v-if="loadingMatrix" color="primary" size="2em" />
             <div v-else-if="matrixData">
               <q-markup-table flat bordered dense class="rounded-borders">
                 <thead>
                   <tr class="bg-primary text-white">
-                    <th class="text-left">{{ t('competenciesPage.student') }}</th>
+                    <th class="text-left">{{ t('coordinatorView.studentCol') }}</th>
                     <th v-for="sub in matrixData.subjects" :key="sub.id" class="text-center">{{ sub.name }}</th>
                   </tr>
                 </thead>
@@ -82,7 +82,7 @@
         <!-- Tab 2: Note Disciplinari -->
         <q-tab-panel name="notes" class="q-pa-none">
           <q-card class="shadow-2 rounded-borders q-pa-md">
-            <div class="text-h6 text-weight-bold q-mb-md">{{ t('notesPage.title') }}</div>
+            <div class="text-h6 text-weight-bold q-mb-md">{{ t('coordinatorView.tabNotes') }}</div>
             <q-list separator v-if="notesList.length > 0">
               <q-item v-for="note in notesList" :key="note.id">
                 <q-item-section avatar>
@@ -97,38 +97,38 @@
                 </q-item-section>
               </q-item>
             </q-list>
-            <div v-else class="text-grey text-center q-pa-md">Nessuna nota presente per la classe selezionata.</div>
+            <div v-else class="text-grey text-center q-pa-md">{{ t('coordinatorView.noNotes') }}</div>
           </q-card>
         </q-tab-panel>
 
         <!-- Tab 3: Genitori -->
         <q-tab-panel name="guardians" class="q-pa-none">
           <q-card class="shadow-2 rounded-borders q-pa-md">
-            <div class="text-h6 text-weight-bold q-mb-md">Contatti Genitori e Rappresentanti</div>
+            <div class="text-h6 text-weight-bold q-mb-md">{{ t('coordinatorView.guardiansTitle') }}</div>
             <q-list separator v-if="guardiansList.length > 0">
               <q-item v-for="g in guardiansList" :key="g.id">
                 <q-item-section avatar>
                   <q-avatar color="secondary" text-color="white" icon="person" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-weight-bold">{{ g.name }} (Genitore di {{ g.student_name }})</q-item-label>
-                  <q-item-label caption>Email: {{ g.email }} | Tel: {{ g.phone || 'N/D' }}</q-item-label>
+                  <q-item-label class="text-weight-bold">{{ g.name }} ({{ t('coordinatorView.guardianOf', { name: g.student_name }) }})</q-item-label>
+                  <q-item-label caption>{{ t('coordinatorView.email') }}: {{ g.email }} | {{ t('coordinatorView.phone') }}: {{ g.phone || t('coordinatorView.notAvailable') }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-btn flat round icon="email" color="primary" :to="`/messages?to=${g.email}`" />
                 </q-item-section>
               </q-item>
             </q-list>
-            <div v-else class="text-grey text-center q-pa-md">Nessun contatto genitore trovato.</div>
+            <div v-else class="text-grey text-center q-pa-md">{{ t('coordinatorView.noGuardians') }}</div>
           </q-card>
         </q-tab-panel>
 
         <!-- Tab 4: Scrutinio -->
         <q-tab-panel name="scrutiny" class="q-pa-none">
           <q-card class="shadow-2 rounded-borders q-pa-md">
-            <div class="text-h6 text-weight-bold q-mb-md">Gestione Scrutinio Finale / Intermedio</div>
-            <p class="text-body2 text-grey-8">Avvia e coordina la sessione di scrutinio per la classe {{ selectedClassId }}.</p>
-            <q-btn color="primary" icon="gavel" label="Avvia Sessione Scrutinio" @click="startScrutiny" class="q-mt-sm" />
+            <div class="text-h6 text-weight-bold q-mb-md">{{ t('coordinatorView.scrutinyTitle') }}</div>
+            <p class="text-body2 text-grey-8">{{ t('coordinatorView.scrutinyDesc', { classId: selectedClassId }) }}</p>
+            <q-btn color="primary" icon="gavel" :label="t('coordinatorView.startScrutinyBtn')" @click="startScrutiny" class="q-mt-sm" />
           </q-card>
         </q-tab-panel>
       </q-tab-panels>
@@ -167,7 +167,8 @@ const fetchClasses = async () => {
     })
     const assignedClasses = res.data || []
     const coordClasses = assignedClasses.filter(c => c.coordinator_id === currentUserId)
-    classOptions.value = coordClasses.length > 0 ? coordClasses : assignedClasses
+    const isExecutive = ['admin', 'superadmin', 'principal', 'vice_principal'].includes(userRes?.role || userRes?.user_role)
+    classOptions.value = coordClasses.length > 0 ? coordClasses : (isExecutive ? assignedClasses : [])
     if (classOptions.value.length > 0) {
       selectedClassId.value = classOptions.value[0].id
       onClassChange(selectedClassId.value)

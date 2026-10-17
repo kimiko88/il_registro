@@ -75,7 +75,7 @@ func (h *Handler) CreateSlot(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" {
+	if role != "teacher" && role != "coordinator" && role != "coordinatore_classe" && role != "admin" && role != "superadmin" && role != "vice_principal" && role != "collaboratore_ds" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo i docenti o amministratori possono creare slot di colloquio"})
 		return
 	}
@@ -508,7 +508,7 @@ func (h *Handler) ListQueueTickets(c *gin.Context) {
 
 	if role == "parent" {
 		parentID = userID
-	} else if role == "teacher" {
+	} else if role == "teacher" || role == "coordinator" || role == "coordinatore_classe" {
 		teacherID = userID
 	} else if role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -533,7 +533,7 @@ func (h *Handler) UpdateTicketStatus(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	if role != "teacher" && role != "admin" && role != "superadmin" && role != "principal" && role != "secretary" {
+	if role != "teacher" && role != "coordinator" && role != "coordinatore_classe" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" && role != "secretary" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: non autorizzato alla gestione dello stato del ticket"})
 		return
 	}

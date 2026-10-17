@@ -81,6 +81,38 @@ func (m *mockRepo) ListByClass(ctx context.Context, classID string) ([]ClassText
 	return result, nil
 }
 
+func (m *mockRepo) UpsertAIECatalog(ctx context.Context, books []AIECatalogBook) (int, error) {
+	return len(books), nil
+}
+
+func (m *mockRepo) SearchAIECatalog(ctx context.Context, queryStr, subject, schoolOrder string, limit int) ([]AIECatalogBook, error) {
+	return nil, nil
+}
+
+func (m *mockRepo) GetSpendingLimit(ctx context.Context, schoolID string, classYear int, schoolOrder, academicYear string) (*SpendingLimit, error) {
+	return nil, nil
+}
+
+func (m *mockRepo) UpsertSpendingLimit(ctx context.Context, limit *SpendingLimit) error {
+	return nil
+}
+
+func (m *mockRepo) ListClassAdoptions(ctx context.Context, classID string) ([]ClassAdoptionItem, error) {
+	return nil, nil
+}
+
+func (m *mockRepo) SaveClassAdoption(ctx context.Context, item *ClassAdoptionItem) error {
+	return nil
+}
+
+func (m *mockRepo) DeleteClassAdoption(ctx context.Context, id string) error {
+	return nil
+}
+
+func (m *mockRepo) GetClassInfo(ctx context.Context, classID string) (int, string, string, string, string, error) {
+	return 1, "secondaria_2", "2026/2027", "RMPS010004", "1A", nil
+}
+
 func TestTextbooksService_CreateValidations(t *testing.T) {
 	repo := newMockRepo()
 	svc := NewService(repo)

@@ -1,0 +1,21 @@
+# .dockerignore for registro-backend
+.git
+.gitignore
+.gocache
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+*.crt
+private_key.*
+public_key.*
+jwt_secret*
+scratch/
+bin/
+tmp/
+*.exe
+*.test
+coverage.*
+cov_*

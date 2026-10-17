@@ -182,7 +182,7 @@
               <div :key="currentStep" class="step-content-area">
                 <div class="step-badge" :class="`badge-${activeStep.color}`">
                   <q-icon :name="activeStep.icon" size="14px" />
-                  {{ activeStep.category || '' }}
+                  {{ activeStep.category || roleLabel }}
                 </div>
 
                 <h2 class="step-title">{{ activeStep.title }}</h2>
@@ -200,6 +200,19 @@
                 <div v-if="activeStep.tip" class="step-tip">
                   <q-icon name="lightbulb" color="amber-7" size="16px" />
                   <span>{{ activeStep.tip }}</span>
+                </div>
+
+                <!-- Direct link to section -->
+                <div v-if="activeStep.route" class="step-route-action q-mt-md">
+                  <q-btn
+                    outline
+                    size="sm"
+                    :color="activeStep.color"
+                    icon="open_in_new"
+                    :label="t('onboardingExtra.goToSection')"
+                    class="rounded-borders btn-goto-section"
+                    @click="navigateTo(activeStep.route)"
+                  />
                 </div>
               </div>
             </transition>
@@ -257,6 +270,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from '@/stores/auth'
@@ -266,7 +280,8 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue', 'completed', 'open-guide'])
 
-const { t, tm, te } = useI18n()
+const router = useRouter()
+const { t, tm, te } = useI18n({ useScope: 'global' })
 const $q = useQuasar()
 const authStore = useAuthStore()
 
@@ -279,17 +294,51 @@ const COMPLETION_STEP = 999
 // ── Role helpers ─────────────────────────────────────────────────────────────
 const userRole = computed(() => {
   const role = authStore.userRole || authStore.user?.role || 'student'
-  const r = role.toLowerCase()
-  if (r === 'superadmin') return 'admin'
-  return ['teacher','student','parent','secretary','admin'].includes(r) ? r : 'student'
+  const r = role.toLowerCase().trim()
+  if (['principal', 'vice_principal', 'dirigente_scolastico', 'collaboratore_vicario'].includes(r)) {
+    return 'principal'
+  }
+  if (['admin', 'superadmin', 'system_auditor', 'dpo'].includes(r)) {
+    return 'admin'
+  }
+  if (['secretary', 'staff', 'responsabile_gestione_documentale', 'responsabile_conservazione'].includes(r)) {
+    return 'secretary'
+  }
+  if (r === 'dsga') {
+    return 'dsga'
+  }
+  if (['collaboratore_ds', 'responsabile_servizio'].includes(r)) {
+    return 'collaboratore_ds'
+  }
+  if (r === 'collaboratore_scolastico') {
+    return 'collaboratore_scolastico'
+  }
+  if (['assistente_amministrativo', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico'].includes(r)) {
+    return 'assistente_amministrativo'
+  }
+  if (['teacher', 'docente', 'coordinator', 'coordinatore_classe', 'segretario_consiglio', 'referente_progetto', 'referente_inclusione', 'responsabile_dipartimento', 'tutor_orientatore', 'animatore_digitale'].includes(r)) {
+    return 'teacher'
+  }
+  if (['parent', 'genitore'].includes(r)) {
+    return 'parent'
+  }
+  if (['student', 'studente'].includes(r)) {
+    return 'student'
+  }
+  return 'student'
 })
 
 const roleMeta = {
-  teacher:   { icon: 'school',              color: 'indigo',  primary: 'indigo',  label: 'roles.teacher' },
-  student:   { icon: 'face',                color: 'teal',    primary: 'teal',    label: 'roles.student' },
-  parent:    { icon: 'family_restroom',      color: 'purple',  primary: 'purple',  label: 'roles.parent' },
-  secretary: { icon: 'admin_panel_settings', color: 'orange',  primary: 'orange',  label: 'roles.secretary' },
-  admin:     { icon: 'manage_accounts',      color: 'red',     primary: 'red',     label: 'roles.admin' }
+  principal:                 { icon: 'account_balance',      color: 'deep-purple', primary: 'deep-purple-8', label: 'roles.principal' },
+  teacher:                   { icon: 'school',              color: 'indigo',      primary: 'indigo',        label: 'roles.teacher' },
+  student:                   { icon: 'face',                color: 'teal',        primary: 'teal',          label: 'roles.student' },
+  parent:                    { icon: 'family_restroom',      color: 'purple',      primary: 'purple',        label: 'roles.parent' },
+  secretary:                 { icon: 'admin_panel_settings', color: 'orange',      primary: 'orange',        label: 'roles.secretary' },
+  admin:                     { icon: 'manage_accounts',      color: 'red',         primary: 'red',           label: 'roles.admin' },
+  assistente_amministrativo: { icon: 'manage_accounts',      color: 'cyan',        primary: 'cyan-8',        label: 'roles.assistente_amministrativo' },
+  collaboratore_ds:          { icon: 'co_present',          color: 'amber',       primary: 'amber-9',       label: 'roles.collaboratore_ds' },
+  collaboratore_scolastico:  { icon: 'door_front',          color: 'teal',        primary: 'teal-8',        label: 'roles.collaboratore_scolastico' },
+  dsga:                      { icon: 'account_balance',     color: 'deep-orange', primary: 'deep-orange-8', label: 'roles.dsga' }
 }
 
 const roleIcon    = computed(() => roleMeta[userRole.value]?.icon    || 'person')
@@ -299,55 +348,190 @@ const roleLabel   = computed(() => t(roleMeta[userRole.value]?.label || 'roles.u
 
 // ── Steps definition ─────────────────────────────────────────────────────────
 const STEP_DEFS = {
+  principal: [
+    { icon: 'dashboard',         color: 'deep-purple', route: '/' },
+    { icon: 'manage_accounts',   color: 'indigo',      route: '/secretary/users' },
+    { icon: 'verified',          color: 'teal',        route: '/ata/personnel-desk' },
+    { icon: 'swap_horiz',        color: 'orange',      route: '/secretary/substitutions' },
+    { icon: 'gavel',             color: 'blue',        route: '/secretary/verbali' },
+    { icon: 'assessment',        color: 'purple',      route: '/secretary/reports' },
+    {
+      icon: 'verified_user',
+      color: 'purple',
+      route: '/admin/enterprise',
+      bullets: [
+        'Firma Remota Qualificata FEQ',
+        'Albo Pretorio & Codice Glifo',
+        'Interpelli supplenze MIM',
+        'Attivazione Servizio Mensa'
+      ]
+    }
+  ],
   teacher: [
-    { icon:'dashboard',       color:'indigo'  },
-    { icon:'menu_book',       color:'blue'    },
-    { icon:'grade',           color:'green'   },
-    { icon:'event',           color:'orange'  },
-    { icon:'people',          color:'purple'  },
-    { icon:'settings',        color:'grey'    },
-    { icon:'draw',            color:'cyan'    },
-    { icon:'workspace_premium', color:'amber' }
+    { icon:'dashboard',          color:'indigo',       route: '/' },
+    { icon:'menu_book',          color:'blue',         route: '/teacher/classes' },
+    { icon:'grade',              color:'green',        route: '/teacher/grades' },
+    { icon:'event',              color:'orange',       route: '/teacher/agenda' },
+    { icon:'people',             color:'purple',       route: '/teacher/colloqui' },
+    { icon:'settings',           color:'grey',         route: '/teacher/settings' },
+    { icon:'draw',               color:'cyan',         route: '/teacher/lessons' },
+    { icon:'workspace_premium',  color:'amber',        route: '/teacher/competencies' }
   ],
   student: [
-    { icon:'dashboard',       color:'teal'    },
-    { icon:'grade',           color:'green'   },
-    { icon:'event_available', color:'blue'    },
-    { icon:'assignment',      color:'orange'  },
-    { icon:'description',     color:'purple'  },
-    { icon:'calendar_month',  color:'red'     },
-    { icon:'work',            color:'cyan'    },
-    { icon:'campaign',        color:'pink'    }
+    { icon:'dashboard',          color:'teal',         route: '/' },
+    { icon:'grade',              color:'green',        route: '/student/grades' },
+    { icon:'event_available',    color:'blue',         route: '/student/attendance' },
+    { icon:'assignment',         color:'orange',       route: '/student/homework' },
+    { icon:'description',        color:'purple',       route: '/student/documents' },
+    { icon:'calendar_month',     color:'red',          route: '/student/timetable' },
+    { icon:'work',               color:'cyan',         route: '/student/pcto' },
+    { icon:'campaign',           color:'pink',         route: '/student/communications' },
+    {
+      icon: 'psychology',
+      color: 'pink',
+      route: '/student/psychology',
+      bullets: [
+        'Prenotazione confidenziale',
+        'Tutela assoluta riservatezza',
+        'Verifica consenso genitori',
+        'Storico appuntamenti'
+      ]
+    },
+    {
+      icon: 'restaurant',
+      color: 'teal',
+      route: '/student/canteen',
+      bullets: [
+        'Menu del giorno',
+        'Presenza pasto confermata',
+        'Dieta standard o speciale',
+        'Storico refezione'
+      ]
+    }
   ],
   parent: [
-    { icon:'dashboard',       color:'purple'  },
-    { icon:'child_care',      color:'pink'    },
-    { icon:'grade',           color:'green'   },
-    { icon:'campaign',        color:'blue'    },
-    { icon:'meeting_room',    color:'orange'  },
-    { icon:'payment',         color:'teal'    },
-    { icon:'verified_user',   color:'indigo'  },
-    { icon:'analytics',       color:'red'     }
+    { icon:'dashboard',          color:'purple',       route: '/' },
+    { icon:'child_care',         color:'pink',         route: '/parent/children' },
+    { icon:'grade',              color:'green',        route: '/parent/grades' },
+    { icon:'campaign',           color:'blue',         route: '/parent/communications' },
+    { icon:'meeting_room',       color:'orange',       route: '/parent/colloqui' },
+    { icon:'payment',            color:'teal',         route: '/parent/payments' },
+    { icon:'verified_user',      color:'indigo',       route: '/parent/attendance' },
+    { icon:'analytics',          color:'red',          route: '/parent/grades' },
+    {
+      icon: 'psychology',
+      color: 'pink',
+      route: '/parent/psychology',
+      bullets: [
+        'Firma consenso informato',
+        'Tutela minori L. 56/1989',
+        'Consulenza genitoriale',
+        'Selezione rapida figli'
+      ]
+    },
+    {
+      icon: 'account_balance_wallet',
+      color: 'teal',
+      route: '/parent/canteen',
+      bullets: [
+        'Saldo borsellino in tempo reale',
+        'Ricarica rapida PagoPA',
+        'Generazione codice IUV',
+        'Monitoraggio addebiti pasti'
+      ]
+    }
   ],
   secretary: [
-    { icon:'dashboard',       color:'orange'  },
-    { icon:'groups',          color:'indigo'  },
-    { icon:'verified',        color:'green'   },
-    { icon:'schedule',        color:'blue'    },
-    { icon:'assessment',      color:'purple'  },
-    { icon:'manage_accounts', color:'red'     },
-    { icon:'badge',           color:'cyan'    },
-    { icon:'newspaper',       color:'teal'    }
+    { icon:'dashboard',          color:'orange',       route: '/' },
+    { icon:'groups',             color:'indigo',       route: '/secretary/classes' },
+    { icon:'verified',           color:'green',        route: '/secretary/certificates' },
+    { icon:'schedule',           color:'blue',         route: '/secretary/timetable' },
+    { icon:'assessment',         color:'purple',       route: '/secretary/reports' },
+    { icon:'manage_accounts',    color:'red',          route: '/secretary/users' },
+    { icon:'badge',              color:'cyan',         route: '/secretary/students' },
+    { icon:'newspaper',          color:'teal',         route: '/secretary/communications' },
+    {
+      icon: 'hub',
+      color: 'indigo',
+      route: '/admin/enterprise',
+      bullets: [
+        'Emissione avvisi PagoPA & IUV',
+        'Curriculum dello Studente',
+        'Cooperazione SIDI MIM',
+        'Mensa Scolastica'
+      ]
+    }
   ],
   admin: [
-    { icon:'dashboard',       color:'red'     },
-    { icon:'monitor_heart',   color:'orange'  },
-    { icon:'manage_accounts', color:'blue'    },
-    { icon:'analytics',       color:'green'   },
-    { icon:'security',        color:'purple'  },
-    { icon:'settings',        color:'grey'    },
-    { icon:'corporate_fare',  color:'indigo'  },
-    { icon:'api',             color:'cyan'    }
+    { icon:'dashboard',          color:'red',          route: '/' },
+    { icon:'monitor_heart',      color:'orange',       route: '/admin/monitoring' },
+    { icon:'manage_accounts',    color:'blue',         route: '/admin/users' },
+    { icon:'analytics',          color:'green',        route: '/admin/analytics' },
+    { icon:'security',           color:'purple',       route: '/admin/audit-logs' },
+    { icon:'settings',           color:'grey',         route: '/admin/settings' },
+    { icon:'corporate_fare',     color:'indigo',       route: '/admin/schools' },
+    { icon:'api',                color:'cyan',         route: '/admin/settings' },
+    {
+      icon: 'hub',
+      color: 'deep-purple',
+      route: '/admin/enterprise',
+      bullets: [
+        'Governance 10 moduli normativi',
+        'Simulatore ruoli istantaneo',
+        'Attivazione servizi d\'istituto',
+        'Conformità AgID e MIM'
+      ]
+    }
+  ],
+  assistente_amministrativo: [
+    { icon: 'dashboard',         color: 'cyan',        route: '/ata' },
+    { icon: 'calendar_month',    color: 'blue',        route: '/ata/timecard' },
+    { icon: 'forward_to_inbox',  color: 'purple',      route: '/ata/personnel-desk' },
+    { icon: 'cloud_sync',        color: 'indigo',      route: '/secretary/sidi' },
+    { icon: 'gavel',             color: 'teal',        route: '/secretary/verbali' },
+    {
+      icon: 'hub',
+      color: 'cyan',
+      route: '/admin/enterprise',
+      bullets: [
+        'Avvisi PagoPA con IUV',
+        'Curriculum Studente D.M. 88/2020',
+        'Cooperazione SIDI MIM',
+        'Riconciliazione tesoreria'
+      ]
+    }
+  ],
+  collaboratore_ds: [
+    { icon: 'dashboard',         color: 'amber',       route: '/ata' },
+    { icon: 'bolt',              color: 'red',         route: '/ata/emergency-substitutions' },
+    { icon: 'swap_horiz',        color: 'blue',        route: '/secretary/substitutions' },
+    { icon: 'co_present',        color: 'orange',      route: '/ata/strike' },
+    { icon: 'gavel',             color: 'purple',      route: '/secretary/verbali' }
+  ],
+  collaboratore_scolastico: [
+    { icon: 'dashboard',         color: 'teal',        route: '/ata' },
+    { icon: 'door_front',        color: 'blue',        route: '/ata/visitor-registry' },
+    { icon: 'logout',            color: 'orange',      route: '/ata/visitor-registry' },
+    { icon: 'build',             color: 'red',         route: '/ata/maintenance' },
+    { icon: 'badge',             color: 'green',       route: '/ata/timecard' }
+  ],
+  dsga: [
+    { icon: 'dashboard',         color: 'deep-orange', route: '/ata' },
+    { icon: 'assessment',        color: 'blue',        route: '/ata/timecard' },
+    { icon: 'verified',          color: 'green',       route: '/ata/personnel-desk' },
+    { icon: 'cloud_sync',        color: 'indigo',      route: '/secretary/sidi' },
+    { icon: 'gavel',             color: 'purple',      route: '/ata/strike' },
+    {
+      icon: 'hub',
+      color: 'deep-orange',
+      route: '/admin/enterprise',
+      bullets: [
+        'Albo Pretorio On-Line',
+        'Inventario beni & discarico',
+        'Riconciliazione OPI/SIOPE+',
+        'Attivazione Mensa'
+      ]
+    }
   ]
 }
 
@@ -364,14 +548,27 @@ const tourSteps = computed(() => {
       : `onboardingExtra.${role}.step${n}_desc`
     const bulletsKey = `onboardingExtra.${role}.step${n}_bullets`
 
-    const rawBullets = tm(bulletsKey)
-    const bullets = Array.isArray(rawBullets) ? rawBullets : []
+    const altTitleKey = n <= 6
+      ? `onboardingExtra.${role}.step${n}_title`
+      : `onboarding.${role}.step${n}_title`
+    const altDescKey = n <= 6
+      ? `onboardingExtra.${role}.step${n}_desc`
+      : `onboarding.${role}.step${n}_desc`
+
+    const rawBullets = typeof tm === 'function' ? tm(bulletsKey) : []
+    const bullets = Array.isArray(rawBullets) && rawBullets.length > 0
+      ? rawBullets
+      : (Array.isArray(d.bullets) ? d.bullets : [])
+
+    const title = te(titleKey) ? t(titleKey) : (te(altTitleKey) ? t(altTitleKey) : '')
+    const desc = te(descKey) ? t(descKey) : (te(altDescKey) ? t(altDescKey) : '')
 
     return {
       icon:    d.icon,
       color:   d.color,
-      title:   t(titleKey),
-      desc:    t(descKey),
+      route:   d.route,
+      title,
+      desc,
       bullets
     }
   })
@@ -431,6 +628,13 @@ function completeTour() {
 function openGuideAndComplete() {
   completeTour()
   emit('open-guide')
+}
+
+function navigateTo(route) {
+  completeTour()
+  if (route) {
+    router.push(route)
+  }
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -528,6 +732,10 @@ function floatIconStyle(i) {
 .hero-purple  { background: linear-gradient(160deg, #a855f7, #7c3aed); }
 .hero-orange  { background: linear-gradient(160deg, #f97316, #ea580c); }
 .hero-red     { background: linear-gradient(160deg, #ef4444, #dc2626); }
+.hero-cyan    { background: linear-gradient(160deg, #06b6d4, #0891b2); }
+.hero-amber   { background: linear-gradient(160deg, #f59e0b, #d97706); }
+.hero-deep-orange { background: linear-gradient(160deg, #f97316, #c2410c); }
+.hero-deep-purple { background: linear-gradient(160deg, #7c3aed, #4c1d95); }
 
 .hero-rings { position: absolute; inset: 0; }
 .ring {
@@ -661,6 +869,8 @@ function floatIconStyle(i) {
 .icon-cyan    { background: #ecfeff; color: #0891b2; }
 .icon-pink    { background: #fdf2f8; color: #db2777; }
 .icon-amber   { background: #fffbeb; color: #d97706; }
+.icon-deep-orange { background: #fff7ed; color: #c2410c; }
+.icon-deep-purple { background: #f5f3ff; color: #6d28d9; }
 
 .welcome-actions {
   display: flex;
@@ -700,6 +910,7 @@ function floatIconStyle(i) {
   position: relative;
   overflow: hidden;
   padding: 28px 16px;
+  background: linear-gradient(160deg, #667eea, #4338ca);
 }
 
 .panel-indigo  { background: linear-gradient(160deg, #667eea, #4338ca); }
@@ -713,6 +924,8 @@ function floatIconStyle(i) {
 .panel-cyan    { background: linear-gradient(160deg, #22d3ee, #0891b2); }
 .panel-pink    { background: linear-gradient(160deg, #ec4899, #db2777); }
 .panel-amber   { background: linear-gradient(160deg, #f59e0b, #d97706); }
+.panel-deep-orange { background: linear-gradient(160deg, #ea580c, #c2410c); }
+.panel-deep-purple { background: linear-gradient(160deg, #7c3aed, #4c1d95); }
 
 /* Sidebar step dots */
 .sidebar-steps {
@@ -752,7 +965,7 @@ function floatIconStyle(i) {
   font-weight: 700;
   color: rgba(255,255,255,0.7);
 }
-.sidebar-dot.active .dot-num { color: #4338ca; }
+.sidebar-dot.active .dot-num { color: #1f2937; }
 
 /* Step visual */
 .step-visual {
@@ -870,6 +1083,7 @@ function floatIconStyle(i) {
 .badge-cyan    { background: #ecfeff; color: #0891b2; }
 .badge-pink    { background: #fdf2f8; color: #db2777; }
 .badge-amber   { background: #fffbeb; color: #d97706; }
+.badge-deep-orange { background: #fff7ed; color: #c2410c; }
 
 .step-title {
   font-size: 1.45rem;
@@ -922,6 +1136,7 @@ function floatIconStyle(i) {
 .dot-cyan    { background: #22d3ee; }
 .dot-pink    { background: #ec4899; }
 .dot-amber   { background: #f59e0b; }
+.dot-deep-orange { background: #ea580c; }
 
 .step-tip {
   display: flex;
@@ -940,6 +1155,22 @@ function floatIconStyle(i) {
   background: #2d2a1e;
   border-color: #92400e;
   color: #fde68a;
+}
+
+.step-route-action {
+  display: flex;
+  align-items: center;
+}
+.btn-goto-section {
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.2px;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+.btn-goto-section:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* Navigation */

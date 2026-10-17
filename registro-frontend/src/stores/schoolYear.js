@@ -52,7 +52,7 @@ function generateSchoolYearsForUser(createdAt) {
 
 export const useSchoolYearStore = defineStore('schoolYear', {
   state: () => {
-    const saved = localStorage.getItem('selected_school_year')
+    const saved = localStorage.getItem('selected_school_year') || localStorage.getItem('registro_selected_school_year')
     const current = getCurrentSchoolYear()
     return {
       selectedSchoolYear: saved || current,
@@ -66,18 +66,20 @@ export const useSchoolYearStore = defineStore('schoolYear', {
       this.availableSchoolYears = years
 
       // Default selected school year to current or saved, ensuring it exists in available options
-      const saved = localStorage.getItem('selected_school_year')
+      const saved = localStorage.getItem('selected_school_year') || localStorage.getItem('registro_selected_school_year')
       if (saved && years.includes(saved)) {
         this.selectedSchoolYear = saved
       } else if (!years.includes(this.selectedSchoolYear)) {
         this.selectedSchoolYear = years[0] || getCurrentSchoolYear()
         localStorage.setItem('selected_school_year', this.selectedSchoolYear)
+        localStorage.setItem('registro_selected_school_year', this.selectedSchoolYear)
       }
     },
     setSchoolYear(year) {
       if (year) {
         this.selectedSchoolYear = year
         localStorage.setItem('selected_school_year', year)
+        localStorage.setItem('registro_selected_school_year', year)
       }
     }
   }

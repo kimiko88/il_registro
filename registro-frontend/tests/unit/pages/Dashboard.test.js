@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file Dashboard.test.js
  * Tests: T18-T27 per Dashboard.vue
  */
@@ -78,9 +78,9 @@ describe('T22 — isDashboardAdmin for principal', () => {
 
 // T23
 describe('T23 — isDashboardAdmin for vice_principal', () => {
-  it('returns true', () => {
+  it('returns false (uses teacher dashboard view with teaching duties)', () => {
     const wrapper = createWrapper('vice_principal')
-    expect(wrapper.vm.isDashboardAdmin).toBe(true)
+    expect(wrapper.vm.isDashboardAdmin).toBe(false)
   })
 })
 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"golang.org/x/sync/singleflight"
 )
 
 // ErrCacheMiss indicates that the requested key does not exist or has expired.
@@ -31,9 +32,10 @@ type memoryItem struct {
 }
 
 type MemoryCache struct {
-	mu      sync.RWMutex
-	items   map[string]memoryItem
-	stopJan chan struct{}
+	mu        sync.RWMutex
+	items     map[string]memoryItem
+	stopJan   chan struct{}
+	closeOnce sync.Once
 }
 
 // NewMemoryCache creates an in-memory thread-safe cache with automatic expired item eviction.
@@ -123,10 +125,12 @@ func (m *MemoryCache) DeletePrefix(ctx context.Context, prefix string) error {
 }
 
 func (m *MemoryCache) Close() error {
-	close(m.stopJan)
-	m.mu.Lock()
-	m.items = make(map[string]memoryItem)
-	m.mu.Unlock()
+	m.closeOnce.Do(func() {
+		close(m.stopJan)
+		m.mu.Lock()
+		m.items = make(map[string]memoryItem)
+		m.mu.Unlock()
+	})
 	return nil
 }
 
@@ -217,4 +221,80 @@ func NewCache(redisURL string) Cache {
 
 	log.Println("cache: initialized with thread-safe in-memory backend")
 	return NewMemoryCache()
+}
+
+// ─── SingleFlight Cache Wrapper ──────────────────────────────────────────────
+
+// SingleFlightCache wraps a Cache instance with a singleflight.Group to suppress
+// duplicate in-flight requests (cache stampede / dog-piling prevention).
+type SingleFlightCache struct {
+	cache Cache
+	group singleflight.Group
+}
+
+// NewSingleFlightCache wraps an existing Cache with singleflight duplicate suppression.
+func NewSingleFlightCache(c Cache) *SingleFlightCache {
+	return &SingleFlightCache{cache: c}
+}
+
+// Underlying returns the wrapped Cache instance.
+func (s *SingleFlightCache) Underlying() Cache {
+	return s.cache
+}
+
+// Get returns the cached value if present.
+func (s *SingleFlightCache) Get(ctx context.Context, key string) (string, error) {
+	return s.cache.Get(ctx, key)
+}
+
+// Set stores a key-value pair with TTL.
+func (s *SingleFlightCache) Set(ctx context.Context, key string, value string, ttl time.Duration) error {
+	return s.cache.Set(ctx, key, value, ttl)
+}
+
+// Delete removes keys from the cache.
+func (s *SingleFlightCache) Delete(ctx context.Context, keys ...string) error {
+	return s.cache.Delete(ctx, keys...)
+}
+
+// DeletePrefix removes all keys matching prefix.
+func (s *SingleFlightCache) DeletePrefix(ctx context.Context, prefix string) error {
+	return s.cache.DeletePrefix(ctx, prefix)
+}
+
+// Close closes the underlying cache.
+func (s *SingleFlightCache) Close() error {
+	return s.cache.Close()
+}
+
+// GetOrLoad fetches from cache, or executes loadFn exactly once across concurrent
+// requests for the same key, caching the result with the given TTL.
+func (s *SingleFlightCache) GetOrLoad(ctx context.Context, key string, ttl time.Duration, loadFn func(ctx context.Context) (string, error)) (string, error) {
+	val, err := s.cache.Get(ctx, key)
+	if err == nil {
+		return val, nil
+	}
+
+	// Not in cache, use SingleFlight to deduplicate concurrent loads
+	v, err, _ := s.group.Do(key, func() (interface{}, error) {
+		// Double check cache inside singleflight just in case another goroutine just loaded it
+		if cVal, cErr := s.cache.Get(ctx, key); cErr == nil {
+			return cVal, nil
+		}
+
+		loaded, lErr := loadFn(ctx)
+		if lErr != nil {
+			return "", lErr
+		}
+
+		if ttl > 0 {
+			_ = s.cache.Set(ctx, key, loaded, ttl)
+		}
+		return loaded, nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+	return v.(string), nil
 }

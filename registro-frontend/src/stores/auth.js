@@ -14,7 +14,7 @@ const parseUser = (val) => {
 }
 
 const ALLOWED_USER_FIELDS = new Set([
-    'id', 'first_name', 'last_name', 'email', 'role', 'user_role', 'school_id', 'class_id', 'is_staff', 'created_at', 'updated_at', 'avatar'
+    'id', 'first_name', 'last_name', 'email', 'role', 'user_role', 'school_id', 'class_id', 'is_staff', 'created_at', 'updated_at', 'avatar', 'assignments'
 ])
 
 const sanitizeUserData = (userData) => {
@@ -30,10 +30,14 @@ const sanitizeUserData = (userData) => {
 
 const toStorageUser = (userData) => {
     if (!userData) return null
-    return {
+    const storageUser = {
         id: userData.id,
         role: userData.role || userData.user_role || null
     }
+    if (Array.isArray(userData.assignments) && userData.assignments.length > 0) {
+        storageUser.assignments = userData.assignments
+    }
+    return storageUser
 }
 
 export const useAuthStore = defineStore('auth', () => {

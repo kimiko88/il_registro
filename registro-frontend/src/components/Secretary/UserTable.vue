@@ -18,6 +18,8 @@
           <div class="text-h5 text-weight-bold text-outfit q-mr-xl text-slate-800">{{ t('usersPage.title') || 'Elenco Utenti' }}</div>
           
           <q-select
+            for="user-table-role-filter"
+            aria-label="Filtra per Ruolo"
             v-model="roleFilter"
             :options="roleFilterOptions"
             dense
@@ -32,7 +34,7 @@
           <q-space />
           
           <div class="row q-gutter-sm">
-            <q-input dense outlined v-model="filter" :placeholder="t('usersPage.searchPlaceholder') || 'Cerca per nome, email...'" class="bg-white min-width-250">
+            <q-input for="user-table-search" aria-label="Cerca utenti" dense outlined v-model="filter" :placeholder="t('usersPage.searchPlaceholder') || 'Cerca per nome, email...'" class="bg-white min-width-250">
               <template v-slot:prepend>
                 <q-icon name="search" color="slate-300" />
               </template>
@@ -86,6 +88,19 @@
             <q-chip v-if="props.row?.is_principal" color="deep-purple-1" text-color="deep-purple-10" icon="workspace_premium" size="xs" class="text-weight-bold rounded-md">
               {{ t('usersPage.rolePrincipal') || 'Preside' }}
             </q-chip>
+            <template v-if="props.row?.assignments?.length">
+              <q-chip 
+                v-for="a in (props.row.assignments || []).filter(x => x.is_active !== false)" 
+                :key="a.id || a.assignment_type"
+                color="indigo-1"
+                text-color="indigo-9"
+                size="xs"
+                class="text-weight-medium rounded-md"
+                icon="badge"
+              >
+                {{ a.title || a.assignment_type }}
+              </q-chip>
+            </template>
           </div>
         </q-td>
       </template>
@@ -110,6 +125,12 @@
                   <q-item-section avatar><q-icon name="edit" color="primary" /></q-item-section>
                   <q-item-section class="text-slate-700">{{ t('usersPage.editProfile') || 'Modifica Profilo' }}</q-item-section>
                 </q-item>
+                
+                <q-item v-if="canManageUserAssignments(props.row)" clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('manage-assignments', props.row)">
+                  <q-item-section avatar><q-icon name="assignment_ind" color="secondary" /></q-item-section>
+                  <q-item-section class="text-slate-700">{{ t('usersPage.manageAssignments') || 'Incarichi & Funzioni' }}</q-item-section>
+                </q-item>
+
                 <q-item clickable v-close-popup class="q-mx-sm rounded-md" @click="$emit('reset-pwd', props.row)">
                   <q-item-section avatar><q-icon name="lock_reset" color="orange" /></q-item-section>
                   <q-item-section class="text-slate-700">{{ t('usersPage.resetPassword') || 'Reset Password' }}</q-item-section>
@@ -148,7 +169,7 @@ const { t } = useI18n()
 // eslint-disable-next-line no-unused-vars
 const props = defineProps(['users', 'loading']);
 // eslint-disable-next-line no-unused-vars
-const emit = defineEmits(['create', 'edit', 'delete', 'reset-pwd', 'filter-role', 'export', 'bulk-delete', 'bulk-reset', 'import', 'manage-subjects'])
+const emit = defineEmits(['create', 'edit', 'delete', 'reset-pwd', 'filter-role', 'export', 'bulk-delete', 'bulk-reset', 'import', 'manage-subjects', 'manage-assignments'])
 
 const filter = ref('')
 const roleFilter = ref('all')
@@ -156,14 +177,29 @@ const selected = ref([])
 
 const roleFilterOptions = computed(() => [
   { label: t('common.all') || 'Tutti', value: 'all' },
-  { label: t('usersPage.roleStudents') || 'Studenti', value: 'student' },
-  { label: t('usersPage.roleTeachers') || 'Docenti', value: 'teacher' },
-  { label: t('usersPage.roleParents') || 'Genitori', value: 'parent' },
-  { label: t('usersPage.roleSecretary') || 'Segreteria', value: 'secretary' },
-  { label: t('usersPage.rolePrincipal') || 'Preside', value: 'principal' },
-  { label: t('usersPage.roleVicePrincipal') || 'Vicepreside', value: 'vice_principal' },
-  { label: t('usersPage.roleAdmin') || 'Amministratore', value: 'admin' },
-  { label: t('usersPage.roleStaff') || 'Staff', value: 'staff' }
+  { label: t('roles.student') || 'Studenti', value: 'student' },
+  { label: t('roles.teacher') || 'Docenti', value: 'teacher' },
+  { label: t('roles.parent') || 'Genitori', value: 'parent' },
+  { label: t('roles.assistente_amministrativo') || 'Assistenti Amministrativi', value: 'assistente_amministrativo' },
+  { label: t('roles.assistente_alunni') || 'Assistenti Alunni', value: 'assistente_alunni' },
+  { label: t('roles.assistente_personale') || 'Assistenti Personale', value: 'assistente_personale' },
+  { label: t('roles.assistente_contabilita') || 'Assistenti Contabilità', value: 'assistente_contabilita' },
+  { label: t('roles.assistente_protocollo') || 'Assistenti Protocollo', value: 'assistente_protocollo' },
+  { label: t('roles.assistente_sportello') || 'Assistenti Sportello', value: 'assistente_sportello' },
+  { label: t('roles.assistente_tecnico') || 'Assistenti Tecnici', value: 'assistente_tecnico' },
+  { label: t('roles.collaboratore_scolastico') || 'Collaboratori Scolastici', value: 'collaboratore_scolastico' },
+  { label: t('roles.collaboratore_ds') || 'Collaboratori D.S.', value: 'collaboratore_ds' },
+  { label: t('roles.responsabile_servizio') || 'Responsabili di Servizio', value: 'responsabile_servizio' },
+  { label: t('roles.dsga') || 'DSGA', value: 'dsga' },
+  { label: t('roles.secretary') || 'Segreteria', value: 'secretary' },
+  { label: t('roles.principal') || 'Preside', value: 'principal' },
+  { label: t('roles.vice_principal') || 'Vicepreside', value: 'vice_principal' },
+  { label: t('roles.responsabile_gestione_documentale') || 'Resp. Gestione Documentale', value: 'responsabile_gestione_documentale' },
+  { label: t('roles.responsabile_conservazione') || 'Resp. Conservazione', value: 'responsabile_conservazione' },
+  { label: t('roles.dpo') || 'DPO', value: 'dpo' },
+  { label: t('roles.admin') || 'Amministratore', value: 'admin' },
+  { label: t('roles.superadmin') || 'Super Admin', value: 'superadmin' },
+  { label: t('roles.staff') || 'Staff', value: 'staff' }
 ])
 
 const columns = computed(() => [
@@ -175,6 +211,17 @@ const columns = computed(() => [
     { name: 'actions', label: t('common.actions') || 'Azioni', align: 'right' }
 ]);
 
+const canManageUserAssignments = (row) => {
+    if (!row) return false
+    // Teachers and staff/ATA users can have duty assignments
+    return row.role === 'teacher' || 
+           row.role === 'collaboratore_scolastico' || 
+           row.role === 'assistente_amministrativo' || 
+           row.role === 'assistente_tecnico' ||
+           row.role === 'collaboratore_ds' ||
+           row.role === 'responsabile_servizio'
+}
+
 const getRoleColor = (role) => {
     switch(role) {
         case 'student': return 'green'
@@ -184,6 +231,21 @@ const getRoleColor = (role) => {
         case 'secretary': return 'cyan'
         case 'principal': return 'deep-purple'
         case 'vice_principal': return 'indigo'
+        case 'dsga': return 'teal'
+        case 'assistente_amministrativo':
+        case 'assistente_alunni':
+        case 'assistente_personale':
+        case 'assistente_contabilita':
+        case 'assistente_protocollo':
+        case 'assistente_sportello':
+            return 'cyan'
+        case 'assistente_tecnico': return 'blue'
+        case 'collaboratore_ds': return 'deep-orange'
+        case 'collaboratore_scolastico': return 'amber-9'
+        case 'responsabile_servizio': return 'teal'
+        case 'responsabile_gestione_documentale': return 'blue-grey'
+        case 'responsabile_conservazione': return 'blue-grey'
+        case 'dpo': return 'indigo'
         case 'admin': return 'red'
         case 'superadmin': return 'amber'
         default: return 'grey'
@@ -191,17 +253,7 @@ const getRoleColor = (role) => {
 }
 
 const getRoleLabel = (role) => {
-    switch(role) {
-        case 'student': return t('usersPage.roleStudents') || 'Studente'
-        case 'teacher': return t('usersPage.roleTeachers') || 'Docente'
-        case 'parent': return t('usersPage.roleParents') || 'Genitore'
-        case 'staff': return t('usersPage.roleStaff') || 'Personale'
-        case 'secretary': return t('usersPage.roleSecretary') || 'Segreteria'
-        case 'principal': return t('usersPage.rolePrincipal') || 'Preside'
-        case 'vice_principal': return t('usersPage.roleVicePrincipal') || 'Vicepreside'
-        case 'admin': return t('usersPage.roleAdmin') || 'Amministratore'
-        case 'superadmin': return 'Super Admin'
-        default: return role
-    }
+    if (!role) return ''
+    return t(`roles.${role}`) || role
 }
 </script>

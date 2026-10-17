@@ -214,7 +214,7 @@ func (h *Handler) GetByID(c *gin.Context) {
 		return
 	}
 	id := c.Param("id")
-	msg, err := h.service.GetMessageByID(c.Request.Context(), uid, role, schoolID, id)
+	msg, err := h.service.GetMessageByID(c.Request.Context(), uid, schoolID, role, id)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) || err.Error() == "communication not found" {
 			c.JSON(http.StatusNotFound, gin.H{"error": "communication not found"})

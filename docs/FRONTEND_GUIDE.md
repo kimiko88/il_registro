@@ -85,7 +85,7 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
 
 ## Internazionalizzazione & Accessibilità (a11y - AgID / WCAG 2.2)
 
-1. **i18n Multi-Lingua**: i file `src/i18n/` coprono 9 lingue distinte (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`) basati su `vue-i18n` v11.
+1. **i18n Multi-Lingua**: i file `src/i18n/` coprono 11 lingue distinte (`it-IT`, `en-US`, `de-DE`, `fr-FR`, `es-ES`, `ro-RO`, `sq-AL`, `ru-RU`, `uk-UA`, `ar-SA`, `zh-CN`) basati su `vue-i18n` v11 con suite di verifica automatizzata (`i18nKeys.test.js`).
 2. **Suite di Accessibilità & Supporto DSA**:
    - **Sintesi Vocale (TTS)**: Composable `useSpeechSynthesis` con Web Speech API nativa e pulsante `TextToSpeechButton.vue`.
    - **Righello di Lettura / Focus Mask**: `ReadingRuler.vue` con tracciamento mouse o navigazione `Alt + ↑/↓`.
@@ -116,8 +116,19 @@ Lo store `useWebSocketStore` espone ref reattivi per lo stato della connessione 
 Il frontend integra un sistema multilivello di assistenza e onboarding guidato per gli utenti di ogni ruolo:
 
 1. **Onboarding Tour Interattivo (`OnboardingTour.vue`)**:
-   - Tutorial a 8 passaggi specifico per ruolo (`teacher`, `student`, `parent`, `secretary`, `admin`).
-   - Card grafiche con pillole di funzionalità, badge di categoria, suggerimenti pratici e lista puntata.
+   - Tutorial guidato specifico per tutti i 10 ruoli canonici (`principal`, `teacher`, `student`, `parent`, `secretary`, `admin`, `assistente_amministrativo`, `collaboratore_ds`, `collaboratore_scolastico`, `dsga`).
+   - **Navigazione Diretta alle Sezioni**: ogni step associa la rotta applicativa corrispondente (es. `/ata/visitor-registry`, `/secretary/timetable`, `/teacher/classes`) e mette a disposizione dell'utente il pulsante interattivo `onboardingExtra.goToSection` ("Vai alla sezione") per completare il tour e recarsi direttamente alla funzionalità.
+   - Allineamento completo dei permessi e flussi per le nuove funzionalità Enterprise:
+     - **Dirigente Scolastico (`principal` - 7 step)**: panoramica, approvazioni, circolari, organigramma, gestione docenti/classi, sicurezza e Governance Enterprise Hub (`/admin/enterprise` - Firma FEQ, Albo Pretorio, Interpelli e attivazione Mensa).
+     - **Studente (`student` - 10 step)**: orario, voti, assenze, didattica, compiti, PCTO, e nuove sezioni per Sportello d'Ascolto Psicologico CIC (`/student/psychology`) e Mensa & Borsellino Pasti (`/student/canteen`).
+     - **Genitore (`parent` - 10 step)**: libretto web con firma PIN, voti, colloqui, autorizzazioni gite, pagamenti PagoPA, pagelle, e nuove sezioni per Sportello d'Ascolto & Consenso Informato (`/parent/psychology`) e Borsellino Mensa & Ricariche PagoPA (`/parent/canteen`).
+     - **Segreteria (`secretary` - 9 step)**: orario, anagrafiche, certificati, iscrizioni, scrutini e Hub Gestionale Enterprise (`/admin/enterprise` - PagoPA ISO 7064 Mod 97-10, Maturità D.M. 88/2020, Cooperazione SIDI MIM).
+     - **Amministratore (`admin` - 9 step)**: configurazione istituto, audit log, backup, sicurezza e Enterprise Hub Governance con simulatore ruoli (`/admin/enterprise`).
+     - **Assistente Amministrativo (`assistente_amministrativo` - 6 step)**: protocollo, iscrizioni, assenze, e Hub Operativo Enterprise (`/admin/enterprise`).
+     - **DSGA (`dsga` - 6 step)**: bilancio, contratti, cedolini, e Amministrazione Contabile Enterprise (`/admin/enterprise` - riconciliazione OPI/SIOPE+, Albo Pretorio, Inventario beni).
+     - **Collaboratore Scolastico**: accesso rapido al Registro Visitatori (`/ata/visitor-registry`), Cartellino CCNL (`/ata/timecard`), Segnalazione Guasti (`/ata/maintenance`) e Sportello Personale (`/ata/personnel-desk`), escludendo presenze d'istituto riservate al DSGA/segreteria.
+     - **Docente**: gestione classi con badge coordinatore, conteggio studenti e filtro per anno scolastico attivo.
+   - Card grafiche con pillole di funzionalità, badge di categoria, suggerimenti pratici, elenco puntato ed atterraggio diretto (`onboardingExtra.goToSection`).
    - Tracciamento completamento automatizzato in `localStorage` (`onboarding_done_{role}`).
 2. **Pannello Help Center Full-Screen (`HelpCenterPanel.vue`)**:
    - Finestra modale a schermo intero con ricerca full-text istantanea in tutte le guide.
@@ -159,6 +170,8 @@ I composabili in `src/composables/` incapsulano la logica reattiva, l'interazion
 7. **Widget Limite Assenze 25% (`AbsenceLimitWidget.vue`)**: Verifica automatica della frequenza minima del 75% per la validità dell'anno scolastico (art. 14 comma 7 DPR 122/2009) con barra visiva, marker sul 25% e calcolo predittivo delle ore residue consentite.
 8. **Spotlight Globale (`GlobalSearchDialog.vue`)**: Ricerca unificata `Ctrl+K` con navigazione da tastiera, debounce e indicizzazione istantanea di studenti, classi, materie e comandi rapidi.
 9. **Isolamento Errori (`ErrorBoundary.vue`)**: Componente di cattura errori reattivo con card fallback accessibile WCAG e ripristino dello stato applicativo senza perdita di sessione.
+10. **Aule Prenotabili Multi-Plesso (`Rooms.vue` & `RoomBooking.vue`)**: Interfaccia segreteria per anagrafica plessi, tipologia e capienza laboratori, e portale docente per prenotazioni spot o ricorrenti con controllo disponibilità e prevenzione sovrapposizioni.
+11. **Generatore Orario & Desiderata (`TimetableConstraints.vue`, `SchedulePreferences.vue`, `Timetable.vue`)**: Modulo per il Vicario/Segreteria con configurazione vincoli istituto, form desiderata docente e console di generazione orario CSP con polling asincrono e pubblicazione atomica.
 
 ---
 
@@ -178,15 +191,18 @@ Il registro implementa un sistema coerente di tema scuro (`.body--dark`) gestito
 
 ---
 
-## 🧪 Unit Testing dei Componenti, Composabili & Servizi
+## 🧪 Unit & E2E Testing dei Componenti, Composabili & Servizi
 
 La suite di test frontend è sviluppata con **Vitest** e **Vue Test Utils**:
 
-- **Comando di esecuzione**: `npm run test:unit`
-- **Metriche**: **190 test suite**, **1228 unit test passati al 100%** (0 errori, 0 fallimenti).
+- **Comando di esecuzione**: `npm run test:unit` oppure `npx vitest run`
+- **Metriche**: **277 test suite**, **1548 unit/E2E test passati al 100%** (0 errori, 0 fallimenti).
 - **Linter**: `npm run lint` (**0 errori, 0 warning** su tutto il codice sorgente).
 - **Copertura**:
   - `tests/unit/components/`: Test dedicati per componenti Admin, Common, Parent, Secretary, Student e Teacher.
+  - `tests/unit/pages/`: Test completi sulle nuove pagine di gestione aule (`Rooms.spec.js`), prenotazione aule (`RoomBooking.spec.js`), desiderata orario (`SchedulePreferences.spec.js`) e vincoli orario (`TimetableConstraints.spec.js`).
+  - `tests/unit/services/`: Test isolati per tutti i client HTTP inclusi `roomsService.spec.js` e `timetableGenService.spec.js`.
+  - `tests/e2e/`: Workflow completi end-to-end con mock realistici: `rooms-booking-workflow.spec.js` e `timetable-generation-workflow.spec.js`.
   - `tests/unit/composables/`: Test dedicati per tutti i composabili (`useSpeechSynthesis`, `useGlobalKeyboardShortcuts`, `useDraftAutosave`, `usePermissions`, `useIdempotency`, `useOutboxStore`, ecc.).
   - `tests/unit/accessibility/`: Suite completa per compliance WCAG 2.2, AgID, TTS, Reading Ruler e invio segnalazioni.
   - `tests/unit/security/`: Test di anti-regressione RBAC, XSS DOMPurify sanitization, CSV injection prevention, route guards e token security.
