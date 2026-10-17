@@ -5,11 +5,14 @@ import { Quasar } from 'quasar'
 import StudentIndex from '@/pages/student/Index.vue'
 
 // Mock services
-const { mockGetMyGrades, mockGetMyAttendance, mockGetMyProjects, mockGetSubjects } = vi.hoisted(() => ({
+const { mockGetMyGrades, mockGetMyAttendance, mockGetMyProjects, mockGetSubjects, mockGetDashboardStats, mockGetMessages, mockApiGet } = vi.hoisted(() => ({
     mockGetMyGrades: vi.fn(),
     mockGetMyAttendance: vi.fn(),
     mockGetMyProjects: vi.fn(),
-    mockGetSubjects: vi.fn()
+    mockGetSubjects: vi.fn(),
+    mockGetDashboardStats: vi.fn(),
+    mockGetMessages: vi.fn(),
+    mockApiGet: vi.fn()
 }))
 
 vi.mock('@/services/gradeService', () => ({
@@ -32,13 +35,37 @@ vi.mock('@/services/adminService', () => ({
         getSubjects: mockGetSubjects
     }
 }))
-// Communications might be used too, assuming mockGetActiveNotifications if needed
+vi.mock('src/services/dashboardService', () => ({
+    default: {
+        getDashboardStats: mockGetDashboardStats
+    }
+}))
+vi.mock('src/services/communicationService', () => ({
+    communicationService: {
+        getMessages: mockGetMessages
+    }
+}))
+vi.mock('src/services/api', () => ({
+    default: {
+        get: mockApiGet
+    }
+}))
 
 describe('Student/Index.vue', () => {
     let wrapper
 
     beforeEach(() => {
         vi.clearAllMocks()
+        mockGetDashboardStats.mockResolvedValue({
+            average_grade: 8.0,
+            presence_rate: 95
+        })
+        mockGetMessages.mockResolvedValue({
+            data: []
+        })
+        mockApiGet.mockResolvedValue({
+            data: []
+        })
         mockGetMyGrades.mockResolvedValue({
             data: {
                 semesters: [
