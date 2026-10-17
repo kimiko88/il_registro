@@ -28,4 +28,19 @@
     <string name="restriction_school_code_desc">Codice identificativo ministeriale dell\'istituto scolastico</string>
     <string name="restriction_kiosk_mode_title">Modalità Kiosk Esame / Tablet Condiviso</string>
     <string name="restriction_kiosk_mode_desc">Disabilita navigazione esterna e lock dell\'app</string>
+    <string name="tab_home">Home</string>
+    <string name="tab_grades">Voti</string>
+    <string name="tab_agenda">Agenda</string>
+    <string name="tab_attendance">Presenze</string>
+    <string name="tab_report_card">Pagella</string>
+    <string name="grade_type_written">Scritto</string>
+    <string name="grade_type_oral">Orale</string>
+    <string name="grade_type_practical">Pratico</string>
+    <string name="grade_type_test">Test</string>
+    <string name="grade_type_project">Progetto</string>
+    <string name="grade_type_lab">Laboratorio</string>
+    <string name="attendance_present">Presenza</string>
+    <string name="attendance_absent">Assenza</string>
+    <string name="attendance_late">Ritardo</string>
+    <string name="attendance_early_exit">Uscita Anticipata</string>
 </resources>

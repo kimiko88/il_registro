@@ -50,22 +50,33 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
     }
 
     public func fetchClasses(token: String) async throws -> [TeacherClassSessionModel] {
-        let url = baseURL.appendingPathComponent("teacher/classes")
+        var url = baseURL.appendingPathComponent("teacher/classes")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
-              let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
-              let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            return []
+        var jsonArray: [[String: Any]] = []
+        if let (data, response) = try? await URLSession.shared.data(for: request),
+           let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
+           let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]], !arr.isEmpty {
+            jsonArray = arr
+        } else {
+            url = baseURL.appendingPathComponent("classes")
+            request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            if let (data, response) = try? await URLSession.shared.data(for: request),
+               let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
+               let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+                jsonArray = arr
+            }
         }
 
         return jsonArray.enumerated().map { index, dict in
             TeacherClassSessionModel(
                 id: (dict["id"] as? String) ?? "\(index)",
                 className: (dict["name"] as? String) ?? (dict["class_name"] as? String) ?? "Classe",
-                subject: (dict["subject"] as? String) ?? (dict["subject_name"] as? String) ?? "Materia",
+                subject: (dict["subject"] as? String) ?? (dict["subject_name"] as? String) ?? "Matematica",
                 isSigned: false,
                 lessonTopic: ""
             )
@@ -73,15 +84,23 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
     }
 
     public func fetchClassStudents(token: String, classId: String) async throws -> [RollCallStudent] {
-        let url = baseURL.appendingPathComponent("classes/\(classId)")
+        let url = baseURL.appendingPathComponent("users?role=student&class_id=\(classId)")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         guard let (data, response) = try? await URLSession.shared.data(for: request),
-              let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let studentsArray = json["students"] as? [[String: Any]] else {
+              let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            return []
+        }
+
+        let studentsArray: [[String: Any]]
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let arr = json["users"] as? [[String: Any]] {
+            studentsArray = arr
+        } else if let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+            studentsArray = arr
+        } else {
             return []
         }
 
@@ -91,7 +110,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
             let fullName = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespacesAndNewlines)
             return RollCallStudent(
                 id: (dict["id"] as? String) ?? "\(index)",
-                name: fullName.isEmpty ? ((dict["name"] as? String) ?? "Studente") : fullName,
+                name: fullName.isEmpty ? ((dict["email"] as? String) ?? "Studente") : fullName,
                 status: "presente"
             )
         }

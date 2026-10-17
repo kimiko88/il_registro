@@ -43,7 +43,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
             guard let role = role, allowedRoles.contains(role) else {
                 throw NSError(domain: "SecretaryAPI", code: 403, userInfo: [NSLocalizedDescriptionKey: "Accesso non consentito: questo account non ha i permessi di segreteria o amministrazione."])
             }
-            if let token = json["token"] as? String ?? json["access_token"] as? String {
+            if let token = json["access_token"] as? String ?? json["token"] as? String {
                 return token
             }
         }

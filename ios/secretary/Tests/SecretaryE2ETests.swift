@@ -22,11 +22,11 @@ final class SecretaryE2ETests: XCTestCase {
         let emailField = app.textFields["Email Segreteria"]
         if emailField.exists {
             emailField.tap()
-            emailField.typeText("segreteria@scuola.it")
+            emailField.typeText("segreteria.prova@scuola.it")
 
             let passwordField = app.secureTextFields["Password"]
             passwordField.tap()
-            passwordField.typeText("password123")
+            passwordField.typeText("password")
 
             let loginButton = app.buttons["ACCEDI AL PANNELLO"]
             loginButton.tap()

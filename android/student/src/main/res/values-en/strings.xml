@@ -28,4 +28,19 @@
     <string name="restriction_school_code_desc">Official school identification code</string>
     <string name="restriction_kiosk_mode_title">Exam Kiosk / Shared Tablet Mode</string>
     <string name="restriction_kiosk_mode_desc">Disables external navigation and locks app</string>
+    <string name="tab_home">Home</string>
+    <string name="tab_grades">Grades</string>
+    <string name="tab_agenda">Agenda</string>
+    <string name="tab_attendance">Attendance</string>
+    <string name="tab_report_card">Report Card</string>
+    <string name="grade_type_written">Written</string>
+    <string name="grade_type_oral">Oral</string>
+    <string name="grade_type_practical">Practical</string>
+    <string name="grade_type_test">Test</string>
+    <string name="grade_type_project">Project</string>
+    <string name="grade_type_lab">Laboratory</string>
+    <string name="attendance_present">Present</string>
+    <string name="attendance_absent">Absent</string>
+    <string name="attendance_late">Late</string>
+    <string name="attendance_early_exit">Early Exit</string>
 </resources>

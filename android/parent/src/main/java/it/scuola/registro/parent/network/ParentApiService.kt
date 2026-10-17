@@ -61,7 +61,7 @@ class HttpParentApiService(
                     if (role != "parent") {
                         Result.failure(Exception("Accesso non consentito: questo account non appartiene a un genitore."))
                     } else {
-                        val token = json.optString("token", json.optString("access_token"))
+                        val token = json.optString("access_token", json.optString("token"))
                         Result.success(token)
                     }
                 } else {
@@ -96,7 +96,7 @@ class HttpParentApiService(
                                 id = obj.optString("id", i.toString()),
                                 firstName = obj.optString("first_name", obj.optString("name", "Figlio")),
                                 lastName = obj.optString("last_name", ""),
-                                className = obj.optString("class_name", "Classe")
+                                className = obj.optString("class_name", obj.optString("class", "Classe"))
                             )
                         )
                     }
@@ -122,7 +122,10 @@ class HttpParentApiService(
                 }
 
                 if (conn.responseCode in 200..299) {
-                    val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
+                    val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
+                    if (response == "null" || response.isEmpty() || response == "[]") {
+                        return@withContext Result.success(emptyList())
+                    }
                     val list = mutableListOf<PendingAbsence>()
                     val arr = JSONArray(response)
                     for (i in 0 until arr.length()) {
