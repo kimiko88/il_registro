@@ -93,14 +93,23 @@ func (s *Service) GetGroupByID(ctx context.Context, id string) (*Group, error) {
 }
 
 func (s *Service) ListGroupsBySchool(ctx context.Context, schoolID string) ([]Group, error) {
+	if schoolID == "" {
+		return nil, errors.New("schoolID is required")
+	}
 	return s.repo.ListBySchool(ctx, schoolID)
 }
 
 func (s *Service) ListGroupsByTeacher(ctx context.Context, teacherID string) ([]Group, error) {
+	if teacherID == "" {
+		return nil, errors.New("teacherID is required")
+	}
 	return s.repo.ListByTeacher(ctx, teacherID)
 }
 
 func (s *Service) ListGroupsByStudent(ctx context.Context, studentID string) ([]Group, error) {
+	if studentID == "" {
+		return nil, errors.New("studentID is required")
+	}
 	return s.repo.ListByStudent(ctx, studentID)
 }
 

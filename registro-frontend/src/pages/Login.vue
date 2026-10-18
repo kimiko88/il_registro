@@ -111,6 +111,49 @@
           />
         </div>
       </q-form>
+
+      <!-- Divisore con "oppure accedi con identità digitale" -->
+      <div class="row items-center q-my-md">
+        <div class="col"><q-separator /></div>
+        <div class="col-auto q-px-sm text-caption text-grey-6 text-weight-medium">
+          oppure accedi con Identità Digitale
+        </div>
+        <div class="col"><q-separator /></div>
+      </div>
+
+      <!-- Pulsanti SPID e CIE AgID Livello 2 -->
+      <div class="q-gutter-y-sm q-mb-md">
+        <!-- Pulsante Entra con SPID -->
+        <q-btn
+          id="btn-login-spid"
+          class="full-width spid-btn text-weight-bold"
+          no-caps
+          unelevated
+          @click="openSpidDialog"
+        >
+          <div class="row items-center justify-center no-wrap">
+            <q-avatar size="24px" class="q-mr-sm bg-white text-primary text-weight-bolder" style="font-size: 11px">
+              ID
+            </q-avatar>
+            <span>Entra con SPID</span>
+          </div>
+        </q-btn>
+
+        <!-- Pulsante Entra con CIE -->
+        <q-btn
+          id="btn-login-cie"
+          class="full-width cie-btn text-weight-bold"
+          no-caps
+          unelevated
+          @click="loginWithCIE"
+          :loading="cieLoading"
+        >
+          <div class="row items-center justify-center no-wrap">
+            <q-icon name="credit_card" size="20px" class="q-mr-sm text-white" />
+            <span>Entra con CIE</span>
+          </div>
+        </q-btn>
+      </div>
       
       <div class="text-center q-mt-lg text-caption text-grey-6">
         {{ t('login.noAccount') }} <span class="text-primary text-weight-bold cursor-pointer hover-underline" @click="openContactSecretary">{{ t('login.contactSecretary') }}</span>
@@ -228,26 +271,151 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Modal Selezione Identity Provider SPID (AgID) -->
+    <q-dialog v-model="showSpidDialog">
+      <q-card style="min-width: 320px; max-width: 480px; width: 100%;" class="rounded-xl">
+        <q-card-section class="bg-primary text-white row items-center justify-between">
+          <div class="text-h6 text-weight-bold row items-center">
+            <q-avatar size="28px" class="q-mr-sm bg-white text-primary text-weight-bolder" style="font-size: 12px">
+              ID
+            </q-avatar>
+            Scegli Identity Provider SPID
+          </div>
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+
+        <q-card-section class="q-pa-md">
+          <div class="text-caption text-grey-7 q-mb-md">
+            Seleziona il tuo gestore di identità digitale SPID accreditato AgID:
+          </div>
+
+          <div class="row q-col-gutter-sm">
+            <div v-for="idp in spidProviders" :key="idp.id" class="col-6">
+              <q-btn
+                outline
+                color="primary"
+                class="full-width q-py-sm text-weight-bold"
+                no-caps
+                @click="selectSpidProvider(idp)"
+                :loading="selectedIdpId === idp.id && spidLoading"
+              >
+                <div class="ellipsis">{{ idp.name }}</div>
+              </q-btn>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md bg-grey-1">
+          <q-btn flat label="Annulla" color="grey-7" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
+import { useAuthStore } from '@/stores/auth'
+import authService from '@/services/authService'
 import api from '@/services/api'
+import { getUserDashboard } from '@/utils/roleUtils'
 import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
 
 const $q = useQuasar()
 const { locale, t } = useI18n()
+const router = useRouter()
 const email = ref('')
 const password = ref('')
 const passwordInputRef = ref(null)
 const showPassword = ref(false)
 const rememberMe = ref(false)
 const loading = ref(false)
+
+// SPID & CIE State
+const showSpidDialog = ref(false)
+const spidLoading = ref(false)
+const cieLoading = ref(false)
+const selectedIdpId = ref('')
+
+const spidProviders = ref([
+  { id: 'poste', name: 'Poste ID' },
+  { id: 'infocert', name: 'InfoCert ID' },
+  { id: 'aruba', name: 'Aruba ID' },
+  { id: 'namirial', name: 'Namirial ID' },
+  { id: 'tim', name: 'TIM ID' },
+  { id: 'sielte', name: 'Sielte ID' },
+  { id: 'lepida', name: 'Lepida ID' },
+  { id: 'intesi', name: 'Intesi Group' },
+  { id: 'spiditalia', name: 'SpidItalia' },
+  { id: 'demo', name: 'AgID Testbed' },
+])
+
+async function openSpidDialog() {
+  showSpidDialog.value = true
+  try {
+    const res = await authService.getSpidProviders()
+    if (res && res.providers && res.providers.length > 0) {
+      spidProviders.value = res.providers
+    }
+  } catch (e) {
+    // Keep default providers
+  }
+}
+
+async function selectSpidProvider(idp) {
+  selectedIdpId.value = idp.id
+  spidLoading.value = true
+  errorMessage.value = ''
+  try {
+    const res = await authService.spidDemoLogin({
+      idp: idp.id,
+      fiscal_code: 'RSSMRA80A01H501U',
+      first_name: 'Mario',
+      last_name: 'Rossi',
+      email: 'mario.rossi.spid@example.com',
+      role: 'parent'
+    })
+    if (res && res.user && res.access_token) {
+      const authStore = useAuthStore()
+      authStore.login(res.user, res.access_token, res.refresh_token, rememberMe.value)
+      showSpidDialog.value = false
+      router.push(getUserDashboard(res.user.role))
+    }
+  } catch (err) {
+    errorMessage.value = 'Autenticazione SPID non riuscita. Riprova.'
+  } finally {
+    spidLoading.value = false
+    selectedIdpId.value = ''
+  }
+}
+
+async function loginWithCIE() {
+  cieLoading.value = true
+  errorMessage.value = ''
+  try {
+    const res = await authService.loginWithCie({
+      fiscal_code: 'BNCGLI85B41H501K',
+      first_name: 'Giulia',
+      last_name: 'Bianchi',
+      email: 'giulia.bianchi.cie@example.com',
+      role: 'parent'
+    })
+    if (res && res.user && res.access_token) {
+      const authStore = useAuthStore()
+      authStore.login(res.user, res.access_token, res.refresh_token, rememberMe.value)
+      router.push(getUserDashboard(res.user.role))
+    }
+  } catch (err) {
+    errorMessage.value = 'Autenticazione CIE non riuscita. Riprova.'
+  } finally {
+    cieLoading.value = false
+  }
+}
 
 // Reattivo al cambio lingua senza ricaricare la pagina
 const errorMessage = ref('')
@@ -404,6 +572,24 @@ async function onSubmit() {
 }
 .border-indigo {
   border: 1px solid #c7d2fe;
+}
+.spid-btn {
+  background-color: #0066cc !important;
+  color: #ffffff !important;
+  border-radius: 8px;
+  height: 44px;
+}
+.spid-btn:hover {
+  background-color: #0052a3 !important;
+}
+.cie-btn {
+  background-color: #0b3b60 !important;
+  color: #ffffff !important;
+  border-radius: 8px;
+  height: 44px;
+}
+.cie-btn:hover {
+  background-color: #07263e !important;
 }
 </style>
 

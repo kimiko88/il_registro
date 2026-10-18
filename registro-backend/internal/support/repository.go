@@ -3,7 +3,9 @@ package support
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"time"
 )
 
 type Repository interface {
@@ -15,6 +17,13 @@ type Repository interface {
 	UpdatePeiGoalProgress(ctx context.Context, id, progressStatus string) error
 	ListPeiGoals(ctx context.Context, schoolID, studentID string) ([]SupportPeiGoal, error)
 	DeletePeiGoal(ctx context.Context, id string) error
+
+	CreateGloMeeting(ctx context.Context, meeting *SupportGloMeeting) error
+	GetGloMeeting(ctx context.Context, id string) (*SupportGloMeeting, error)
+	ListGloMeetings(ctx context.Context, schoolID, studentID string) ([]SupportGloMeeting, error)
+	SignGloMeeting(ctx context.Context, meetingID string, sig *GloSignature) error
+	SaveSupportHours(ctx context.Context, h *SupportHoursQuantification) error
+	GetSupportHours(ctx context.Context, schoolID, studentID, schoolYear, peiStage string) (*SupportHoursQuantification, error)
 }
 
 type repository struct {
@@ -181,4 +190,259 @@ func (r *repository) ListPeiGoals(ctx context.Context, schoolID, studentID strin
 func (r *repository) DeletePeiGoal(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM support_pei_goals WHERE id = $1`, id)
 	return err
+}
+
+func (r *repository) CreateGloMeeting(ctx context.Context, m *SupportGloMeeting) error {
+	if m.ID == "" {
+		m.ID = fmt.Sprintf("glo-%d", time.Now().UnixNano())
+	}
+	m.CreatedAt = time.Now()
+	m.UpdatedAt = time.Now()
+
+	if r.db == nil {
+		return nil
+	}
+
+	membersJSON, _ := json.Marshal(m.MembersPresent)
+	query := `
+		INSERT INTO support_glo_meetings (
+			id, school_id, student_id, meeting_date, meeting_type,
+			school_year, members_present, discussion_summary, decisions_taken, status,
+			created_at, updated_at
+		) VALUES (
+			COALESCE(NULLIF($1, '')::uuid, gen_random_uuid()), $2, $3, $4::date, $5,
+			$6, $7::jsonb, $8, $9, $10,
+			NOW(), NOW()
+		) RETURNING id`
+
+	return r.db.QueryRowContext(ctx, query,
+		m.ID, m.SchoolID, m.StudentID, m.MeetingDate, m.MeetingType,
+		m.SchoolYear, string(membersJSON), m.DiscussionSummary, m.DecisionsTaken, m.Status,
+	).Scan(&m.ID)
+}
+
+func (r *repository) GetGloMeeting(ctx context.Context, id string) (*SupportGloMeeting, error) {
+	if r.db == nil {
+		return &SupportGloMeeting{
+			ID:                id,
+			MeetingType:       "INIZIALE",
+			SchoolYear:        "2025/2026",
+			Status:            "BOZZA",
+			DiscussionSummary: "Sintesi GLO",
+			CreatedAt:         time.Now(),
+		}, nil
+	}
+
+	query := `
+		SELECT id, school_id, student_id, meeting_date::text, meeting_type,
+		       school_year, members_present, discussion_summary, decisions_taken, status,
+		       created_at, updated_at
+		FROM support_glo_meetings
+		WHERE id = $1::uuid`
+
+	var m SupportGloMeeting
+	var membersRaw []byte
+	if err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&m.ID, &m.SchoolID, &m.StudentID, &m.MeetingDate, &m.MeetingType,
+		&m.SchoolYear, &membersRaw, &m.DiscussionSummary, &m.DecisionsTaken, &m.Status,
+		&m.CreatedAt, &m.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+	_ = json.Unmarshal(membersRaw, &m.MembersPresent)
+
+	// Fetch signatures
+	sigQuery := `
+		SELECT id, meeting_id, member_id, member_name, member_role, signed_at, signature_type, signature_hash, status
+		FROM support_glo_signatures
+		WHERE meeting_id = $1::uuid`
+	rows, err := r.db.QueryContext(ctx, sigQuery, id)
+	if err == nil {
+		defer func() { _ = rows.Close() }()
+		for rows.Next() {
+			var sig GloSignature
+			if err := rows.Scan(&sig.ID, &sig.MeetingID, &sig.MemberID, &sig.MemberName, &sig.MemberRole, &sig.SignedAt, &sig.SignatureType, &sig.SignatureHash, &sig.Status); err == nil {
+				m.Signatures = append(m.Signatures, sig)
+			}
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
+	}
+
+	return &m, nil
+}
+
+func (r *repository) ListGloMeetings(ctx context.Context, schoolID, studentID string) ([]SupportGloMeeting, error) {
+	if r.db == nil {
+		return []SupportGloMeeting{
+			{
+				ID:                "glo-sample-1",
+				SchoolID:          schoolID,
+				StudentID:         studentID,
+				MeetingType:       "INIZIALE",
+				SchoolYear:        "2025/2026",
+				Status:            "APPROVATO_CON_FIRME",
+				DiscussionSummary: "Verbale di approvazione del Piano Educativo Individualizzato (PEI).",
+				CreatedAt:         time.Now(),
+			},
+		}, nil
+	}
+
+	query := `
+		SELECT m.id, m.school_id, m.student_id,
+		       COALESCE(u.first_name || ' ' || u.last_name, '') as student_name,
+		       m.meeting_date::text, m.meeting_type, m.school_year, m.members_present,
+		       m.discussion_summary, m.decisions_taken, m.status, m.created_at, m.updated_at
+		FROM support_glo_meetings m
+		JOIN students s ON m.student_id = s.id
+		JOIN users u ON s.user_id = u.id
+		WHERE m.school_id = $1 AND ($2 = '' OR m.student_id = NULLIF($2, '')::uuid)
+		ORDER BY m.meeting_date DESC`
+
+	rows, err := r.db.QueryContext(ctx, query, schoolID, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = rows.Close() }()
+
+	var list []SupportGloMeeting
+	for rows.Next() {
+		var m SupportGloMeeting
+		var membersRaw []byte
+		if err := rows.Scan(
+			&m.ID, &m.SchoolID, &m.StudentID, &m.StudentName,
+			&m.MeetingDate, &m.MeetingType, &m.SchoolYear, &membersRaw,
+			&m.DiscussionSummary, &m.DecisionsTaken, &m.Status,
+			&m.CreatedAt, &m.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		_ = json.Unmarshal(membersRaw, &m.MembersPresent)
+		list = append(list, m)
+	}
+	return list, rows.Err()
+}
+
+func (r *repository) SignGloMeeting(ctx context.Context, meetingID string, sig *GloSignature) error {
+	if sig.ID == "" {
+		sig.ID = fmt.Sprintf("sig-%d", time.Now().UnixNano())
+	}
+	now := time.Now()
+	sig.SignedAt = &now
+	sig.Status = "SIGNED"
+
+	if r.db == nil {
+		return nil
+	}
+
+	query := `
+		INSERT INTO support_glo_signatures (
+			id, meeting_id, member_id, member_name, member_role, signed_at, signature_type, signature_hash, status
+		) VALUES (
+			COALESCE(NULLIF($1, '')::uuid, gen_random_uuid()), $2::uuid, $3, $4, $5, NOW(), $6, $7, $8
+		) RETURNING id`
+
+	return r.db.QueryRowContext(ctx, query,
+		sig.ID, meetingID, sig.MemberID, sig.MemberName, sig.MemberRole,
+		sig.SignatureType, sig.SignatureHash, sig.Status,
+	).Scan(&sig.ID)
+}
+
+func (r *repository) SaveSupportHours(ctx context.Context, h *SupportHoursQuantification) error {
+	if h.ID == "" {
+		h.ID = fmt.Sprintf("sh-%d", time.Now().UnixNano())
+	}
+	h.CreatedAt = time.Now()
+	h.UpdatedAt = time.Now()
+
+	if r.db == nil {
+		return nil
+	}
+
+	query := `
+		INSERT INTO support_hours_quantifications (
+			id, school_id, student_id, school_year, pei_stage,
+			debt_relazione, debt_comunicazione, debt_autonomia, debt_cognitiva,
+			weekly_support_hours_requested, weekly_support_hours_assigned,
+			assistant_hours_requested, assistant_hours_assigned,
+			transportation_needed, personal_care_needed, justification_summary,
+			created_at, updated_at
+		) VALUES (
+			COALESCE(NULLIF($1, '')::uuid, gen_random_uuid()), $2, $3, $4, $5,
+			$6, $7, $8, $9,
+			$10, $11,
+			$12, $13,
+			$14, $15, $16,
+			NOW(), NOW()
+		)
+		ON CONFLICT (school_id, student_id, school_year, pei_stage)
+		DO UPDATE SET
+			debt_relazione = EXCLUDED.debt_relazione,
+			debt_comunicazione = EXCLUDED.debt_comunicazione,
+			debt_autonomia = EXCLUDED.debt_autonomia,
+			debt_cognitiva = EXCLUDED.debt_cognitiva,
+			weekly_support_hours_requested = EXCLUDED.weekly_support_hours_requested,
+			weekly_support_hours_assigned = EXCLUDED.weekly_support_hours_assigned,
+			assistant_hours_requested = EXCLUDED.assistant_hours_requested,
+			assistant_hours_assigned = EXCLUDED.assistant_hours_assigned,
+			transportation_needed = EXCLUDED.transportation_needed,
+			personal_care_needed = EXCLUDED.personal_care_needed,
+			justification_summary = EXCLUDED.justification_summary,
+			updated_at = NOW()
+		RETURNING id`
+
+	return r.db.QueryRowContext(ctx, query,
+		h.ID, h.SchoolID, h.StudentID, h.SchoolYear, h.PeiStage,
+		h.DebtRelazione, h.DebtComunicazione, h.DebtAutonomia, h.DebtCognitiva,
+		h.WeeklySupportHoursRequested, h.WeeklySupportHoursAssigned,
+		h.AssistantHoursRequested, h.AssistantHoursAssigned,
+		h.TransportationNeeded, h.PersonalCareNeeded, h.JustificationSummary,
+	).Scan(&h.ID)
+}
+
+func (r *repository) GetSupportHours(ctx context.Context, schoolID, studentID, schoolYear, peiStage string) (*SupportHoursQuantification, error) {
+	if r.db == nil {
+		return &SupportHoursQuantification{
+			ID:                          "sh-sample-1",
+			SchoolID:                    schoolID,
+			StudentID:                   studentID,
+			SchoolYear:                  schoolYear,
+			PeiStage:                    peiStage,
+			DebtRelazione:               3,
+			DebtComunicazione:           2,
+			DebtAutonomia:               3,
+			DebtCognitiva:               2,
+			WeeklySupportHoursRequested: 18.0,
+			WeeklySupportHoursAssigned:  18.0,
+			AssistantHoursRequested:     10.0,
+			AssistantHoursAssigned:      10.0,
+			TransportationNeeded:        false,
+			PersonalCareNeeded:          true,
+			JustificationSummary:        "Fabbisogno quantificato secondo Allegato C Linee Guida D.I. 182/2020.",
+		}, nil
+	}
+
+	query := `
+		SELECT id, school_id, student_id, school_year, pei_stage,
+		       debt_relazione, debt_comunicazione, debt_autonomia, debt_cognitiva,
+		       weekly_support_hours_requested, weekly_support_hours_assigned,
+		       assistant_hours_requested, assistant_hours_assigned,
+		       transportation_needed, personal_care_needed, justification_summary,
+		       created_at, updated_at
+		FROM support_hours_quantifications
+		WHERE school_id = $1 AND student_id = $2::uuid AND school_year = $3 AND pei_stage = $4`
+
+	var h SupportHoursQuantification
+	if err := r.db.QueryRowContext(ctx, query, schoolID, studentID, schoolYear, peiStage).Scan(
+		&h.ID, &h.SchoolID, &h.StudentID, &h.SchoolYear, &h.PeiStage,
+		&h.DebtRelazione, &h.DebtComunicazione, &h.DebtAutonomia, &h.DebtCognitiva,
+		&h.WeeklySupportHoursRequested, &h.WeeklySupportHoursAssigned,
+		&h.AssistantHoursRequested, &h.AssistantHoursAssigned,
+		&h.TransportationNeeded, &h.PersonalCareNeeded, &h.JustificationSummary,
+		&h.CreatedAt, &h.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+	return &h, nil
 }

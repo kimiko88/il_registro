@@ -22,6 +22,14 @@ func (m *mockAuthRepoPhase4) GetUserByEmail(ctx context.Context, email string) (
 	return args.Get(0).(*User), args.Error(1)
 }
 
+func (m *mockAuthRepoPhase4) GetUserByFiscalCode(ctx context.Context, fiscalCode string) (*User, error) {
+	args := m.Called(ctx, fiscalCode)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*User), args.Error(1)
+}
+
 func (m *mockAuthRepoPhase4) RotateRefreshTokenTx(ctx context.Context, oldID string, newRt *RefreshToken) error {
 	args := m.Called(ctx, oldID, newRt)
 	return args.Error(0)

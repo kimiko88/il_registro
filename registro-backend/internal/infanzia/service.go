@@ -29,6 +29,9 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) CreateSection(sec *InfanziaSection) error {
+	if sec == nil {
+		return errors.New("dati sezione non validi")
+	}
 	if sec.SchoolID == "" || sec.SectionName == "" {
 		return errors.New("schoolID e sectionName sono obbligatori")
 	}
@@ -67,6 +70,9 @@ func (s *service) GetAttendances(sectionID, date string) ([]InfanziaDailyAttenda
 }
 
 func (s *service) RecordObservation(obs *InfanziaExperienceObservation) error {
+	if obs == nil {
+		return errors.New("osservazione non valida")
+	}
 	if obs.StudentID == "" || obs.RecordedBy == "" || obs.ObservationNotes == "" {
 		return errors.New("studentID, recordedBy e observationNotes sono obbligatori")
 	}
@@ -94,6 +100,9 @@ func (s *service) ListStudentObservations(studentID string) ([]InfanziaExperienc
 }
 
 func (s *service) AddDiarioStory(d *InfanziaDiarioBordo) error {
+	if d == nil {
+		return errors.New("diario non valido")
+	}
 	if d.SectionID == "" || d.Title == "" || d.NarrativeStory == "" {
 		return errors.New("sectionID, title e narrativeStory sono obbligatori")
 	}
@@ -103,6 +112,11 @@ func (s *service) AddDiarioStory(d *InfanziaDiarioBordo) error {
 func (s *service) ListDiarioStories(sectionID string, limit int) ([]InfanziaDiarioBordo, error) {
 	if sectionID == "" {
 		return nil, errors.New("sectionID obbligatorio")
+	}
+	if limit <= 0 {
+		limit = 30
+	} else if limit > 100 {
+		limit = 100
 	}
 	return s.repo.ListDiarioEntries(sectionID, limit)
 }

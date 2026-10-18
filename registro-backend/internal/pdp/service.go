@@ -37,6 +37,12 @@ func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole, schoolID s
 	if !canManagePDP(actorRole) {
 		return nil, ErrUnauthorized
 	}
+	if req == nil {
+		return nil, errors.New("request cannot be nil")
+	}
+	if req.StudentID == "" || req.ClassID == "" {
+		return nil, errors.New("studentID and classID are required")
+	}
 	if req.PlanType == "" {
 		req.PlanType = PlanTypePDP
 	}
@@ -164,6 +170,9 @@ func (s *Service) GetByID(ctx context.Context, actorID, actorRole, actorSchoolID
 func (s *Service) UpdatePlan(ctx context.Context, actorRole, actorSchoolID, id string, req *UpdatePdpRequest) (*PdpPlan, error) {
 	if !canManagePDP(actorRole) {
 		return nil, ErrUnauthorized
+	}
+	if req == nil {
+		return nil, errors.New("request cannot be nil")
 	}
 	plan, err := s.repo.GetByID(ctx, id)
 	if err != nil || plan == nil {

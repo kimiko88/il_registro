@@ -53,6 +53,14 @@ func (m *MockRepository) GetUserByEmail(ctx context.Context, email string) (*Use
 	return args.Get(0).(*User), args.Error(1)
 }
 
+func (m *MockRepository) GetUserByFiscalCode(ctx context.Context, fiscalCode string) (*User, error) {
+	args := m.Called(ctx, fiscalCode)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*User), args.Error(1)
+}
+
 func (m *MockRepository) GetUserByID(ctx context.Context, id string) (*User, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {

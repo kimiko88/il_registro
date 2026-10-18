@@ -23,6 +23,9 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) SubmitHomework(sub *HomeworkSubmission) error {
+	if sub == nil {
+		return errors.New("dati sottomissione non validi")
+	}
 	if sub.HomeworkID == "" || sub.StudentID == "" || sub.FileURL == "" {
 		return errors.New("homeworkID, studentID e fileURL sono obbligatori")
 	}
@@ -33,10 +36,16 @@ func (s *service) SubmitHomework(sub *HomeworkSubmission) error {
 }
 
 func (s *service) GetSubmission(id string) (*HomeworkSubmission, error) {
+	if id == "" {
+		return nil, errors.New("id sottomissione obbligatorio")
+	}
 	return s.repo.GetSubmission(id)
 }
 
 func (s *service) GetStudentSubmission(homeworkID, studentID string) (*HomeworkSubmission, error) {
+	if homeworkID == "" || studentID == "" {
+		return nil, errors.New("homeworkID e studentID sono obbligatori")
+	}
 	return s.repo.GetSubmissionByHomeworkAndStudent(homeworkID, studentID)
 }
 

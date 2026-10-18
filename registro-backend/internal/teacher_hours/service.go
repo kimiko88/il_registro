@@ -121,6 +121,9 @@ func (s *service) RequestShortLeave(schoolID, teacherID string, req ShortLeaveRe
 }
 
 func (s *service) ReviewShortLeave(leaveID, status, notes string) error {
+	if leaveID == "" {
+		return errors.New("leaveID obbligatorio")
+	}
 	if status != "approved" && status != "rejected" {
 		return errors.New("stato non valido (ammessi: approved, rejected)")
 	}
@@ -128,6 +131,9 @@ func (s *service) ReviewShortLeave(leaveID, status, notes string) error {
 }
 
 func (s *service) RecordLeaveRecovery(leaveID string, req RecoverLeaveRequest) error {
+	if leaveID == "" {
+		return errors.New("leaveID obbligatorio")
+	}
 	if req.RecoveredHours <= 0 {
 		return errors.New("le ore recuperate devono essere maggiori di zero")
 	}
@@ -135,5 +141,8 @@ func (s *service) RecordLeaveRecovery(leaveID string, req RecoverLeaveRequest) e
 }
 
 func (s *service) ListSchoolObligations(schoolID, academicYear string) ([]TeacherHourObligation, error) {
+	if schoolID == "" {
+		return nil, errors.New("schoolID obbligatorio")
+	}
 	return s.repo.ListObligationsBySchool(schoolID, academicYear)
 }

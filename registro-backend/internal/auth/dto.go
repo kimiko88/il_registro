@@ -73,6 +73,7 @@ type UserResponse struct {
 	EmailVerified bool                     `json:"email_verified"`
 	MFAEnabled    bool                     `json:"mfa_enabled"`
 	BadgeCode     string                   `json:"badge_code,omitempty"`
+	FiscalCode    *string                  `json:"fiscal_code,omitempty"`
 	Assignments   []UserAssignmentResponse `json:"assignments,omitempty"`
 }
 

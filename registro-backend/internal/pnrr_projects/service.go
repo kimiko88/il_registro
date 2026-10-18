@@ -23,6 +23,9 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) CreateProject(p *PNRRProject) error {
+	if p == nil {
+		return errors.New("dati progetto non validi")
+	}
 	if p.SchoolID == "" || p.CUPCode == "" || p.ProjectTitle == "" {
 		return errors.New("schoolID, CUP e titolo progetto sono obbligatori")
 	}
@@ -43,6 +46,9 @@ func (s *service) ListProjects(schoolID, academicYear string) ([]PNRRProject, er
 }
 
 func (s *service) GetProject(id string) (*PNRRProject, error) {
+	if id == "" {
+		return nil, errors.New("id progetto obbligatorio")
+	}
 	return s.repo.GetProject(id)
 }
 
@@ -65,6 +71,9 @@ func (s *service) ListStudents(projectID string) ([]PNRRProjectStudent, error) {
 }
 
 func (s *service) RecordLesson(l *PNRRLessonAttendance, attendedStudentIDs []string) error {
+	if l == nil {
+		return errors.New("dati lezione non validi")
+	}
 	if l.ProjectID == "" || l.Hours <= 0 || l.Topic == "" {
 		return errors.New("projectID, ore e argomento lezione sono obbligatori")
 	}

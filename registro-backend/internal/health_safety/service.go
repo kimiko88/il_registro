@@ -28,6 +28,9 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) RegisterMedication(m *StudentMedication) error {
+	if m == nil {
+		return errors.New("dati farmaco non validi")
+	}
 	if m.SchoolID == "" || m.StudentID == "" || m.MedicationName == "" {
 		return errors.New("schoolID, studentID e medication_name sono obbligatori")
 	}
@@ -48,10 +51,16 @@ func (s *service) ListMedications(schoolID, classID string) ([]StudentMedication
 }
 
 func (s *service) GetMedication(id string) (*StudentMedication, error) {
+	if id == "" {
+		return nil, errors.New("id farmaco obbligatorio")
+	}
 	return s.repo.GetMedication(id)
 }
 
 func (s *service) LogAdministration(a *MedicationAdministration) error {
+	if a == nil {
+		return errors.New("dati somministrazione non validi")
+	}
 	if a.MedicationID == "" || a.AdministeredBy == "" || a.DoseGiven == "" {
 		return errors.New("medicationID, administeredBy e doseGiven sono obbligatori")
 	}
@@ -59,10 +68,16 @@ func (s *service) LogAdministration(a *MedicationAdministration) error {
 }
 
 func (s *service) ListAdministrations(medicationID string) ([]MedicationAdministration, error) {
+	if medicationID == "" {
+		return nil, errors.New("medicationID obbligatorio")
+	}
 	return s.repo.ListMedicationAdministrations(medicationID)
 }
 
 func (s *service) RecordAccident(a *SchoolAccident) error {
+	if a == nil {
+		return errors.New("dati infortunio non validi")
+	}
 	if a.SchoolID == "" || a.PersonID == "" || a.DynamicsDescription == "" {
 		return errors.New("schoolID, personID e dynamicsDescription sono obbligatori")
 	}
@@ -88,12 +103,15 @@ func (s *service) ListAccidents(schoolID string) ([]SchoolAccident, error) {
 }
 
 func (s *service) GetAccident(id string) (*SchoolAccident, error) {
+	if id == "" {
+		return nil, errors.New("id infortunio obbligatorio")
+	}
 	return s.repo.GetSchoolAccident(id)
 }
 
 func (s *service) TransmitInail(accidentID, protocol string) error {
-	if protocol == "" {
-		return errors.New("il protocollo di trasmissione INAIL è obbligatorio")
+	if accidentID == "" || protocol == "" {
+		return errors.New("accidentID e protocollo di trasmissione INAIL sono obbligatori")
 	}
 	return s.repo.UpdateAccidentInailTransmission(accidentID, protocol)
 }

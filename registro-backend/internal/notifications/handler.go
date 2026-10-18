@@ -32,6 +32,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		n.POST("/register-device", h.RegisterDevice)
 		n.DELETE("/push-tokens", h.UnregisterToken)
 		n.POST("/send-push", h.SendPush)
+		n.POST("/multi-channel", h.SendMultiChannel)
 	}
 
 	// PWA Manifest endpoint
@@ -248,4 +249,36 @@ func (h *Handler) SendPush(c *gin.Context) {
 
 func (h *Handler) GetManifest(c *gin.Context) {
 	c.JSON(http.StatusOK, h.service.GetPWAManifest())
+}
+
+func (h *Handler) SendMultiChannel(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	// Allowed roles: admin, superadmin, principal, vice_principal, secretary, dsga, teacher
+	switch role {
+	case "admin", "superadmin", "principal", "vice_principal", "secretary", "dsga", "teacher":
+		// allowed
+	default:
+		c.JSON(http.StatusForbidden, gin.H{"error": "accesso non autorizzato all'invio di comunicazioni multicanale"})
+		return
+	}
+
+	var req MultiChannelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp, err := h.service.DispatchMultiChannel(c.Request.Context(), req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

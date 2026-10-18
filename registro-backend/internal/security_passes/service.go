@@ -25,6 +25,9 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) IssueHallPass(p *StudentHallPass) error {
+	if p == nil {
+		return errors.New("dati pass non validi")
+	}
 	if p.SchoolID == "" || p.ClassID == "" || p.StudentID == "" || p.TeacherID == "" {
 		return errors.New("parametri obbligatori mancanti per il rilascio del pass")
 	}
@@ -53,10 +56,18 @@ func (s *service) GetClassPasses(classID string, limit int) ([]StudentHallPass, 
 	if classID == "" {
 		return nil, errors.New("classID obbligatorio")
 	}
+	if limit <= 0 {
+		limit = 30
+	} else if limit > 100 {
+		limit = 100
+	}
 	return s.repo.ListHallPassesByClass(classID, limit)
 }
 
 func (s *service) AddPickupDelegate(d *StudentPickupDelegate) error {
+	if d == nil {
+		return errors.New("dati delega non validi")
+	}
 	if d.StudentID == "" || d.DelegateName == "" || d.FiscalCode == "" || d.Phone == "" {
 		return errors.New("studentID, delegateName, fiscalCode e phone sono obbligatori")
 	}

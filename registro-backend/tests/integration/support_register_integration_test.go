@@ -97,6 +97,42 @@ func (m *mockSupportRepo) DeletePeiGoal(ctx context.Context, id string) error {
 	return nil
 }
 
+func (m *mockSupportRepo) CreateGloMeeting(ctx context.Context, meeting *support.SupportGloMeeting) error {
+	if meeting.ID == "" {
+		meeting.ID = "glo-" + time.Now().Format("150405.000000")
+	}
+	return nil
+}
+
+func (m *mockSupportRepo) GetGloMeeting(ctx context.Context, id string) (*support.SupportGloMeeting, error) {
+	return &support.SupportGloMeeting{ID: id, Status: "BOZZA"}, nil
+}
+
+func (m *mockSupportRepo) ListGloMeetings(ctx context.Context, schoolID, studentID string) ([]support.SupportGloMeeting, error) {
+	return []support.SupportGloMeeting{{ID: "glo-1", SchoolID: schoolID, StudentID: studentID}}, nil
+}
+
+func (m *mockSupportRepo) SignGloMeeting(ctx context.Context, meetingID string, sig *support.GloSignature) error {
+	sig.ID = "sig-1"
+	return nil
+}
+
+func (m *mockSupportRepo) SaveSupportHours(ctx context.Context, h *support.SupportHoursQuantification) error {
+	h.ID = "sh-1"
+	return nil
+}
+
+func (m *mockSupportRepo) GetSupportHours(ctx context.Context, schoolID, studentID, schoolYear, peiStage string) (*support.SupportHoursQuantification, error) {
+	return &support.SupportHoursQuantification{
+		ID:                          "sh-1",
+		SchoolID:                    schoolID,
+		StudentID:                   studentID,
+		SchoolYear:                  schoolYear,
+		PeiStage:                    peiStage,
+		WeeklySupportHoursRequested: 18.0,
+	}, nil
+}
+
 func setupSupportTestRouter(repo support.Repository) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

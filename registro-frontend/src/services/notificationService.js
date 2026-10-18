@@ -34,6 +34,9 @@ export const notificationService = {
       return token
     }
     return null
+  },
+  sendMultiChannel(payload) {
+    return api.post('/notifications/multi-channel', payload)
   }
 }
 

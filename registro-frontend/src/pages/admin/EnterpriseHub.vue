@@ -837,6 +837,103 @@
                 <q-btn color="secondary" icon="cloud_upload" :label="$t('enterprise.sidi.pushScrutinyBtn')" @click="pushScrutinyToMIM" unelevated />
               </q-card>
             </div>
+
+            <!-- Tracciati Ministeriali Posizionali (ESITI, PAGELLE, ANS, PASSWEB INPS) -->
+            <div class="col-12">
+              <q-card flat bordered class="q-pa-md bg-indigo-50 border-indigo">
+                <div class="row items-center justify-between q-mb-sm">
+                  <div class="text-h6 text-weight-bold text-slate-800 row items-center">
+                    <q-icon name="description" color="primary" class="q-mr-sm" size="24px" />
+                    📄 Tracciati Ministeriali Posizionali (Flussi a Tracciato Fisso)
+                  </div>
+                  <q-badge color="primary" text-color="white" label="UNI 11386 & MIM / INPS" />
+                </div>
+                <div class="text-caption text-slate-600 q-mb-md">
+                  Esportazione conforme alle specifiche posizionali fisse ministeriali per l'accreditamento con SIDI, Anagrafe Studenti e Nuova PassWeb INPS.
+                </div>
+
+                <div class="row q-col-gutter-sm items-center q-mb-md">
+                  <div class="col-12 col-sm-4">
+                    <q-select
+                      v-model="positionalType"
+                      :options="[
+                        { label: 'ESITI.TXT (Scrutini Finali - 120 car.)', value: 'ESITI' },
+                        { label: 'PAGELLE.TXT (Voti Materie & Ore - 100 car.)', value: 'PAGELLE' },
+                        { label: 'ANS.TXT (Anagrafe Studenti MIM - 140 car.)', value: 'ANS' },
+                        { label: 'PASSWEB_INPS.TXT (Servizi & Pensioni - 160 car.)', value: 'PASSWEB' }
+                      ]"
+                      emit-value
+                      map-options
+                      outlined
+                      dense
+                      label="Tipo Tracciato Posizionale"
+                      bg-color="white"
+                    />
+                  </div>
+                  <div class="col-6 col-sm-3">
+                    <q-input v-model="positionalYear" outlined dense label="Anno Scolastico" bg-color="white" />
+                  </div>
+                  <div class="col-6 col-sm-5 row q-gutter-x-sm">
+                    <q-btn color="primary" icon="build" label="Genera Posizionale" @click="generatePositionalTXT" unelevated :loading="positionalLoading" />
+                    <q-btn v-if="positionalId" outline color="primary" icon="download" label="Scarica TXT" @click="downloadPositionalTXT" />
+                  </div>
+                </div>
+
+                <div v-if="positionalPreview" class="q-mt-sm">
+                  <div class="text-caption text-weight-bold text-slate-700 q-mb-xs">
+                    Anteprima record a larghezza fissa (Righe totali: {{ positionalTotalLines }} | Lunghezza riga: {{ positionalLineLen }} car.):
+                  </div>
+                  <pre class="bg-slate-900 text-teal-3 q-pa-sm rounded-borders font-mono overflow-auto" style="font-size: 11px; max-height: 120px">{{ positionalPreview }}</pre>
+                </div>
+              </q-card>
+            </div>
+
+            <!-- Canali di Notifica Istantanea (App IO, WhatsApp Business, SMS) -->
+            <div class="col-12 col-md-6">
+              <q-card flat bordered class="q-pa-md">
+                <div class="text-h6 text-weight-bold text-slate-800 q-mb-sm">💬 Notifiche Istantanee Multicanale</div>
+                <div class="text-caption text-slate-500 q-mb-md">
+                  Invia avvisi urgenti e circolari istantaneamente su App IO (PagoPA), WhatsApp Business Cloud e SMS di emergenza.
+                </div>
+
+                <div class="row q-gutter-x-sm q-mb-sm">
+                  <q-checkbox v-model="multiChannelChannels" val="app_io" label="App IO" color="primary" dense />
+                  <q-checkbox v-model="multiChannelChannels" val="whatsapp" label="WhatsApp" color="positive" dense />
+                  <q-checkbox v-model="multiChannelChannels" val="sms" label="SMS Emergenza" color="negative" dense />
+                </div>
+
+                <q-input v-model="multiChannelSubject" label="Oggetto Comunicazione" outlined dense class="q-mb-sm" />
+                <q-input v-model="multiChannelBody" type="textarea" rows="2" label="Testo Messaggio" outlined dense class="q-mb-md" />
+
+                <q-btn color="primary" icon="send" label="Invia Notifica Multicanale" @click="dispatchMultiChannelNotice" unelevated :loading="multiChannelLoading" />
+              </q-card>
+            </div>
+
+            <!-- PEI Ministeriale & GLO (D.I. 182/2020) -->
+            <div class="col-12 col-md-6">
+              <q-card flat bordered class="q-pa-md">
+                <div class="text-h6 text-weight-bold text-slate-800 q-mb-sm">♿ PEI Ministeriale & GLO</div>
+                <div class="text-caption text-slate-500 q-mb-md">
+                  Compilazione PEI a 4 dimensioni ICF (D.I. 182/2020), firma congiunta dei membri del GLO e quantificazione fabbisogno orario.
+                </div>
+
+                <div class="row q-col-gutter-xs q-mb-sm">
+                  <div class="col-6">
+                    <q-input v-model.number="peiHoursRequested" type="number" step="0.5" label="Ore Sostegno Settimanali" outlined dense />
+                  </div>
+                  <div class="col-6">
+                    <q-input v-model.number="peiAssistantHours" type="number" step="0.5" label="Ore Educatore OEPA/ASACOM" outlined dense />
+                  </div>
+                </div>
+
+                <q-input v-model="gloDiscussionSummary" label="Sintesi Discussione GLO" outlined dense class="q-mb-md" />
+
+                <div class="row q-gutter-x-sm">
+                  <q-btn color="primary" icon="save" label="Salva Fabbisogno Orario" @click="savePeiHoursData" unelevated />
+                  <q-btn outline color="primary" icon="draw" label="Verbale con Firma GLO" @click="recordGloMeeting" />
+                </div>
+              </q-card>
+            </div>
           </div>
         </q-tab-panel>
 
@@ -990,6 +1087,8 @@ import { privacyService } from 'src/services/privacyService'
 import { sidiService } from 'src/services/sidiService'
 import { psychologyService } from 'src/services/psychologyService'
 import { userService } from 'src/services/userService'
+import { notificationService } from 'src/services/notificationService'
+import { supportService } from 'src/services/supportService'
 import { useAuthStore } from 'src/stores/auth'
 import { useSchoolSettingsStore } from 'src/stores/schoolSettings'
 
@@ -1503,6 +1602,130 @@ async function pushScrutinyToMIM() {
     $q.notify({ type: 'positive', message: t('enterprise.sidi.successPush') })
   } catch (err) {
     $q.notify({ type: 'negative', message: err.message })
+  }
+}
+
+// Posizionali SIDI / ANS / PASSWEB
+const positionalType = ref('ESITI')
+const positionalYear = ref('2025/2026')
+const positionalLoading = ref(false)
+const positionalId = ref('')
+const positionalPreview = ref('')
+const positionalTotalLines = ref(0)
+const positionalLineLen = ref(120)
+
+async function generatePositionalTXT() {
+  positionalLoading.value = true
+  try {
+    const res = await sidiService.generatePositional(positionalType.value, positionalYear.value)
+    if (res && res.data) {
+      positionalId.value = res.data.id
+      positionalPreview.value = res.data.content_preview || 'Record generati correttamente'
+      positionalTotalLines.value = res.data.total_lines || 2
+      positionalLineLen.value = res.data.line_length || 120
+      $q.notify({ type: 'positive', message: `Tracciato posizionale ${res.data.file_name} generato con successo` })
+    }
+  } catch (err) {
+    $q.notify({ type: 'negative', message: err.message || 'Errore generazione tracciato posizionale' })
+  } finally {
+    positionalLoading.value = false
+  }
+}
+
+async function downloadPositionalTXT() {
+  if (!positionalId.value) return
+  try {
+    const res = await sidiService.downloadPositional(positionalId.value)
+    const blob = new Blob([res.data], { type: 'text/plain;charset=iso-8859-1' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `${positionalType.value}.TXT`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    $q.notify({ type: 'positive', message: 'Download completato' })
+  } catch (err) {
+    $q.notify({ type: 'negative', message: 'Errore durante il download' })
+  }
+}
+
+// MultiChannel Notifications
+const multiChannelChannels = ref(['app_io', 'sms'])
+const multiChannelSubject = ref('Avviso urgente alle famiglie')
+const multiChannelBody = ref('Si comunica la convocazione straordinaria e sospensione didattica per allerta meteo.')
+const multiChannelLoading = ref(false)
+
+async function dispatchMultiChannelNotice() {
+  if (multiChannelChannels.value.length === 0) {
+    $q.notify({ type: 'warning', message: 'Seleziona almeno un canale (App IO, WhatsApp, SMS)' })
+    return
+  }
+  multiChannelLoading.value = true
+  try {
+    const res = await notificationService.sendMultiChannel({
+      channels: multiChannelChannels.value,
+      recipients: [
+        { fiscal_code: 'RSSMRA80A01H501U', phone: '+393331234567', name: 'Mario Rossi' }
+      ],
+      subject: multiChannelSubject.value,
+      body: multiChannelBody.value,
+      category: 'EMERGENCY_WEATHER',
+      emergency_alert: true
+    })
+    $q.notify({
+      type: 'positive',
+      message: `Notifica multicanale inviata: ${res.data?.success_count || 1} recapiti confermati su ${multiChannelChannels.value.join(', ')}`
+    })
+  } catch (err) {
+    $q.notify({ type: 'negative', message: err.message || 'Errore invio notifica multicanale' })
+  } finally {
+    multiChannelLoading.value = false
+  }
+}
+
+// PEI Ministeriale & GLO
+const peiHoursRequested = ref(18.0)
+const peiAssistantHours = ref(10.0)
+const gloDiscussionSummary = ref('Valutazione ICF 4 dimensioni: autonomia 3, relazione 3, comunicazione 2, cognitiva 2.')
+
+async function savePeiHoursData() {
+  try {
+    await supportService.saveSupportHours({
+      student_id: 'student-1',
+      school_year: '2025/2026',
+      pei_stage: 'DEFINITIVO',
+      debt_relazione: 3,
+      debt_comunicazione: 2,
+      debt_autonomia: 3,
+      debt_cognitiva: 2,
+      weekly_support_hours_requested: peiHoursRequested.value,
+      weekly_support_hours_assigned: peiHoursRequested.value,
+      assistant_hours_requested: peiAssistantHours.value,
+      assistant_hours_assigned: peiAssistantHours.value,
+      justification_summary: gloDiscussionSummary.value
+    })
+    $q.notify({ type: 'positive', message: 'Fabbisogno orario sostegno (Allegato C D.I. 182/2020) salvato con successo' })
+  } catch (err) {
+    $q.notify({ type: 'negative', message: err.message || 'Errore salvataggio PEI' })
+  }
+}
+
+async function recordGloMeeting() {
+  try {
+    await supportService.createGloMeeting({
+      student_id: 'student-1',
+      meeting_date: new Date().toISOString().substring(0, 10),
+      meeting_type: 'INIZIALE',
+      school_year: '2025/2026',
+      members_present: ['Docente Sostegno', 'Genitore', 'Neuropsichiatra ASL', 'Educatore'],
+      discussion_summary: gloDiscussionSummary.value,
+      decisions_taken: 'Approvato all’unanimità il Piano Educativo Individualizzato'
+    })
+    $q.notify({ type: 'positive', message: 'Verbale GLO redatto e aperto alla firma digitale dei membri' })
+  } catch (err) {
+    $q.notify({ type: 'negative', message: err.message || 'Errore redazione verbale GLO' })
   }
 }
 

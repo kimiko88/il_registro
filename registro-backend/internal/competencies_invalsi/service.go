@@ -25,6 +25,9 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) SaveCertification(c *CompetencyCertificationDM14) error {
+	if c == nil {
+		return errors.New("dati certificazione non validi")
+	}
 	if c.SchoolID == "" || c.StudentID == "" || c.ClassID == "" {
 		return errors.New("schoolID, studentID e classID sono obbligatori")
 	}
@@ -38,10 +41,16 @@ func (s *service) SaveCertification(c *CompetencyCertificationDM14) error {
 }
 
 func (s *service) GetCertification(id string) (*CompetencyCertificationDM14, error) {
+	if id == "" {
+		return nil, errors.New("id certificazione obbligatorio")
+	}
 	return s.repo.GetCertification(id)
 }
 
 func (s *service) GetCertificationByStudent(studentID, schoolYear, schoolTier string) (*CompetencyCertificationDM14, error) {
+	if studentID == "" {
+		return nil, errors.New("studentID obbligatorio")
+	}
 	return s.repo.GetCertificationByStudent(studentID, schoolYear, schoolTier)
 }
 
@@ -72,9 +81,15 @@ func (s *service) ImportInvalsiBatch(results []InvalsiResult) error {
 }
 
 func (s *service) ListInvalsiByClass(classID, schoolYear string) ([]InvalsiResult, error) {
+	if classID == "" {
+		return nil, errors.New("classID obbligatorio")
+	}
 	return s.repo.ListInvalsiByClass(classID, schoolYear)
 }
 
 func (s *service) GetSchoolAnalytics(schoolID, schoolYear string) ([]InvalsiResult, error) {
+	if schoolID == "" {
+		return nil, errors.New("schoolID obbligatorio")
+	}
 	return s.repo.GetSchoolInvalsiAnalytics(schoolID, schoolYear)
 }

@@ -26,6 +26,11 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	grp.POST("/sync-student-codes", h.SyncStudentCodes)
 	grp.POST("/push-scrutiny-results", h.PushScrutinyResults)
 	grp.GET("/cooperation-config", h.GetCooperationConfig)
+
+	// Tracciati Ufficiali Posizionali MIM / SIDI / INPS
+	grp.GET("/positional/templates", h.GetPositionalTemplates)
+	grp.POST("/positional/generate", h.GeneratePositional)
+	grp.GET("/positional/download/:id", h.DownloadPositionalTXT)
 }
 
 func canAccessSidi(role string) bool {
@@ -163,4 +168,60 @@ func (h *Handler) GetCooperationConfig(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, cfg)
+}
+
+func (h *Handler) GetPositionalTemplates(c *gin.Context) {
+	templates := h.service.GetPositionalTemplates()
+	c.JSON(http.StatusOK, templates)
+}
+
+func (h *Handler) GeneratePositional(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !canAccessSidi(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo il personale autorizzato può generare tracciati posizionali SIDI/INPS"})
+		return
+	}
+
+	var req PositionalExportRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	resp, _, err := h.service.GeneratePositional(c.Request.Context(), schoolID, userID, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *Handler) DownloadPositionalTXT(c *gin.Context) {
+	userID := c.GetString("user_id")
+	role := c.GetString("role")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	if !canAccessSidi(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	id := c.Param("id")
+	content, err := h.service.GetExportXML(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "tracciato posizionale non trovato"})
+		return
+	}
+
+	c.Header("Content-Disposition", "attachment; filename=tracciato_posizionale.txt")
+	c.Data(http.StatusOK, "text/plain; charset=iso-8859-1", []byte(content))
 }

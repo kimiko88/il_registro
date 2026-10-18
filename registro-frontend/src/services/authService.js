@@ -97,6 +97,35 @@ export const authService = {
             new_password: newPassword
         })
         return response.data
+    },
+
+    /**
+     * Get list of certified SPID Identity Providers
+     * @returns {Promise} List of AgID providers
+     */
+    async getSpidProviders() {
+        const response = await api.get('/auth/spid/providers')
+        return response.data
+    },
+
+    /**
+     * Perform SPID login or simulated SAML assertion verification
+     * @param {Object} payload - { idp, fiscal_code, email, first_name, last_name, role }
+     * @returns {Promise} Response with user and tokens
+     */
+    async spidDemoLogin(payload) {
+        const response = await api.post('/auth/spid/demo-login', payload)
+        return response.data
+    },
+
+    /**
+     * Perform CIE (Carta d'Identità Elettronica) Level 2 login
+     * @param {Object} payload - { fiscal_code, email, first_name, last_name, role }
+     * @returns {Promise} Response with user and tokens
+     */
+    async loginWithCie(payload) {
+        const response = await api.post('/auth/cie/login', payload)
+        return response.data
     }
 }
 

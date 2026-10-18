@@ -38,6 +38,12 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) CreateProject(ctx context.Context, schoolID, actorRole, teacherID string, req CreateProjectRequest) error {
+	if schoolID == "" {
+		return errors.New("school_id is required")
+	}
+	if req.Title == "" {
+		return errors.New("title is required")
+	}
 	if !s.permManager.HasPermission(actorRole, permissions.PCTOCreate) &&
 		actorRole != "teacher" && actorRole != "coordinator" && actorRole != "coordinatore_classe" &&
 		actorRole != "referente_progetto" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
@@ -77,6 +83,9 @@ func (s *service) GetProjects(ctx context.Context, schoolID string) ([]Project, 
 }
 
 func (s *service) AssignStudent(ctx context.Context, actorRole, projectID, studentID string) error {
+	if projectID == "" || studentID == "" {
+		return errors.New("project_id and student_id required")
+	}
 	if !s.permManager.HasPermission(actorRole, permissions.PCTOUpdate) &&
 		actorRole != "teacher" && actorRole != "coordinator" && actorRole != "coordinatore_classe" &&
 		actorRole != "referente_progetto" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
@@ -91,6 +100,9 @@ func (s *service) AssignStudent(ctx context.Context, actorRole, projectID, stude
 }
 
 func (s *service) LogHours(ctx context.Context, studentID string, req LogHourRequest) error {
+	if studentID == "" || req.ProjectID == "" {
+		return errors.New("student_id and project_id required")
+	}
 	// Verify participation
 	part, err := s.repo.GetParticipation(ctx, req.ProjectID, studentID)
 	if err != nil {
@@ -117,6 +129,9 @@ func (s *service) LogHours(ctx context.Context, studentID string, req LogHourReq
 }
 
 func (s *service) GetMyProjects(ctx context.Context, studentID string) ([]Project, error) {
+	if studentID == "" {
+		return nil, errors.New("student_id is required")
+	}
 	parts, err := s.repo.GetParticipationsByStudent(ctx, studentID)
 	if err != nil {
 		return nil, err
@@ -136,6 +151,9 @@ func (s *service) GetMyProjects(ctx context.Context, studentID string) ([]Projec
 }
 
 func (s *service) GetMyProjectDetails(ctx context.Context, studentID, projectID string) (*Participation, []HourLog, error) {
+	if studentID == "" || projectID == "" {
+		return nil, nil, errors.New("student_id and project_id required")
+	}
 	part, err := s.repo.GetParticipation(ctx, projectID, studentID)
 	if err != nil {
 		return nil, nil, err
@@ -146,6 +164,12 @@ func (s *service) GetMyProjectDetails(ctx context.Context, studentID, projectID 
 }
 
 func (s *service) CreateCompany(ctx context.Context, schoolID, actorRole string, c Company) error {
+	if schoolID == "" {
+		return errors.New("school_id is required")
+	}
+	if c.Name == "" {
+		return errors.New("company name is required")
+	}
 	if !s.permManager.HasPermission(actorRole, permissions.PCTOCreate) &&
 		actorRole != "teacher" && actorRole != "coordinator" && actorRole != "coordinatore_classe" &&
 		actorRole != "referente_progetto" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
@@ -156,6 +180,9 @@ func (s *service) CreateCompany(ctx context.Context, schoolID, actorRole string,
 }
 
 func (s *service) UpdateProject(ctx context.Context, actorID, actorRole, id string, req CreateProjectRequest) error {
+	if id == "" {
+		return errors.New("project id is required")
+	}
 	if !s.permManager.HasPermission(actorRole, permissions.PCTOUpdate) &&
 		actorRole != "teacher" && actorRole != "coordinator" && actorRole != "coordinatore_classe" &&
 		actorRole != "referente_progetto" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
@@ -164,6 +191,9 @@ func (s *service) UpdateProject(ctx context.Context, actorID, actorRole, id stri
 	p, err := s.repo.GetProjectByID(ctx, id)
 	if err != nil {
 		return err
+	}
+	if p == nil {
+		return errors.New("project not found")
 	}
 	if p.CreatedBy != actorID && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
 		return errors.New("unauthorized: not the creator of this PCTO project")
@@ -175,6 +205,9 @@ func (s *service) UpdateProject(ctx context.Context, actorID, actorRole, id stri
 }
 
 func (s *service) DeleteProject(ctx context.Context, actorID, actorRole, id string) error {
+	if id == "" {
+		return errors.New("project id is required")
+	}
 	if !s.permManager.HasPermission(actorRole, permissions.PCTODelete) &&
 		actorRole != "teacher" && actorRole != "coordinator" && actorRole != "coordinatore_classe" &&
 		actorRole != "referente_progetto" && actorRole != "principal" && actorRole != "vice_principal" && actorRole != "collaboratore_ds" {
@@ -183,6 +216,9 @@ func (s *service) DeleteProject(ctx context.Context, actorID, actorRole, id stri
 	p, err := s.repo.GetProjectByID(ctx, id)
 	if err != nil {
 		return err
+	}
+	if p == nil {
+		return errors.New("project not found")
 	}
 	if p.CreatedBy != actorID && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
 		return errors.New("unauthorized: not the creator of this PCTO project")
@@ -201,6 +237,9 @@ func (s *service) GetStats(ctx context.Context, schoolID string) (*PCTOStats, er
 // ApproveHours approves or rejects a PCTO hour log entry.
 // Bug 136: verifies that the actor is the school tutor of the project or an admin/superadmin.
 func (s *service) ApproveHours(ctx context.Context, actorID, actorRole, logID string, approved bool) error {
+	if logID == "" {
+		return errors.New("log_id is required")
+	}
 	if !s.permManager.HasPermission(actorRole, permissions.PCTOUpdate) &&
 		actorRole != "teacher" && actorRole != "coordinator" && actorRole != "coordinatore_classe" &&
 		actorRole != "referente_progetto" && actorRole != "tutor" && actorRole != "admin" &&
