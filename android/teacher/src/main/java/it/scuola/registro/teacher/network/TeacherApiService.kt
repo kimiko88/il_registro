@@ -17,6 +17,7 @@ import java.net.URL
 interface TeacherApiService {
     suspend fun login(email: String, password: String): Result<String>
     suspend fun getClasses(token: String): Result<List<ClassSession>>
+    suspend fun getClassStudents(token: String, classId: String): Result<List<StudentRollCall>>
     suspend fun signLesson(token: String, classId: String, topic: String): Result<ClassSession>
     suspend fun submitRollCall(token: String, classId: String, records: List<StudentRollCall>): Result<Boolean>
     suspend fun submitGrade(token: String, proposal: GradeProposal): Result<Boolean>
@@ -56,7 +57,7 @@ class HttpTeacherApiService(
                     if (role != "teacher" && role != "coordinator") {
                         Result.failure(Exception("Accesso non consentito: questo account non appartiene a un docente."))
                     } else {
-                        val token = json.optString("token", json.optString("access_token"))
+                        val token = json.optString("access_token", json.optString("token"))
                         Result.success(token)
                     }
                 } else {
@@ -71,33 +72,93 @@ class HttpTeacherApiService(
     override suspend fun getClasses(token: String): Result<List<ClassSession>> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/teacher/classes")
-                val conn = (url.openConnection() as HttpURLConnection).apply {
+                var url = URL("$baseUrl/teacher/classes")
+                var conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     connectTimeout = 10000
                     readTimeout = 10000
                 }
-                if (conn.responseCode in 200..299) {
-                    val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
+                var response = if (conn.responseCode in 200..299) {
+                    BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
+                } else {
+                    ""
+                }
+                if (response.isEmpty() || response == "[]" || response == "null") {
+                    url = URL("$baseUrl/classes")
+                    conn = (url.openConnection() as HttpURLConnection).apply {
+                        requestMethod = "GET"
+                        setRequestProperty("Authorization", "Bearer $token")
+                        connectTimeout = 10000
+                        readTimeout = 10000
+                    }
+                    if (conn.responseCode in 200..299) {
+                        response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
+                    }
+                }
+
+                val list = mutableListOf<ClassSession>()
+                if (response.startsWith("[")) {
                     val arr = JSONArray(response)
-                    val list = mutableListOf<ClassSession>()
                     for (i in 0 until arr.length()) {
                         val obj = arr.getJSONObject(i)
                         list.add(
                             ClassSession(
                                 classId = obj.optString("id", "$i"),
                                 className = obj.optString("name", obj.optString("class_name", "Classe")),
-                                subject = obj.optString("subject_name", obj.optString("subject", "Materia")),
+                                subject = obj.optString("subject_name", obj.optString("subject", "Matematica")),
                                 hourSlot = "Orario lezioni",
                                 isSigned = false,
                                 lessonTopic = ""
                             )
                         )
                     }
+                }
+                Result.success(list)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+
+    override suspend fun getClassStudents(token: String, classId: String): Result<List<StudentRollCall>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val url = URL("$baseUrl/users?role=student&class_id=$classId")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    setRequestProperty("Authorization", "Bearer $token")
+                    setRequestProperty("Accept", "application/json")
+                    connectTimeout = 10000
+                    readTimeout = 10000
+                }
+                if (conn.responseCode in 200..299) {
+                    val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
+                    val list = mutableListOf<StudentRollCall>()
+                    val arr = if (response.startsWith("{")) {
+                        val root = JSONObject(response)
+                        root.optJSONArray("users") ?: JSONArray()
+                    } else if (response.startsWith("[")) {
+                        JSONArray(response)
+                    } else {
+                        JSONArray()
+                    }
+
+                    for (i in 0 until arr.length()) {
+                        val obj = arr.getJSONObject(i)
+                        val fName = obj.optString("first_name", "")
+                        val lName = obj.optString("last_name", "")
+                        val fullName = "$fName $lName".trim().ifEmpty { obj.optString("email", "Studente") }
+                        list.add(
+                            StudentRollCall(
+                                studentId = obj.optString("id", "$i"),
+                                fullName = fullName,
+                                status = "presente"
+                            )
+                        )
+                    }
                     Result.success(list)
                 } else {
-                    Result.failure(Exception("Errore caricamento classi: HTTP ${conn.responseCode}"))
+                    Result.failure(Exception("Errore recupero studenti classe: HTTP ${conn.responseCode}"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)

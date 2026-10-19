@@ -21,7 +21,7 @@ func BenchmarkSyncStudentCodes(b *testing.B) {
 
 	b.ResetTimer()
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = svc.SyncStudentCodes(ctx, "school-1", students)
 	}
 }

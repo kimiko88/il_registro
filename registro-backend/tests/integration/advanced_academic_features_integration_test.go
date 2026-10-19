@@ -207,6 +207,40 @@ func (m *mockSupportIntegrationRepo) DeletePeiGoal(ctx context.Context, id strin
 	return nil
 }
 
+func (m *mockSupportIntegrationRepo) CreateGloMeeting(ctx context.Context, meeting *support.SupportGloMeeting) error {
+	meeting.ID = "glo-1"
+	return nil
+}
+
+func (m *mockSupportIntegrationRepo) GetGloMeeting(ctx context.Context, id string) (*support.SupportGloMeeting, error) {
+	return &support.SupportGloMeeting{ID: id, Status: "BOZZA"}, nil
+}
+
+func (m *mockSupportIntegrationRepo) ListGloMeetings(ctx context.Context, schoolID, studentID string) ([]support.SupportGloMeeting, error) {
+	return []support.SupportGloMeeting{{ID: "glo-1", SchoolID: schoolID, StudentID: studentID}}, nil
+}
+
+func (m *mockSupportIntegrationRepo) SignGloMeeting(ctx context.Context, meetingID string, sig *support.GloSignature) error {
+	sig.ID = "sig-1"
+	return nil
+}
+
+func (m *mockSupportIntegrationRepo) SaveSupportHours(ctx context.Context, h *support.SupportHoursQuantification) error {
+	h.ID = "sh-1"
+	return nil
+}
+
+func (m *mockSupportIntegrationRepo) GetSupportHours(ctx context.Context, schoolID, studentID, schoolYear, peiStage string) (*support.SupportHoursQuantification, error) {
+	return &support.SupportHoursQuantification{
+		ID:                          "sh-1",
+		SchoolID:                    schoolID,
+		StudentID:                   studentID,
+		SchoolYear:                  schoolYear,
+		PeiStage:                    peiStage,
+		WeeklySupportHoursRequested: 18.0,
+	}, nil
+}
+
 func TestIntegration_Support_Workflow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	repo := new(mockSupportIntegrationRepo)

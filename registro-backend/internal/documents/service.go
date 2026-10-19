@@ -134,12 +134,18 @@ func (s *service) CreateDocument(ctx context.Context, actorRole, userID, schoolI
 }
 
 func (s *service) GetDocument(ctx context.Context, actorRole, schoolID, id string) (*DocumentDetailResponse, error) {
+	if id == "" {
+		return nil, errors.New("document id is required")
+	}
 	if !s.permManager.HasPermission(actorRole, permissions.DocumentRead) {
 		return nil, errors.New("unauthorized")
 	}
 	doc, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
+	}
+	if doc == nil {
+		return nil, errors.New("document not found")
 	}
 	if doc.SchoolID != schoolID {
 		return nil, errors.New("unauthorized: cannot access documents of another school")
@@ -167,12 +173,18 @@ func (s *service) GetDocument(ctx context.Context, actorRole, schoolID, id strin
 }
 
 func (s *service) UpdateDocument(ctx context.Context, actorRole, schoolID, userID, id string, req UpdateDocumentRequest) error {
+	if id == "" {
+		return errors.New("document id is required")
+	}
 	if !s.permManager.HasPermission(actorRole, permissions.DocumentUpdate) {
 		return errors.New("unauthorized")
 	}
 	doc, err := s.repo.FindByID(id)
 	if err != nil {
 		return err
+	}
+	if doc == nil {
+		return errors.New("document not found")
 	}
 	if doc.SchoolID != schoolID {
 		return errors.New("unauthorized: cannot edit document of another school")
@@ -202,12 +214,18 @@ func (s *service) UpdateDocument(ctx context.Context, actorRole, schoolID, userI
 }
 
 func (s *service) DeleteDocument(ctx context.Context, actorRole, schoolID, userID, id string) error {
+	if id == "" {
+		return errors.New("document id is required")
+	}
 	if !s.permManager.HasPermission(actorRole, permissions.DocumentDelete) {
 		return errors.New("unauthorized")
 	}
 	doc, err := s.repo.FindByID(id)
 	if err != nil {
 		return err
+	}
+	if doc == nil {
+		return errors.New("document not found")
 	}
 	if actorRole != "superadmin" && doc.SchoolID != schoolID {
 		return errors.New("unauthorized: cannot delete document of another school")
@@ -221,9 +239,15 @@ func (s *service) DeleteDocument(ctx context.Context, actorRole, schoolID, userI
 }
 
 func (s *service) ProcessWorkflow(ctx context.Context, actorRole, schoolID, userID, docID string, req WorkflowActionRequest) error {
+	if docID == "" {
+		return errors.New("document id is required")
+	}
 	doc, err := s.repo.FindByID(docID)
 	if err != nil {
 		return err
+	}
+	if doc == nil {
+		return errors.New("document not found")
 	}
 	if doc.SchoolID != schoolID {
 		return errors.New("unauthorized: cannot process document of another school")
@@ -376,6 +400,12 @@ func (s *service) ListDocuments(ctx context.Context, actorRole, schoolID string,
 }
 
 func (s *service) CreateTemplate(ctx context.Context, schoolID string, req TemplateRequest) error {
+	if schoolID == "" {
+		return errors.New("schoolID is required")
+	}
+	if req.Name == "" {
+		return errors.New("template name is required")
+	}
 	return s.repo.CreateTemplate(&DocumentTemplate{
 		SchoolID: schoolID,
 		Name:     req.Name,
@@ -389,9 +419,15 @@ func (s *service) ListTemplates(ctx context.Context, schoolID string) ([]Documen
 }
 
 func (s *service) UpdateTemplate(ctx context.Context, schoolID, id string, req TemplateRequest) error {
+	if id == "" {
+		return errors.New("template id is required")
+	}
 	t, err := s.repo.GetTemplate(id)
 	if err != nil {
 		return err
+	}
+	if t == nil {
+		return errors.New("template not found")
 	}
 	if t.SchoolID != schoolID {
 		return errors.New("unauthorized: template belongs to another school")
@@ -408,9 +444,15 @@ func (s *service) UpdateTemplate(ctx context.Context, schoolID, id string, req T
 }
 
 func (s *service) DeleteTemplate(ctx context.Context, schoolID, id string) error {
+	if id == "" {
+		return errors.New("template id is required")
+	}
 	t, err := s.repo.GetTemplate(id)
 	if err != nil {
 		return err
+	}
+	if t == nil {
+		return errors.New("template not found")
 	}
 	if t.SchoolID != schoolID {
 		return errors.New("unauthorized: template belongs to another school")

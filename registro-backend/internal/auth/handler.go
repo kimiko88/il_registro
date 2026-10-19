@@ -473,9 +473,13 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup, middleware *Middleware
 			protected.POST("/mfa/setup", h.SetupMFA)
 			protected.POST("/mfa/verify", h.VerifyMFA)
 			protected.POST("/ws-ticket", h.IssueWSTicket)
-
-			// Registration is protected: caller must be superadmin, admin or segreteria.
 			protected.POST("/register", h.Register)
 		}
+
+		// SPID and CIE Federated Authentication
+		spidH := NewSPIDHandler(h.service)
+		spidH.RegisterSPIDRoutes(router)
+		cieH := NewCIEHandler(h.service)
+		cieH.RegisterCIERoutes(router)
 	}
 }

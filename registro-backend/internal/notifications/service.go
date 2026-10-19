@@ -21,18 +21,27 @@ type Service interface {
 	MarkAsRead(ctx context.Context, userID, notificationID string) error
 	MarkAllAsRead(ctx context.Context, userID string) error
 	GetPWAManifest() PWAConfig
+	DispatchMultiChannel(ctx context.Context, req MultiChannelRequest) (*MultiChannelResponse, error)
 }
 
 type serviceImpl struct {
 	repo         Repository
 	pushProvider PushProvider
+	multiChannel *MultiChannelDispatcher
 }
 
 func NewService(repo Repository) Service {
 	if repo == nil {
 		panic("notifications.NewService: repo must not be nil")
 	}
-	return &serviceImpl{repo: repo}
+	return &serviceImpl{
+		repo:         repo,
+		multiChannel: NewMultiChannelDispatcher(nil, nil, nil),
+	}
+}
+
+func (s *serviceImpl) DispatchMultiChannel(ctx context.Context, req MultiChannelRequest) (*MultiChannelResponse, error) {
+	return s.multiChannel.Dispatch(ctx, req)
 }
 
 func (s *serviceImpl) SetPushProvider(provider PushProvider) {
@@ -64,6 +73,9 @@ func (s *serviceImpl) RegisterToken(ctx context.Context, userID string, req Regi
 }
 
 func (s *serviceImpl) UnregisterToken(ctx context.Context, userID, deviceToken string) error {
+	if userID == "" || deviceToken == "" {
+		return errors.New("userID e deviceToken sono obbligatori")
+	}
 	return s.repo.DeleteToken(ctx, userID, deviceToken)
 }
 

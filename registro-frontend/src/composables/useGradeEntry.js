@@ -45,7 +45,7 @@ export function useGradeEntry() {
                     url: '/grades',
                     method: 'post',
                     data: gradeData
-                }, { title: `Voto Studente ${gradeData.studentId}` });
+                }, { title: `Voto Studente ${gradeData.studentId}`, forceEnqueue: true });
                 return true;
             }
 

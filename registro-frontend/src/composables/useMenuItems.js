@@ -57,6 +57,8 @@ export function useMenuItems(role, assignments = [], isCanteenEnabled = true) {
                 { label: 'Scioperi',              icon: 'campaign',     path: '/ata/strike' },
                 { label: 'Sostituzioni',          icon: 'swap_horiz',   path: '/secretary/substitutions', badge: 'pendingSubstitutions' },
                 { label: 'Aule & Plessi',         icon: 'meeting_room', path: '/secretary/rooms' },
+                { label: 'Sanità & Infortuni',    icon: 'medical_services', path: '/secretary/health-safety' },
+                { label: 'Progetti PNRR',         icon: 'account_tree', path: '/secretary/pnrr' },
             ]
         },
         {
@@ -66,6 +68,7 @@ export function useMenuItems(role, assignments = [], isCanteenEnabled = true) {
                 { label: 'Orario & Cattedre',          icon: 'schedule',  path: '/secretary/timetable' },
                 { label: 'Analytics',                  icon: 'analytics', path: '/admin/analytics' },
                 { label: 'E-Learning (Google/Teams)',  icon: 'hub',       path: '/admin/elearning' },
+                { label: 'Analisi INVALSI (RAV)',      icon: 'insights',  path: '/admin/invalsi' },
                 { label: 'Enterprise & Compliance',    icon: 'verified_user', path: '/admin/enterprise' },
                 { label: 'Verbali & Riunioni',         icon: 'gavel',     path: '/secretary/verbali' },
                 { label: 'Impostazioni',               icon: 'settings',  path: '/admin/settings' },
@@ -101,6 +104,8 @@ export function useMenuItems(role, assignments = [], isCanteenEnabled = true) {
                 { label: 'Libri di Testo',      icon: 'auto_stories',      path: '/secretary/textbooks' },
                 { label: 'Flussi SIDI',         icon: 'cloud_sync',        path: '/secretary/sidi' },
                 { label: 'Scrutinio & Esami',   icon: 'analytics',         path: '/secretary/scrutiny' },
+                { label: 'Sanità & Infortuni',  icon: 'medical_services',  path: '/secretary/health-safety' },
+                { label: 'Progetti PNRR & Futura', icon: 'account_tree',   path: '/secretary/pnrr' },
             ]
         },
         {
@@ -134,6 +139,11 @@ export function useMenuItems(role, assignments = [], isCanteenEnabled = true) {
                 { label: 'Credito Scolastico',    icon: 'military_tech',     path: '/teacher/credits' },
                 { label: 'Corsi Recupero & PAI',  icon: 'school',            path: '/teacher/recovery' },
                 { label: 'PDP/PEI & Sostegno',   icon: 'accessibility_new', path: '/teacher/pdp' },
+                { label: 'Monte Ore 40+40',      icon: 'timelapse',         path: '/teacher/hours' },
+                { label: 'Pass Fuori Classe',    icon: 'directions_walk',   path: '/teacher/hall-passes' },
+                { label: 'Correzione Compiti',   icon: 'draw',              path: '/teacher/homework-correction' },
+                { label: 'Certificazione DM14',  icon: 'stars',             path: '/teacher/competencies-dm14' },
+                { label: 'Registro Infanzia',    icon: 'child_care',        path: '/teacher/infanzia' },
             ]
         },
         {
@@ -228,6 +238,7 @@ export function useMenuItems(role, assignments = [], isCanteenEnabled = true) {
                 { label: 'Pagella',            icon: 'description',    path: '/student/report-card' },
                 { label: 'Note Disciplinari',  icon: 'assignment_late', path: '/student/notes' },
                 { label: 'Obiettivi',          icon: 'flag',           path: '/student/goals' },
+                { label: 'Consegna Compiti',   icon: 'upload_file',    path: '/student/homework-submissions' },
             ]
         },
         {
@@ -260,6 +271,7 @@ export function useMenuItems(role, assignments = [], isCanteenEnabled = true) {
                 { label: 'Note Disciplinari',  icon: 'assignment_late', path: '/parent/notes' },
                 { label: 'Piano PDP/PEI',      icon: 'accessibility_new', path: '/parent/pdp' },
                 { label: 'Materiale Didattico', icon: 'folder_shared',  path: '/parent/didactics' },
+                { label: 'Diario Infanzia',     icon: 'photo_library',  path: '/parent/infanzia' },
             ]
         },
         {
@@ -272,6 +284,7 @@ export function useMenuItems(role, assignments = [], isCanteenEnabled = true) {
                 ...(isCanteenEnabled ? [{ label: 'Mensa & Borsellino Pasti', icon: 'restaurant', path: '/parent/canteen' }] : []),
                 { label: 'Uscite & Viaggi',        icon: 'card_travel',       path: '/parent/trips' },
                 { label: 'Pagamenti',              icon: 'payments',          path: '/parent/payments' },
+                { label: 'Deleghe Ritiro',         icon: 'badge',             path: '/parent/delegates' },
                 { label: 'Documenti',              icon: 'description',       path: '/parent/documents' },
                 { label: 'Impostazioni & Profilo', icon: 'settings',          path: '/parent/settings' },
             ]
@@ -484,6 +497,7 @@ export function useMenuItems(role, assignments = [], isCanteenEnabled = true) {
             category: 'Servizi di Sede & Vigilanza',
             icon: 'security',
             children: [
+                { label: 'Tabellone Pass Uscite',     icon: 'door_sliding',     path: '/ata/hall-monitor' },
                 { label: 'Registro Visitatori',       icon: 'door_front',       path: '/ata/visitor-registry' },
                 { label: 'Cartellino & Ferie',        icon: 'calendar_month',   path: '/ata/timecard' },
                 { label: 'Sportello Personale',       icon: 'forward_to_inbox', path: '/ata/personnel-desk' },

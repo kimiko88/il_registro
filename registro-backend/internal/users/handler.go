@@ -21,6 +21,39 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
+func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
+	u := r.Group("/users")
+	{
+		u.POST("", h.Create)
+		u.GET("", h.List)
+		u.GET("/search", h.List)
+		u.GET("/me/children", h.GetMyChildren)
+		u.POST("/me/switch-child/:studentId", h.SwitchChild)
+		u.GET("/:id", h.Get)
+		u.PATCH("/:id", h.Update)
+		u.DELETE("/:id", h.Delete)
+		u.POST("/:id/restore", h.Restore)
+		u.POST("/bulk-import", h.BulkImport)
+		u.POST("/bulk-delete", h.BulkDelete)
+		u.POST("/:id/change-password", h.ChangePassword)
+		u.POST("/:id/reset-password", h.ForceResetPassword)
+		u.PATCH("/:id/roles", h.AssignRoles)
+		u.GET("/:id/audit-log", h.GetAuditLog)
+		u.POST("/:id/gdpr-export", h.ExportGDPR)
+		u.DELETE("/:id/gdpr-delete", h.DeleteGDPR)
+		u.POST("/gdpr/retention", h.ApplyDataRetention)
+		u.PATCH("/:id/disable-mfa", h.DisableMFA)
+		u.GET("/:id/guardians", h.GetGuardians)
+		u.POST("/:id/guardians", h.AddGuardian)
+		u.DELETE("/:id/guardians/:guardianId", h.RemoveGuardian)
+		u.GET("/students/:id/fascicolo", h.GetFascicolo)
+		u.GET("/:id/assignments", h.GetAssignments)
+		u.POST("/:id/assignments", h.AddAssignment)
+		u.DELETE("/:id/assignments/:assignmentId", h.DeleteAssignment)
+		u.PUT("/:id/coordinated-classes", h.SetCoordinatedClasses)
+	}
+}
+
 func getActorRole(c *gin.Context) string {
 	role, exists := c.Get("role")
 	if !exists {
@@ -275,6 +308,10 @@ func (h *Handler) Restore(c *gin.Context) {
 	if err := h.service.RestoreUser(c.Request.Context(), getActorRole(c), getSchoolID(c), c.Param("id")); err != nil {
 		if errors.Is(err, ErrUnauthorized) || err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
+		if errors.Is(err, ErrUserNotFound) || strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

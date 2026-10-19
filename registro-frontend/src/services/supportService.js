@@ -21,6 +21,28 @@ export const supportService = {
   },
   deletePeiGoal(id) {
     return api.delete(`/support/pei-goals/${id}`)
+  },
+
+  // GLO Meetings and Joint Digital Signatures
+  createGloMeeting(payload) {
+    return api.post('/support/glo-meetings', payload)
+  },
+  listGloMeetings(params = {}) {
+    return api.get('/support/glo-meetings', { params })
+  },
+  getGloMeeting(id) {
+    return api.get(`/support/glo-meetings/${id}`)
+  },
+  signGloMeeting(payload) {
+    return api.post('/support/glo-meetings/sign', payload)
+  },
+
+  // Support Hours Quantification (D.I. 182/2020 e D.M. 153/2023)
+  saveSupportHours(payload) {
+    return api.post('/support/hours', payload)
+  },
+  getSupportHours(params = {}) {
+    return api.get('/support/hours', { params })
   }
 }
 

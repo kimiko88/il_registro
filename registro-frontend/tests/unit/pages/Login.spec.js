@@ -55,7 +55,7 @@ describe('Login.vue', () => {
                     'q-btn-dropdown': { template: '<div><slot /></div>' },
                     'q-icon': true,
                     'q-checkbox': true,
-                    'q-btn': { template: '<button type="submit"></button>' },
+                    'q-btn': { template: '<button type="submit"><slot /></button>' },
                     'q-dialog': { template: '<div><slot /></div>' },
                     'q-card': { template: '<div><slot /></div>' },
                     'q-card-section': { template: '<div><slot /></div>' },
@@ -103,5 +103,10 @@ describe('Login.vue', () => {
         await new Promise(resolve => setTimeout(resolve, 0))
 
         expect(wrapper.text()).toContain('Invalid credentials')
+    })
+
+    it('renders AgID SPID and CIE buttons', () => {
+        expect(wrapper.text()).toContain('Entra con SPID')
+        expect(wrapper.text()).toContain('Entra con CIE')
     })
 })

@@ -24,6 +24,16 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 		g.PATCH("/pei-goals/:id/progress", h.UpdatePeiGoalProgress)
 		g.GET("/pei-goals", h.ListPeiGoals)
 		g.DELETE("/pei-goals/:id", h.DeletePeiGoal)
+
+		// GLO Meeting Minutes and Joint Digital Signatures
+		g.POST("/glo-meetings", h.CreateGloMeeting)
+		g.GET("/glo-meetings", h.ListGloMeetings)
+		g.GET("/glo-meetings/:id", h.GetGloMeeting)
+		g.POST("/glo-meetings/sign", h.SignGloMeeting)
+
+		// Support Hours Quantification (D.I. 182/2020)
+		g.POST("/hours", h.SaveSupportHours)
+		g.GET("/hours", h.GetSupportHours)
 	}
 }
 
@@ -231,4 +241,122 @@ func (h *Handler) DeletePeiGoal(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+func (h *Handler) CreateGloMeeting(c *gin.Context) {
+	role := c.GetString("role")
+	if role != "teacher" && role != "coordinator" && role != "coordinatore_classe" && role != "referente_inclusione" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: solo docenti autorizzati o amministratori possono redigere verbali GLO"})
+		return
+	}
+
+	var req CreateGloMeetingRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	schoolID := c.GetString("school_id")
+	meeting, err := h.svc.CreateGloMeeting(c.Request.Context(), schoolID, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, meeting)
+}
+
+func (h *Handler) GetGloMeeting(c *gin.Context) {
+	id := c.Param("id")
+	meeting, err := h.svc.GetGloMeeting(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "verbale GLO non trovato"})
+		return
+	}
+	c.JSON(http.StatusOK, meeting)
+}
+
+func (h *Handler) ListGloMeetings(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	studentID := c.Query("student_id")
+
+	list, err := h.svc.ListGloMeetings(c.Request.Context(), schoolID, studentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if list == nil {
+		list = []SupportGloMeeting{}
+	}
+	c.JSON(http.StatusOK, list)
+}
+
+func (h *Handler) SignGloMeeting(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	var req SignGloMeetingRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	memberName := c.GetString("user_name")
+	if memberName == "" {
+		memberName = "Membro GLO"
+	}
+
+	sig, err := h.svc.SignGloMeeting(c.Request.Context(), userID, memberName, req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, sig)
+}
+
+func (h *Handler) SaveSupportHours(c *gin.Context) {
+	role := c.GetString("role")
+	if role != "teacher" && role != "coordinator" && role != "coordinatore_classe" && role != "referente_inclusione" && role != "admin" && role != "superadmin" && role != "principal" && role != "vice_principal" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+		return
+	}
+
+	var req SaveSupportHoursRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	schoolID := c.GetString("school_id")
+	hQuant, err := h.svc.SaveSupportHours(c.Request.Context(), schoolID, req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, hQuant)
+}
+
+func (h *Handler) GetSupportHours(c *gin.Context) {
+	schoolID := c.GetString("school_id")
+	studentID := c.Query("student_id")
+	schoolYear := c.Query("school_year")
+	peiStage := c.Query("pei_stage")
+
+	if studentID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "student_id is required"})
+		return
+	}
+
+	res, err := h.svc.GetSupportHours(c.Request.Context(), schoolID, studentID, schoolYear, peiStage)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "fabbisogno orario non trovato"})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
 }

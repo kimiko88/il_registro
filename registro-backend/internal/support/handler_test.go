@@ -75,6 +75,30 @@ func (m *mockSupportService) GetUserRepo() users.Repository {
 	return nil
 }
 
+func (m *mockSupportService) CreateGloMeeting(ctx context.Context, schoolID string, req CreateGloMeetingRequest) (*SupportGloMeeting, error) {
+	return &SupportGloMeeting{ID: "glo-1", SchoolID: schoolID, StudentID: req.StudentID, Status: "IN_FIRMA"}, nil
+}
+
+func (m *mockSupportService) GetGloMeeting(ctx context.Context, id string) (*SupportGloMeeting, error) {
+	return &SupportGloMeeting{ID: id, Status: "IN_FIRMA"}, nil
+}
+
+func (m *mockSupportService) ListGloMeetings(ctx context.Context, schoolID, studentID string) ([]SupportGloMeeting, error) {
+	return []SupportGloMeeting{{ID: "glo-1", SchoolID: schoolID, StudentID: studentID}}, nil
+}
+
+func (m *mockSupportService) SignGloMeeting(ctx context.Context, memberID, memberName string, req SignGloMeetingRequest) (*GloSignature, error) {
+	return &GloSignature{ID: "sig-1", MeetingID: req.MeetingID, Status: "SIGNED"}, nil
+}
+
+func (m *mockSupportService) SaveSupportHours(ctx context.Context, schoolID string, req SaveSupportHoursRequest) (*SupportHoursQuantification, error) {
+	return &SupportHoursQuantification{ID: "sh-1", SchoolID: schoolID, StudentID: req.StudentID, WeeklySupportHoursRequested: req.WeeklySupportHoursRequested}, nil
+}
+
+func (m *mockSupportService) GetSupportHours(ctx context.Context, schoolID, studentID, schoolYear, peiStage string) (*SupportHoursQuantification, error) {
+	return &SupportHoursQuantification{ID: "sh-1", SchoolID: schoolID, StudentID: studentID, WeeklySupportHoursRequested: 18.0}, nil
+}
+
 func setupSupportRouter(svc Service, role string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
@@ -152,5 +176,50 @@ func TestSupportHandler_PeiGoals(t *testing.T) {
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 ok, got %d", w.Code)
+	}
+
+	// Create GLO Meeting
+	gloBody, _ := json.Marshal(CreateGloMeetingRequest{
+		StudentID:         "stu-1",
+		MeetingDate:       "2026-10-15",
+		MeetingType:       "INIZIALE",
+		DiscussionSummary: "Sintesi GLO",
+	})
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, "/api/v1/support/glo-meetings", bytes.NewBuffer(gloBody))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201 created, got %d", w.Code)
+	}
+
+	// Sign GLO Meeting
+	sigBody, _ := json.Marshal(SignGloMeetingRequest{
+		MeetingID:     "glo-1",
+		MemberRole:    "GENITORE",
+		SignatureType: "SPID_OTP",
+	})
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, "/api/v1/support/glo-meetings/sign", bytes.NewBuffer(sigBody))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 ok for signing, got %d", w.Code)
+	}
+
+	// Save Support Hours
+	hoursBody, _ := json.Marshal(SaveSupportHoursRequest{
+		StudentID:                   "stu-1",
+		SchoolYear:                  "2025/2026",
+		PeiStage:                    "DEFINITIVO",
+		WeeklySupportHoursRequested: 18.0,
+		AssistantHoursRequested:     10.0,
+	})
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, "/api/v1/support/hours", bytes.NewBuffer(hoursBody))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 ok for hours, got %d", w.Code)
 	}
 }

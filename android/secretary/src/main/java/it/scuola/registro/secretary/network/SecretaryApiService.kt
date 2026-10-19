@@ -60,7 +60,7 @@ class HttpSecretaryApiService(
                     if (role !in allowedRoles) {
                         Result.failure(Exception("Accesso non consentito: questo account non ha i permessi di segreteria o amministrazione."))
                     } else {
-                        val token = json.optString("token", json.optString("access_token"))
+                        val token = json.optString("access_token", json.optString("token"))
                         val profile = userObj?.let {
                             UserProfile(
                                 id = it.optString("id"),

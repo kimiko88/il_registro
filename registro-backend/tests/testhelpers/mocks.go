@@ -44,6 +44,13 @@ func (m *MockAuthRepository) GetUserByEmail(ctx context.Context, email string) (
 	}
 	return args.Get(0).(*auth.User), args.Error(1)
 }
+func (m *MockAuthRepository) GetUserByFiscalCode(ctx context.Context, fiscalCode string) (*auth.User, error) {
+	args := m.Called(ctx, fiscalCode)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*auth.User), args.Error(1)
+}
 func (m *MockAuthRepository) GetUserByID(ctx context.Context, id string) (*auth.User, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {

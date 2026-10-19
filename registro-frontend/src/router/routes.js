@@ -98,6 +98,11 @@ export default [
                 redirect: '/secretary/classes',
                 meta: { title: 'Gestione Classi', titleKey: 'routeTitles.classes', roles: ['superadmin', 'admin'] }
             },
+            {
+                path: 'admin/invalsi',
+                component: () => import('@/pages/admin/InvalsiAnalytics.vue'),
+                meta: { title: 'Analisi Prove INVALSI', titleKey: 'competenciesDM14.invalsiTitle', roles: ['superadmin', 'admin', 'principal', 'vice_principal', 'coordinator'] }
+            },
 
             // Secretary Routes
             { path: 'secretary', component: () => import('@/pages/secretary/Index.vue'), meta: { title: 'Pannello Segreteria', titleKey: 'routeTitles.secretaryPanel', roles: ['secretary', 'principal', 'vice_principal'] } },
@@ -130,6 +135,8 @@ export default [
             { path: 'admin/election-scrutiny', component: () => import('@/pages/admin/ElectionScrutiny.vue'), meta: { title: 'Scrutinio Elezioni', titleKey: 'routeTitles.auditLogs', roles: ['superadmin', 'admin', 'principal', 'vice_principal'] } },
             { path: 'secretary/audit-logs', redirect: '/admin/audit-logs' },
             { path: 'secretary/audit-log', redirect: '/admin/audit-logs' },
+            { path: 'secretary/health-safety', component: () => import('@/pages/secretary/HealthSafety.vue'), meta: { title: 'Sanità Scolastica & Registro Infortuni INAIL', titleKey: 'healthSafety.title', roles: ['secretary', 'principal', 'vice_principal', 'dsga', 'admin', 'superadmin', 'assistente_amministrativo', 'collaboratore_ds'] } },
+            { path: 'secretary/pnrr', component: () => import('@/pages/secretary/PnrrProjects.vue'), meta: { title: 'Monitoraggio Progetti PNRR & Piattaforma Futura', titleKey: 'pnrrProjects.title', roles: ['secretary', 'principal', 'vice_principal', 'dsga', 'admin', 'superadmin', 'assistente_amministrativo'] } },
 
             // ATA Routes & Staff Attendance (Presenze ATA e Docenti)
             { path: 'ata', component: () => import('@/pages/ata/Index.vue'), meta: { title: 'Pannello ATA', titleKey: 'routeTitles.ataPanel', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
@@ -140,6 +147,7 @@ export default [
             { path: 'ata/strike', component: () => import('@/pages/ata/StrikeManagement.vue'), meta: { title: 'Rilevazione Preventiva Scioperi', titleKey: 'routeTitles.strikeManagement', roles: ['dsga', 'principal', 'vice_principal', 'admin', 'superadmin', 'collaboratore_ds', 'assistente_amministrativo', 'assistente_personale', 'secretary'] } },
             { path: 'ata/personnel-desk', component: () => import('@/pages/ata/PersonnelDesk.vue'), meta: { title: 'Sportello Digitale Personale', titleKey: 'routeTitles.personnelDesk', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'teacher', 'coordinator', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
             { path: 'ata/settings', component: () => import('@/pages/ata/Settings.vue'), meta: { title: 'Impostazioni Profilo', titleKey: 'routeTitles.settings', roles: ['dsga', 'assistente_amministrativo', 'collaboratore_ds', 'collaboratore_scolastico', 'assistente_alunni', 'assistente_personale', 'assistente_contabilita', 'assistente_protocollo', 'assistente_sportello', 'assistente_tecnico', 'responsabile_servizio', 'responsabile_gestione_documentale', 'responsabile_conservazione', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
+            { path: 'ata/hall-monitor', component: () => import('@/pages/ata/HallMonitor.vue'), meta: { title: 'Tabellone Pass Uscita Aule', titleKey: 'securityPasses.title', roles: ['dsga', 'collaboratore_scolastico', 'assistente_alunni', 'collaboratore_ds', 'assistente_amministrativo', 'principal', 'vice_principal', 'secretary', 'admin', 'superadmin'] } },
 
             // Teacher Routes (Supports 'teacher', 'coordinator', and 'vice_principal')
             { path: 'teacher', component: () => import('@/pages/teacher/Index.vue'), meta: { title: 'Pannello Docente', titleKey: 'routeTitles.teacherPanel', roles: ['teacher', 'coordinator', 'vice_principal'] } },
@@ -177,6 +185,11 @@ export default [
             { path: 'teacher/may15', component: () => import('@/pages/teacher/May15Document.vue'), meta: { title: 'Documento del 15 Maggio', titleKey: 'may15.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
             { path: 'teacher/middle-school-exam', component: () => import('@/pages/teacher/MiddleSchoolExam.vue'), meta: { title: 'Esame di Stato I Ciclo (Terza Media)', titleKey: 'routeTitles.scrutiny', roles: ['teacher', 'coordinator', 'vice_principal', 'principal'] } },
             { path: 'teacher/help-desk', component: () => import('@/pages/teacher/HelpDeskManagement.vue'), meta: { title: 'Sportello Help & FIS', titleKey: 'routeTitles.recovery', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/hours', component: () => import('@/pages/teacher/TeacherHourObligations.vue'), meta: { title: 'Monte Ore Docenti (Art. 29 CCNL)', titleKey: 'teacherHours.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/competencies-dm14', component: () => import('@/pages/teacher/CompetenciesDM14.vue'), meta: { title: 'Certificazione Competenze D.M. 14/2024', titleKey: 'competenciesDM14.title', roles: ['teacher', 'coordinator', 'vice_principal', 'principal'] } },
+            { path: 'teacher/hall-passes', component: () => import('@/pages/teacher/HallPasses.vue'), meta: { title: 'Pass Digitale Fuori Classe', titleKey: 'securityPasses.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/homework-correction', component: () => import('@/pages/teacher/HomeworkCorrection.vue'), meta: { title: 'Correzione Compiti Canvas', titleKey: 'homeworkSubmissions.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
+            { path: 'teacher/infanzia', component: () => import('@/pages/teacher/InfanziaRegister.vue'), meta: { title: 'Registro Scuola dell\'Infanzia', titleKey: 'infanzia.title', roles: ['teacher', 'coordinator', 'vice_principal'] } },
 
             // Student Routes
             { path: 'student', component: () => import('@/pages/student/Index.vue'), meta: { title: 'Pannello Studente', titleKey: 'routeTitles.studentPanel', roles: ['student'] } },
@@ -200,6 +213,7 @@ export default [
             { path: 'student/help-desk', component: () => import('@/pages/student/HelpDeskBooking.vue'), meta: { title: 'Prenota Sportello Help', titleKey: 'routeTitles.recovery', roles: ['student'] } },
             { path: 'student/psychology', component: () => import('@/pages/student/PsychologyDesk.vue'), meta: { title: 'Sportello d\'Ascolto (CIC)', titleKey: 'routeTitles.psychology', roles: ['student'] } },
             { path: 'student/canteen', component: () => import('@/pages/student/Canteen.vue'), meta: { title: 'Mensa Scolastica', titleKey: 'routeTitles.canteen', roles: ['student'] } },
+            { path: 'student/homework-submissions', component: () => import('@/pages/student/HomeworkSubmissions.vue'), meta: { title: 'Consegna Elaborati & Compiti', titleKey: 'homeworkSubmissions.title', roles: ['student'] } },
             { path: 'elections/vote/:id?', component: () => import('@/pages/elections/VotingBooth.vue'), meta: { title: 'Cabina Elettorale Digitale', roles: ['student', 'parent', 'teacher', 'admin', 'secretary', 'superadmin'] } },
 
             // Parent Routes
@@ -225,6 +239,8 @@ export default [
             { path: 'parent/psychology', component: () => import('@/pages/parent/PsychologyConsent.vue'), meta: { title: 'Sportello Psicologico (CIC)', titleKey: 'routeTitles.psychology', roles: ['parent'] } },
             { path: 'parent/canteen', component: () => import('@/pages/parent/CanteenWallet.vue'), meta: { title: 'Borsellino Mensa & Pasti', titleKey: 'routeTitles.canteen', roles: ['parent'] } },
             { path: 'parent/settings', component: () => import('@/pages/parent/Settings.vue'), meta: { title: 'Impostazioni Genitore', titleKey: 'routeTitles.settings', roles: ['parent'] } },
+            { path: 'parent/delegates', component: () => import('@/pages/parent/Delegates.vue'), meta: { title: 'Deleghe Ritiro & Affido Minori', titleKey: 'securityPasses.title', roles: ['parent'] } },
+            { path: 'parent/infanzia', component: () => import('@/pages/parent/InfanziaDiario.vue'), meta: { title: 'Diario di Bordo Infanzia', titleKey: 'infanzia.title', roles: ['parent'] } },
 
             {
                 path: 'communications',

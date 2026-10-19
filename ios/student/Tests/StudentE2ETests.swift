@@ -23,11 +23,11 @@ final class StudentE2ETests: XCTestCase {
         let emailField = app.textFields["Email Studente"]
         if emailField.exists {
             emailField.tap()
-            emailField.typeText("mario@scuola.it")
+            emailField.typeText("studente2b_10@scuola.it")
 
             let passwordField = app.secureTextFields["Password"]
             passwordField.tap()
-            passwordField.typeText("password123")
+            passwordField.typeText("password")
 
             let loginButton = app.buttons["ACCEDI"]
             loginButton.tap()

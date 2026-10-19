@@ -353,6 +353,15 @@ DECLARE
 BEGIN
     FOREACH tbl IN ARRAY tables LOOP
         EXECUTE format('DROP POLICY IF EXISTS %I ON %I;', tbl || '_policy', tbl);
-        EXECUTE format('CREATE POLICY %I ON %I FOR ALL USING (true) WITH CHECK (true);', tbl || '_policy', tbl);
+        EXECUTE format('DROP POLICY IF EXISTS %I ON %I;', tbl || '_select_policy', tbl);
+        EXECUTE format('DROP POLICY IF EXISTS %I ON %I;', tbl || '_service_policy', tbl);
+
+        IF tbl IN ('albo_pretorio_items', 'interpelli_notices') THEN
+            EXECUTE format('CREATE POLICY %I ON %I FOR SELECT TO anon, authenticated, service_role USING (true);', tbl || '_select_policy', tbl);
+        ELSE
+            EXECUTE format('CREATE POLICY %I ON %I FOR SELECT TO authenticated, service_role USING (true);', tbl || '_select_policy', tbl);
+        END IF;
+
+        EXECUTE format('CREATE POLICY %I ON %I FOR ALL TO service_role USING (true) WITH CHECK (true);', tbl || '_service_policy', tbl);
     END LOOP;
 END $$;

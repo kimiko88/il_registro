@@ -14,6 +14,7 @@ import (
 	"registro-backend/pkg/jwt"
 	"registro-backend/pkg/logger"
 
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -274,6 +275,114 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 			EmailVerified: user.EmailVerified,
 			MFAEnabled:    user.MFAEnabled,
 			BadgeCode:     user.BadgeCode,
+			Assignments:   user.Assignments,
+		},
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresIn:    s.tokenManager.GetAccessTokenTTL(),
+	}, nil
+}
+
+// AuthenticateFederatedUser signs in or provisions a user authenticated via SPID or CIE.
+func (s *Service) AuthenticateFederatedUser(ctx context.Context, fiscalCode, email, firstName, lastName, provider, ipAddress, userAgent string) (*AuthResponse, error) {
+	fiscalCode = strings.ToUpper(strings.TrimSpace(fiscalCode))
+	email = normalizeEmail(email)
+
+	if fiscalCode == "" && email == "" {
+		return nil, errors.New("codice fiscale o email obbligatorio per autenticazione federata")
+	}
+
+	var user *User
+	var err error
+
+	if fiscalCode != "" {
+		user, err = s.repo.GetUserByFiscalCode(ctx, fiscalCode)
+	}
+	if (user == nil || err != nil) && email != "" {
+		user, err = s.repo.GetUserByEmail(ctx, email)
+	}
+
+	// If user still not found, provision as parent account
+	if user == nil || err != nil {
+		if firstName == "" {
+			firstName = "Utente"
+		}
+		if lastName == "" {
+			lastName = provider
+		}
+		if email == "" {
+			email = strings.ToLower(fiscalCode) + "@spid.italia.it"
+		}
+
+		user = &User{
+			ID:            uuid.New().String(),
+			Email:         email,
+			FirstName:     firstName,
+			LastName:      lastName,
+			Role:          "parent",
+			IsActive:      true,
+			EmailVerified: true,
+			CreatedAt:     time.Now(),
+			UpdatedAt:     time.Now(),
+		}
+		if fiscalCode != "" {
+			user.FiscalCode = &fiscalCode
+		}
+		if err := s.repo.CreateUser(ctx, user); err != nil {
+			return nil, fmt.Errorf("failed to auto-provision %s user: %w", provider, err)
+		}
+	} else {
+		if !user.IsActive {
+			return nil, ErrUserInactive
+		}
+		if user.FiscalCode == nil && fiscalCode != "" {
+			user.FiscalCode = &fiscalCode
+			_ = s.repo.UpdateUser(ctx, user)
+		}
+	}
+
+	// Generate JWT tokens
+	schoolID := ""
+	if user.SchoolID != nil {
+		schoolID = *user.SchoolID
+	}
+	accessToken, err := s.tokenManager.GenerateAccessToken(user.ID, user.Email, user.Role, schoolID)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := s.tokenManager.GenerateRefreshToken(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	userAgent = sanitizeUserAgent(userAgent)
+	rt := &RefreshToken{
+		UserID:    user.ID,
+		Token:     refreshToken,
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
+		IPAddress: ipAddress,
+		UserAgent: userAgent,
+	}
+	if err := s.repo.CreateRefreshToken(ctx, rt); err != nil {
+		return nil, err
+	}
+
+	_ = s.repo.UpdateLastLogin(ctx, user.ID)
+
+	return &AuthResponse{
+		User: &UserResponse{
+			ID:            user.ID,
+			Email:         user.Email,
+			FirstName:     user.FirstName,
+			LastName:      user.LastName,
+			Role:          user.Role,
+			SchoolID:      user.SchoolID,
+			IsStaff:       user.IsStaff,
+			EmailVerified: user.EmailVerified,
+			MFAEnabled:    user.MFAEnabled,
+			BadgeCode:     user.BadgeCode,
+			FiscalCode:    user.FiscalCode,
 			Assignments:   user.Assignments,
 		},
 		AccessToken:  accessToken,

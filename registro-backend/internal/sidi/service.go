@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -14,6 +15,8 @@ type Service interface {
 	SyncStudentCodes(ctx context.Context, schoolID string, students []StudenteSIDI) (*SyncSidiCodesResponse, error)
 	PushScrutinyResults(ctx context.Context, schoolID string, req PushScrutinyResultsRequest) (*PushScrutinyResultsResponse, error)
 	GetCooperationConfig(ctx context.Context, schoolID string) (*SidiCooperationConfig, error)
+	GeneratePositional(ctx context.Context, schoolID, createdBy string, req PositionalExportRequest) (*PositionalExportResponse, string, error)
+	GetPositionalTemplates() map[string]interface{}
 }
 
 type service struct {
@@ -188,4 +191,269 @@ func (s *service) GetCooperationConfig(ctx context.Context, schoolID string) (*S
 		CertificatoPostazione: "POSTAZIONE-CERT-MIUR-ACTIVE",
 		Environment:           "PRODUZIONE",
 	}, nil
+}
+
+func (s *service) GetPositionalTemplates() map[string]interface{} {
+	return map[string]interface{}{
+		"ESITI": map[string]interface{}{
+			"filename":    "ESITI.TXT",
+			"line_length": RecordLenEsiti,
+			"description": "Flusso ministeriale esiti scrutini finali di giugno o recupero debiti di settembre",
+			"sample": EsitoPosizionaleRecord{
+				CodiceScuola:     "RMIS09900B",
+				AnnoScolastico:   "202526",
+				CodiceFiscale:    "RSSMRA08A01H501Z",
+				CodiceSIDI:       "SIDI1049281 ",
+				ClasseSezione:    "3A   ",
+				Sessione:         "GIU",
+				Esito:            "A",
+				Crediti:          11,
+				DebitiAssegnati:  0,
+				DebitiRecuperati: "S",
+				MediaVoti:        "0780",
+				Note:             "AMMESSO ALLA CLASSE SUCCESSIVA SENZA DEBITI",
+			},
+		},
+		"PAGELLE": map[string]interface{}{
+			"filename":    "PAGELLE.TXT",
+			"line_length": RecordLenPagelle,
+			"description": "Flusso ministeriale voti per materia, condotta e ore di assenza",
+			"sample": PagellaPosizionaleRecord{
+				CodiceScuola:   "RMIS09900B",
+				AnnoScolastico: "202526",
+				Periodo:        "2Q",
+				CodiceFiscale:  "RSSMRA08A01H501Z",
+				CodiceMateria:  "MAT   ",
+				Voto:           "080",
+				Condotta:       "09",
+				AssenzeOre:     12,
+				Giudizio:       "OTTIMO LIVELLO      ",
+				Note:           "CONSEGUIMENTO OBIETTIVI         ",
+			},
+		},
+		"ANS": map[string]interface{}{
+			"filename":    "ANS.TXT",
+			"line_length": RecordLenANS,
+			"description": "Anagrafe Nazionale Studenti - tracciato posizionale anagrafico MIM",
+			"sample": ANSPosizionaleRecord{
+				CodiceScuola:    "RMIS09900B",
+				AnnoScolastico:  "202526",
+				CodiceFiscale:   "RSSMRA08A01H501Z",
+				CodiceSIDI:      "SIDI1049281 ",
+				Cognome:         "ROSSI",
+				Nome:            "MARIO",
+				Sesso:           "M",
+				DataNascita:     "20080115",
+				ComuneNascita:   "H501",
+				Cittadinanza:    "ITA",
+				ClasseSezione:   "3A   ",
+				IndirizzoStudi:  "LI01  ",
+				StatoIscrizione: "ATT",
+				Filler:          "",
+			},
+		},
+		"PASSWEB": map[string]interface{}{
+			"filename":    "PASSWEB_INPS.TXT",
+			"line_length": RecordLenPassWeb,
+			"description": "Nuova PassWeb INPS - Flusso posizionale stato di servizio, TFS/TFR e pensioni",
+			"sample": PassWebPosizionaleRecord{
+				CodiceFiscale:         "RSSMRA75C12H501W",
+				CodiceScuola:          "RMIS09900B",
+				Profilo:               "DOCENTE   ",
+				TipoContratto:         "TI",
+				DataInizio:            "20100901",
+				DataFine:              "20260831",
+				RegimePrev:            "TFR       ",
+				RetribuzioneLordaCent: 3250000,
+				RetribuzioneTabellare: 2800000,
+				GiorniUtili:           365,
+				CausaCessazione:       "IN_SERVIZIO     ",
+				Filler:                "",
+			},
+		},
+	}
+}
+
+func (s *service) GeneratePositional(ctx context.Context, schoolID, createdBy string, req PositionalExportRequest) (*PositionalExportResponse, string, error) {
+	if req.SchoolYear == "" {
+		req.SchoolYear = "2025/2026"
+	}
+
+	var content string
+	var errs []string
+	var fileName string
+	var lineLen int
+	var totalLines int
+
+	switch req.Type {
+	case PositionalTypeEsiti:
+		fileName = "ESITI.TXT"
+		lineLen = RecordLenEsiti
+		records := req.Esiti
+		if len(records) == 0 {
+			records = []EsitoPosizionaleRecord{
+				{
+					CodiceScuola:     "RMIS09900B",
+					AnnoScolastico:   "202526",
+					CodiceFiscale:    "RSSMRA08A01H501Z",
+					CodiceSIDI:       "SIDI1049281",
+					ClasseSezione:    "3A",
+					Sessione:         "GIU",
+					Esito:            "A",
+					Crediti:          11,
+					DebitiAssegnati:  0,
+					DebitiRecuperati: "S",
+					MediaVoti:        "0780",
+					Note:             "AMMESSO",
+				},
+				{
+					CodiceScuola:     "RMIS09900B",
+					AnnoScolastico:   "202526",
+					CodiceFiscale:    "BNCGLI08B41H501A",
+					CodiceSIDI:       "SIDI1049282",
+					ClasseSezione:    "3A",
+					Sessione:         "GIU",
+					Esito:            "S",
+					Crediti:          0,
+					DebitiAssegnati:  2,
+					DebitiRecuperati: "N",
+					MediaVoti:        "0580",
+					Note:             "SOSPESO GIUDIZIO RECUPERO MATEMATICA E FISICA",
+				},
+			}
+		}
+		totalLines = len(records)
+		content, errs = BuildEsitiTXT(records)
+
+	case PositionalTypePagelle:
+		fileName = "PAGELLE.TXT"
+		lineLen = RecordLenPagelle
+		records := req.Pagelle
+		if len(records) == 0 {
+			records = []PagellaPosizionaleRecord{
+				{
+					CodiceScuola:   "RMIS09900B",
+					AnnoScolastico: "202526",
+					Periodo:        "2Q",
+					CodiceFiscale:  "RSSMRA08A01H501Z",
+					CodiceMateria:  "MAT",
+					Voto:           "080",
+					Condotta:       "09",
+					AssenzeOre:     6,
+					Giudizio:       "OTTIMO",
+					Note:           "PARTECIPAZIONE ATTIVA",
+				},
+				{
+					CodiceScuola:   "RMIS09900B",
+					AnnoScolastico: "202526",
+					Periodo:        "2Q",
+					CodiceFiscale:  "RSSMRA08A01H501Z",
+					CodiceMateria:  "ITA",
+					Voto:           "075",
+					Condotta:       "09",
+					AssenzeOre:     4,
+					Giudizio:       "BUONO",
+					Note:           "COMPETENZE CONSOLIDATE",
+				},
+			}
+		}
+		totalLines = len(records)
+		content, errs = BuildPagelleTXT(records)
+
+	case PositionalTypeANS:
+		fileName = "ANS.TXT"
+		lineLen = RecordLenANS
+		records := req.ANS
+		if len(records) == 0 {
+			records = []ANSPosizionaleRecord{
+				{
+					CodiceScuola:    "RMIS09900B",
+					AnnoScolastico:  "202526",
+					CodiceFiscale:   "RSSMRA08A01H501Z",
+					CodiceSIDI:      "SIDI1049281",
+					Cognome:         "ROSSI",
+					Nome:            "MARIO",
+					Sesso:           "M",
+					DataNascita:     "20080115",
+					ComuneNascita:   "H501",
+					Cittadinanza:    "ITA",
+					ClasseSezione:   "3A",
+					IndirizzoStudi:  "LI01",
+					StatoIscrizione: "ATT",
+				},
+				{
+					CodiceScuola:    "RMIS09900B",
+					AnnoScolastico:  "202526",
+					CodiceFiscale:   "BNCGLI08B41H501A",
+					CodiceSIDI:      "SIDI1049282",
+					Cognome:         "BIANCHI",
+					Nome:            "GIULIA",
+					Sesso:           "F",
+					DataNascita:     "20080220",
+					ComuneNascita:   "H501",
+					Cittadinanza:    "ITA",
+					ClasseSezione:   "3A",
+					IndirizzoStudi:  "LI01",
+					StatoIscrizione: "ATT",
+				},
+			}
+		}
+		totalLines = len(records)
+		content, errs = BuildANSTXT(records)
+
+	case PositionalTypePassWeb:
+		fileName = "PASSWEB_INPS.TXT"
+		lineLen = RecordLenPassWeb
+		records := req.PassWeb
+		if len(records) == 0 {
+			records = []PassWebPosizionaleRecord{
+				{
+					CodiceFiscale:         "RSSMRA75C12H501W",
+					CodiceScuola:          "RMIS09900B",
+					Profilo:               "DOCENTE",
+					TipoContratto:         "TI",
+					DataInizio:            "20100901",
+					DataFine:              "20260831",
+					RegimePrev:            "TFR",
+					RetribuzioneLordaCent: 3250000,
+					RetribuzioneTabellare: 2800000,
+					GiorniUtili:           365,
+					CausaCessazione:       "IN_SERVIZIO",
+				},
+			}
+		}
+		totalLines = len(records)
+		content, errs = BuildPassWebTXT(records)
+
+	default:
+		return nil, "", fmt.Errorf("tipo tracciato posizionale non supportato: %s (supportati: ESITI, PAGELLE, ANS, PASSWEB)", req.Type)
+	}
+
+	recordID := fmt.Sprintf("pos-%s-%d", strings.ToLower(req.Type), time.Now().Unix())
+	if s.db != nil {
+		query := `
+			INSERT INTO sidi_exports (school_id, export_type, school_year, file_name, status, records_count, xml_content, created_by)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			RETURNING id`
+		_ = s.db.QueryRowContext(ctx, query, schoolID, "POSIZIONALE_"+req.Type, req.SchoolYear, fileName, "VALIDATED", totalLines, content, createdBy).Scan(&recordID)
+	}
+
+	previewLen := 300
+	if len(content) < previewLen {
+		previewLen = len(content)
+	}
+
+	resp := &PositionalExportResponse{
+		ID:             recordID,
+		Type:           req.Type,
+		FileName:       fileName,
+		TotalLines:     totalLines,
+		LineLength:     lineLen,
+		ValidationOK:   len(errs) == 0,
+		Errors:         errs,
+		ContentPreview: content[:previewLen],
+		CreatedAt:      time.Now(),
+	}
+
+	return resp, content, nil
 }

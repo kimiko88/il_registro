@@ -27,6 +27,7 @@ import (
 	"registro-backend/internal/colloqui"
 	"registro-backend/internal/communications"
 	"registro-backend/internal/competencies"
+	"registro-backend/internal/competencies_invalsi"
 	"registro-backend/internal/config"
 	"registro-backend/internal/credits"
 	"registro-backend/internal/db"
@@ -41,7 +42,10 @@ import (
 	"registro-backend/internal/grades"
 	"registro-backend/internal/groups"
 	"registro-backend/internal/handler"
+	"registro-backend/internal/health_safety"
 	"registro-backend/internal/helpdesk"
+	"registro-backend/internal/homework_submissions"
+	"registro-backend/internal/infanzia"
 	"registro-backend/internal/interpelli"
 	"registro-backend/internal/inventory"
 	"registro-backend/internal/lessons"
@@ -61,6 +65,7 @@ import (
 	"registro-backend/internal/pdfworker"
 	"registro-backend/internal/pdp"
 	"registro-backend/internal/personnel_desk"
+	"registro-backend/internal/pnrr_projects"
 	"registro-backend/internal/postgres"
 	"registro-backend/internal/primaryeval"
 	"registro-backend/internal/privacy"
@@ -77,6 +82,7 @@ import (
 	"registro-backend/internal/schoolsettings"
 	"registro-backend/internal/scrutiny"
 	"registro-backend/internal/search"
+	"registro-backend/internal/security_passes"
 	"registro-backend/internal/sidi"
 	"registro-backend/internal/signatures"
 	"registro-backend/internal/staff_attendance"
@@ -87,6 +93,7 @@ import (
 	"registro-backend/internal/substitutions"
 	"registro-backend/internal/support"
 	"registro-backend/internal/teacher_activities"
+	"registro-backend/internal/teacher_hours"
 	"registro-backend/internal/teachers"
 	"registro-backend/internal/tenants"
 	"registro-backend/internal/textbooks"
@@ -746,6 +753,42 @@ func main() {
 			inventoryH.RegisterRoutes(protected)
 			privacyH.RegisterRoutes(protected)
 			psychologyH.RegisterRoutes(protected)
+
+			// Expansion Pack: Art. 29 CCNL 40+40h, Sanità/Infortuni, DM 14/2024 & INVALSI, Pass Fuori Classe, Compiti Canvas, PNRR Futura, Infanzia
+			teacherHoursRepo := teacher_hours.NewRepository(database)
+			teacherHoursSvc := teacher_hours.NewService(teacherHoursRepo)
+			teacherHoursH := teacher_hours.NewHandler(teacherHoursSvc)
+			teacherHoursH.RegisterRoutes(protected)
+
+			healthSafetyRepo := health_safety.NewRepository(database)
+			healthSafetySvc := health_safety.NewService(healthSafetyRepo)
+			healthSafetyH := health_safety.NewHandler(healthSafetySvc)
+			healthSafetyH.RegisterRoutes(protected)
+
+			compInvalsiRepo := competencies_invalsi.NewRepository(database)
+			compInvalsiSvc := competencies_invalsi.NewService(compInvalsiRepo)
+			compInvalsiH := competencies_invalsi.NewHandler(compInvalsiSvc)
+			compInvalsiH.RegisterRoutes(protected)
+
+			secPassesRepo := security_passes.NewRepository(database)
+			secPassesSvc := security_passes.NewService(secPassesRepo)
+			secPassesH := security_passes.NewHandler(secPassesSvc)
+			secPassesH.RegisterRoutes(protected)
+
+			hwSubmissionsRepo := homework_submissions.NewRepository(database)
+			hwSubmissionsSvc := homework_submissions.NewService(hwSubmissionsRepo)
+			hwSubmissionsH := homework_submissions.NewHandler(hwSubmissionsSvc)
+			hwSubmissionsH.RegisterRoutes(protected)
+
+			pnrrRepo := pnrr_projects.NewRepository(database)
+			pnrrSvc := pnrr_projects.NewService(pnrrRepo)
+			pnrrH := pnrr_projects.NewHandler(pnrrSvc)
+			pnrrH.RegisterRoutes(protected)
+
+			infanziaRepo := infanzia.NewRepository(database)
+			infanziaSvc := infanzia.NewService(infanziaRepo)
+			infanziaH := infanzia.NewHandler(infanziaSvc)
+			infanziaH.RegisterRoutes(protected)
 
 			adminH.RegisterRoutes(protected, adminMiddleware)
 		}

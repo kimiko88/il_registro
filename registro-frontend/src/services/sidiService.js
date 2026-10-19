@@ -42,6 +42,21 @@ export const sidiService = {
       school_year: schoolYear,
       results
     })
+  },
+
+  // Tracciati Ufficiali Posizionali MIM / ANS / Nuova PassWeb INPS
+  getPositionalTemplates() {
+    return api.get('/sidi/positional/templates')
+  },
+  generatePositional(type, schoolYear = '2025/2026', data = {}) {
+    return api.post('/sidi/positional/generate', {
+      type,
+      school_year: schoolYear,
+      ...data
+    })
+  },
+  downloadPositional(id) {
+    return api.get(`/sidi/positional/download/${id}`, { responseType: 'blob' })
   }
 }
 

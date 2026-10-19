@@ -29,6 +29,9 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) SubmitFeedback(ctx context.Context, req *CreateFeedbackRequest, userID, schoolID, userAgent, ipAddress *string) (*FeedbackResponse, error) {
+	if req == nil {
+		return nil, errors.New("richiesta non valida")
+	}
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
 		return nil, errors.New("il nome e cognome sono obbligatori")
@@ -79,10 +82,21 @@ func (s *service) SubmitFeedback(ctx context.Context, req *CreateFeedbackRequest
 }
 
 func (s *service) ListFeedbacks(ctx context.Context, schoolID, status string, limit, offset int) ([]AccessibilityFeedback, int, error) {
+	if limit <= 0 {
+		limit = 20
+	} else if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
 	return s.repo.List(ctx, schoolID, status, limit, offset)
 }
 
 func (s *service) UpdateFeedbackStatus(ctx context.Context, id, status, responseNotes string) error {
+	if strings.TrimSpace(id) == "" {
+		return errors.New("id obbligatorio")
+	}
 	status = strings.ToLower(strings.TrimSpace(status))
 	if status != "open" && status != "in_progress" && status != "resolved" {
 		return errors.New("stato non valido (consentiti: open, in_progress, resolved)")

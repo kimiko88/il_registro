@@ -62,7 +62,7 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
                 self.lastStudentName = name
             }
 
-            if let token = json["token"] as? String ?? json["access_token"] as? String {
+            if let token = json["access_token"] as? String ?? json["token"] as? String {
                 return token
             }
         }

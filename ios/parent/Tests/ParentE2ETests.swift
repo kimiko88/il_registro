@@ -22,11 +22,11 @@ final class ParentE2ETests: XCTestCase {
         let emailField = app.textFields["Email Genitore"]
         if emailField.exists {
             emailField.tap()
-            emailField.typeText("genitore@famiglia.it")
+            emailField.typeText("genitore2b_10@scuola.it")
 
             let passwordField = app.secureTextFields["Password"]
             passwordField.tap()
-            passwordField.typeText("password123")
+            passwordField.typeText("password")
 
             let loginButton = app.buttons["ACCEDI AL PORTALE"]
             loginButton.tap()

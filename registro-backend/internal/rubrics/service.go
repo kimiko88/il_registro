@@ -75,6 +75,9 @@ func (s *Service) CreateRubric(ctx context.Context, schoolID, teacherID string, 
 }
 
 func (s *Service) GetRubric(ctx context.Context, id string) (*Rubric, error) {
+	if id == "" {
+		return nil, errors.New("rubric id required")
+	}
 	return s.repo.GetRubricByID(ctx, id)
 }
 
@@ -85,9 +88,15 @@ func (s *Service) ListRubrics(ctx context.Context, schoolID, teacherID string) (
 // UpdateRubric updates a rubric, verifying ownership or admin school membership.
 // Bug 138: admin can only update rubrics belonging to their own school.
 func (s *Service) UpdateRubric(ctx context.Context, actorID, actorRole, actorSchoolID, id string, req CreateRubricRequest) (*Rubric, error) {
+	if id == "" {
+		return nil, errors.New("rubric id required")
+	}
 	rub, err := s.repo.GetRubricByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	if rub == nil {
+		return nil, ErrRubricNotFound
 	}
 	if rub.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
 		return nil, ErrUnauthorized
@@ -110,9 +119,15 @@ func (s *Service) UpdateRubric(ctx context.Context, actorID, actorRole, actorSch
 // DeleteRubric deletes a rubric, verifying ownership or admin school membership.
 // Bug 138: admin can only delete rubrics belonging to their own school.
 func (s *Service) DeleteRubric(ctx context.Context, actorID, actorRole, actorSchoolID, id string) error {
+	if id == "" {
+		return errors.New("rubric id required")
+	}
 	rub, err := s.repo.GetRubricByID(ctx, id)
 	if err != nil {
 		return err
+	}
+	if rub == nil {
+		return ErrRubricNotFound
 	}
 	if rub.TeacherID != actorID && actorRole != "admin" && actorRole != "superadmin" && actorRole != "principal" && actorRole != "vice_principal" {
 		return ErrUnauthorized
@@ -128,6 +143,12 @@ func (s *Service) DeleteRubric(ctx context.Context, actorID, actorRole, actorSch
 // Bug 137: verifying teacher-class assignment requires a classRepo or teacherRepo dependency.
 // TODO: add IsTeacherAssignedToClass(ctx, teacherID, classID) to the Repository and call it here.
 func (s *Service) AssessStudent(ctx context.Context, teacherID, rubricID string, req CreateAssessmentRequest) (*RubricAssessment, error) {
+	if rubricID == "" {
+		return nil, errors.New("rubric_id required")
+	}
+	if req.StudentID == "" {
+		return nil, errors.New("student_id required")
+	}
 	var totalScore float64
 	for _, cs := range req.Scores {
 		if cs.Score < 0 {
@@ -165,9 +186,15 @@ func (s *Service) AssessStudent(ctx context.Context, teacherID, rubricID string,
 }
 
 func (s *Service) ListAssessmentsByStudent(ctx context.Context, studentID string) ([]*RubricAssessment, error) {
+	if studentID == "" {
+		return nil, errors.New("student_id required")
+	}
 	return s.repo.ListAssessmentsByStudent(ctx, studentID)
 }
 
 func (s *Service) ListAssessmentsByClass(ctx context.Context, classID string) ([]*RubricAssessment, error) {
+	if classID == "" {
+		return nil, errors.New("class_id required")
+	}
 	return s.repo.ListAssessmentsByClass(ctx, classID)
 }

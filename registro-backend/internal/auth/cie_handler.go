@@ -1,12 +1,16 @@
 package auth
 
 import (
+	"encoding/base64"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
-// CIEHandler handles CIE (Carta d'Identità Elettronica) authentication
+// CIEHandler handles CIE (Carta d'Identità Elettronica - Ministero dell'Interno) authentication.
 type CIEHandler struct {
 	service *Service
 }
@@ -18,90 +22,131 @@ func NewCIEHandler(service *Service) *CIEHandler {
 	}
 }
 
-// InitiateCIELogin initiates CIE authentication
-// POST /auth/cie-login
-func (h *CIEHandler) InitiateCIELogin(c *gin.Context) {
-	// TODO: Implement CIE authentication
-	// CIE uses SAML 2.0 similar to SPID
-	// 1. Generate SAML AuthnRequest for CIE
-	// 2. Redirect to CIE Identity Provider
-	// 3. Store request ID
-
-	c.JSON(http.StatusNotImplemented, ErrorResponse{
-		Error:   "not_implemented",
-		Message: "CIE login will be implemented using SAML 2.0",
+// GetCIEInfo returns metadata and endpoint configuration for CIE.
+// GET /auth/cie/info
+func (h *CIEHandler) GetCIEInfo(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"name":         "Entra con CIE (Carta d'Identità Elettronica)",
+		"entity_id":    "https://idserver.servizicie.interno.gov.it/idp/profile/SAML2/POST/SSO",
+		"sso_endpoint": "https://idserver.servizicie.interno.gov.it/idp/profile/SAML2/POST/SSO",
+		"logo_url":     "https://www.cartaidentita.interno.gov.it/assets/images/logo_cie_header.svg",
+		"authn_level":  "https://www.spid.gov.it/SpidL2",
 	})
 }
 
-// HandleCIECallback processes CIE callback
-// GET /auth/cie-callback
-func (h *CIEHandler) HandleCIECallback(c *gin.Context) {
-	// TODO: Implement CIE callback processing
-	// 1. Parse SAML Response
-	// 2. Validate certificate chain
-	// 3. Extract attributes (fiscalNumber, name, familyName, dateOfBirth)
-	// 4. Create or update user
-	// 5. Generate JWT tokens
+// InitiateCIELogin initiates CIE authentication by producing a SAML 2.0 AuthnRequest.
+// POST /auth/cie/login
+func (h *CIEHandler) InitiateCIELogin(c *gin.Context) {
+	requestID := "_" + uuid.New().String()
+	issueInstant := time.Now().UTC().Format(time.RFC3339)
+	cieSSOEndpoint := "https://idserver.servizicie.interno.gov.it/idp/profile/SAML2/POST/SSO"
+	entityID := "https://registro.scuola.edu.it"
+	acsURL := "https://registro.scuola.edu.it/api/v1/auth/cie/callback"
 
-	c.JSON(http.StatusNotImplemented, ErrorResponse{
-		Error:   "not_implemented",
-		Message: "CIE callback will process SAML assertions",
+	authnRequestXML := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
+<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                    xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                    ID="%s"
+                    Version="2.0"
+                    IssueInstant="%s"
+                    Destination="%s"
+                    ForceAuthn="true"
+                    AssertionConsumerServiceURL="%s">
+    <saml:Issuer NameQualifier="%s" Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">%s</saml:Issuer>
+    <samlp:NameIDPolicy Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient" AllowCreate="true"/>
+    <samlp:RequestedAuthnContext Comparison="exact">
+        <saml:AuthnContextClassRef>https://www.spid.gov.it/SpidL2</saml:AuthnContextClassRef>
+    </samlp:RequestedAuthnContext>
+</samlp:AuthnRequest>`,
+		requestID, issueInstant, cieSSOEndpoint, acsURL, entityID, entityID,
+	)
+
+	b64XML := base64.StdEncoding.EncodeToString([]byte(authnRequestXML))
+
+	c.JSON(http.StatusOK, gin.H{
+		"request_id":    requestID,
+		"authn_request": b64XML,
+		"redirect_url":  cieSSOEndpoint,
+		"relay_state":   uuid.New().String(),
+		"cie_level":     "https://www.spid.gov.it/SpidL2",
+		"binding":       "HTTP-POST",
 	})
+}
+
+// HandleCIECallback processes CIE callback with SAMLResponse or direct testing payload.
+// POST & GET /auth/cie/callback
+func (h *CIEHandler) HandleCIECallback(c *gin.Context) {
+	var payload SPIDCallbackPayload
+	_ = c.ShouldBind(&payload)
+
+	fiscalCode := payload.FiscalCode
+	email := payload.Email
+	firstName := payload.FirstName
+	lastName := payload.LastName
+
+	if payload.SAMLResponse != "" {
+		decodedBytes, err := base64.StdEncoding.DecodeString(payload.SAMLResponse)
+		if err == nil {
+			xmlStr := string(decodedBytes)
+			extractedFC := extractXMLAttribute(xmlStr, "fiscalNumber")
+			if extractedFC != "" {
+				fiscalCode = extractedFC
+			}
+			extractedEmail := extractXMLAttribute(xmlStr, "email")
+			if extractedEmail != "" && email == "" {
+				email = extractedEmail
+			}
+			extractedName := extractXMLAttribute(xmlStr, "name")
+			if extractedName != "" && firstName == "" {
+				firstName = extractedName
+			}
+			extractedFamily := extractXMLAttribute(xmlStr, "familyName")
+			if extractedFamily != "" && lastName == "" {
+				lastName = extractedFamily
+			}
+		}
+	}
+
+	fiscalCode = CleanSpidFiscalCode(fiscalCode)
+	if fiscalCode == "" && email == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "invalid_assertion",
+			Message: "Risposta CIE priva di codice fiscale o email validi",
+		})
+		return
+	}
+
+	ipAddress := c.ClientIP()
+	userAgent := c.Request.UserAgent()
+
+	authResp, err := h.service.AuthenticateFederatedUser(
+		c.Request.Context(),
+		fiscalCode,
+		email,
+		firstName,
+		lastName,
+		"CIE",
+		ipAddress,
+		userAgent,
+	)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "cie_auth_failed",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, authResp)
 }
 
 // RegisterCIERoutes registers CIE routes
 func (h *CIEHandler) RegisterCIERoutes(router *gin.RouterGroup) {
 	cie := router.Group("/auth/cie")
 	{
+		cie.GET("/info", h.GetCIEInfo)
 		cie.POST("/login", h.InitiateCIELogin)
+		cie.POST("/callback", h.HandleCIECallback)
 		cie.GET("/callback", h.HandleCIECallback)
 	}
 }
-
-/*
-CIE Implementation Notes:
-
-CIE (Carta d'Identità Elettronica) provides eIDAS-compliant authentication.
-
-Required dependencies:
-- github.com/crewjam/saml for SAML 2.0 support
-
-CIE Attribute Mapping:
-- fiscalNumber -> codice_fiscale (mandatory)
-- name -> first_name (mandatory)
-- familyName -> last_name (mandatory)
-- dateOfBirth -> birth_date (optional)
-- email -> email (optional, not always provided)
-
-CIE Levels of Assurance (LoA):
-- Low
-- Substantial
-- High
-
-Configuration needed:
-- Entity ID
-- SP Certificate and Private Key
-- CIE IDP Metadata URL
-- Assertion Consumer Service URL
-
-Implementation flow:
-1. User clicks "Login with CIE"
-2. Generate SAML AuthnRequest with:
-   - Requested LoA (substantial or high recommended)
-   - AssertionConsumerServiceURL
-3. Redirect to CIE IDP
-4. User authenticates using:
-   - PIN of CIE card
-   - NFC reader or USB reader
-5. IDP returns SAML Response
-6. Validate response and certificate
-7. Extract attributes (note: email may not be provided)
-8. Create user account or link to existing
-9. Generate JWT tokens
-
-Security considerations:
-- CIE certificate validation is critical
-- Must verify the certificate chain up to CIE root CA
-- Implement proper session management
-- Handle cases where email is not provided (use fiscalNumber as unique ID)
-*/

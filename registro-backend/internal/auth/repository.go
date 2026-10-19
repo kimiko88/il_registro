@@ -22,6 +22,7 @@ type Repository interface {
 	// User operations
 	CreateUser(ctx context.Context, user *User) error
 	GetUserByEmail(ctx context.Context, email string) (*User, error)
+	GetUserByFiscalCode(ctx context.Context, fiscalCode string) (*User, error)
 	GetUserByID(ctx context.Context, id string) (*User, error)
 	UpdateUser(ctx context.Context, user *User) error
 	UpdateLastLogin(ctx context.Context, userID string) error
@@ -129,6 +130,34 @@ func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, e
 	user.MFASecret = mfaSecret.String
 	user.Assignments = r.loadAssignments(ctx, user.ID)
 	user.BadgeCode = r.loadBadgeCode(ctx, user.ID)
+	return user, nil
+}
+
+func (r *repository) GetUserByFiscalCode(ctx context.Context, fiscalCode string) (*User, error) {
+	query := `
+		SELECT id, email, password_hash, first_name, last_name, role, school_id, 
+		       is_active, COALESCE(is_staff, false), email_verified, mfa_enabled, mfa_secret, created_at, updated_at, last_login, password_changed_at
+		FROM users
+		WHERE UPPER(fiscal_code) = UPPER($1) AND deleted_at IS NULL
+	`
+	user := &User{}
+	var mfaSecret sql.NullString
+	err := r.db.QueryRowContext(ctx, query, fiscalCode).Scan(
+		&user.ID, &user.Email, &user.PasswordHash, &user.FirstName, &user.LastName,
+		&user.Role, &user.SchoolID, &user.IsActive, &user.IsStaff, &user.EmailVerified,
+		&user.MFAEnabled, &mfaSecret, &user.CreatedAt, &user.UpdatedAt, &user.LastLogin, &user.PasswordChangedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, ErrUserNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	user.MFASecret = mfaSecret.String
+	user.Assignments = r.loadAssignments(ctx, user.ID)
+	user.BadgeCode = r.loadBadgeCode(ctx, user.ID)
+	fc := fiscalCode
+	user.FiscalCode = &fc
 	return user, nil
 }
 

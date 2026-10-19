@@ -61,6 +61,48 @@ func (m *MockSupportRepo) DeletePeiGoal(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
+func (m *MockSupportRepo) CreateGloMeeting(ctx context.Context, meeting *SupportGloMeeting) error {
+	args := m.Called(ctx, meeting)
+	meeting.ID = "glo-1"
+	return args.Error(0)
+}
+
+func (m *MockSupportRepo) GetGloMeeting(ctx context.Context, id string) (*SupportGloMeeting, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*SupportGloMeeting), args.Error(1)
+}
+
+func (m *MockSupportRepo) ListGloMeetings(ctx context.Context, schoolID, studentID string) ([]SupportGloMeeting, error) {
+	args := m.Called(ctx, schoolID, studentID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]SupportGloMeeting), args.Error(1)
+}
+
+func (m *MockSupportRepo) SignGloMeeting(ctx context.Context, meetingID string, sig *GloSignature) error {
+	args := m.Called(ctx, meetingID, sig)
+	sig.ID = "sig-1"
+	return args.Error(0)
+}
+
+func (m *MockSupportRepo) SaveSupportHours(ctx context.Context, h *SupportHoursQuantification) error {
+	args := m.Called(ctx, h)
+	h.ID = "sh-1"
+	return args.Error(0)
+}
+
+func (m *MockSupportRepo) GetSupportHours(ctx context.Context, schoolID, studentID, schoolYear, peiStage string) (*SupportHoursQuantification, error) {
+	args := m.Called(ctx, schoolID, studentID, schoolYear, peiStage)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*SupportHoursQuantification), args.Error(1)
+}
+
 func TestSupportService_CreateDiaryEntry(t *testing.T) {
 	repo := new(MockSupportRepo)
 	svc := NewService(repo)
@@ -173,5 +215,70 @@ func TestSupportHandler_Security(t *testing.T) {
 		h.ListPeiGoals(c)
 		assert.Equal(t, http.StatusForbidden, w.Code)
 		mockUsers.AssertExpectations(t)
+	})
+}
+
+func TestSupportService_GLO_And_SupportHours(t *testing.T) {
+	repo := new(MockSupportRepo)
+	svc := NewService(repo)
+	ctx := context.Background()
+
+	t.Run("Create and Sign GLO Meeting", func(t *testing.T) {
+		repo.On("CreateGloMeeting", ctx, mock.AnythingOfType("*support.SupportGloMeeting")).Return(nil).Once()
+
+		m, err := svc.CreateGloMeeting(ctx, "school-1", CreateGloMeetingRequest{
+			StudentID:         "student-1",
+			MeetingDate:       "2026-10-15",
+			MeetingType:       "INIZIALE",
+			SchoolYear:        "2025/2026",
+			MembersPresent:    []string{"Prof. Bianchi", "Dott.ssa NPI", "Genitore"},
+			DiscussionSummary: "Definizione degli obiettivi ICF e raccordo curriculare.",
+			DecisionsTaken:    "Approvato percorso personalizzato B.",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, "glo-1", m.ID)
+		assert.Equal(t, "IN_FIRMA", m.Status)
+
+		// Test signing the meeting
+		repo.On("GetGloMeeting", ctx, "glo-1").Return(m, nil).Once()
+		repo.On("SignGloMeeting", ctx, "glo-1", mock.AnythingOfType("*support.GloSignature")).Return(nil).Once()
+
+		sig, err := svc.SignGloMeeting(ctx, "user-parent-1", "Mario Rossi (Genitore)", SignGloMeetingRequest{
+			MeetingID:     "glo-1",
+			MemberRole:    "GENITORE",
+			SignatureType: "SPID_OTP",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, "SIGNED", sig.Status)
+		assert.Contains(t, sig.SignatureHash, "sha256:")
+	})
+
+	t.Run("Save and Get Support Hours Quantification", func(t *testing.T) {
+		repo.On("SaveSupportHours", ctx, mock.AnythingOfType("*support.SupportHoursQuantification")).Return(nil).Once()
+
+		h, err := svc.SaveSupportHours(ctx, "school-1", SaveSupportHoursRequest{
+			StudentID:                   "student-1",
+			SchoolYear:                  "2025/2026",
+			PeiStage:                    "DEFINITIVO",
+			DebtRelazione:               3,
+			DebtComunicazione:           2,
+			DebtAutonomia:               3,
+			DebtCognitiva:               2,
+			WeeklySupportHoursRequested: 18.0,
+			WeeklySupportHoursAssigned:  18.0,
+			AssistantHoursRequested:     10.0,
+			AssistantHoursAssigned:      10.0,
+			TransportationNeeded:        false,
+			PersonalCareNeeded:          true,
+			JustificationSummary:        "Allegato C D.I. 182/2020",
+		})
+		assert.NoError(t, err)
+		assert.Equal(t, "sh-1", h.ID)
+		assert.Equal(t, 18.0, h.WeeklySupportHoursRequested)
+
+		repo.On("GetSupportHours", ctx, "school-1", "student-1", "2025/2026", "DEFINITIVO").Return(h, nil).Once()
+		res, err := svc.GetSupportHours(ctx, "school-1", "student-1", "2025/2026", "DEFINITIVO")
+		assert.NoError(t, err)
+		assert.Equal(t, 10.0, res.AssistantHoursAssigned)
 	})
 }

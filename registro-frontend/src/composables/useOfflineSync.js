@@ -54,8 +54,8 @@ export function useOfflineSync() {
     async function executeWithOfflineQueue(requestConfig, options = {}) {
         const title = options.title || `${requestConfig.method?.toUpperCase() || 'POST'} ${requestConfig.url}`
 
-        // 1. If currently offline, enqueue immediately.
-        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        // 1. If currently offline or forced, enqueue immediately.
+        if ((typeof navigator !== 'undefined' && navigator.onLine === false) || options.forceEnqueue) {
             const id = await outboxStore.enqueue({
                 url: requestConfig.url,
                 method: requestConfig.method || 'post',

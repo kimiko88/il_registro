@@ -47,7 +47,7 @@ public class HttpParentAPIService: ParentAPIServiceProtocol {
             guard role == "parent" else {
                 throw NSError(domain: "ParentAPI", code: 403, userInfo: [NSLocalizedDescriptionKey: "Accesso non consentito: questo account non appartiene a un genitore."])
             }
-            if let token = json["token"] as? String ?? json["access_token"] as? String {
+            if let token = json["access_token"] as? String ?? json["token"] as? String {
                 return token
             }
         }
@@ -74,7 +74,7 @@ public class HttpParentAPIService: ParentAPIServiceProtocol {
                 id: (dict["id"] as? String) ?? "\(index)",
                 firstName: (dict["first_name"] as? String) ?? (dict["name"] as? String) ?? "Figlio",
                 lastName: (dict["last_name"] as? String) ?? "",
-                className: (dict["class_name"] as? String) ?? "Classe"
+                className: (dict["class_name"] as? String) ?? (dict["class"] as? String) ?? "Classe"
             )
         }
     }
