@@ -314,10 +314,12 @@ async function onClassChanged(classId) {
 
 async function loadStudents(classId) {
   try {
-    const res = await api.get(`/classes/${classId}/students`)
-    const raw = res.data?.students || res.data || []
+    const res = await api.get(`/classes/${classId}/students`).catch(() =>
+      api.get('/users', { params: { role: 'student', class_id: classId, page_size: 100 } })
+    )
+    const raw = res.data?.students || res.data?.users || res.data || []
     studentsInClass.value = raw.map(s => ({
-      id: s.id,
+      id: s.student_id || s.id,
       name: `${s.last_name || ''} ${s.first_name || ''}`.trim() || s.name || s.username
     }))
   } catch (err) {

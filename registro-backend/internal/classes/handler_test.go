@@ -195,3 +195,31 @@ func TestHandler_List_SuperadminAllowedWithoutSchoolID(t *testing.T) {
 	assert.Equal(t, "1A", res[0].Name)
 	mockRepo.AssertExpectations(t)
 }
+
+func TestHandler_GetClassStudents(t *testing.T) {
+	handler, mockRepo := setupClassesHandlerTest()
+	mockRepo.On("Get", mock.Anything, "class-1").Return(&Class{ID: "class-1", SchoolID: "school-1"}, nil)
+	mockRepo.On("GetClassStudents", mock.Anything, "class-1").Return([]ClassStudent{
+		{ID: "st-1", StudentID: "st-1", UserID: "u-1", FirstName: "Mario", LastName: "Rossi", Email: "mario@example.com"},
+	}, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Set("user_id", "teacher-1")
+	c.Set("role", "teacher")
+	c.Set("school_id", "school-1")
+	c.Params = gin.Params{{Key: "id", Value: "class-1"}}
+	c.Request = httptest.NewRequest("GET", "/classes/class-1/students", nil)
+
+	handler.GetClassStudents(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var res struct {
+		Students []ClassStudent `json:"students"`
+	}
+	err := json.Unmarshal(w.Body.Bytes(), &res)
+	assert.NoError(t, err)
+	assert.Len(t, res.Students, 1)
+	assert.Equal(t, "Mario", res.Students[0].FirstName)
+	mockRepo.AssertExpectations(t)
+}

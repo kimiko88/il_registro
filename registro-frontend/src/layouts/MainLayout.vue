@@ -1408,12 +1408,21 @@ watch([userRole, isTeacherCoordinator, () => classesStore.classes, () => authSto
   }
   let items = useMenuItems(newRole, assignments, isCanteen)
   const isActuallyCoordinator = isCoord || (assignments || []).some(a => (a.assignment_type === 'coordinatore_classe' || a.assignment_type === 'coordinator') && a.is_active !== false)
-  if (newRole === 'teacher' && !isActuallyCoordinator) {
+  if (newRole === 'teacher') {
+    const hasInfanzia = (_classes || []).some(c => {
+      const level = (c.school_level || c.level || c.order || '').toLowerCase()
+      const name = (c.name || c.label || '').toLowerCase()
+      return level === 'infanzia' || name.includes('infanzia')
+    })
     items = items.map(cat => {
       if (!cat.children) return cat
       return {
         ...cat,
-        children: cat.children.filter(child => !child.coordinatorOnly)
+        children: cat.children.filter(child => {
+          if (!isActuallyCoordinator && child.coordinatorOnly) return false
+          if (!hasInfanzia && child.path === '/teacher/infanzia') return false
+          return true
+        })
       }
     }).filter(cat => !cat.children || cat.children.length > 0)
   }

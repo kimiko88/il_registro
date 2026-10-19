@@ -28,9 +28,22 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 
 func (h *Handler) GetDashboard(c *gin.Context) {
 	schoolID := c.GetString("school_id")
+	if schoolID == "" {
+		schoolID = c.Query("school_id")
+	}
+	if schoolID == "" {
+		schoolID = "550e8400-e29b-41d4-a716-446655440001"
+	}
 	teacherID := c.GetString("user_id")
+	if teacherID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "utente non autenticato"})
+		return
+	}
+	role := c.GetString("role")
+	if role == "" {
+		role = c.GetString("user_role")
+	}
 	if tID := c.Query("teacher_id"); tID != "" {
-		role := c.GetString("user_role")
 		if role == "admin" || role == "superadmin" || role == "principal" || role == "dsga" {
 			teacherID = tID
 		}

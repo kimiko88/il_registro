@@ -20,6 +20,7 @@ type Repository interface {
 	UnassignSubject(ctx context.Context, assignmentID string) error
 	GetClassSubjects(ctx context.Context, classID string) ([]ClassSubject, error)
 	GetClassGuardians(ctx context.Context, classID string) ([]GuardianInfo, error)
+	GetClassStudents(ctx context.Context, classID string) ([]ClassStudent, error)
 	GetLessonTopics(ctx context.Context, classID string) ([]LessonTopic, error)
 	GetDisciplinaryNotes(ctx context.Context, classID string) ([]DisciplinaryNoteReport, error)
 	BulkMigrateStudents(ctx context.Context, migrations []StudentMigrationItem) error
@@ -303,6 +304,41 @@ func (r *PostgresRepository) GetClassGuardians(ctx context.Context, classID stri
 		return nil, err
 	}
 	return result, nil
+}
+
+func (r *PostgresRepository) GetClassStudents(ctx context.Context, classID string) ([]ClassStudent, error) {
+	if _, err := uuid.Parse(classID); err != nil {
+		return []ClassStudent{}, nil
+	}
+	query := `
+		SELECT st.id::text AS student_id, u.id::text AS user_id, u.first_name, u.last_name, COALESCE(u.email, '')
+		FROM students st
+		JOIN users u ON st.user_id = u.id
+		WHERE st.class_id = $1::uuid AND u.deleted_at IS NULL
+		ORDER BY u.last_name, u.first_name
+	`
+	rows, err := r.db.QueryContext(ctx, query, classID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []ClassStudent
+	for rows.Next() {
+		var s ClassStudent
+		if err := rows.Scan(&s.StudentID, &s.UserID, &s.FirstName, &s.LastName, &s.Email); err != nil {
+			return nil, err
+		}
+		s.ID = s.StudentID
+		students = append(students, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if students == nil {
+		students = []ClassStudent{}
+	}
+	return students, nil
 }
 
 func (r *PostgresRepository) GetLessonTopics(ctx context.Context, classID string) ([]LessonTopic, error) {
