@@ -344,8 +344,8 @@ func TestDocumentsHandler_AllEndpoints(t *testing.T) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 	part, _ := writer.CreateFormFile("file", "malicious.exe")
-	part.Write([]byte("MZ executable header dummy"))
-	writer.Close()
+	_, _ = part.Write([]byte("MZ executable header dummy"))
+	_ = writer.Close()
 
 	req, _ = http.NewRequest(http.MethodPost, "/api/v1/documents/upload", body)
 	req.Header.Set("Content-Type", writer.FormDataContentType())

@@ -120,9 +120,10 @@ func (r *repository) enrichObligationWithLogs(o *TeacherHourObligation) {
 		var cat string
 		var sum float64
 		if err := rows.Scan(&cat, &sum); err == nil {
-			if cat == "collegio" {
+			switch cat {
+			case "collegio":
 				o.CollegioDoneHours = sum
-			} else if cat == "consigli" {
+			case "consigli":
 				o.ConsigliDoneHours = sum
 			}
 		}
