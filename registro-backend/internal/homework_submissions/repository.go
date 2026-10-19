@@ -2,6 +2,8 @@ package homework_submissions
 
 import (
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type Repository interface {
@@ -42,6 +44,9 @@ func (r *repository) UpsertSubmission(s *HomeworkSubmission) error {
 }
 
 func (r *repository) GetSubmission(id string) (*HomeworkSubmission, error) {
+	if _, err := uuid.Parse(id); err != nil {
+		return nil, sql.ErrNoRows
+	}
 	query := `
 		SELECT s.id, s.homework_id, s.student_id, s.file_url, s.file_type, s.submitted_at,
 		       COALESCE(s.teacher_annotated_file_url, ''), s.annotations_json::text,
@@ -51,7 +56,8 @@ func (r *repository) GetSubmission(id string) (*HomeworkSubmission, error) {
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS student_name,
 		       COALESCE(h.description, '') AS homework_title
 		FROM homework_submissions s
-		LEFT JOIN users u ON s.student_id = u.id
+		LEFT JOIN students st ON s.student_id = st.id
+		LEFT JOIN users u ON (s.student_id = u.id OR st.user_id = u.id)
 		LEFT JOIN class_homeworks h ON s.homework_id = h.id
 		WHERE s.id = $1
 	`
@@ -69,6 +75,9 @@ func (r *repository) GetSubmission(id string) (*HomeworkSubmission, error) {
 }
 
 func (r *repository) GetSubmissionByHomeworkAndStudent(homeworkID, studentID string) (*HomeworkSubmission, error) {
+	if _, err := uuid.Parse(homeworkID); err != nil {
+		return nil, sql.ErrNoRows
+	}
 	query := `
 		SELECT s.id, s.homework_id, s.student_id, s.file_url, s.file_type, s.submitted_at,
 		       COALESCE(s.teacher_annotated_file_url, ''), s.annotations_json::text,
@@ -78,9 +87,10 @@ func (r *repository) GetSubmissionByHomeworkAndStudent(homeworkID, studentID str
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS student_name,
 		       COALESCE(h.description, '') AS homework_title
 		FROM homework_submissions s
-		LEFT JOIN users u ON s.student_id = u.id
+		LEFT JOIN students st ON s.student_id = st.id
+		LEFT JOIN users u ON (s.student_id = u.id OR st.user_id = u.id)
 		LEFT JOIN class_homeworks h ON s.homework_id = h.id
-		WHERE s.homework_id = $1 AND s.student_id = $2
+		WHERE s.homework_id = $1 AND (s.student_id = $2 OR st.user_id::text = $2)
 	`
 	var sub HomeworkSubmission
 	err := r.db.QueryRow(query, homeworkID, studentID).Scan(
@@ -96,6 +106,9 @@ func (r *repository) GetSubmissionByHomeworkAndStudent(homeworkID, studentID str
 }
 
 func (r *repository) ListSubmissionsByHomework(homeworkID string) ([]HomeworkSubmission, error) {
+	if _, err := uuid.Parse(homeworkID); err != nil {
+		return []HomeworkSubmission{}, nil
+	}
 	query := `
 		SELECT s.id, s.homework_id, s.student_id, s.file_url, s.file_type, s.submitted_at,
 		       COALESCE(s.teacher_annotated_file_url, ''), s.annotations_json::text,
@@ -105,7 +118,8 @@ func (r *repository) ListSubmissionsByHomework(homeworkID string) ([]HomeworkSub
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS student_name,
 		       COALESCE(h.description, '') AS homework_title
 		FROM homework_submissions s
-		LEFT JOIN users u ON s.student_id = u.id
+		LEFT JOIN students st ON s.student_id = st.id
+		LEFT JOIN users u ON (s.student_id = u.id OR st.user_id = u.id)
 		LEFT JOIN class_homeworks h ON s.homework_id = h.id
 		WHERE s.homework_id = $1
 		ORDER BY s.submitted_at DESC
@@ -132,6 +146,9 @@ func (r *repository) ListSubmissionsByHomework(homeworkID string) ([]HomeworkSub
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+	if list == nil {
+		list = []HomeworkSubmission{}
+	}
 	return list, nil
 }
 
@@ -145,9 +162,10 @@ func (r *repository) ListSubmissionsByStudent(studentID string) ([]HomeworkSubmi
 		       COALESCE(u.first_name || ' ' || u.last_name, '') AS student_name,
 		       COALESCE(h.description, '') AS homework_title
 		FROM homework_submissions s
-		LEFT JOIN users u ON s.student_id = u.id
+		LEFT JOIN students st ON s.student_id = st.id
+		LEFT JOIN users u ON (s.student_id = u.id OR st.user_id = u.id)
 		LEFT JOIN class_homeworks h ON s.homework_id = h.id
-		WHERE s.student_id = $1
+		WHERE s.student_id = $1 OR st.user_id::text = $1
 		ORDER BY s.submitted_at DESC
 	`
 	rows, err := r.db.Query(query, studentID)
@@ -171,6 +189,9 @@ func (r *repository) ListSubmissionsByStudent(studentID string) ([]HomeworkSubmi
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
+	}
+	if list == nil {
+		list = []HomeworkSubmission{}
 	}
 	return list, nil
 }

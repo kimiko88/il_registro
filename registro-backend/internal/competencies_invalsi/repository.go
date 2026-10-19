@@ -24,7 +24,31 @@ func NewRepository(db *sql.DB) Repository {
 	return &repository{db: db}
 }
 
+func (r *repository) resolveSchoolID(schoolID, studentID, classID string) string {
+	if schoolID != "" {
+		return schoolID
+	}
+	if classID != "" {
+		var sID sql.NullString
+		_ = r.db.QueryRow(`SELECT school_id::text FROM classes WHERE id::text = $1`, classID).Scan(&sID)
+		if sID.Valid && sID.String != "" {
+			return sID.String
+		}
+	}
+	if studentID != "" {
+		var sID sql.NullString
+		_ = r.db.QueryRow(`SELECT school_id::text FROM users WHERE id::text = $1 AND school_id IS NOT NULL`, studentID).Scan(&sID)
+		if sID.Valid && sID.String != "" {
+			return sID.String
+		}
+	}
+	var defaultSchoolID string
+	_ = r.db.QueryRow(`SELECT id::text FROM schools ORDER BY created_at ASC LIMIT 1`).Scan(&defaultSchoolID)
+	return defaultSchoolID
+}
+
 func (r *repository) UpsertCertification(c *CompetencyCertificationDM14) error {
+	c.SchoolID = r.resolveSchoolID(c.SchoolID, c.StudentID, c.ClassID)
 	query := `
 		INSERT INTO competency_certifications_dm14 (
 			school_id, student_id, class_id, school_tier, school_year,
@@ -100,7 +124,7 @@ func (r *repository) ListCertificationsByClass(classID, schoolYear string) ([]Co
 		       COALESCE(u.first_name || ' ' || u.last_name, '') as student_name
 		FROM competency_certifications_dm14 c
 		LEFT JOIN users u ON c.student_id = u.id
-		WHERE c.class_id = $1 AND ($2 = '' OR c.school_year = $2)
+		WHERE (c.class_id::text = $1 OR $1 = '') AND ($2 = '' OR c.school_year = $2)
 		ORDER BY student_name ASC
 	`
 	rows, err := r.db.Query(query, classID, schoolYear)

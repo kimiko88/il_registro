@@ -329,6 +329,26 @@ func (h *Handler) GetClassGuardians(c *gin.Context) {
 	c.JSON(http.StatusOK, guardians)
 }
 
+func (h *Handler) GetClassStudents(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	schoolID := getSchoolID(c)
+
+	students, err := h.service.GetClassStudents(c.Request.Context(), schoolID, c.Param("id"))
+	if err != nil {
+		if err.Error() == "class not found" || err.Error() == "record not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "class not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"students": students})
+}
+
 func (h *Handler) GetLessonTopics(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
@@ -449,6 +469,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		group.GET("/:id/subjects", h.GetClassSubjects)
 		group.DELETE("/:id/subjects/:assignmentId", h.RemoveSubject)
 		group.GET("/:id/guardians", h.GetClassGuardians)
+		group.GET("/:id/students", h.GetClassStudents)
 		group.GET("/:id/lesson-topics", h.GetLessonTopics)
 		group.GET("/:id/disciplinary-notes", h.GetDisciplinaryNotes)
 		group.GET("/:id/giornale-mensile/pdf", h.GetMonthlyJournalPDF)

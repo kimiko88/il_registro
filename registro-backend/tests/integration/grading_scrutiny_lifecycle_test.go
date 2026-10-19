@@ -234,6 +234,9 @@ func (m *mockClassesRepoForScrutiny) GetClassSubjects(ctx context.Context, class
 func (m *mockClassesRepoForScrutiny) GetClassGuardians(ctx context.Context, classID string) ([]classes.GuardianInfo, error) {
 	return []classes.GuardianInfo{}, nil
 }
+func (m *mockClassesRepoForScrutiny) GetClassStudents(ctx context.Context, classID string) ([]classes.ClassStudent, error) {
+	return []classes.ClassStudent{}, nil
+}
 func (m *mockClassesRepoForScrutiny) GetLessonTopics(ctx context.Context, classID string) ([]classes.LessonTopic, error) {
 	return []classes.LessonTopic{}, nil
 }

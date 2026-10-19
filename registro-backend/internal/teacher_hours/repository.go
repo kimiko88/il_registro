@@ -26,10 +26,27 @@ func NewRepository(db *sql.DB) Repository {
 	return &repository{db: db}
 }
 
+func (r *repository) resolveSchoolID(schoolID, teacherID string) string {
+	if schoolID != "" {
+		return schoolID
+	}
+	if teacherID != "" {
+		var userSchoolID sql.NullString
+		_ = r.db.QueryRow(`SELECT school_id::text FROM users WHERE id::text = $1 AND school_id IS NOT NULL`, teacherID).Scan(&userSchoolID)
+		if userSchoolID.Valid && userSchoolID.String != "" {
+			return userSchoolID.String
+		}
+	}
+	var defaultSchoolID string
+	_ = r.db.QueryRow(`SELECT id::text FROM schools ORDER BY created_at ASC LIMIT 1`).Scan(&defaultSchoolID)
+	return defaultSchoolID
+}
+
 func (r *repository) GetOrCreateObligation(schoolID, teacherID, academicYear string) (*TeacherHourObligation, error) {
 	if academicYear == "" {
 		academicYear = "2025/2026"
 	}
+	schoolID = r.resolveSchoolID(schoolID, teacherID)
 	query := `
 		INSERT INTO teacher_hour_obligations (school_id, teacher_id, academic_year, collegio_planned_hours, consigli_planned_hours)
 		VALUES ($1, $2, $3, 40.00, 40.00)
@@ -76,7 +93,7 @@ func (r *repository) ListObligationsBySchool(schoolID, academicYear string) ([]T
 		SELECT id, school_id, teacher_id, academic_year, collegio_planned_hours, consigli_planned_hours,
 		       eccedenti_hours, disposizione_hours, banca_ore_balance, created_at, updated_at
 		FROM teacher_hour_obligations
-		WHERE school_id = $1 AND ($2 = '' OR academic_year = $2)
+		WHERE (school_id::text = $1 OR $1 = '') AND ($2 = '' OR academic_year = $2)
 		ORDER BY created_at DESC
 	`
 	rows, err := r.db.Query(query, schoolID, academicYear)
@@ -120,9 +137,10 @@ func (r *repository) enrichObligationWithLogs(o *TeacherHourObligation) {
 		var cat string
 		var sum float64
 		if err := rows.Scan(&cat, &sum); err == nil {
-			if cat == "collegio" {
+			switch cat {
+			case "collegio":
 				o.CollegioDoneHours = sum
-			} else if cat == "consigli" {
+			case "consigli":
 				o.ConsigliDoneHours = sum
 			}
 		}
@@ -175,6 +193,7 @@ func (r *repository) ListLogsByObligation(obligationID string) ([]TeacherHourLog
 }
 
 func (r *repository) CreateShortLeave(leave *TeacherShortLeave) error {
+	leave.SchoolID = r.resolveSchoolID(leave.SchoolID, leave.TeacherID)
 	reqDate, err := time.Parse("2006-01-02", leave.RequestDate)
 	if err != nil {
 		reqDate = time.Now()
@@ -194,13 +213,14 @@ func (r *repository) CreateShortLeave(leave *TeacherShortLeave) error {
 }
 
 func (r *repository) ListShortLeaves(schoolID, teacherID string) ([]TeacherShortLeave, error) {
+	schoolID = r.resolveSchoolID(schoolID, teacherID)
 	query := `
 		SELECT id, school_id, teacher_id, TO_CHAR(request_date, 'YYYY-MM-DD'), hours, reason, status,
 		       TO_CHAR(recovery_deadline, 'YYYY-MM-DD'), recovered_hours,
 		       CASE WHEN recovered_date IS NOT NULL THEN TO_CHAR(recovered_date, 'YYYY-MM-DD') ELSE NULL END,
 		       COALESCE(notes, ''), created_at, updated_at
 		FROM teacher_short_leaves
-		WHERE school_id = $1 AND ($2 = '' OR teacher_id = $2)
+		WHERE (school_id::text = $1 OR $1 = '') AND ($2 = '' OR teacher_id::text = $2)
 		ORDER BY request_date DESC, created_at DESC
 	`
 	rows, err := r.db.Query(query, schoolID, teacherID)

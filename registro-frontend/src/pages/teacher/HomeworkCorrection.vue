@@ -17,8 +17,8 @@
           outlined
           dense
           bg-color="white"
-          placeholder="ID Compito (es. 101)"
-          style="width: 180px"
+          placeholder="ID Compito (UUID)"
+          style="width: 220px"
           @keyup.enter="loadSubmissions"
         >
           <template #append>
@@ -229,11 +229,13 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import { api } from '@/services/api'
 import { useQuasar } from 'quasar'
 
+const route = useRoute()
 const $q = useQuasar()
-const homeworkIdFilter = ref('1')
+const homeworkIdFilter = ref(route.query.homework_id || '')
 const submissions = ref([])
 const selectedSubmission = ref(null)
 
@@ -257,9 +259,15 @@ function formatDate(isoStr) {
 }
 
 async function loadSubmissions() {
+  const hwId = homeworkIdFilter.value?.trim()
+  if (!hwId) {
+    submissions.value = []
+    selectedSubmission.value = null
+    return
+  }
   try {
     const res = await api.get('/homework-submissions/by-homework', {
-      params: { homework_id: homeworkIdFilter.value }
+      params: { homework_id: hwId }
     })
     submissions.value = res.data?.submissions || []
     if (submissions.value.length > 0) {

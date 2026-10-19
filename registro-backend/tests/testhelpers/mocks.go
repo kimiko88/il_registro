@@ -992,6 +992,13 @@ func (m *MockClassesRepository) GetClassGuardians(ctx context.Context, classID s
 	}
 	return args.Get(0).([]classes.GuardianInfo), args.Error(1)
 }
+func (m *MockClassesRepository) GetClassStudents(ctx context.Context, classID string) ([]classes.ClassStudent, error) {
+	args := m.Called(ctx, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]classes.ClassStudent), args.Error(1)
+}
 func (m *MockClassesRepository) GetLessonTopics(ctx context.Context, classID string) ([]classes.LessonTopic, error) {
 	args := m.Called(ctx, classID)
 	if args.Get(0) == nil {

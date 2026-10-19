@@ -306,6 +306,33 @@
         </div>
     </q-card>
 
+    <!-- Sezione Registro Scuola dell'Infanzia (appare SOLO se la classe è dell'infanzia) -->
+    <q-card v-if="isInfanziaClass && selectedClass" class="q-mb-md shadow-2 rounded-xl border border-pink-200 bg-pink-50">
+      <q-card-section class="row items-center justify-between q-py-sm wrap q-gutter-y-xs">
+        <div class="row items-center q-gutter-x-sm col-12 col-md-auto">
+          <q-icon name="child_care" size="24px" color="pink-7" />
+          <div>
+            <div class="text-subtitle2 text-weight-bold text-pink-10">
+              Registro Scuola dell'Infanzia
+            </div>
+            <div class="text-caption text-pink-8">
+              Rilevazione presenze e mensa, osservazioni Campi d'Esperienza e diario di bordo pedagogico
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-auto text-right">
+          <q-btn
+            unelevated
+            color="pink-7"
+            icon="launch"
+            label="Apri Registro Scuola dell'Infanzia"
+            class="rounded-lg text-weight-bold"
+            @click="$router.push('/teacher/infanzia')"
+          />
+        </div>
+      </q-card-section>
+    </q-card>
+
     <!-- School Meals Section (Mensa Scolastica per Infanzia e Primaria) -->
     <q-card v-if="isInfanziaOrPrimaria && selectedClass" class="q-mb-md shadow-2 rounded-xl border border-teal-200">
       <q-card-section class="bg-teal-8 text-white row items-center justify-between q-py-sm wrap q-gutter-y-xs">
@@ -898,15 +925,26 @@ const { executeWithOfflineQueue } = useOfflineSync()
 // Current teacher ID from auth token
 const currentTeacherId = computed(() => authStore.user?.id || null)
 
+const isInfanziaClass = computed(() => {
+  const currentClassObj = typeof selectedClass.value === 'object'
+    ? selectedClass.value
+    : classesStore.classes.find(c => c.id === selectedClass.value)
+  if (!currentClassObj) return false
+  const level = (currentClassObj.school_level || currentClassObj.level || currentClassObj.order || '').toLowerCase()
+  if (level === 'infanzia') return true
+  const name = (currentClassObj.name || currentClassObj.label || '').toLowerCase()
+  return name.includes('infanzia')
+})
+
 const isInfanziaOrPrimaria = computed(() => {
   const currentClassObj = typeof selectedClass.value === 'object'
     ? selectedClass.value
     : classesStore.classes.find(c => c.id === selectedClass.value)
-  if (currentClassObj?.school_level === 'infanzia' || currentClassObj?.school_level === 'primaria') return true
-  const name = (currentClassObj?.name || currentClassObj?.label || '').toLowerCase()
-  if (name.includes('infanzia') || name.includes('primaria')) return true
-  if (schoolStore.hasCampiEsperienza || schoolStore.hasPrimaryLevels) return true
-  return false
+  if (!currentClassObj) return false
+  const level = (currentClassObj.school_level || currentClassObj.level || currentClassObj.order || '').toLowerCase()
+  if (level === 'infanzia' || level === 'primaria') return true
+  const name = (currentClassObj.name || currentClassObj.label || '').toLowerCase()
+  return name.includes('infanzia') || name.includes('primaria')
 })
 
 const studentMealMap = ref({})

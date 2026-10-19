@@ -42,10 +42,10 @@
                 <span>{{ $t('teacherHours.collegioCard') }}</span>
               </div>
               <q-badge
-                :color="obligation.collegio_done_hours > 40 ? 'warning' : 'positive'"
+                :color="Number(obligation.collegio_done_hours || 0) > 40 ? 'warning' : 'positive'"
                 class="q-pa-xs text-weight-bold text-caption"
               >
-                {{ obligation.collegio_done_hours.toFixed(1) }} / {{ obligation.collegio_planned_hours.toFixed(1) }}h
+                {{ fmt(obligation.collegio_done_hours) }} / {{ fmt(obligation.collegio_planned_hours) }}h
               </q-badge>
             </div>
             <p class="text-caption text-slate-500 q-mb-md">
@@ -53,7 +53,7 @@
             </p>
 
             <q-linear-progress
-              :value="Math.min(obligation.collegio_done_hours / 40.0, 1.0)"
+              :value="Math.min(Number(obligation.collegio_done_hours || 0) / 40.0, 1.0)"
               size="12px"
               rounded
               color="primary"
@@ -68,12 +68,12 @@
               </div>
               <div class="col-4">
                 <div class="text-caption text-slate-500">{{ $t('teacherHours.done') }}</div>
-                <div class="text-h6 text-weight-bold text-primary">{{ obligation.collegio_done_hours.toFixed(1) }}h</div>
+                <div class="text-h6 text-weight-bold text-primary">{{ fmt(obligation.collegio_done_hours) }}h</div>
               </div>
               <div class="col-4">
                 <div class="text-caption text-slate-500">{{ $t('teacherHours.remaining') }}</div>
-                <div :class="['text-h6 text-weight-bold', obligation.collegio_remaining_hours < 0 ? 'text-warning' : 'text-positive']">
-                  {{ obligation.collegio_remaining_hours.toFixed(1) }}h
+                <div :class="['text-h6 text-weight-bold', Number(obligation.collegio_remaining_hours || 0) < 0 ? 'text-warning' : 'text-positive']">
+                  {{ fmt(obligation.collegio_remaining_hours) }}h
                 </div>
               </div>
             </div>
@@ -91,10 +91,10 @@
                 <span>{{ $t('teacherHours.consigliCard') }}</span>
               </div>
               <q-badge
-                :color="obligation.consigli_done_hours > 40 ? 'warning' : 'positive'"
+                :color="Number(obligation.consigli_done_hours || 0) > 40 ? 'warning' : 'positive'"
                 class="q-pa-xs text-weight-bold text-caption"
               >
-                {{ obligation.consigli_done_hours.toFixed(1) }} / {{ obligation.consigli_planned_hours.toFixed(1) }}h
+                {{ fmt(obligation.consigli_done_hours) }} / {{ fmt(obligation.consigli_planned_hours) }}h
               </q-badge>
             </div>
             <p class="text-caption text-slate-500 q-mb-md">
@@ -102,7 +102,7 @@
             </p>
 
             <q-linear-progress
-              :value="Math.min(obligation.consigli_done_hours / 40.0, 1.0)"
+              :value="Math.min(Number(obligation.consigli_done_hours || 0) / 40.0, 1.0)"
               size="12px"
               rounded
               color="indigo-7"
@@ -117,12 +117,12 @@
               </div>
               <div class="col-4">
                 <div class="text-caption text-slate-500">{{ $t('teacherHours.done') }}</div>
-                <div class="text-h6 text-weight-bold text-indigo-7">{{ obligation.consigli_done_hours.toFixed(1) }}h</div>
+                <div class="text-h6 text-weight-bold text-indigo-7">{{ fmt(obligation.consigli_done_hours) }}h</div>
               </div>
               <div class="col-4">
                 <div class="text-caption text-slate-500">{{ $t('teacherHours.remaining') }}</div>
-                <div :class="['text-h6 text-weight-bold', obligation.consigli_remaining_hours < 0 ? 'text-warning' : 'text-positive']">
-                  {{ obligation.consigli_remaining_hours.toFixed(1) }}h
+                <div :class="['text-h6 text-weight-bold', Number(obligation.consigli_remaining_hours || 0) < 0 ? 'text-warning' : 'text-positive']">
+                  {{ fmt(obligation.consigli_remaining_hours) }}h
                 </div>
               </div>
             </div>
@@ -396,13 +396,28 @@ const leaveColumns = [
   { name: 'actions', label: 'Azioni', align: 'center' }
 ]
 
+function fmt(val) {
+  return Number(val || 0).toFixed(1)
+}
+
 async function loadData() {
   try {
     const res = await api.get('/teacher-hours/dashboard')
     if (res.data) {
-      if (res.data.obligation) obligation.value = res.data.obligation
-      if (res.data.logs) logs.value = res.data.logs
-      if (res.data.leaves) leaves.value = res.data.leaves
+      if (res.data.obligation) {
+        obligation.value = {
+          ...obligation.value,
+          ...res.data.obligation,
+          collegio_done_hours: Number(res.data.obligation.collegio_done_hours || 0),
+          collegio_planned_hours: Number(res.data.obligation.collegio_planned_hours || 40),
+          collegio_remaining_hours: Number(res.data.obligation.collegio_remaining_hours || 40),
+          consigli_done_hours: Number(res.data.obligation.consigli_done_hours || 0),
+          consigli_planned_hours: Number(res.data.obligation.consigli_planned_hours || 40),
+          consigli_remaining_hours: Number(res.data.obligation.consigli_remaining_hours || 40)
+        }
+      }
+      if (Array.isArray(res.data.logs)) logs.value = res.data.logs
+      if (Array.isArray(res.data.leaves)) leaves.value = res.data.leaves
     }
   } catch (err) {
     console.error('Error loading teacher hours:', err)

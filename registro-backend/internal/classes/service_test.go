@@ -68,6 +68,13 @@ func (m *MockRepository) GetClassGuardians(ctx context.Context, classID string) 
 	}
 	return args.Get(0).([]GuardianInfo), args.Error(1)
 }
+func (m *MockRepository) GetClassStudents(ctx context.Context, classID string) ([]ClassStudent, error) {
+	args := m.Called(ctx, classID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]ClassStudent), args.Error(1)
+}
 func (m *MockRepository) GetLessonTopics(ctx context.Context, classID string) ([]LessonTopic, error) {
 	args := m.Called(ctx, classID)
 	if args.Get(0) == nil {
@@ -610,5 +617,21 @@ func TestService_BulkMigrateStudents(t *testing.T) {
 	err := service.BulkMigrateStudents(context.Background(), "school-1", req)
 
 	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestService_GetClassStudents(t *testing.T) {
+	mockRepo := new(MockRepository)
+	expected := []ClassStudent{
+		{ID: "st-1", StudentID: "st-1", UserID: "u-1", FirstName: "Luigi", LastName: "Bianchi"},
+	}
+	mockRepo.On("Get", mock.Anything, "class-1").Return(&Class{ID: "class-1", SchoolID: "school-1"}, nil)
+	mockRepo.On("GetClassStudents", mock.Anything, "class-1").Return(expected, nil)
+
+	service := NewService(mockRepo)
+	students, err := service.GetClassStudents(context.Background(), "school-1", "class-1")
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, students)
 	mockRepo.AssertExpectations(t)
 }

@@ -5,7 +5,7 @@
         <q-icon name="accessibility_new" color="primary" class="q-mr-xs" />
         {{ t('compensativeMeasures.title') || 'Misure Compensative BES / DSA' }}
       </span>
-      <q-chip v-if="modelValue.length > 0" dense color="primary" text-color="white" size="xs">
+      <q-chip v-if="Array.isArray(modelValue) && modelValue.length > 0" dense color="primary" text-color="white" size="xs">
         {{ t('compensativeMeasures.selectedCount', { count: modelValue.length }) || `${modelValue.length} selezionate` }}
       </q-chip>
     </div>
@@ -86,17 +86,17 @@ const defaultMeasures = computed(() => [
 const customMeasures = ref([])
 
 const allMeasures = computed(() => [
-  ...defaultMeasures,
-  ...customMeasures.value
+  ...(defaultMeasures.value || []),
+  ...(customMeasures.value || [])
 ])
 
 function isSelected(val) {
-  return props.modelValue.includes(val)
+  return Array.isArray(props.modelValue) && props.modelValue.includes(val)
 }
 
 function toggle(val) {
   if (props.readOnly) return
-  const current = [...props.modelValue]
+  const current = Array.isArray(props.modelValue) ? [...props.modelValue] : []
   const idx = current.indexOf(val)
   if (idx >= 0) {
     current.splice(idx, 1)

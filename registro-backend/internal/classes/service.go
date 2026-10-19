@@ -140,6 +140,13 @@ func (s *Service) GetClassGuardians(ctx context.Context, schoolID, classID strin
 	return s.repo.GetClassGuardians(ctx, classID)
 }
 
+func (s *Service) GetClassStudents(ctx context.Context, schoolID, classID string) ([]ClassStudent, error) {
+	if err := s.checkClassSchool(ctx, schoolID, classID); err != nil {
+		return nil, err
+	}
+	return s.repo.GetClassStudents(ctx, classID)
+}
+
 func (s *Service) GetLessonTopics(ctx context.Context, schoolID, classID string) ([]LessonTopic, error) {
 	if err := s.checkClassSchool(ctx, schoolID, classID); err != nil {
 		return nil, err
