@@ -121,20 +121,38 @@ il_registro is designed to be **self-hosted by schools, municipalities, regions,
 
 | Domain                    | Features                                                                                                                             |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Developer Guide**       | **[docs/DEVELOPER_GUIDE_EN.md](./docs/DEVELOPER_GUIDE_EN.md)** (English) & **[docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)** (Italian): in-depth documentation covering architecture, modules, RBAC, database, and tutorial |
 | **Native Mobile Apps (Alpha)**| **Native Android & iOS (Alpha Stage — Unstable & Incomplete)** for Student, Parent, Teacher, and Secretary (Kotlin Compose & SwiftUI, biometrics, offline, 11 languages) |
-| **Authentication & SSO**  | JWT (15min access + refresh rotation), MFA TOTP, **Google Workspace & MS Teams SSO**, OAuth2/OIDC                                    |
-| **Roles**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                   |
+| **Authentication & SSO**  | Asymmetric RS256 JWT, instant JTI revocation in Redis, MFA TOTP, Bcrypt pre-hashing SHA-256 with pepper, brute-force rate limiter, **Google Workspace & MS Teams SSO** |
+| **Institutional Roles**   | Strict governance across 25 roles (Management, Admin, Staff, Teachers, Parents, Students, DPO, Psychologist) with least-privilege RBAC |
 | **Grades & Evaluation**   | Fast entry, **Keyboard Matrix View**, weighted averages, target grade simulator, **Descriptive Matrix (O.M. 172/2020 4 proficiency levels)**, BES/DSA measures |
 | **Attendance & Lessons**  | Daily register, **1-Click Class Sign**, fast consecutive multi-hour signing (2-3h), reuse previous lesson topics, absenteeism alerts  |
 | **Official Records (PDF)**| **Teacher Personal Register PDF** (terms, weighted averages, signed lessons), **Monthly Class Journal PDF** with coded presence matrix (P, A, R, U, G) |
-| **Diagnostic & Linter**   | **School Data Integrity Linter**: proactive checks for relational issues (orphaned students, uncoordinated classes, lesson overlaps) |
-| **Substitutions & Dispatcher** | **Live Hourly Dispatcher Grid (1st-6th period)** with uncovered classes detection and 1-click substitute recommendation and assignment |
+| **Teacher Hours CCNL**    | **Art. 29 CCNL 40+40 Hours**: automated tracking of collegiate activities (letter A) and class boards (letter B), short leaves and recovery |
+| **Health & Safety**       | **Medication Administration Register** (ASL therapeutic plan, consents) and **Accident Registry with teletransmission to INAIL**    |
+| **Competencies & INVALSI**| **Competencies Certification D.M. 14/2024** (8 European competencies, levels A-D) and **INVALSI Analytical Dashboard**               |
+| **Hall Passes & Safety**  | **Digital Classroom Hall Pass** with time limit alerts, live corridor monitor board for auxiliary staff, and **Pickup Delegates**     |
+| **Homework & Submissions**| **Student Homework Upload & Teacher Canvas Correction** with analytic rubrics and automatic synchronization with Google Classroom    |
+| **PNRR Futura Projects**  | **PNRR School 4.0 Tracking**: projects catalog, CUP, targets, milestones, student enrolments, and lesson attendance logs            |
+| **Kindergarten Register** | **Kindergarten Register & Photo Story Diary**: attendance, meals/special diets, afternoon nap, developmental milestones observations |
+| **Special Education (PEI)**| **Special Ed Register, PEI (D.I. 182/2020)** on 4 dimensions, GLO board minutes with joint digital signatures and weekly hours        |
+| **PDP (BES & DSA)**       | **Personalized Educational Plans**, compensatory/dispensatory measures, AES-256 medical diagnosis encryption, parent digital approval |
+| **Substitutions Dispatcher**| **Live Hourly Dispatcher Grid (1st-6th period)** with uncovered classes detection and 1-click substitute recommendation with scoring  |
+| **Auxiliary Staff (ATA)** | **Staff Attendance & RFID/NFC Badge Clock-Ins**, monthly 36-hour CCNL timesheets, leaves, and **3-Stage Digital Staff Desk**         |
+| **Strike Early Detection**| **ARAN Strike Participation Surveys**: voluntary staff declarations, school attendance projection percentages, family alerts         |
+| **Gatehouse & Visitors**  | **Gatehouse Visitor Registry**, physical badge logs, student early departure authorizations with delegate ID checks, maintenance tickets |
+| **Enterprise Hub (MIM)**  | **PagoPA with IUV Codes** and OPI/SIOPE+ bank reconciliation, **SIDI / MIM Data Flows** (positional and WebServices), **Maturità D.M. 88/2020 & Student Curriculum** |
+| **Legal Public Notice**   | **Online Public Notice Board (L. 69/2009)** with 15-day publication, digital stamp, **Transparent Administration with ANAC XML export** |
+| **Asset Inventory**       | **School Inventory D.I. 129/2018**, barcode/QR asset labels, and free device lending tracking for students and staff                 |
+| **Psychological Desk**    | **Confidential Student Listening Desk (CIC L. 107/2015)** with digital parental consent, anonymous booking, and isolated notes       |
+| **Digital School Elections**| **Anonymous Digital Ballot Box** for school council elections with automated, certified tallying                                      |
+| **AgID Protocol Registry**| **Official Protocol Registry** with classification scheme and compliant `Segnatura.xml` interoperability generation                  |
 | **Parent & Student Portals** | **25% Absence Limit Tracking (DPR 122/2009)** with remaining hours forecasting, **Interactive Homework Planner & To-Do List**      |
-| **PDP / PEI (BES & DSA)** | **Personalized Educational Plans**, compensatory/dispensatory measures, digital parent signature/approval, diagnosis data protection |
+| **Scrutiny & Deferred**   | Scrutiny boards, conduct marks, school credits, **Deferred Scrutiny (summer debt recovery O.M. 92/2007)**                            |
 | **Business Intelligence** | **School Dropout & Early Warning Dashboard (DPR 122/2009)**, CSV support plan export, term progress analytics                       |
 | **Cloud-Native & Resilience** | **Kubernetes Probes (`/live`, `/ready`)** with deep dependency checks (DB, Redis, goroutines, RAM), **Circuit Breaker** for remote services |
 | **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: automatic sync for assignments, grades, and classes                                          |
-| **Communications**        | School circulars, urgent announcements with **Mandatory Read Acknowledgment**, real-time WebSocket & Web Push notifications          |
+| **Communications**        | School circulars, urgent announcements with **Mandatory Read Acknowledgment**, real-time multichannels (Web Push, WebSocket, SMS)   |
 | **Accessibility & UX**    | **OpenDyslexic DSA Font**, high contrast, **Global Search `Ctrl+K`**, **Toast & Undo (15s)**, Daily Timeline, Skeleton screens       |
 | **PWA & Offline Outbox**  | Desktop & mobile installable (PWA), **Offline Outbox Queue** for teacher actions with automatic FIFO background synchronization      |
 | **Multi-Building Rooms**  | **Multi-Building Bookable Rooms Management**: building sites, special labs & gyms, live availability and teacher spot/recurring bookings with clash detection |
@@ -210,6 +228,8 @@ Go was chosen for the backend for reasons beyond technology trends:
 
 | Document                                                     | Description                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [docs/DEVELOPER_GUIDE_EN.md](./docs/DEVELOPER_GUIDE_EN.md)   | **Complete Developer Guide (English)**: deep-dive architecture, modules, RBAC, tutorial |
+| [docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)         | **Guida per lo Sviluppatore (Italiano)**: architettura, layer Go, Pinia, RBAC e tutorial |
 | [docs/ABOUT.md](./docs/ABOUT.md)                             | Overview, external library rationale, stack, and testing     |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)               | Architecture, layers, design patterns, data flow diagrams    |
 | [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)                 | Local setup, Docker, production, and troubleshooting         |

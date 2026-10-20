@@ -22,23 +22,45 @@ Questo documento descrive gli endpoint REST e le connessioni WebSocket del backe
 - [Plessi e Aule Prenotabili](#plessi-e-aule-prenotabili)
 - [Generatore Orario Scolastico & Desiderata Docenti](#generatore-orario-scolastico--desiderata-docenti)
 - [Sostituzioni Docenti](#sostituzioni-docenti)
+- [Presenze Personale, Cartellino CCNL & Timbrature](#presenze-personale-cartellino-ccnl--timbrature)
 - [Rilevazione Scioperi (Strike Notices & Summary)](#rilevazione-scioperi-strike-notices--summary)
+- [Registro Portineria Visitatori & Uscite Anticipate](#registro-portineria-visitatori--uscite-anticipate)
+- [Sportello Digitale Personale (Ferie & Permessi)](#sportello-digitale-personale-ferie--permessi)
 - [Colloqui e Ricevimento Famiglie](#colloqui-e-ricevimento-famiglie)
 - [Voti, Rubriche ed Educazione Civica](#voti-rubriche-ed-educazione-civica)
 - [Piani Didattici Personalizzati (PDP / PEI)](#piani-didattici-personalizzati-pdp--pei)
+- [Registro di Sostegno, PEI & Verbali GLO](#registro-di-sostegno-pei--verbali-glo)
+- [Monte Ore Docenti Art. 29 CCNL (40+40 Ore)](#monte-ore-docenti-art-29-ccnl-4040-ore)
+- [Sanità Scolastica & Registro Infortuni INAIL](#sanit-scolastica--registro-infortuni-inail)
+- [Certificazione Competenze D.M. 14/2024 & INVALSI](#certificazione-competenze-dm-142024--invalsi)
+- [Pass Digitale Fuori Classe & Delegati Ritiro](#pass-digitale-fuori-classe--delegati-ritiro)
+- [Consegna Elaborati & Correzione Compiti Canvas](#consegna-elaborati--correzione-compiti-canvas)
+- [Monitoraggio Progetti PNRR Futura](#monitoraggio-progetti-pnrr-futura)
+- [Registro Infanzia & Diario di Bordo Famiglie](#registro-infanzia--diario-di-bordo-famiglie)
+- [Cooperazione Applicativa & Flussi Posizionali SIDI](#cooperazione-applicativa--flussi-posizionali-sidi)
+- [Pagamenti PagoPA, Bollettini IUV & Riconciliazione OPI](#pagamenti-pagopa-bollettini-iuv--riconciliazione-opi)
+- [Interpelli Nazionali Supplenze (O.M. 88/2024)](#interpelli-nazionali-supplenze-om-882024)
+- [Albo Pretorio Online & Trasparenza ANAC XML](#albo-pretorio-online--trasparenza-anac-xml)
+- [Esami di Stato Maturità & Curriculum Studente](#esami-di-stato-maturit--curriculum-studente)
+- [Mensa Scolastica, Diete Speciali & Borsellino Pasti](#mensa-scolastica-diete-speciali--borsellino-pasti)
+- [Inventario Beni D.I. 129/2018 & Registro Prestiti](#inventario-beni-di-1292018--registro-prestiti)
+- [Privacy GDPR, Registro Trattamenti & Consensi](#privacy-gdpr-registro-trattamenti--consensi)
+- [Sportello Psicologico d'Ascolto (CIC)](#sportello-psicologico-dascolto-cic)
+- [Elezioni Organi Collegiali & Urna Digitale](#elezioni-organi-collegiali--urna-digitale)
+- [Titolario & Protocollo Informatico AgID](#titolario--protocollo-informatico-agid)
+- [Sportello Digitale Istanze Famiglie](#sportello-digitale-istanze-famiglie)
 - [Piattaforme E-Learning (Google Classroom & Teams)](#piattaforme-e-learning-google-classroom--teams)
 - [Presenze, PCTO e Orientamento](#presenze-pcto-e-orientamento)
 - [Libri di Testo](#libri-di-testo)
 - [Scrutinio e Pagelle](#scrutinio-e-pagelle)
 - [Export e Reportistica (Excel, PDF, SIDI)](#export-e-reportistica-excel-pdf-sidi)
-- [Accessibilità & Segnalazione Barriere (AgID / WCAG 2.2)](#accessibilità--segnalazione-barriere-agid--wcag-22)
-- [Registro di Sostegno & PEI](#registro-di-sostegno--pei)
+- [Accessibilità & Segnalazione Barriere (AgID / WCAG 2.2)](#accessibilit--segnalazione-barriere-agid--wcag-22)
 - [Ricevimento Generale Scuola-Famiglia](#ricevimento-generale-scuola-famiglia)
 - [Corsi di Recupero & Debiti (PAI)](#corsi-di-recupero--debiti-pai)
 - [Credito Scolastico Triennio](#credito-scolastico-triennio)
 - [Cloud-Native Health & Kubernetes Probes](#cloud-native-health--kubernetes-probes)
 - [Registro Personale Docente & Giornale Mensile (PDF)](#registro-personale-docente--giornale-mensile-pdf)
-- [Verifica Congruità Dati Scolastici & Diagnostic](#verifica-congruità-dati-scolastici--diagnostic)
+- [Verifica Congruità Dati Scolastici & Diagnostic](#verifica-congruit-dati-scolastici--diagnostic)
 - [Agenda & Completamento Compiti Studente (To-Do)](#agenda--completamento-compiti-studente-to-do)
 - [Analytics Anti-Dispersione & GDPR Retention](#analytics-anti-dispersione--gdpr-retention)
 - [Documentazione Interattiva Swagger UI & OpenAPI](#documentazione-interattiva-swagger-ui--openapi)
@@ -770,6 +792,392 @@ Esegue la pseudonimizzazione irreversibile dei dati anagrafici e di contatto deg
   "retention_years": 5
 }
 ```
+
+---
+
+## Presenze Personale, Cartellino CCNL & Timbrature
+
+### `GET /api/v1/staff-attendance/today-summary`
+Restituisce il conteggio e le percentuali aggregate delle presenze odierne distinte tra personale Docente e personale ATA.
+- **Autorizzazione**: `dsga`, `principal`, `vice_principal`, `secretary`, `admin`, `superadmin`.
+
+### `GET /api/v1/staff-attendance/list`
+Elenca le timbrature e lo stato del personale per una data specifica.
+- **Query params**: `date` (YYYY-MM-DD), `role_group` (`all`, `ata`, `teacher`), `status` (`present`, `absent`, `late`, `strike`, `leave`).
+
+### `POST /api/v1/staff-attendance/clock-in`
+Registra una timbratura di ingresso/uscita tramite simulatore o terminale badge RFID/NFC.
+- **Request body**:
+```json
+{
+  "user_id": "uuid-dipendente",
+  "badge_code": "RFID-994821",
+  "direction": "in", // "in" o "out"
+  "timestamp": "2026-10-20T07:55:00Z"
+}
+```
+
+### `GET /api/v1/staff-attendance/timecard/monthly`
+Restituisce il prospetto mensile del cartellino orario per il calcolo delle 36 ore settimanali CCNL, con conteggio ore lavorate, straordinari, congedi e debito/credito orario.
+
+### `POST /api/v1/staff-attendance/leaves`
+Sottomette una richiesta di ferie, permesso retribuito (es. motivi personali, studio 150 ore, lutto) o congedo parentale.
+
+### `PATCH /api/v1/staff-attendance/leaves/:id/approve` e `reject`
+Approvazione formale da parte del DSGA o Dirigente Scolastico con motivazione.
+
+---
+
+## Registro Portineria Visitatori & Uscite Anticipate
+
+### `POST /api/v1/visitors/check-in`
+Registra l'ingresso di un visitatore esterno o fornitore nell'edificio scolastico.
+- **Request body**:
+```json
+{
+  "full_name": "Ing. Marco Bianchi",
+  "document_type": "Carta Identità",
+  "document_number": "CA12345AA",
+  "badge_number": "BADGE-12",
+  "destination": "Presidenza / Ufficio Tecnico",
+  "reason": "Sopralluogo impianti"
+}
+```
+
+### `POST /api/v1/visitors/:id/check-out`
+Registra l'uscita del visitatore e la riconsegna del badge fisico.
+
+### `POST /api/v1/visitors/early-departure`
+Registra l'uscita anticipata di uno studente affidato a un genitore o delegato identificato con documento.
+- **Request body**:
+```json
+{
+  "student_id": "uuid-studente",
+  "delegate_name": "Laura Neri",
+  "relationship": "Madre / Delegato permanente",
+  "reason": "visita_medica",
+  "departure_time": "2026-10-20T11:15:00Z"
+}
+```
+
+### `POST /api/v1/visitors/maintenance-tickets`
+Crea una segnalazione guasto o richiesta manutenzione da parte del collaboratore scolastico con priorità (`bassa`, `media`, `alta`, `urgente`) e localizzazione.
+
+---
+
+## Sportello Digitale Personale (Ferie & Permessi)
+
+### `POST /api/v1/personnel-desk/requests`
+Inoltra un'istanza telematica del personale docente o ATA. Il sistema attiva una macchina a stati a 3 stadi:
+1. `submitted`: inviata dal dipendente.
+2. `aa_review`: verificata dall'Assistente Amministrativo di segreteria del personale.
+3. `dsga_review`: munita di visto contabile dal DSGA.
+4. `ds_review` / `approved`: approvata con decreto finale del Dirigente Scolastico.
+
+---
+
+## Registro di Sostegno, PEI & Verbali GLO
+
+### `POST /api/v1/support/diaries`
+Inserisce una voce nel diario giornaliero del docente di sostegno (`activity_description`, `strengths`, `difficulties`, `student_id`).
+
+### `POST /api/v1/support/pei-goals`
+Crea un obiettivo del Piano Educativo Individualizzato (D.I. 182/2020) classificato in una delle 4 dimensioni ministeriali:
+- `relazione_socializzazione`
+- `comunicazione_linguaggi`
+- `autonomia_orientamento`
+- `cognitiva_neuropsicologica`
+Percorsi ammessi: `A_ordinario`, `B_personalizzato_equipollente`, `C_differenziato`.
+
+### `POST /api/v1/support/glo-meetings`
+Verbalizza una riunione del Gruppo di Lavoro Operativo per l'Inclusione (GLO) con partecipanti, delibere e firme congiunte dei membri (docenti, famiglia, specialisti ASL).
+
+### `POST /api/v1/support/hours`
+Registra la quantificazione ufficiale delle ore settimanali di sostegno e di assistenza all'autonomia/comunicazione deliberate nel PEI.
+
+---
+
+## Monte Ore Docenti Art. 29 CCNL (40+40 Ore)
+
+### `GET /api/v1/teacher-hours/dashboard`
+Restituisce il riepilogo del monte ore individuale del docente per l'anno scolastico:
+- **Lettera A (40 ore collegiali)**: Collegi docenti, informazione alle famiglie, open day.
+- **Lettera B (40 ore consigli)**: Consigli di classe, scrutini, dipartimenti disciplinari.
+- Saldo permessi brevi richiesti e ore di recupero effettuate/da effettuare.
+
+### `POST /api/v1/teacher-hours/logs`
+Registra la partecipazione a un'attività collegiale con tipologia (`letter_a` o `letter_b`) e durata in minuti.
+
+### `POST /api/v1/teacher-hours/leaves`
+Richiede un permesso breve (max 2 ore giornaliere, art. 30 CCNL) con impegno al recupero entro due mesi.
+
+### `PATCH /api/v1/teacher-hours/leaves/:id/review`
+Approvazione o rigetto da parte della Dirigenza o Segreteria.
+
+### `POST /api/v1/teacher-hours/leaves/:id/recover`
+Registra l'ora di supplenza o attività svolta dal docente a titolo di saldo del permesso breve pregresso.
+
+---
+
+## Sanità Scolastica & Registro Infortuni INAIL
+
+### `POST /api/v1/health-safety/medications`
+Registra il protocollo di somministrazione farmaco salvavita o ordinario per uno studente:
+- Piano terapeutico ASL allegato.
+- Autorizzazione genitori.
+- Personale formato designato.
+- Posologia, orario e modalità di conservazione (es. frigorifero 2-8°C).
+
+### `POST /api/v1/health-safety/medications/:id/administer`
+Registra l'avvenuta somministrazione quotidiana del farmaco con firma del personale esecutore.
+
+### `POST /api/v1/health-safety/accidents`
+Apre una pratica di infortunio scolastico:
+- Dinamica dell'evento, testimoni presenti, lesione presunta.
+- Chiamata 118, codice di priorità e ospedale di destinazione.
+- Certificato medico con giorni di prognosi.
+
+### `POST /api/v1/health-safety/accidents/:id/transmit-inail`
+Prepara e invia la denuncia telematica teletrasmessa all'INAIL (obbligatoria entro 48 ore se prognosi > 3 giorni).
+
+---
+
+## Certificazione Competenze D.M. 14/2024 & INVALSI
+
+### `POST /api/v1/competencies-dm14/certifications`
+Salva la certificazione ministeriale delle competenze per gli studenti del termine del primo ciclo (terza media) o secondo ciclo:
+- Livelli ministeriali: `A` (Avanzato), `B` (Intermedio), `C` (Base), `D` (Iniziale).
+- Codici per le 8 Competenze Chiave Europee.
+
+### `POST /api/v1/competencies-dm14/certifications/:id/sign`
+Apposizione della firma del coordinatore di classe o del Dirigente Scolastico.
+
+### `POST /api/v1/competencies-dm14/invalsi/batch`
+Importazione massiva delle risultanze delle Prove INVALSI da file ministeriale ufficiale (Italiano, Matematica, Inglese Reading e Listening).
+
+### `GET /api/v1/competencies-dm14/invalsi/analytics`
+Statistiche comparative sui livelli di padronanza INVALSI (1-5) e correlazione con i voti del registro elettronico per il Rapporto di Autovalutazione (RAV).
+
+---
+
+## Pass Digitale Fuori Classe & Delegati Ritiro
+
+### `POST /api/v1/security-passes/hall-passes`
+Rilascio da parte del docente dell'autorizzazione all'uscita temporanea dell'alunno dall'aula (destinazione: bagno, segreteria, infermeria, biblioteca).
+
+### `POST /api/v1/security-passes/hall-passes/:id/return`
+Chiusura del pass al rientro dello studente in classe, con calcolo del tempo di permanenza e alert per uscite prolungate.
+
+### `GET /api/v1/security-passes/hall-passes/active`
+Visualizzazione in tempo reale di tutti gli studenti autorizzati nei corridoi d'istituto per il tabellone dei collaboratori scolastici (`HallMonitor.vue`).
+
+### `POST /api/v1/security-passes/delegates`
+Registrazione formale da parte della famiglia di un delegato permanente maggiorenne autorizzato a ritirare il minore da scuola, con allegata copia del documento.
+
+---
+
+## Consegna Elaborati & Correzione Compiti Canvas
+
+### `POST /api/v1/homework-submissions`
+Sottomissione dell'elaborato svolto da parte dello studente (file allegato, testo formattato, link repository) prima della scadenza.
+
+### `POST /api/v1/homework-submissions/:id/grade`
+Valutazione del docente con inserimento del voto, feedback discorsivo e punteggi analitici per criterio della rubrica valutativa associata.
+
+### `POST /api/v1/homework-submissions/:id/sync-classroom`
+Sincronizzazione automatica del voto e del feedback con il compito corrispondente su Google Classroom.
+
+---
+
+## Monitoraggio Progetti PNRR Futura
+
+### `POST /api/v1/pnrr-projects`
+Censimento di un progetto PNRR Scuola 4.0:
+- Codice Unico di Progetto (CUP) e codice identificativo Piattaforma Futura.
+- Linea di investimento (es. Azione 1 - Next Generation Classrooms, Azione 2 - Next Generation Labs, Dispersione).
+- Target, milestone e importo finanziato.
+
+### `POST /api/v1/pnrr-projects/:id/enroll`
+Iscrizione degli studenti ai percorsi formativi extracurricolari o di mentoring individuale.
+
+### `POST /api/v1/pnrr-projects/:id/lessons`
+Firma della lezione PNRR con rilevamento presenze per la rendicontazione oraria e il rispetto del monte ore minimo.
+
+---
+
+## Registro Infanzia & Diario di Bordo Famiglie
+
+### `POST /api/v1/infanzia/sections`
+Configurazione della sezione della Scuola dell'Infanzia (sezione eterogenea o per età: 3, 4, 5 anni).
+
+### `POST /api/v1/infanzia/sections/:id/attendances`
+Appello giornaliero con registrazione dello stato pasto (`standard`, `dieta_bianco`, `dieta_speciale`) e del riposo pomeridiano (`sonno_regolare`, `insonnia`, `non_ha_dormito`).
+
+### `POST /api/v1/infanzia/observations`
+Registrazione dell'osservazione pedagogica per campi d'esperienza (*Il sé e l'altro*, *Il corpo e il movimento*, *Immagini, suoni, colori*, *I discorsi e le parole*, *La conoscenza del mondo*).
+
+### `POST /api/v1/infanzia/sections/:id/diario`
+Pubblicazione di una storia o momento educativo nel "Diario di Bordo" della sezione visibile ai genitori con foto e descrizione delle attività laboratoriali.
+
+---
+
+## Cooperazione Applicativa & Flussi Posizionali SIDI
+
+### `POST /api/v1/sidi/exports/generate`
+Generazione dei tracciati XML conformi agli schemi XSD ministeriali (Anagrafe Studenti, Frequenze Mensili, Scrutini Quadrimestrali e Finali).
+
+### `POST /api/v1/sidi/positional/generate`
+Generazione dei flussi a lunghezza fissa posizionale (formato TXT a colonne fisse) per l'interscambio con i sistemi SIDI MIUR e INPS.
+
+### `POST /api/v1/sidi/sync-student-codes`
+Interrogazione WebService MIM in cooperazione applicativa (WS-Security SOAP) per la riconciliazione automatica dei codici identificativi SIDI degli studenti.
+
+---
+
+## Pagamenti PagoPA, Bollettini IUV & Riconciliazione OPI
+
+### `GET /api/v1/payments`
+Elenco degli avvisi di pagamento intestati alla famiglia o alla classe (visite d'istruzione, quota assicurativa, contributi volontari).
+
+### `GET /api/v1/payments/:id/bollettino`
+Genera il bollettino di pagamento PDF conforme allo standard PagoPA, corredato di Codice Avviso IUV (ISO 7064 Mod 97-10) e QR Code pagoPA per il versamento presso banche, tabaccherie o app IO.
+
+### `POST /api/v1/payments/:id/pay`
+Registrazione dell'esito della transazione con codice Ricevuta Telematica (RT).
+
+### `POST /api/v1/payments/reconcile-opi`
+Importazione del flusso giornale di cassa OPI / SIOPE+ della banca tesoriera per la riconciliazione contabile automatica degli incassi.
+
+---
+
+## Interpelli Nazionali Supplenze (O.M. 88/2024)
+
+### `GET /api/v1/public/interpelli`
+Consultazione pubblica degli avvisi di interpello attivi per classi di concorso con graduatorie d'istituto (GPS) esaurite.
+
+### `POST /api/v1/public/interpelli/:id/candidatura`
+Invio telematico della candidatura da parte del docente aspirante supplente (titoli di studio, abilitazione, punteggio, disponibilità immediata).
+
+### `GET /api/v1/interpelli/:id/graduatoria`
+Generazione automatica della graduatoria provvisoria dei candidati ordinata per punteggio di servizio e abilitazione.
+
+---
+
+## Albo Pretorio Online & Trasparenza ANAC XML
+
+### `GET /api/v1/public/albo-pretorio`
+Consultazione pubblica degli atti e determine in corso di pubblicazione legale con periodo di affissione legale di 15 giorni consecutivi (L. 69/2009).
+
+### `POST /api/v1/albo-pretorio`
+Pubblicazione di un atto nel registro di repertorio non modificabile con apposizione del timbro digitale e sha256 del documento.
+
+### `POST /api/v1/albo-pretorio/:id/defissione`
+Emissione del certificato di avvenuta pubblicazione legale al termine del quindicesimo giorno.
+
+### `GET /api/v1/public/amministrazione-trasparente/anac.xml`
+Generazione del file XML secondo la specifica tecnica dell'Autorità Nazionale Anticorruzione (ANAC) per l'adempimento dell'art. 1 comma 32 L. 190/2012 su gare e contratti.
+
+---
+
+## Esami di Stato Maturità & Curriculum Studente
+
+### `POST /api/v1/maturita/commission`
+Costituzione della Commissione d'Esame con Presidente, commissari interni ed esterni e abbinamento classi.
+
+### `POST /api/v1/maturita/calculate-credits`
+Calcolo automatico del credito scolastico del triennio (fino a 40 punti) secondo le tabelle di conversione ministeriali del D.Lgs. 62/2017.
+
+### `GET /api/v1/maturita/curriculum-xml`
+Generazione del file XML per il portale nazionale del "Curriculum dello Studente" (D.M. 88/2020) contenente il percorso scolastico, le certificazioni linguistiche/informatiche e le attività extrascolastiche.
+
+---
+
+## Mensa Scolastica, Diete Speciali & Borsellino Pasti
+
+### `POST /api/v1/meals/roll-call`
+Registrazione delle presenze al pasto della giornata per la cucina centralizzata.
+
+### `GET /api/v1/meals/catering-report`
+Esportazione del report aggregato per il centro cottura (suddivisione tra pasti standard, in bianco, per celiachia, allergie sanitarie e diete etico-religiose).
+
+### `GET /api/v1/meals/wallet/:student_id`
+Consultazione del saldo residuo pasti del borsellino elettronico dello studente.
+
+### `POST /api/v1/meals/wallet/:student_id/topup`
+Ricarica del saldo pasti tramite transazione PagoPA o accredito manuale di segreteria.
+
+---
+
+## Inventario Beni D.I. 129/2018 & Registro Prestiti
+
+### `POST /api/v1/inventory/assets`
+Caricamento di un bene mobile o apparecchiatura nell'inventario scolastico con categoria, valore di carico, ubicazione e generazione codice barcode / QR Code.
+
+### `POST /api/v1/inventory/loans`
+Assegnazione di un dispositivo (es. notebook in comodato d'uso gratuito per studenti o docenti) con verbale di consegna firmato digitalmente.
+
+### `POST /api/v1/inventory/loans/:id/return`
+Chiusura del prestito con verifica integrità e reintegro a magazzino.
+
+---
+
+## Privacy GDPR, Registro Trattamenti & Consensi
+
+### `POST /api/v1/privacy/treatments`
+Censimento delle attività di trattamento nel Registro dei Trattamenti dell'istituto (Art. 30 GDPR) con finalità, base giuridica, tempi di conservazione e misure di sicurezza.
+
+### `POST /api/v1/privacy/consent`
+Registrazione del consenso informato dei genitori per riprese fotografiche/video a fini didattici, uscite sul territorio o servizi cloud terzi.
+
+---
+
+## Sportello Psicologico d'Ascolto (CIC)
+
+### `POST /api/v1/psychology/consent`
+Sottoscrizione digitale da parte di entrambi i genitori dell'autorizzazione all'accesso dello studente minorenne allo sportello d'ascolto psicologico (L. 107/2015).
+
+### `POST /api/v1/psychology/book`
+Prenotazione riservata e confidenziale di una sessione di colloquio con lo psicologo d'istituto.
+
+### `PUT /api/v1/psychology/sessions/:id/notes`
+Aggiornamento delle note cliniche e del diario degli interventi, accessibile con isolamento rigoroso esclusivamente al professionista incaricato.
+
+---
+
+## Elezioni Organi Collegiali & Urna Digitale
+
+### `POST /api/v1/elections`
+Indizione di una consultazione elettorale per il rinnovo di Consiglio d'Istituto, Consulta Provinciale degli Studenti o rappresentanti di classe.
+
+### `POST /api/v1/elections/:id/vote`
+Espressione del voto nell'urna digitale protetta con cifratura anonima. L'avvenuto voto viene registrato per impedire votazioni multiple, mentre la scheda votata è scorrelata crittograficamente dall'identità dell'elettore.
+
+### `GET /api/v1/elections/:id/scrutiny`
+Calcolo automatico e certificato dei voti di lista e delle preferenze individuali dei candidati.
+
+---
+
+## Titolario & Protocollo Informatico AgID
+
+### `POST /api/v1/protocol`
+Registrazione formale di un documento in arrivo, partenza o interno:
+- Assegnazione numero progressivo annuale univoco e data/ora certificata.
+- Classificazione secondo il Titolario di Conservazione per le Scuole.
+- Generazione del file `Segnatura.xml` standard AgID.
+
+### `GET /api/v1/protocol/:id/segnatura.xml`
+Download del file di segnatura interoperabile per lo scambio tra Pubbliche Amministrazioni.
+
+---
+
+## Sportello Digitale Istanze Famiglie
+
+### `POST /api/v1/family-desk/requests`
+Invio telematico da parte della famiglia di una richiesta formale:
+- Richiesta nulla osta al trasferimento.
+- Richiesta esonero scienze motorie per motivi di salute.
+- Richiesta certificato di iscrizione o frequenza con timbro digitale.
+- Stato della pratica: `ricevuta`, `in_istruttoria`, `approvata`, `completata`.
 
 ---
 

@@ -26,6 +26,8 @@ il_registro/
 │       └── ci.yml           # Pipeline CI (test, vet, build)
 ├── docs/                    # Documentazione tecnica
 │   ├── ARCHITECTURE.md      # Questo file
+│   ├── DEVELOPER_GUIDE.md   # Guida completa per lo sviluppatore (Italiano)
+│   ├── DEVELOPER_GUIDE_EN.md# Complete Developer Guide (Inglese)
 │   ├── SETUP_GUIDE.md       # Guida installazione
 │   ├── FRONTEND_GUIDE.md    # Guida sviluppo frontend
 │   ├── API_REFERENCE.md     # Riferimento API
@@ -93,6 +95,66 @@ Il backend segue un'architettura **a layer** ispirata alla Clean Architecture:
 │  Migrazioni SQL │     │  Sessioni token      │
 └─────────────────┘     └─────────────────────┘
 ```
+
+---
+
+## Moduli backend
+
+Il backend è organizzato in oltre 40 package modulari e indipendenti all'interno di `registro-backend/internal/`:
+
+### 1. Moduli Core & Anagrafiche
+- **`auth`**: Gestione dell'autenticazione JWT RS256, rotazione refresh token, revoca istantanea JTI su Redis, MFA TOTP e rate limiting anti-brute force sliding-window.
+- **`users`**: Gestione dei 25 ruoli istituzionali, anagrafiche, fascicolo personale dello studente e reset password differenziato per ruolo.
+- **`schools`**: Configurazione istituti, plessi, sedi distaccate e recapiti pubblici di segreteria.
+- **`classes`**: Classi, sezioni, indirizzi di studio e assegnazione dei docenti coordinatori.
+- **`teachers` & `students` & `parents`**: Entità e relazioni del triangolo formativo scuola-famiglia.
+- **`tenants`**: Supporto architetturale multi-istituto e isolamento logico dei dati.
+
+### 2. Moduli Didattici & Valutazione
+- **`grades`**: Valutazioni numeriche, pesi percentuali, simulatore voto target, medie ponderate e grafici di andamento.
+- **`attendance`**: Rilevamento presenze/assenze, firma ora 1-click, giustificazioni con PIN dispositivo e prenotazione mensa.
+- **`scrutiny`**: Tabelloni scrutinio primo/secondo quadrimestre, delibere voto di condotta, calcolo crediti e scrutinio differito (O.M. 92/2007).
+- **`primaryeval`**: Valutazione descrittiva scuola primaria conforme a O.M. 172/2020 (4 livelli ministeriali e 4 dimensioni pedagogiche).
+- **`rubrics`**: Rubriche valutative per criteri e descrittori analitici di prestazione.
+- **`student_goals`**: Monitoraggio traguardi formativi e obiettivi personalizzati dello studente.
+- **`homework_submissions`**: Consegna telematica compiti, annotazione docente e sincronizzazione con Google Classroom.
+- **`infanzia`**: Registro presenze infanzia, sonno, pasti, osservazioni per campi d'esperienza e diario di bordo fotografico.
+
+### 3. Moduli Inclusione & Bisogni Educativi Speciali
+- **`pdp`**: Piani Didattici Personalizzati per DSA/BES con cifratura a riposo della diagnosi (AES-256-GCM) e firma approvativa dei genitori.
+- **`support`**: Registro di Sostegno, tracciamento obiettivi PEI (D.I. 182/2020), verbali riunioni GLO con firme congiunte e quantificazione ore settimanali.
+- **`recovery`**: Corsi di recupero pomeridiani, piani di apprendimento individualizzati (PAI) e prove di verifica debito formativo.
+
+### 4. Orario, Plessi & Sostituzioni
+- **`timetables`**: Tabellone orario scolastico sincronizzato bidirezionalmente tra classi e docenti.
+- **`rooms`**: Anagrafica aule speciali e laboratori multi-plesso, con verifica atomica anti-sovrapposizione su prenotazioni spot e ricorrenti.
+- **`timetablegen`**: Motore di generazione automatica dell'orario scolastico (CSP Solver) con ponderazione dei desiderata sull'anzianità di servizio (`hiring_date`).
+- **`substitutions`**: Algoritmo euristico per l'assegnazione rapida dei docenti supplenti su cattedre scoperte con firma digitale 1-click.
+
+### 5. Moduli Amministrativi, Personale ATA & Sicurezza
+- **`staff_attendance`**: Presenze personale ATA e docenti, simulatore badge RFID/NFC e cartellino 36 ore settimanali CCNL.
+- **`strike`**: Rilevazione preventiva e volontaria dell'adesione agli scioperi ARAN con calcolo percentuali d'istituto.
+- **`visitors`**: Registro portineria visitatori esterni, rilascio badge e autorizzazione uscite anticipate alunni con identificazione delegati.
+- **`personnel_desk`**: Sportello digitale istanze personale (ferie, permessi, congedi) con flusso a 3 stadi (Istruttoria AA -> Visto DSGA -> Decreto DS).
+- **`teacher_hours`**: Monte ore obbligatorio Art. 29 CCNL (40h attività collegiali + 40h consigli di classe) e permessi brevi con recupero.
+- **`health_safety`**: Registro somministrazione farmaci a scuola (con piano ASL) e registro infortuni con trasmissione telematica INAIL.
+- **`security_passes`**: Pass digitale uscita dall'aula (bagno/segreteria), alert permanenza e registro deleghe permanenti ritiro minori.
+
+### 6. Moduli Enterprise, Ministero (MIM) & Conformità Legale
+- **`sidi`**: Tracciati posizionali TXT a colonne fisse e Cooperazione Applicativa WebService SIDI/MIM.
+- **`payments`**: Integrazione PagoPA, emissione avvisi con IUV ISO 7064 Mod 97-10 e riconciliazione contabile OPI/SIOPE+.
+- **`interpelli`**: Gestione interpelli nazionali per supplenze a graduatorie esaurite (O.M. 88/2024) e graduatorie di merito.
+- **`albopretorio`**: Pubblicità legale L. 69/2009 con affissione di 15 giorni, timbro digitale ed export ANAC XML (L. 190/2012).
+- **`maturita`**: Commissione d'esame, conversione crediti D.M. 88/2020 ed esportazione del Curriculum dello Studente.
+- **`meals`**: Prenotazione pasti, report centro cottura, diete sanitarie/religiose e borsellino prepagato refezione.
+- **`inventory`**: Inventario beni e apparecchiature D.I. 129/2018 con etichette barcode e comodati d'uso.
+- **`privacy`**: Registro dei trattamenti GDPR Art. 30 e gestione dei consensi informati studente/famiglia.
+- **`psychology`**: Sportello d'ascolto psicologico (CIC L. 107/2015) con consenso informato genitori e prenotazione anonima.
+- **`elections`**: Urna elettorale digitale con crittografia segreta per il voto online degli organi collegiali.
+- **`protocol`**: Titolario e protocollo informatico ufficiale con generazione Segnatura.xml conforme AgID.
+- **`pnrr_projects`**: Monitoraggio investimenti PNRR Futura, CUP, target, milestone e rendicontazione lezioni.
+- **`competencies_invalsi`**: Certificazione delle competenze D.M. 14/2024 e analisi statistica prove INVALSI.
+- **`signatures`**: Firma Elettronica Qualificata (FEQ) ed Avanzata (FEA) con valore legale eIDAS / CAD.
 
 ---
 
