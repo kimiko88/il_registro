@@ -2,6 +2,10 @@
 
 Benvenuto nel Wiki di **il_registro**. Questa guida completa è pensata per sviluppatori, architetti e maintainer del progetto. Fornisce una visione approfondita dell'architettura del sistema, dei modelli dati, delle regole di sicurezza RBAC, dei flussi applicativi e delle linee guida per l'estensione del codice.
 
+> 📖 **Guide Dedicate per lo Sviluppatore**:
+> - 🇮🇹 **[Guida Completa per lo Sviluppatore (Italiano)](./DEVELOPER_GUIDE.md)**: guida approfondita passo-passo su layer Go, Pinia, RBAC, database e tutorial end-to-end.
+> - 🇬🇧 **[Complete Developer Guide (English)](./DEVELOPER_GUIDE_EN.md)**: in-depth developer guide with architecture, modules, and contribution workflows.
+
 ---
 
 ## 📑 Indice

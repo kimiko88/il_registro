@@ -1178,3 +1178,24 @@ Nei vincoli ci sono solo le aule e i laboratori, non posso scegliere anche le pr
     - Aggiunti step guidati dedicati con titoli, descrizioni, elenchi puntati e navigazione diretta per `principal` (7 step), `student` (10 step), `parent` (10 step), `secretary` (9 step), `admin` (9 step), `assistente_amministrativo` (6 step) e `dsga` (6 step).
     - Allineamento completo delle traduzioni nelle 11 lingue supportate.
     - Test unitari passati al 100% (`EnterpriseRoleTours.spec.js`, `HelpAndOnboarding.spec.js`, `OnboardingTourExtended.spec.js`).
+
+- [x] **Commercial Enterprise Expansion Pack & Allineamento Documentazione Completa (Ottobre 2026)**:
+  - **1. Moduli Backend & Frontend Expansion Pack**:
+    - `teacher_hours`: Monte ore docenti Art. 29 CCNL (40h collegiali + 40h consigli) e permessi brevi con recupero (`TeacherHourObligations.vue`).
+    - `health_safety`: Somministrazione farmaci con piano ASL e registro infortuni con trasmissione telematica INAIL (`HealthSafety.vue`).
+    - `competencies_invalsi`: Certificazione competenze D.M. 14/2024 e dashboard analitica prove INVALSI per RAV (`CompetenciesDM14.vue`, `InvalsiAnalytics.vue`).
+    - `security_passes`: Pass digitale uscita aula, timer permanenza, tabellone monitor per collaboratori scolastici ATA (`HallPasses.vue`, `HallMonitor.vue`) e deleghe permanenti ritiro minori (`Delegates.vue`).
+    - `homework_submissions`: Consegna elaborati Canvas e correzione con rubriche e sync Google Classroom (`HomeworkSubmissions.vue`, `HomeworkCorrection.vue`).
+    - `pnrr_projects`: Monitoraggio progetti PNRR Scuola 4.0, CUP, target, milestone e rendicontazione lezioni (`PnrrProjects.vue`).
+    - `infanzia`: Registro scuola infanzia (pasti, sonno, campi d'esperienza) e diario di bordo fotografico famiglie (`InfanziaRegister.vue`, `InfanziaDiario.vue`).
+    - `support`: Registro sostegno potenziato con verbali riunioni GLO e quantificazione ore D.I. 182/2020 (`SupportRegister.vue`).
+  - **2. Guide Dettagliate per lo Sviluppatore (Italiano & Inglese)**:
+    - Creata `docs/DEVELOPER_GUIDE.md` (Guida completa per lo sviluppatore in italiano) con architettura Clean Architecture a strati, catena middleware, crittografia e sicurezza (RSA, JTI blacklist Redis, pepper SHA-256), database pgx/v5 e partizionamento, catalogo di tutti i 40+ moduli, architettura frontend Vue 3 + Quasar, architettura mobile Android/iOS, tutorial passo-passo per nuove funzionalità e linee guida di testing e release.
+    - Creata `docs/DEVELOPER_GUIDE_EN.md` (Complete Developer Guide in inglese) con la medesima struttura approfondita per contributori internazionali.
+  - **3. Aggiornamento Documentazione Generale di Progetto**:
+    - `README.md` & `README_EN.md`: Tabella funzionalità principali estesa con tutte le oltre 40 aree applicative e collegamenti prominenti alle Guide per lo Sviluppatore.
+    - `docs/ARCHITECTURE.md`: Albero monorepo e catalogo completo dei 40+ moduli backend (`Moduli backend`), pattern architetturali e database design.
+    - `docs/API_REFERENCE.md`: Indice ed endpoint dettagliati per tutti i nuovi moduli (teacher-hours, health-safety, competencies-dm14, security-passes, homework-submissions, pnrr-projects, infanzia, support, sidi, payments, interpelli, albo-pretorio, maturita, meals, inventory, privacy, psychology, elections, protocol, family-desk, staff-attendance, visitors, personnel-desk).
+    - `docs/FRONTEND_GUIDE.md`: Linee guida componenti estese con le nuove viste e metriche test aggiornate (297 test suite, 1667+ test passati).
+    - `docs/WIKI.md`: Aggiornata visione generale e collegamenti alle Guide per lo Sviluppatore.
+

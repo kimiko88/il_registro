@@ -7,14 +7,18 @@ Questa guida è rivolta agli sviluppatori che contribuiscono al frontend di il_r
 ## Indice
 
 - [Principi generali](#principi-generali)
-- [Convenzioni di naming](#convenzioni-di-naming)
-- [Struttura dei componenti Vue](#struttura-dei-componenti-vue)
 - [Composables & Error Handler](#composables--error-handler)
 - [Pinia Stores & Caching](#pinia-stores--caching)
-- [API Service Layer & Router Integration](#api-service-layer--router-integration)
 - [Gestione Errori Centralizzata](#gestione-errori-centralizzata)
-- [Internazionalizzazione & Accessibilità (a11y)](#internazionalizzazione--accessibilità-a11y)
-- [Performance](#performance)
+- [WebSocket & Real-time Error Exposure](#websocket--real-time-error-exposure)
+- [Internazionalizzazione & Accessibilità (a11y)](#internazionalizzazione--accessibilità-a11y---agid--wcag-22)
+- [Impostazioni Utente, MFA (2FA) & Filtro Anno Scolastico](#impostazioni-utente-mfa-2fa--filtro-anno-scolastico)
+- [Sistema di Help Center, Onboarding & Guida In-App](#-sistema-di-help-center-onboarding--guida-in-app)
+- [Architettura dei Composables & Safety Guidelines](#️-architettura-dei-composables--safety-guidelines)
+- [Linee Guida per i Componenti Vue](#-linee-guida-per-i-componenti-vue-srccomponents)
+- [Dark Mode & Sistema di Design Globale](#-dark-mode--sistema-di-design-globale-globalscss)
+- [Unit & E2E Testing dei Componenti, Composabili & Servizi](#-unit--e2e-testing-dei-componenti-composabili--servizi)
+- [Documentazione Correlata per Sviluppatori](#-documentazione-correlata-per-sviluppatori)
 
 ---
 
@@ -172,6 +176,14 @@ I composabili in `src/composables/` incapsulano la logica reattiva, l'interazion
 9. **Isolamento Errori (`ErrorBoundary.vue`)**: Componente di cattura errori reattivo con card fallback accessibile WCAG e ripristino dello stato applicativo senza perdita di sessione.
 10. **Aule Prenotabili Multi-Plesso (`Rooms.vue` & `RoomBooking.vue`)**: Interfaccia segreteria per anagrafica plessi, tipologia e capienza laboratori, e portale docente per prenotazioni spot o ricorrenti con controllo disponibilità e prevenzione sovrapposizioni.
 11. **Generatore Orario & Desiderata (`TimetableConstraints.vue`, `SchedulePreferences.vue`, `Timetable.vue`)**: Modulo per il Vicario/Segreteria con configurazione vincoli istituto, form desiderata docente e console di generazione orario CSP con polling asincrono e pubblicazione atomica.
+12. **Monte Ore Docenti Art. 29 CCNL (`TeacherHourObligations.vue`)**: Cruscotto interattivo per il monitoraggio delle 40 ore collegiali (Lettera A) e 40 ore di consigli (Lettera B), con richiesta e approvazione permessi brevi e registrazione ore di recupero.
+13. **Sanità Scolastica & Infortuni (`HealthSafety.vue`)**: Registro somministrazione farmaci salvavita con piano ASL, log quotidiano delle somministrazioni, fascicolo infortuni e teletrasmissione telematica INAIL entro 48 ore.
+14. **Competenze D.M. 14/2024 & INVALSI (`CompetenciesDM14.vue` & `InvalsiAnalytics.vue`)**: Griglia ministeriale per le 8 Competenze Chiave Europee (livelli A-D), firma digitale del certificato ed analisi comparativa delle prove INVALSI con i voti scolastici per il RAV.
+15. **Pass Fuori Classe & Monitoraggio ATA (`HallPasses.vue` & `HallMonitor.vue`)**: Gestione dei permessi di uscita dall'aula per studenti con timer automatico di permanenza, alert per ritardi e tabellone a tutto schermo per i collaboratori scolastici di plesso.
+16. **Compiti Canvas & Consegne (`HomeworkSubmissions.vue` & `HomeworkCorrection.vue`)**: Caricamento elaborati digitali da parte dello studente e correzione docente con rubriche di valutazione analitiche e sincronizzazione Google Classroom.
+17. **Progetti PNRR Futura (`PnrrProjects.vue`)**: Monitoraggio delle linee di investimento PNRR Scuola 4.0, codice CUP, milestone, target, anagrafica studenti e registri lezioni per la rendicontazione.
+18. **Scuola dell'Infanzia (`InfanziaRegister.vue` & `InfanziaDiario.vue`)**: Registro specifico con presenze per campi d'esperienza, rilevamento pasti/diete speciali, sonno pomeridiano e diario fotografico per le famiglie.
+19. **Enterprise & Legal Compliance Hub (`EnterpriseHub.vue`)**: Cruscotto unificato per i 10 moduli normativi (PagoPA, SIDI MIM, Maturità D.M. 88/2020, Albo Pretorio L. 69/2009, Inventario Beni D.I. 129/2018, Firma FEQ, Sportello Psicologico CIC, Interpelli O.M. 88/2024, Borsellino Mensa, Pre-iscrizioni).
 
 ---
 
@@ -196,15 +208,26 @@ Il registro implementa un sistema coerente di tema scuro (`.body--dark`) gestito
 La suite di test frontend è sviluppata con **Vitest** e **Vue Test Utils**:
 
 - **Comando di esecuzione**: `npm run test:unit` oppure `npx vitest run`
-- **Metriche**: **277 test suite**, **1548 unit/E2E test passati al 100%** (0 errori, 0 fallimenti).
+- **Metriche**: **297 test suite**, **1667+ unit/E2E test passati al 100%** (0 errori, 0 fallimenti).
 - **Linter**: `npm run lint` (**0 errori, 0 warning** su tutto il codice sorgente).
 - **Copertura**:
   - `tests/unit/components/`: Test dedicati per componenti Admin, Common, Parent, Secretary, Student e Teacher.
-  - `tests/unit/pages/`: Test completi sulle nuove pagine di gestione aule (`Rooms.spec.js`), prenotazione aule (`RoomBooking.spec.js`), desiderata orario (`SchedulePreferences.spec.js`) e vincoli orario (`TimetableConstraints.spec.js`).
+  - `tests/unit/pages/`: Test completi sulle nuove pagine di gestione aule (`Rooms.spec.js`), prenotazione aule (`RoomBooking.spec.js`), desiderata orario (`SchedulePreferences.spec.js`), vincoli orario (`TimetableConstraints.spec.js`) ed enterprise pack (`commercialEnterpriseExpansion.spec.js`).
   - `tests/unit/services/`: Test isolati per tutti i client HTTP inclusi `roomsService.spec.js` e `timetableGenService.spec.js`.
-  - `tests/e2e/`: Workflow completi end-to-end con mock realistici: `rooms-booking-workflow.spec.js` e `timetable-generation-workflow.spec.js`.
+  - `tests/e2e/`: Workflow completi end-to-end con mock realistici: `rooms-booking-workflow.spec.js`, `timetable-generation-workflow.spec.js`, `strike-management-workflow.spec.js`, `personnel-desk-workflow.spec.js`, `emergency-substitutions-workflow.spec.js`.
   - `tests/unit/composables/`: Test dedicati per tutti i composabili (`useSpeechSynthesis`, `useGlobalKeyboardShortcuts`, `useDraftAutosave`, `usePermissions`, `useIdempotency`, `useOutboxStore`, ecc.).
   - `tests/unit/accessibility/`: Suite completa per compliance WCAG 2.2, AgID, TTS, Reading Ruler e invio segnalazioni.
   - `tests/unit/security/`: Test di anti-regressione RBAC, XSS DOMPurify sanitization, CSV injection prevention, route guards e token security.
+
+---
+
+## 📚 Documentazione Correlata per Sviluppatori
+
+Per un approfondimento completo e guide passo-passo sull'architettura e sull'implementazione di nuove funzionalità end-to-end:
+- **[Guida Completa per lo Sviluppatore (Italiano)](./DEVELOPER_GUIDE.md)**
+- **[Complete Developer Guide (English)](./DEVELOPER_GUIDE_EN.md)**
+- **[Architettura di Sistema](./ARCHITECTURE.md)**
+- **[Riferimento REST API & WebSocket](./API_REFERENCE.md)**
+
 
 

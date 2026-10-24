@@ -122,21 +122,38 @@ il_registro è pensato per essere **auto-ospitato da scuole, Comuni, Regioni o d
 
 | Area                      | Funzionalità                                                                                                                              |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Guida Sviluppatore**    | **[docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)** (Italiano) & **[docs/DEVELOPER_GUIDE_EN.md](./docs/DEVELOPER_GUIDE_EN.md)** (English): documentazione approfondita su architettura, moduli, RBAC, database e tutorial di estensione |
 | **App Mobile Native (Alpha)** | **Android & iOS Native (Fase Alpha non stabile e incompleta)** per Studente, Genitore, Docente e Segreteria (Kotlin Compose & SwiftUI, biometria, offline, 11 lingue) |
-| **Autenticazione & SSO**  | JWT (access 15min + refresh rotation), MFA TOTP, **Google Workspace & MS Teams SSO**, OAuth2/OIDC                                        |
-| **Ruoli**                 | `superadmin`, `admin`, `secretary`, `teacher`, `student`, `parent`                                                                        |
+| **Autenticazione & SSO**  | JWT RS256 asimmetrico, revoca istantanea JTI su Redis, MFA TOTP, Bcrypt pre-hashing SHA-256 con pepper, rate limit anti-brute force, **Google Workspace & MS Teams SSO** |
+| **Ruoli Istituzionali**   | Governance rigorosa su 25 ruoli (Dirigenza, Amministrazione, ATA, Docenti, Famiglie, DPO, Psicologo, Tutor) con matrice RBAC di minimo privilegio |
 | **Voti & Valutazioni**    | Inserimento rapido, **Matrix View a Tastiera**, medie ponderate, simulatore voto target, **Matrice Descrittiva O.M. 172/2020 (4 livelli ministeriali)**, misure BES/DSA |
 | **Presenze & Lezioni**    | Registro giornaliero, **Firma Ora 1-Click**, firma rapida lezioni consecutive (2-3h), copia argomenti ultima lezione, alert assenteismo  |
 | **Atti Ufficiali (PDF)**  | **Registro Personale del Docente PDF** (quadrimestri, medie pesate, lezioni), **Giornale di Classe Mensile PDF** con matrice presenze codificata (P, A, R, U, G) |
-| **Diagnostica & Linter**  | **Data Integrity Scanner**: controllo preventivo incongruenze relazionali (studenti orfani, classi senza coordinatore, lezioni sovrapposte) |
-| **Supplenze & Dispatcher**| **Tabellone Orario Live (1ª-6ª Ora)** con visualizzazione classi scoperte e raccomandazione automatica supplenti con assegnazione 1-click |
+| **Monte Ore Docenti CCNL**| **Art. 29 CCNL 40+40 Ore**: tracciamento automatico attività collegiali (lettera A) e consigli di classe (lettera B), permessi brevi e ore di recupero |
+| **Sanità & Infortuni**    | **Registro Somministrazione Farmaci** (piano terapeutico ASL, consensi) e **Registro Infortuni con trasmissione telematica INAIL**       |
+| **Competenze & INVALSI**  | **Certificazione Competenze D.M. 14/2024** (8 competenze europee, livelli A-D) e **Dashboard Analitica Prove INVALSI** (confronto RAV)  |
+| **Pass Fuori Classe**     | **Pass Digitale Uscita Aula** con timer permanenza, tabellone live monitoraggio corridoi per collaboratori scolastici ATA e **Deleghe Ritiro Minori** |
+| **Compiti & Consegne**    | **Consegna Elaborati Studente & Correzione Docente Canvas** con rubriche analitiche e sincronizzazione automatica su Google Classroom    |
+| **Progetti PNRR Futura**  | **Monitoraggio PNRR Scuola 4.0**: anagrafica progetti, CUP, target, milestone, iscrizione percorsi e registri lezioni rendicontabili     |
+| **Scuola dell'Infanzia**  | **Registro Infanzia & Diario di Bordo Fotografico**: appello pasti/diete speciali, riposo pomeridiano, osservazioni per campi d'esperienza |
+| **Sostegno & Inclusione** | **Registro Sostegno, PEI (D.I. 182/2020)** su 4 dimensioni ministeriali, verbali riunioni GLO con firme congiunte e quantificazione ore settimanali |
+| **PDP (BES & DSA)**       | **Piani Didattici Personalizzati**, misure compensative/dispensative, crittografia AES-256 della diagnosi sanitaria e firma digitale genitore |
+| **Supplenze & Dispatcher**| **Tabellone Orario Live (1ª-6ª Ora)** con classi scoperte, raccomandazione automatica supplenti con scoring e assegnazione 1-click        |
+| **Personale ATA & Presenze**| **Presenze Personale & Timbrature Badge RFID/NFC**, cartellino mensile 36h CCNL, congedi e **Sportello Digitale Personale** a 3 stadi |
+| **Rilevazione Scioperi**  | **Rilevazione Preventiva Scioperi ARAN**: dichiarazioni volontarie del personale, calcolo percentuali d'adesione e avvisi alle famiglie   |
+| **Portineria & Visitatori**| **Registro Visitatori di Portineria**, prestiti badge fisici, uscite anticipate alunni con identificazione delegati e segnalazione guasti |
+| **Enterprise Hub (MIM)**  | **PagoPA con codici IUV** e riconciliazione OPI/SIOPE+, **Flussi SIDI / MIM** (posizionali e cooperazione applicativa), **Maturità D.M. 88/2020 & Curriculum dello Studente** |
+| **Trasparenza & Legalità**| **Albo Pretorio Online (L. 69/2009)** con affissione 15 giorni e timbro digitale, **Amministrazione Trasparente con export ANAC XML**     |
+| **Beni & Inventario**     | **Inventario Beni Scolastici D.I. 129/2018**, etichette barcode/QR, registro prestiti e comodati d'uso gratuito per studenti/docenti    |
+| **Sportello Psicologico** | **Sportello d'Ascolto (CIC L. 107/2015)** con consenso informato digitale genitori, prenotazione riservata e note cliniche isolate       |
+| **Elezioni Digitali**     | **Urna Elettorale Digitale Anonima** per elezioni organi collegiali con scrutinio automatico e certificato                             |
+| **Protocollo AgID**       | **Titolario & Protocollo Informatico Ufficiale** con generazione e download del file `Segnatura.xml` interoperabile                      |
 | **Portale Famiglia & Studente** | **Monitoraggio Limite Assenze 25% (DPR 122/2009)** con calcolo ore residue, **Planner Compiti & To-Do List** sincronizzato via API |
-| **Scrutini & Differiti**  | Tabellone scrutinio, delibere condotta, credito scolastico, **Scrutinio Differito (saldo debiti formativi)**                              |
-| **PDP / PEI (BES & DSA)** | **Gestione Piani Didattici Personalizzati**, misure compensative/dispensative, firma/approvazione digitale genitore e protezione diagnosi |
+| **Scrutini & Differiti**  | Tabellone scrutinio, delibere condotta, credito scolastico, **Scrutinio Differito (saldo debiti formativi O.M. 92/2007)**                  |
 | **Business Intelligence** | **Dashboard Dispersione Scolastica & Early Warning (DPR 122/2009)**, export piano di supporto CSV, report andamento quadrimestri          |
 | **Cloud-Native & Resilienza** | **Kubernetes Probes (`/live`, `/ready`)** con deep dependency check (DB, Redis, goroutine, RAM), **Circuit Breaker** su integrazioni esterne |
 | **E-Learning Sync**       | **Google Classroom & Microsoft Teams**: sincronizzazione automatica compiti, voti e classi                                                |
-| **Comunicazioni**         | Circolari, comunicazioni urgenti con **Presa d'Atto obbligatoria**, notifiche real-time WebSocket e Web Push                              |
+| **Comunicazioni**         | Circolari, comunicazioni urgenti con **Presa d'Atto obbligatoria**, notifiche real-time multicanale (Web Push, WebSocket, Email, SMS)   |
 | **Accessibilità & UX**    | **Font DSA OpenDyslexic**, alto contrasto, **Ricerca Globale `Ctrl+K`**, **Toast & Undo (15s)**, Timeline del Giorno, Skeleton screens    |
 | **PWA & Offline Outbox**  | Installabile su desktop/mobile (PWA), **Coda Outbox Offline** per operazioni docente con sync FIFO automatico                             |
 | **Aule & Multi-Plesso**   | **Gestione Aule Prenotabili nei Vari Plessi**: anagrafica plessi, tipologia e capienza laboratori, disponibilità live e prenotazioni spot/ricorrenti docenti per classe con verifica sovrapposizioni |
@@ -215,6 +232,8 @@ Go è stato scelto per il backend per ragioni che vanno oltre la moda tecnologic
 
 | Documento                                                    | Descrizione                                                  |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [docs/DEVELOPER_GUIDE.md](./docs/DEVELOPER_GUIDE.md)         | **Guida Completa per lo Sviluppatore (Italiano)**: architettura, layer Go, Pinia, RBAC e tutorial |
+| [docs/DEVELOPER_GUIDE_EN.md](./docs/DEVELOPER_GUIDE_EN.md)   | **Complete Developer Guide (English)**: deep-dive architecture, modules, RBAC, tutorial |
 | [docs/ABOUT.md](./docs/ABOUT.md)                             | Panoramica, logica librerie esterne, stack e test            |
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)               | Architettura, layer, pattern, diagrammi data flow            |
 | [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md)                 | Installazione locale, Docker, produzione, troubleshooting    |

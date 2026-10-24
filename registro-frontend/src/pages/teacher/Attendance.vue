@@ -902,7 +902,6 @@ import NoteDialog from 'src/components/Teacher/NoteDialog.vue'
 import StudentAttendanceDetailDialog from '@/components/Teacher/StudentAttendanceDetailDialog.vue'
 import SkeletonTable from '@/components/Common/SkeletonTable.vue'
 import { useSchoolYearStore } from '@/stores/schoolYear'
-import { useSchoolStore } from '@/stores/schools'
 import { useOfflineSync } from '@/composables/useOfflineSync'
 
 const $q = useQuasar()
@@ -919,7 +918,6 @@ const classesStore = useClassesStore()
 const gradesStore = useGradesStore()
 const authStore = useAuthStore()
 const schoolYearStore = useSchoolYearStore()
-const schoolStore = useSchoolStore()
 const { executeWithOfflineQueue } = useOfflineSync()
 
 // Current teacher ID from auth token
