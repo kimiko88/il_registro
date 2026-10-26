@@ -23,18 +23,7 @@ export function useErrorHandler() {
 
         console.error('[ErrorHandler]', err)
 
-        errorStore.reportError(err, message)
-
-        if (showToast) {
-            Notify.create({
-                message,
-                color: 'negative',
-                icon: 'error',
-                position: 'top-right',
-                timeout: 4000,
-                attrs: { role: 'alert' }
-            })
-        }
+        errorStore.reportError(err, message, showToast)
 
         return message
     }

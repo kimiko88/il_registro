@@ -22,8 +22,8 @@ type UserAssignmentResponse struct {
 
 // LoginRequest represents login credentials
 type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" binding:"required,email" validate:"required,email"`
+	Password string `json:"password" binding:"required" validate:"required"`
 	MFAToken string `json:"mfa_token,omitempty"`
 }
 
@@ -34,13 +34,13 @@ type RefreshTokenRequest struct {
 
 // PasswordResetRequest represents a password reset request
 type PasswordResetRequest struct {
-	Email string `json:"email" validate:"required,email"`
+	Email string `json:"email" binding:"required,email" validate:"required,email"`
 }
 
 // PasswordResetConfirmRequest represents password reset confirmation
 type PasswordResetConfirmRequest struct {
-	Token       string `json:"token" validate:"required"`
-	NewPassword string `json:"new_password" validate:"required,min=10"`
+	Token       string `json:"token" binding:"required" validate:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=10" validate:"required,min=10"`
 }
 
 // MFASetupRequest represents MFA setup initiation
