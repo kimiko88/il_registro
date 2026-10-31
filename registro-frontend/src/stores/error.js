@@ -7,7 +7,7 @@ export const useErrorStore = defineStore('error', () => {
     const globalError = ref(null)
     const errorHistory = ref([])
 
-    function reportError(error, customMessage = null) {
+    function reportError(error, customMessage = null, showNotify = true) {
         // i18n may not be available yet during early boot errors — use safe fallback
         const t = i18n?.global?.t
         const defaultMsg = t ? t('common.error') : 'Si è verificato un errore inaspettato.'
@@ -30,17 +30,19 @@ export const useErrorStore = defineStore('error', () => {
             errorHistory.value.pop()
         }
 
-        // Display Quasar toast notification
-        Notify.create({
-            message,
-            color: 'negative',
-            icon: 'error',
-            position: 'top-right',
-            timeout: 5000,
-            actions: [
-                { label: closeLabel, color: 'white' }
-            ]
-        })
+        // Display Quasar toast notification if requested
+        if (showNotify) {
+            Notify.create({
+                message,
+                color: 'negative',
+                icon: 'error',
+                position: 'top-right',
+                timeout: 5000,
+                actions: [
+                    { label: closeLabel, color: 'white' }
+                ]
+            })
+        }
     }
 
     function clearGlobalError() {
