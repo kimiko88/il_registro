@@ -1,4 +1,3 @@
-import { Notify } from 'quasar'
 import { useErrorStore } from '@/stores/error'
 import { i18n } from '@/i18n'
 
@@ -22,7 +21,6 @@ export function useErrorHandler() {
         const message = err?.userMessage || err?.response?.data?.error || err?.message || fallbackMessage || defaultMsg
 
         console.error('[ErrorHandler]', err)
-
         errorStore.reportError(err, message, showToast)
 
         return message
