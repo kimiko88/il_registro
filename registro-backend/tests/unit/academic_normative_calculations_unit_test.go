@@ -58,19 +58,19 @@ type SubjectGrade struct {
 type ScrutinyOutcome string
 
 const (
-	OutcomeAmesso                 ScrutinyOutcome = "AMMESSO"
-	OutcomeNonAmmesso             ScrutinyOutcome = "NON_AMMESSO"
-	OutcomeSospensioneGiudizio    ScrutinyOutcome = "SOSPENSIONE_GIUDIZIO"
-	OutcomeAmmessoConDebito       ScrutinyOutcome = "AMMESSO_CON_DEBITO"
+	OutcomeAmesso              ScrutinyOutcome = "AMMESSO"
+	OutcomeNonAmmesso          ScrutinyOutcome = "NON_AMMESSO"
+	OutcomeSospensioneGiudizio ScrutinyOutcome = "SOSPENSIONE_GIUDIZIO"
+	OutcomeAmmessoConDebito    ScrutinyOutcome = "AMMESSO_CON_DEBITO"
 )
 
 type FinalScrutinyAssessment struct {
-	GPA            float64
-	FailingCount   int
-	FailingDebts   []SubjectGrade
-	ConductGrade   float64
-	FinalOutcome   ScrutinyOutcome
-	RequiresExam   bool
+	GPA          float64
+	FailingCount int
+	FailingDebts []SubjectGrade
+	ConductGrade float64
+	FinalOutcome ScrutinyOutcome
+	RequiresExam bool
 }
 
 func AssessFinalScrutiny(grades []SubjectGrade, conductGrade float64, isHighSchool bool) FinalScrutinyAssessment {
@@ -418,6 +418,6 @@ func TestValidateMechanographicCode(t *testing.T) {
 func TestValidatePagoPAIUV(t *testing.T) {
 	assert.True(t, ValidatePagoPAIUV("020260000000012345"))
 	assert.True(t, ValidatePagoPAIUV("012345678901234"))
-	assert.False(t, ValidatePagoPAIUV("123")) // Too short
+	assert.False(t, ValidatePagoPAIUV("123"))                // Too short
 	assert.False(t, ValidatePagoPAIUV("02026ABC0000012345")) // Non numeric
 }

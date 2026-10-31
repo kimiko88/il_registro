@@ -154,7 +154,7 @@ func TestIntegration_FamilyDesk_PermanentDelegates_Lifecycle(t *testing.T) {
 		require.Equal(t, http.StatusOK, w.Code)
 
 		var resp struct {
-			Message string                  `json:"message"`
+			Message string                    `json:"message"`
 			Request family_desk.FamilyRequest `json:"request"`
 		}
 		err := json.Unmarshal(w.Body.Bytes(), &resp)
