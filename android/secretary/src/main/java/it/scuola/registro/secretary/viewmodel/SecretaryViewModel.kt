@@ -269,6 +269,14 @@ class SecretaryViewModel(
             totalTeachers = 2,
             totalUsers = 3
         )
+
+        auditLogs.clear()
+        auditLogs.addAll(
+            listOf(
+                AuditLogEntry("a1", "Segreteria Centrale", "secretary", "BLOCCO_SCRUTINIO", "Classe 1A", "2026-09-01 10:00:00", "SUCCESS"),
+                AuditLogEntry("a2", "Segreteria Centrale", "secretary", "CREAZIONE_UTENTE", "u3", "2026-09-01 10:05:00", "SUCCESS")
+            )
+        )
     }
 
     fun getUsersByRole(role: String): List<ManagedUser> {
@@ -295,13 +303,15 @@ class SecretaryViewModel(
     }
 
     fun generateCertificate(studentId: String, type: String): CertificateRequest {
+        val timestamp = System.currentTimeMillis()
         val newCert = CertificateRequest(
-            id = "cert_${System.currentTimeMillis()}",
+            id = "cert_$timestamp",
             studentId = studentId,
             studentName = "Studente",
             certificateType = type,
+            protocolNo = "PROT-$timestamp",
             status = "completato",
-            generatedPdfUrl = "/api/v1/certificates/gen_${System.currentTimeMillis()}.pdf"
+            generatedPdfUrl = "/api/v1/certificates/gen_$timestamp.pdf"
         )
         certificateRequests.add(newCert)
         return newCert
