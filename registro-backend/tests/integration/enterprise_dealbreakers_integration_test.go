@@ -248,9 +248,9 @@ func TestIntegration_Interpelli_Supplenze(t *testing.T) {
 		ConcorsoClass: "A026",
 		PostType:      "comune",
 		WeeklyHours:   18,
-		StartDate:     "2026-11-01",
-		EndDate:       "2027-06-30",
-		Deadline:      "2026-10-31",
+		StartDate:     time.Now().Format("2006-01-02"),
+		EndDate:       time.Now().AddDate(1, 0, 0).Format("2006-01-02"),
+		Deadline:      time.Now().AddDate(0, 1, 0).Format("2006-01-02"),
 		Description:   "Supplenza per cattedra intera A026",
 	}
 	body, _ := json.Marshal(noticeReq)

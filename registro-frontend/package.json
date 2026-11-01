@@ -49,7 +49,9 @@
   "overrides": {
     "@sinclair/typebox": "^0.34.0",
     "nanoid": "^3.3.18",
-    "brace-expansion": ">=2.1.7"
+    "brace-expansion": ">=2.1.7",
+    "minimatch": "^11.0.3",
+    "glob": "^14.0.3"
   },
   "engines": {
     "node": "^18 || ^20 || ^22 || ^24",
@@ -57,3 +59,4 @@
     "yarn": ">= 1.21.1"
   }
 }
+
