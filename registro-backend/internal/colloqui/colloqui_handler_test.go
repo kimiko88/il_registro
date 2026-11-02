@@ -201,10 +201,11 @@ func TestColloquiHandler_Endpoints(t *testing.T) {
 	rAdmin.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusCreated, w.Code)
 
-	// CreateAssembly
-	repo.On("ExistsOverlappingSlot", mock.Anything, "admin-1", "2026-10-30", "10:00", "12:00").Return(false, nil).Once()
+	// CreateAssembly — use a future date so the past-date guard in CreateSlot does not fire
+	futureDate := time.Now().AddDate(0, 1, 0).Format("2006-01-02")
+	repo.On("ExistsOverlappingSlot", mock.Anything, "admin-1", futureDate, "10:00", "12:00").Return(false, nil).Once()
 	repo.On("CreateSlot", mock.Anything, mock.AnythingOfType("*colloqui.ColloquioSlot")).Return(nil).Once()
-	assemblyPayload := `{"class_id":"cls-1","title":"Assemblea Generale","date":"2026-10-30","start_time":"10:00","end_time":"12:00","max_bookings":50,"location":"Aula Magna"}`
+	assemblyPayload := `{"class_id":"cls-1","title":"Assemblea Generale","date":"` + futureDate + `","start_time":"10:00","end_time":"12:00","max_bookings":50,"location":"Aula Magna"}`
 	req, _ = http.NewRequest(http.MethodPost, "/api/v1/colloqui/assemblies", bytes.NewBufferString(assemblyPayload))
 	req.Header.Set("Content-Type", "application/json")
 	w = httptest.NewRecorder()
