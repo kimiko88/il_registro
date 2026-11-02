@@ -234,6 +234,40 @@ func TestPathTraversal_AllowsSafePaths(t *testing.T) {
 	}
 }
 
+// ─── LDAP Injection Validation ────────────────────────────────────────────────
+
+func TestLDAPInjection_DetectsDangerousPatterns(t *testing.T) {
+	dangerous := []string{
+		"*",
+		"(cn=*)",
+		"admin)(|(password=*)",
+		"user\x00injected",
+		"test/path",
+		"(objectClass=*)",
+		"*)(uid=*))(|(uid=*",
+	}
+	for _, input := range dangerous {
+		t.Run(input, func(t *testing.T) {
+			assert.True(t, containsLDAPInjectionPatterns(input), "should detect LDAP injection: %q", input)
+		})
+	}
+}
+
+func TestLDAPInjection_AllowsSafeInputs(t *testing.T) {
+	safe := []string{
+		"mario.rossi",
+		"admin123",
+		"teacher-biagi",
+		"scuola_est",
+		"NomeClasse2B",
+	}
+	for _, input := range safe {
+		t.Run(input, func(t *testing.T) {
+			assert.False(t, containsLDAPInjectionPatterns(input), "safe input should pass: %q", input)
+		})
+	}
+}
+
 // ─── Username Validation ──────────────────────────────────────────────────────
 
 func TestUsernameValidation_ValidUsernames(t *testing.T) {
