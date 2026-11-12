@@ -199,7 +199,10 @@ func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string
 			return nil, 0, ErrUnauthorized
 		}
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" {
+			return nil, 0, ErrUnauthorized
+		}
 		filter.SchoolID = &actorSchoolID
 	}
 	return s.repo.List(ctx, filter)
@@ -214,7 +217,7 @@ func (s *Service) GetUser(ctx context.Context, actorRole, actorSchoolID string, 
 	if err != nil {
 		return nil, err
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || user.SchoolID == nil || *user.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
 	}
 	return user, nil
@@ -397,10 +400,12 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 
 	// ChangePasswordTx aggiorna password e history in un'unica transazione atomica.
 	// Questo garantisce che se la history fallisce, anche la password non viene salvata.
+	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+		return fmt.Errorf("failed to revoke existing sessions: %w", err)
+	}
 	if err := s.repo.ChangePasswordTx(ctx, userID, string(hash)); err != nil {
 		return err
 	}
-	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return nil
 }
 
@@ -475,10 +480,12 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 	now := time.Now()
 	user.PasswordHash = string(hash)
 	user.PasswordChangedAt = &now
+	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+		return fmt.Errorf("failed to revoke existing sessions: %w", err)
+	}
 	if err := s.repo.Update(ctx, user); err != nil {
 		return err
 	}
-	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return s.repo.AddPasswordHistory(ctx, userID, string(hash))
 }
 
