@@ -102,7 +102,7 @@ func (h *Handler) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	user, err := h.service.CreateUser(c.Request.Context(), getActorRole(c), req)
+	user, err := h.service.CreateUserForSchool(c.Request.Context(), getActorRole(c), getSchoolID(c), req)
 	if err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
