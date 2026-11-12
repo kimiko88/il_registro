@@ -61,7 +61,7 @@ var upgrader = websocket.Upgrader{
 			// Default local dev fallback: allow only exact localhost/127.0.0.1 hosts.
 			// We parse the origin URL and compare the host exactly — no substring match.
 			if origin == "" {
-				return true
+				return false
 			}
 			parsed, err := url.Parse(origin)
 			if err != nil {
