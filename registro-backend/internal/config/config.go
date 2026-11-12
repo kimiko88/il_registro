@@ -203,8 +203,11 @@ func LoadConfig() (*Config, error) {
 // RedisURL resolves the Redis connection string, preferring REDIS_URL if set,
 // or constructing redis://host:port from the host and port config.
 func (c *Config) RedisURL() string {
-	if url := os.Getenv("REDIS_URL"); url != "" {
-		return url
+	if redisURL := viper.GetString("REDIS_URL"); redisURL != "" {
+		return redisURL
+	}
+	if redisURL := os.Getenv("REDIS_URL"); redisURL != "" {
+		return redisURL
 	}
 	if c.Redis.Host != "" {
 		port := c.Redis.Port
