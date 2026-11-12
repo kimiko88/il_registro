@@ -43,6 +43,7 @@ services:
     depends_on: [db, pgbouncer, redis]
     environment:
       SERVER_MODE: ${SERVER_MODE:-release}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?ALLOWED_ORIGINS must be set}
       DB_HOST: pgbouncer
       DB_PORT: 6432
       DB_USER: ${DB_USER:?DB_USER must be set}
