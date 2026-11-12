@@ -15,31 +15,33 @@ import (
 var (
 	ErrCiphertextTooShort = errors.New("ciphertext too short")
 	ErrDecryptionFailed   = errors.New("decryption failed")
+	ErrEncryptionKeyNotConfigured = errors.New("ENCRYPTION_KEY must be configured as 32 raw bytes or 64 hexadecimal characters")
 )
 
-// GetEncryptionKey returns the 32-byte key from ENCRYPTION_KEY env var
-// or a secure default key for development purposes.
+// GetEncryptionKey returns the configured 256-bit encryption key.
+// There is intentionally no built-in fallback: a public default would expose
+// encrypted student and health records to anyone with access to the source.
 func GetEncryptionKey() []byte {
 	keyStr := os.Getenv("ENCRYPTION_KEY")
-	if keyStr != "" {
-		key, err := hex.DecodeString(keyStr)
-		if err == nil && len(key) == 32 {
-			return key
-		}
-		if len(keyStr) == 32 {
-			return []byte(keyStr)
-		}
+	if keyStr == "" {
+		return nil
 	}
-	// Fallback 32-byte development key (hex of "registro_elettronico_secure_aes_key")
-	// "726567697374726f5f656c657474726f6e69636f5f7365637572655f6b657931"
-	fallbackKey, _ := hex.DecodeString("726567697374726f5f656c657474726f6e69636f5f7365637572655f6b657931")
-	return fallbackKey
+	if key, err := hex.DecodeString(keyStr); err == nil && len(key) == 32 {
+		return key
+	}
+	if len(keyStr) == 32 {
+		return []byte(keyStr)
+	}
+	return nil
 }
 
 // Encrypt encrypts a byte slice using AES-256-GCM.
 // Prepend the 12-byte nonce to the ciphertext.
 func Encrypt(plaintext []byte) ([]byte, error) {
 	key := GetEncryptionKey()
+	if len(key) != 32 {
+		return nil, ErrEncryptionKeyNotConfigured
+	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
