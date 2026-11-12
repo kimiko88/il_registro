@@ -212,3 +212,23 @@ func TestApproveByFamily_NonGuardian_Forbidden(t *testing.T) {
 	err := svc.ApproveByFamily(context.Background(), "parent", "parent-1", "school-1", "pdp-2")
 	assert.ErrorIs(t, err, ErrNotGuardian)
 }
+
+
+// A tenantless or cross-school principal must never read a PDP/PEI record.
+func TestGetByID_CrossTenantForbidden(t *testing.T) {
+	pRepo := &mockPdpRepoForSecTest{plans: map[string]*PdpPlan{
+		"pdp-tenant": {ID: "pdp-tenant", StudentID: "student-1", SchoolID: "school-1"},
+	}}
+	svc := NewService(pRepo)
+	_, err := svc.GetByID(context.Background(), "teacher-2", "teacher", "school-2", "pdp-tenant")
+	assert.ErrorIs(t, err, ErrUnauthorized)
+}
+
+func TestGetByID_MissingTenantForbidden(t *testing.T) {
+	pRepo := &mockPdpRepoForSecTest{plans: map[string]*PdpPlan{
+		"pdp-tenant": {ID: "pdp-tenant", StudentID: "student-1", SchoolID: "school-1"},
+	}}
+	svc := NewService(pRepo)
+	_, err := svc.GetByID(context.Background(), "teacher-1", "teacher", "", "pdp-tenant")
+	assert.ErrorIs(t, err, ErrUnauthorized)
+}
