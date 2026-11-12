@@ -24,7 +24,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: registro_user
-          POSTGRES_PASSWORD: testpassword
+          POSTGRES_PASSWORD: ci-test-db-password-not-for-production-0123456789
           POSTGRES_DB: registro_test
         ports:
           - 5432:5432
@@ -79,6 +79,7 @@ jobs:
           JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxxxxxxxxxxx
           ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           PEPPER_SECRET: ci-only-pepper-value-not-for-production-0123456789
+          DB_PASSWORD: ci-test-db-password-not-for-production-0123456789
       ALLOW_LEGACY_PASSWORD_PEPPER: "true"
         run: go test -race -coverprofile=coverage.out ./...
 
