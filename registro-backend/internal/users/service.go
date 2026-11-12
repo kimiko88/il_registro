@@ -125,6 +125,22 @@ func isPrivileged(role string) bool {
 
 // ─── CRUD ────────────────────────────────────────────────────────────────────
 
+// CreateUserForSchool prevents non-superadmin callers from selecting or omitting
+// the tenant. The HTTP handler must pass the authenticated school from context.
+func (s *Service) CreateUserForSchool(ctx context.Context, actorRole, actorSchoolID string, req CreateUserRequest) (*User, error) {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" {
+			return nil, ErrUnauthorized
+		}
+		if req.SchoolID != nil && *req.SchoolID != actorSchoolID {
+			return nil, ErrUnauthorized
+		}
+		schoolID := actorSchoolID
+		req.SchoolID = &schoolID
+	}
+	return s.CreateUser(ctx, actorRole, req)
+}
+
 // CreateUser creates a new user, enforcing role-based permission checks.
 func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUserRequest) (*User, error) {
 	allowed, ok := allowedCreators[actorRole]
