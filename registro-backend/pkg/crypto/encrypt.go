@@ -10,6 +10,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"strings"
 )
 
 var (
@@ -24,7 +25,12 @@ var (
 func GetEncryptionKey() []byte {
 	keyStr := os.Getenv("ENCRYPTION_KEY")
 	if keyStr == "" {
-		return nil
+		if strings.EqualFold(os.Getenv("SERVER_MODE"), "release") || strings.EqualFold(os.Getenv("APP_ENV"), "production") || strings.EqualFold(os.Getenv("GIN_MODE"), "release") {
+			return nil
+		}
+		// Development-only compatibility key. Production startup rejects missing keys.
+		fallback, _ := hex.DecodeString("726567697374726f5f656c657474726f6e69636f5f7365637572655f6b657931")
+		return fallback
 	}
 	if key, err := hex.DecodeString(keyStr); err == nil && len(key) == 32 {
 		return key
@@ -65,6 +71,9 @@ func Encrypt(plaintext []byte) ([]byte, error) {
 // Decrypt decrypts a byte slice using AES-256-GCM.
 func Decrypt(ciphertext []byte) ([]byte, error) {
 	key := GetEncryptionKey()
+	if len(key) != 32 {
+		return nil, ErrEncryptionKeyNotConfigured
+	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -121,7 +130,10 @@ func DecryptString(ciphertextHex string) (string, error) {
 func PrehashPassword(password string) []byte {
 	pepper := os.Getenv("PEPPER_SECRET")
 	if pepper == "" {
-		pepper = "default_pepper_secret_registrov2"
+		if strings.EqualFold(os.Getenv("SERVER_MODE"), "release") || strings.EqualFold(os.Getenv("APP_ENV"), "production") || strings.EqualFold(os.Getenv("GIN_MODE"), "release") {
+			return nil
+		}
+		pepper = "default_pepper_secret_registrov2" // development-only compatibility
 	}
 	h := hmac.New(sha256.New, []byte(pepper))
 	h.Write([]byte(password))
