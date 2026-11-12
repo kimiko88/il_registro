@@ -124,6 +124,35 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 
+		// Role, tenant and password changes invalidate already-issued access JWTs.
+		currentUser, userErr := m.userRepo.GetByID(c.Request.Context(), claims.UserID)
+		if userErr != nil {
+			logger.Log.Errorf("Current account authorization check failed for user %s: %v", claims.UserID, userErr)
+			c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "authentication temporarily unavailable"})
+			c.Abort()
+			return
+		}
+		if currentUser == nil || !currentUser.IsActive {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
+			c.Abort()
+			return
+		}
+		currentSchoolID := ""
+		if currentUser.SchoolID != nil {
+			currentSchoolID = *currentUser.SchoolID
+		}
+		if currentUser.Role != claims.Role || currentSchoolID != claims.SchoolID {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "account permissions changed; authenticate again"})
+			c.Abort()
+			return
+		}
+		if currentUser.PasswordChangedAt != nil &&
+			(claims.IssuedAt == nil || !claims.IssuedAt.Time.After(*currentUser.PasswordChangedAt)) {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "credentials changed; authenticate again"})
+			c.Abort()
+			return
+		}
+
 		// Set claims in context
 		c.Set("user_id", claims.UserID)
 		c.Set("email", claims.Email)
@@ -268,6 +297,21 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 		}
 		if !isActive {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
+			c.Abort()
+			return
+		}
+		currentUser, userErr := m.userRepo.GetByID(c.Request.Context(), userID)
+		if userErr != nil {
+			c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "authentication temporarily unavailable"})
+			c.Abort()
+			return
+		}
+		currentSchoolID := ""
+		if currentUser != nil && currentUser.SchoolID != nil {
+			currentSchoolID = *currentUser.SchoolID
+		}
+		if currentUser == nil || !currentUser.IsActive || currentUser.Role != role || currentSchoolID != schoolID {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "account permissions changed; authenticate again"})
 			c.Abort()
 			return
 		}
