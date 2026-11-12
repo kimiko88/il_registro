@@ -14,13 +14,18 @@ import (
 func RequestBodyLimitMiddleware(maxBytes int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		contentType := c.GetHeader("Content-Type")
-		if strings.HasPrefix(contentType, "multipart/form-data") {
-			c.Next()
+		limit := maxBytes
+		if strings.HasPrefix(strings.ToLower(contentType), "multipart/form-data") {
+			// Allow the documented 20 MiB upload ceiling plus bounded multipart headers.
+			// Never exempt multipart requests: parsers may otherwise spool unbounded data to disk.
+			limit = 22 << 20
+		}
+		if c.Request.ContentLength > limit {
+			c.AbortWithStatusJSON(http.StatusRequestEntityTooLarge, gin.H{"error": "request body too large"})
 			return
 		}
-
 		if c.Request.Body != nil {
-			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxBytes)
+			c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, limit)
 		}
 		c.Next()
 	}
