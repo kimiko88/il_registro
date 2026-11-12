@@ -81,6 +81,7 @@ services:
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set}
       PEPPER_SECRET: ${PEPPER_SECRET:?PEPPER_SECRET must be set}
+      ALLOW_LEGACY_ENCRYPTION_KEY: ${ALLOW_LEGACY_ENCRYPTION_KEY:-false}
     networks: [backend]
 
 networks:
