@@ -20,8 +20,8 @@ var (
 )
 
 // GetEncryptionKey returns the configured 256-bit encryption key.
-// There is intentionally no built-in fallback: a public default would expose
-// encrypted student and health records to anyone with access to the source.
+// A development-only compatibility key is retained for local setups; production
+// startup rejects missing keys and disables this fallback.
 func GetEncryptionKey() []byte {
 	keyStr := os.Getenv("ENCRYPTION_KEY")
 	if keyStr == "" {
