@@ -234,7 +234,7 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole, actorSchoolID, id s
 		return nil, err
 	}
 
-	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || user.SchoolID == nil || *user.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
 	}
 
@@ -285,6 +285,12 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole, actorSchoolID, id s
 
 	user.UpdatedAt = time.Now()
 
+	// Changes to role, activation state or tenant invalidate all previously issued sessions.
+	if req.Role != nil || req.IsActive != nil || req.SchoolID != nil {
+		if err := s.repo.RevokeAllUserTokens(ctx, id); err != nil {
+			return nil, fmt.Errorf("failed to revoke sessions after security-sensitive account change: %w", err)
+		}
+	}
 	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, err
 	}
@@ -300,11 +306,14 @@ func (s *Service) DeleteUser(ctx context.Context, actorRole, actorSchoolID, id s
 	if err != nil {
 		return err
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || user.SchoolID == nil || *user.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 	if (actorRole == "secretary" || actorRole == "dsga" || actorRole == "assistente_amministrativo") && (user.Role == "admin" || user.Role == "superadmin" || (actorRole != "dsga" && user.Role == "dsga")) {
 		return ErrUnauthorized
+	}
+	if err := s.repo.RevokeAllUserTokens(ctx, id); err != nil {
+		return fmt.Errorf("failed to revoke sessions before deleting user: %w", err)
 	}
 	return s.repo.Delete(ctx, id)
 }
@@ -344,7 +353,7 @@ func (s *Service) RestoreUser(ctx context.Context, actorRole, actorSchoolID stri
 	if err != nil {
 		return err
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || user.SchoolID == nil || *user.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 	return s.repo.Restore(ctx, id)
@@ -453,7 +462,7 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 		}
 	}
 
-	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || user.SchoolID == nil || *user.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 
@@ -463,7 +472,10 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 
 	preNew := crypto.PrehashPassword(newPassword)
 	history, err := s.repo.GetPasswordHistory(ctx, userID)
-	if err == nil {
+	if err != nil {
+		return fmt.Errorf("failed to fetch password history: %w", err)
+	}
+	{
 		for _, old := range history {
 			if bcrypt.CompareHashAndPassword([]byte(old), preNew) == nil ||
 				bcrypt.CompareHashAndPassword([]byte(old), []byte(newPassword)) == nil {
@@ -498,10 +510,14 @@ func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID strin
 	if err != nil {
 		return err
 	}
+	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+		return fmt.Errorf("failed to revoke sessions before disabling MFA: %w", err)
+	}
+	if err := s.repo.ClearTempMFASecret(ctx, userID); err != nil {
+		return fmt.Errorf("failed to clear temporary MFA secret: %w", err)
+	}
 	user.MFAEnabled = false
 	user.MFASecret = ""
-	_ = s.repo.ClearTempMFASecret(ctx, userID)
-	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return s.repo.Update(ctx, user)
 }
 
