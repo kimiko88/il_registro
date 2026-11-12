@@ -14,9 +14,9 @@ import (
 )
 
 var (
-	ErrCiphertextTooShort = errors.New("ciphertext too short")
-	ErrDecryptionFailed   = errors.New("decryption failed")
-	ErrEncryptionKeyNotConfigured = errors.New("ENCRYPTION_KEY must be configured as 32 raw bytes or 64 hexadecimal characters")
+	ErrCiphertextTooShort          = errors.New("ciphertext too short")
+	ErrDecryptionFailed            = errors.New("decryption failed")
+	ErrEncryptionKeyNotConfigured  = errors.New("ENCRYPTION_KEY must be configured as 32 raw bytes or 64 hexadecimal characters")
 )
 
 // GetEncryptionKey returns the configured 256-bit encryption key.
