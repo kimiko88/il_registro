@@ -119,7 +119,8 @@ func TestPDPService_CreatePlan(t *testing.T) {
 
 func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 	mockRepo := new(MockRepository)
-	svc := NewService(mockRepo)
+	guardians := &mockUserRepoForPdp{guardians: map[string]string{"parent-1:student-1": "ok"}}
+	svc := NewService(mockRepo, guardians)
 	ctx := context.Background()
 
 	originalPlan := &PdpPlan{
@@ -136,7 +137,7 @@ func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 	t.Run("teacher sees full diagnosis", func(t *testing.T) {
 		mockRepo.On("GetByID", ctx, "pdp-100").Return(originalPlan, nil).Once()
 
-		plan, err := svc.GetByID(ctx, "teacher-1", "teacher", "", "pdp-100")
+		plan, err := svc.GetByID(ctx, "teacher-1", "teacher", "school-1", "pdp-100")
 		assert.NoError(t, err)
 		assert.Equal(t, "Diagnosi Riservata Clinica", plan.Diagnosis)
 	})
@@ -144,7 +145,7 @@ func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 	t.Run("parent sees shared plan with redacted diagnosis", func(t *testing.T) {
 		mockRepo.On("GetByID", ctx, "pdp-100").Return(originalPlan, nil).Once()
 
-		plan, err := svc.GetByID(ctx, "parent-1", "parent", "", "pdp-100")
+		plan, err := svc.GetByID(ctx, "parent-1", "parent", "school-1", "pdp-100")
 		assert.NoError(t, err)
 		assert.Equal(t, "", plan.Diagnosis)
 	})
@@ -153,11 +154,12 @@ func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 		unsharedPlan := &PdpPlan{
 			ID:               "pdp-200",
 			StudentID:        "student-1",
+			SchoolID:         "school-1",
 			SharedWithFamily: false,
 		}
 		mockRepo.On("GetByID", ctx, "pdp-200").Return(unsharedPlan, nil).Once()
 
-		plan, err := svc.GetByID(ctx, "parent-1", "parent", "", "pdp-200")
+		plan, err := svc.GetByID(ctx, "parent-1", "parent", "school-1", "pdp-200")
 		assert.Error(t, err)
 		assert.Nil(t, plan)
 		assert.Equal(t, ErrNotSharedYet, err)
