@@ -111,8 +111,12 @@ func LoadConfig() (*Config, error) {
 		strings.EqualFold(viper.GetString("GIN_MODE"), "release")
 	if isProduction {
 		dbPassword := strings.TrimSpace(viper.GetString("DB_PASSWORD"))
-		if len(dbPassword) < 24 || strings.HasPrefix(strings.ToUpper(dbPassword), "CAMBIA") {
+		if len(dbPassword) < 24 || strings.HasPrefix(strings.ToUpper(dbPassword), "CAMBIA") || strings.HasPrefix(strings.ToUpper(dbPassword), "INSERISCI") {
 			return nil, fmt.Errorf("DB_PASSWORD must be a generated secret of at least 24 characters in production")
+		}
+		redisPassword := strings.TrimSpace(viper.GetString("REDIS_PASSWORD"))
+		if redisPassword != "" && (len(redisPassword) < 32 || strings.HasPrefix(strings.ToUpper(redisPassword), "CAMBIA") || strings.HasPrefix(strings.ToUpper(redisPassword), "INSERISCI")) {
+			return nil, fmt.Errorf("REDIS_PASSWORD must be a generated secret of at least 32 characters when configured")
 		}
 		if strings.TrimSpace(viper.GetString("ALLOWED_ORIGINS")) == "" {
 			return nil, fmt.Errorf("ALLOWED_ORIGINS must be configured in production")
