@@ -178,13 +178,16 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	prehashedPassword := crypto.PrehashPassword(req.Password)
 	bcryptErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), prehashedPassword)
 	if bcryptErr != nil {
-		// Fallback check against legacy raw password (for existing user accounts)
-		legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
-		if legacyErr != nil {
-			s.recordFailedAttempt(ctx, req.Email, ipAddress)
-			return nil, ErrInvalidCredentials
+		// First accept hashes made with the old built-in pepper, then legacy raw
+		// bcrypt hashes. Successful legacy authentication is transparently upgraded.
+		legacyPepperedErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), crypto.PrehashPasswordLegacy(req.Password))
+		if legacyPepperedErr != nil {
+			legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
+			if legacyErr != nil {
+				s.recordFailedAttempt(ctx, req.Email, ipAddress)
+				return nil, ErrInvalidCredentials
+			}
 		}
-		// Transparent auto-migration: re-hash with pre-hashed format and update in DB
 		go func(uid string, passBytes []byte, cost int) {
 			if newHash, err := bcrypt.GenerateFromPassword(passBytes, cost); err == nil {
 				_ = s.repo.UpdatePassword(context.Background(), uid, string(newHash))
@@ -676,6 +679,7 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 	}
 	for _, oldHash := range history {
 		if bcrypt.CompareHashAndPassword([]byte(oldHash), crypto.PrehashPassword(newPassword)) == nil ||
+			bcrypt.CompareHashAndPassword([]byte(oldHash), crypto.PrehashPasswordLegacy(newPassword)) == nil ||
 			bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
 			return ErrPasswordReused
 		}
@@ -740,8 +744,10 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 	// Verify current password (supports prehashed or legacy raw)
 	preCurrent := crypto.PrehashPassword(currentPassword)
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), preCurrent); err != nil {
-		if legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)); legacyErr != nil {
-			return ErrInvalidCredentials
+		if legacyPepperedErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), crypto.PrehashPasswordLegacy(currentPassword)); legacyPepperedErr != nil {
+			if legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)); legacyErr != nil {
+				return ErrInvalidCredentials
+			}
 		}
 	}
 
@@ -759,6 +765,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 	preNew := crypto.PrehashPassword(newPassword)
 	for _, oldHash := range history {
 		if bcrypt.CompareHashAndPassword([]byte(oldHash), preNew) == nil ||
+			bcrypt.CompareHashAndPassword([]byte(oldHash), crypto.PrehashPasswordLegacy(newPassword)) == nil ||
 			bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
 			return ErrPasswordReused
 		}
