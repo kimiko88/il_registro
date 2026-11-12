@@ -90,9 +90,21 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		// Instant distributed revocation check (JTI Blacklist)
-		if m.revocationStore != nil && claims.ID != "" {
-			if revoked, err := m.revocationStore.IsRevoked(c.Request.Context(), claims.ID); err == nil && revoked {
+		// Distributed revocation is security-critical: fail closed on store errors.
+		if m.revocationStore != nil {
+			if claims.ID == "" {
+				c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "token missing identifier"})
+				c.Abort()
+				return
+			}
+			revoked, revocationErr := m.revocationStore.IsRevoked(c.Request.Context(), claims.ID)
+			if revocationErr != nil {
+				logger.Log.Errorf("Token revocation check unavailable for user %s: %v", claims.UserID, revocationErr)
+				c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "authentication temporarily unavailable"})
+				c.Abort()
+				return
+			}
+			if revoked {
 				logger.Log.Warnf("Revoked token rejected: jti=%s user=%s", claims.ID, claims.UserID)
 				c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "token has been revoked"})
 				c.Abort()
