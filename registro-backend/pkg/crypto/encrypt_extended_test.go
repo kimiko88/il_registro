@@ -11,6 +11,7 @@ import (
 
 // TestGetEncryptionKey_Missing verifies that no insecure built-in key is used.
 func TestGetEncryptionKey_Missing(t *testing.T) {
+	t.Setenv("SERVER_MODE", "release")
 	t.Setenv("ENCRYPTION_KEY", "")
 	assert.Nil(t, GetEncryptionKey())
 	_, err := Encrypt([]byte("sensitive"))
