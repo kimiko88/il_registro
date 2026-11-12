@@ -123,15 +123,6 @@ func LoadConfig() (*Config, error) {
 		if len(viper.GetString("JWT_SECRET")) < 64 {
 			return nil, fmt.Errorf("JWT_SECRET must contain at least 64 characters in release mode")
 		}
-		// Crypto helpers read process environment directly; copy values loaded from .env
-		// into the process environment after validation.
-		for _, name := range []string{"ENCRYPTION_KEY", "PEPPER_SECRET"} {
-			if value := viper.GetString(name); value != "" && os.Getenv(name) == "" {
-				if err := os.Setenv(name, value); err != nil {
-					return nil, fmt.Errorf("failed to initialize %s: %w", name, err)
-				}
-			}
-		}
 	}
 
 	// Crypto helpers read process environment directly. Promote values loaded
