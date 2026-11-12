@@ -8,6 +8,8 @@ import (
 	"encoding/pem"
 	"path/filepath"
 	"testing"
+	"context"
+	"time"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -259,20 +261,25 @@ func TestNewRevocationStore_EmptyURL(t *testing.T) {
 	_ = store.Close()
 }
 
-// TestNewRevocationStore_UnreachableRedis falls back to memory.
-func TestNewRevocationStore_UnreachableRedis(t *testing.T) {
+// Configured Redis must never silently degrade to process-local revocation.
+func TestNewRevocationStore_UnreachableRedisFailsClosed(t *testing.T) {
 	store := NewRevocationStore("redis://127.0.0.1:1/0")
 	require.NotNil(t, store)
 	_, ok := store.(*MemoryRevocationStore)
-	assert.True(t, ok)
+	assert.False(t, ok)
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+	_, err := store.IsRevoked(ctx, "test-jti")
+	assert.Error(t, err)
 	_ = store.Close()
 }
 
-// TestNewRevocationStore_InvalidRedisURL falls back to memory.
-func TestNewRevocationStore_InvalidRedisURL(t *testing.T) {
+func TestNewRevocationStore_InvalidRedisURLFailsClosed(t *testing.T) {
 	store := NewRevocationStore("not-a-redis-url")
 	require.NotNil(t, store)
-	_, ok := store.(*MemoryRevocationStore)
+	_, ok := store.(*unavailableRevocationStore)
 	assert.True(t, ok)
+	_, err := store.IsRevoked(context.Background(), "test-jti")
+	assert.Error(t, err)
 	_ = store.Close()
 }
