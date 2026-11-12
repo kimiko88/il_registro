@@ -132,7 +132,7 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		if currentUser == nil || !currentUser.IsActive {
+		if currentUser == nil || !currentUser.IsActive || currentUser.DeletedAt != nil {
 			c.JSON(http.StatusForbidden, ErrorResponse{Error: "account is disabled"})
 			c.Abort()
 			return
@@ -310,7 +310,7 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 		if currentUser != nil && currentUser.SchoolID != nil {
 			currentSchoolID = *currentUser.SchoolID
 		}
-		if currentUser == nil || !currentUser.IsActive || currentUser.Role != role || currentSchoolID != schoolID {
+		if currentUser == nil || !currentUser.IsActive || currentUser.DeletedAt != nil || currentUser.Role != role || currentSchoolID != schoolID {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "account permissions changed; authenticate again"})
 			c.Abort()
 			return
