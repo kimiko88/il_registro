@@ -92,6 +92,22 @@ func Decrypt(ciphertext []byte) ([]byte, error) {
 	nonce, actualCiphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 	plaintext, err := aesGCM.Open(nil, nonce, actualCiphertext, nil)
 	if err != nil {
+		// Existing records may have been encrypted with the historical public
+		// development key. Decrypt them only when an operator explicitly enables
+		// the migration compatibility switch; all new writes use ENCRYPTION_KEY.
+		if strings.EqualFold(os.Getenv("ALLOW_LEGACY_ENCRYPTION_KEY"), "true") {
+			legacyKey, _ := hex.DecodeString("726567697374726f5f656c657474726f6e69636f5f7365637572655f6b657931")
+			legacyBlock, legacyErr := aes.NewCipher(legacyKey)
+			if legacyErr == nil {
+				legacyGCM, gcmErr := cipher.NewGCM(legacyBlock)
+				if gcmErr == nil {
+					legacyPlaintext, openErr := legacyGCM.Open(nil, nonce, actualCiphertext, nil)
+					if openErr == nil {
+						return legacyPlaintext, nil
+					}
+				}
+			}
+		}
 		return nil, ErrDecryptionFailed
 	}
 
@@ -125,7 +141,7 @@ func DecryptString(ciphertextHex string) (string, error) {
 	return string(plainBytes), nil
 }
 
-// PrehashPassword computes a 32-byte HMAC-SHA256 of the password using the PEPPER_SECRET env var.
+// PrehashPassword computes a 32-byte HMAC-SHA256 using the configured PEPPER_SECRET.
 // This resolves the 72-byte truncation limit of bcrypt and protects against rainbow tables with a server pepper.
 func PrehashPassword(password string) []byte {
 	pepper := os.Getenv("PEPPER_SECRET")
@@ -136,6 +152,16 @@ func PrehashPassword(password string) []byte {
 		pepper = "default_pepper_secret_registrov2" // development-only compatibility
 	}
 	h := hmac.New(sha256.New, []byte(pepper))
+	h.Write([]byte(password))
+	return h.Sum(nil)
+}
+
+
+// PrehashPasswordLegacy computes the historical pre-hash used before PEPPER_SECRET
+// became mandatory. It exists only to verify and transparently migrate existing
+// password hashes. Remove it after all legacy accounts have authenticated or been reset.
+func PrehashPasswordLegacy(password string) []byte {
+	h := hmac.New(sha256.New, []byte("default_pepper_secret_registrov2"))
 	h.Write([]byte(password))
 	return h.Sum(nil)
 }
