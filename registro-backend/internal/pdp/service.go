@@ -187,7 +187,7 @@ func (s *Service) UpdatePlan(ctx context.Context, actorRole, actorSchoolID, id s
 	if err != nil || plan == nil {
 		return nil, ErrPlanNotFound
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
 	}
 	return s.repo.Update(ctx, id, req)
@@ -202,7 +202,7 @@ func (s *Service) ShareWithFamily(ctx context.Context, actorRole, actorSchoolID,
 	if err != nil || plan == nil {
 		return nil, ErrPlanNotFound
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
 	}
 	if err := s.repo.SetSharedWithFamily(ctx, id, share); err != nil {
@@ -249,7 +249,7 @@ func (s *Service) DeletePlan(ctx context.Context, actorRole, actorSchoolID, id s
 	if err != nil || plan == nil {
 		return ErrPlanNotFound
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 	return s.repo.Delete(ctx, id)
