@@ -112,6 +112,11 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			}
 		}
 
+		if m.userRepo == nil {
+			c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "account authorization service unavailable"})
+			c.Abort()
+			return
+		}
 		isActive, err := m.isAccountActive(c.Request.Context(), claims.UserID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
@@ -289,6 +294,11 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 			return
 		}
 
+		if m.userRepo == nil {
+			c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "account authorization service unavailable"})
+			c.Abort()
+			return
+		}
 		isActive, err := m.isAccountActive(c.Request.Context(), userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
