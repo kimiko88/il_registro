@@ -687,14 +687,15 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 		return err
 	}
 
-	// Atomically update password, burn reset token, and add to password history in a single DB transaction
-	if err := s.repo.ResetPasswordTx(ctx, prt.UserID, string(passwordHash), prt.ID); err != nil {
-		return err
+	// Revoke sessions before committing the new password. If revocation fails,
+	// leave the reset token usable and do not report a successful password change.
+	if err := s.repo.RevokeAllUserTokens(ctx, prt.UserID); err != nil {
+		return fmt.Errorf("failed to revoke existing sessions: %w", err)
 	}
 
-	// Revoke all refresh tokens for security
-	if err := s.repo.RevokeAllUserTokens(ctx, prt.UserID); err != nil {
-		logger.Log.Warnf("ResetPassword: failed to revoke user tokens for user %s: %v", prt.UserID, err)
+	// Atomically update password, burn reset token, and add to password history.
+	if err := s.repo.ResetPasswordTx(ctx, prt.UserID, string(passwordHash), prt.ID); err != nil {
+		return err
 	}
 
 	return nil
@@ -769,12 +770,12 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 		return err
 	}
 
+	// Revoke existing sessions before changing the password.
+	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+		return fmt.Errorf("failed to revoke existing sessions: %w", err)
+	}
 	if err := s.repo.ChangePasswordTx(ctx, userID, string(passwordHash)); err != nil {
 		return err
-	}
-
-	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
-		logger.Log.Warnf("ChangePassword: failed to revoke user tokens for user %s: %v", userID, err)
 	}
 	return nil
 }
