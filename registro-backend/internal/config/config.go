@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"encoding/hex"
 	"log"
 	"os"
 	"strings"
@@ -101,6 +102,26 @@ func LoadConfig() (*Config, error) {
 	viper.SetDefault("REDIS_HOST", "localhost")
 	viper.SetDefault("REDIS_PORT", "6379")
 	viper.SetDefault("SUPABASE_STORAGE_BUCKET", "documents")
+
+	// Production must never start with public/default cryptographic material.
+	if strings.EqualFold(viper.GetString("SERVER_MODE"), "release") {
+		key := strings.TrimSpace(os.Getenv("ENCRYPTION_KEY"))
+		validEncryptionKey := false
+		if decoded, err := hex.DecodeString(key); err == nil && len(decoded) == 32 {
+			validEncryptionKey = true
+		} else if len(key) == 32 {
+			validEncryptionKey = true
+		}
+		if !validEncryptionKey {
+			return nil, fmt.Errorf("ENCRYPTION_KEY is required in release mode (32 raw bytes or 64 hex characters)")
+		}
+		if len(os.Getenv("PEPPER_SECRET")) < 32 {
+			return nil, fmt.Errorf("PEPPER_SECRET must contain at least 32 characters in release mode")
+		}
+		if len(os.Getenv("JWT_SECRET")) < 64 {
+			return nil, fmt.Errorf("JWT_SECRET must contain at least 64 characters in release mode")
+		}
+	}
 
 	config := &Config{
 		Server: ServerConfig{
