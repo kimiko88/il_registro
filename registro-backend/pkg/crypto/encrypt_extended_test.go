@@ -138,6 +138,7 @@ func TestPrehashPassword_DifferentPasswords(t *testing.T) {
 
 // TestPrehashPassword_DefaultPepper verifies that the default pepper is used when env is unset.
 func TestPrehashPassword_DefaultPepper(t *testing.T) {
+	t.Setenv("SERVER_MODE", "debug")
 	os.Unsetenv("PEPPER_SECRET")
 	h := PrehashPassword("test-password")
 	assert.Len(t, h, 32)
