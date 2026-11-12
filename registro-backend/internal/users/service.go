@@ -537,7 +537,10 @@ func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID strin
 		return nil, err
 	}
 
-	if actorRole != "superadmin" && actorSchoolID != "" {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" {
+			return nil, ErrUnauthorized
+		}
 		for i := range users {
 			scID := actorSchoolID
 			users[i].SchoolID = &scID
@@ -735,7 +738,10 @@ func (s *Service) ExportUsers(ctx context.Context, actorRole, actorSchoolID stri
 	if !isPrivileged(actorRole) {
 		return nil, ErrUnauthorized
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" {
+			return nil, ErrUnauthorized
+		}
 		filter.SchoolID = &actorSchoolID
 	}
 	users, _, err := s.repo.List(ctx, filter)
@@ -867,7 +873,7 @@ func (s *Service) AddUserAssignment(ctx context.Context, actorRole, actorUserID,
 	if schoolID == "" && targetUser.SchoolID != nil {
 		schoolID = *targetUser.SchoolID
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && targetUser.SchoolID != nil && *targetUser.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || targetUser.SchoolID == nil || *targetUser.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
 	}
 
@@ -910,7 +916,7 @@ func (s *Service) DeleteUserAssignment(ctx context.Context, actorRole, actorScho
 	if err != nil {
 		return err
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && targetUser.SchoolID != nil && *targetUser.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || targetUser.SchoolID == nil || *targetUser.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 
@@ -951,7 +957,7 @@ func (s *Service) SetCoordinatedClasses(ctx context.Context, actorRole, actorSch
 	if schoolID == "" && teacher.SchoolID != nil {
 		schoolID = *teacher.SchoolID
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && teacher.SchoolID != nil && *teacher.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || teacher.SchoolID == nil || *teacher.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 
