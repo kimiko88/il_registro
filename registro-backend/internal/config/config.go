@@ -110,6 +110,10 @@ func LoadConfig() (*Config, error) {
 		strings.EqualFold(viper.GetString("APP_ENV"), "production") ||
 		strings.EqualFold(viper.GetString("GIN_MODE"), "release")
 	if isProduction {
+		dbPassword := strings.TrimSpace(viper.GetString("DB_PASSWORD"))
+		if len(dbPassword) < 24 || strings.HasPrefix(strings.ToUpper(dbPassword), "CAMBIA") {
+			return nil, fmt.Errorf("DB_PASSWORD must be a generated secret of at least 24 characters in production")
+		}
 		if strings.TrimSpace(viper.GetString("ALLOWED_ORIGINS")) == "" {
 			return nil, fmt.Errorf("ALLOWED_ORIGINS must be configured in production")
 		}
