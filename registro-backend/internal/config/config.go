@@ -106,7 +106,10 @@ func LoadConfig() (*Config, error) {
 	viper.SetDefault("SUPABASE_STORAGE_BUCKET", "documents")
 
 	// Production must never start with public/default cryptographic material.
-	if strings.EqualFold(viper.GetString("SERVER_MODE"), "release") {
+	isProduction := strings.EqualFold(viper.GetString("SERVER_MODE"), "release") ||
+		strings.EqualFold(viper.GetString("APP_ENV"), "production") ||
+		strings.EqualFold(viper.GetString("GIN_MODE"), "release")
+	if isProduction {
 		key := strings.TrimSpace(viper.GetString("ENCRYPTION_KEY"))
 		validEncryptionKey := false
 		if decoded, err := hex.DecodeString(key); err == nil && len(decoded) == 32 {
@@ -117,11 +120,13 @@ func LoadConfig() (*Config, error) {
 		if !validEncryptionKey {
 			return nil, fmt.Errorf("ENCRYPTION_KEY is required in release mode (32 raw bytes or 64 hex characters)")
 		}
-		if len(viper.GetString("PEPPER_SECRET")) < 32 {
-			return nil, fmt.Errorf("PEPPER_SECRET must contain at least 32 characters in release mode")
+		pepper := strings.TrimSpace(viper.GetString("PEPPER_SECRET"))
+		if len(pepper) < 32 || strings.HasPrefix(strings.ToUpper(pepper), "INSERISCI") {
+			return nil, fmt.Errorf("PEPPER_SECRET must be a generated secret of at least 32 characters in production")
 		}
-		if len(viper.GetString("JWT_SECRET")) < 64 {
-			return nil, fmt.Errorf("JWT_SECRET must contain at least 64 characters in release mode")
+		jwtSecret := strings.TrimSpace(viper.GetString("JWT_SECRET"))
+		if len(jwtSecret) < 64 || strings.HasPrefix(strings.ToUpper(jwtSecret), "INSERISCI") {
+			return nil, fmt.Errorf("JWT_SECRET must be a generated secret of at least 64 characters in production")
 		}
 	}
 
