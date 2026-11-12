@@ -76,6 +76,8 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: 6379
           JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxx
+          ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          PEPPER_SECRET: ci-only-pepper-value-not-for-production-0123456789
         run: go test -race -coverprofile=coverage.out ./...
 
       - name: Upload coverage
