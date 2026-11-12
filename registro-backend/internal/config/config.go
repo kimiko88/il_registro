@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"encoding/hex"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 
@@ -23,8 +24,9 @@ type Config struct {
 }
 
 type RedisConfig struct {
-	Host string
-	Port string
+	Host     string
+	Port     string
+	Password string
 }
 
 type ElearningConfig struct {
@@ -139,6 +141,7 @@ func LoadConfig() (*Config, error) {
 		Redis: RedisConfig{
 			Host: viper.GetString("REDIS_HOST"),
 			Port: viper.GetString("REDIS_PORT"),
+			Password: viper.GetString("REDIS_PASSWORD"),
 		},
 
 		JWT: JWTConfig{
@@ -192,6 +195,9 @@ func (c *Config) RedisURL() string {
 		port := c.Redis.Port
 		if port == "" {
 			port = "6379"
+		}
+		if c.Redis.Password != "" {
+			return (&url.URL{Scheme: "redis", Host: fmt.Sprintf("%s:%s", c.Redis.Host, port), User: url.UserPassword("", c.Redis.Password)}).String()
 		}
 		return fmt.Sprintf("redis://%s:%s", c.Redis.Host, port)
 	}
