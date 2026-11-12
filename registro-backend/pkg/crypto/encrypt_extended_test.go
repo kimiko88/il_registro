@@ -9,11 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestGetEncryptionKey_Default verifies the fallback key is returned when no env var is set.
-func TestGetEncryptionKey_Default(t *testing.T) {
+// TestGetEncryptionKey_Missing verifies that no insecure built-in key is used.
+func TestGetEncryptionKey_Missing(t *testing.T) {
 	t.Setenv("ENCRYPTION_KEY", "")
-	key := GetEncryptionKey()
-	require.Len(t, key, 32, "default key must be exactly 32 bytes")
+	assert.Nil(t, GetEncryptionKey())
+	_, err := Encrypt([]byte("sensitive"))
+	require.ErrorIs(t, err, ErrEncryptionKeyNotConfigured)
 }
 
 // TestGetEncryptionKey_HexEnv verifies that a valid 64-hex-char env key is decoded correctly.
@@ -48,6 +49,7 @@ func TestGetEncryptionKey_InvalidHexFallsBackToRaw(t *testing.T) {
 // TestEncryptDecrypt_RoundTrip verifies that encrypting and decrypting produces the original
 // plaintext for various input sizes.
 func TestEncryptDecrypt_RoundTrip(t *testing.T) {
+	t.Setenv("ENCRYPTION_KEY", "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20")
 	cases := []struct {
 		name  string
 		input []byte
@@ -75,12 +77,14 @@ func TestEncryptDecrypt_RoundTrip(t *testing.T) {
 
 // TestDecrypt_TooShort verifies that a ciphertext shorter than the nonce size is rejected.
 func TestDecrypt_TooShort(t *testing.T) {
+	t.Setenv("ENCRYPTION_KEY", "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20")
 	_, err := Decrypt([]byte{0x01, 0x02, 0x03}) // 3 bytes, nonce is 12 bytes
 	require.ErrorIs(t, err, ErrCiphertextTooShort)
 }
 
 // TestDecrypt_Tampered verifies that altering a byte in the ciphertext causes decryption failure.
 func TestDecrypt_Tampered(t *testing.T) {
+	t.Setenv("ENCRYPTION_KEY", "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20")
 	ct, err := Encrypt([]byte("important secret"))
 	require.NoError(t, err)
 	ct[len(ct)-1] ^= 0xFF // flip the last byte
@@ -104,6 +108,7 @@ func TestDecryptString_InvalidHex(t *testing.T) {
 // TestEncryptString_Uniqueness verifies that two encryptions of the same plaintext
 // produce different ciphertexts (random nonce).
 func TestEncryptString_Uniqueness(t *testing.T) {
+	t.Setenv("ENCRYPTION_KEY", "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20")
 	plain := "deterministic nonce check"
 	ct1, err := EncryptString(plain)
 	require.NoError(t, err)
