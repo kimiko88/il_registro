@@ -1,8 +1,8 @@
 package config
 
 import (
-	"fmt"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net/url"
 	"os"
