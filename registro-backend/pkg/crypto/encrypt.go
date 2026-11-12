@@ -161,6 +161,9 @@ func PrehashPassword(password string) []byte {
 // became mandatory. It exists only to verify and transparently migrate existing
 // password hashes. Remove it after all legacy accounts have authenticated or been reset.
 func PrehashPasswordLegacy(password string) []byte {
+	if !strings.EqualFold(os.Getenv("ALLOW_LEGACY_PASSWORD_PEPPER"), "true") {
+		return nil
+	}
 	h := hmac.New(sha256.New, []byte("default_pepper_secret_registrov2"))
 	h.Write([]byte(password))
 	return h.Sum(nil)
