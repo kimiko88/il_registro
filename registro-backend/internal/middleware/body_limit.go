@@ -9,8 +9,8 @@ import (
 
 // RequestBodyLimitMiddleware limits the HTTP request body size to maxBytes (default 2 MB)
 // to protect against Out-Of-Memory Denial of Service attacks.
-// Multipart file uploads are exempted from this limit, as they are independently
-// guarded by upload.MaxUploadSize.
+// Multipart uploads receive a separate bounded 22 MiB request ceiling to allow
+// the 20 MiB file limit plus multipart framing without permitting unbounded bodies.
 func RequestBodyLimitMiddleware(maxBytes int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		contentType := c.GetHeader("Content-Type")
