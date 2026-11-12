@@ -87,7 +87,7 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 	normalizedEmail := normalizeEmail(req.Email)
 
 	// Hash password
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), s.bcryptCost)
+	passwordHash, err := bcrypt.GenerateFromPassword(crypto.PrehashPassword(req.Password), s.bcryptCost)
 	if err != nil {
 		return nil, err
 	}
@@ -675,13 +675,14 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 		return fmt.Errorf("failed to fetch password history: %w", err)
 	}
 	for _, oldHash := range history {
-		if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
+		if bcrypt.CompareHashAndPassword([]byte(oldHash), crypto.PrehashPassword(newPassword)) == nil ||
+			bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
 			return ErrPasswordReused
 		}
 	}
 
 	// Hash new password
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), s.bcryptCost)
+	passwordHash, err := bcrypt.GenerateFromPassword(crypto.PrehashPassword(newPassword), s.bcryptCost)
 	if err != nil {
 		return err
 	}
