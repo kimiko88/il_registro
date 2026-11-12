@@ -134,6 +134,16 @@ func LoadConfig() (*Config, error) {
 		}
 	}
 
+	// Crypto helpers read process environment directly. Promote values loaded
+	// from .env only after validating them, so .env deployments work as intended.
+	for _, name := range []string{"ENCRYPTION_KEY", "PEPPER_SECRET"} {
+		if value := viper.GetString(name); value != "" && os.Getenv(name) == "" {
+			if err := os.Setenv(name, value); err != nil {
+				return nil, fmt.Errorf("failed to initialize %s: %w", name, err)
+			}
+		}
+	}
+
 	config := &Config{
 		Server: ServerConfig{
 			Port: viper.GetString("SERVER_PORT"),
