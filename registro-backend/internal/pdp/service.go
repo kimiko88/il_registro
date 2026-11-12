@@ -70,9 +70,15 @@ func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole, schoolID s
 // GetByStudent returns all PDP/PEI plans for a student for a given academic year.
 // Parents only see plans that have been shared with the family, and guardianship is verified.
 func (s *Service) GetByStudent(ctx context.Context, actorID, actorRole, actorSchoolID, studentID, academicYear string) ([]*PdpPlan, error) {
+	if actorRole != "superadmin" && actorRole != "parent" && actorRole != "student" && !canViewClassPDP(actorRole) {
+		return nil, ErrUnauthorized
+	}
 	switch actorRole {
 	case "parent":
-		if s.userRepo != nil {
+		if s.userRepo == nil {
+			return nil, ErrNotGuardian
+		}
+		{
 			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
 			if err != nil {
 				return nil, fmt.Errorf("pdp.GetByStudent: guardian check failed: %w", err)
@@ -139,6 +145,9 @@ func (s *Service) GetByClass(ctx context.Context, actorRole, actorSchoolID, clas
 
 // GetByID returns a single plan by ID.
 func (s *Service) GetByID(ctx context.Context, actorID, actorRole, actorSchoolID, id string) (*PdpPlan, error) {
+	if actorRole != "superadmin" && actorRole != "parent" && actorRole != "student" && !canViewClassPDP(actorRole) {
+		return nil, ErrUnauthorized
+	}
 	plan, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -152,7 +161,10 @@ func (s *Service) GetByID(ctx context.Context, actorID, actorRole, actorSchoolID
 
 	switch actorRole {
 	case "parent":
-		if s.userRepo != nil {
+		if s.userRepo == nil {
+			return nil, ErrNotGuardian
+		}
+		{
 			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, plan.StudentID)
 			if err != nil || !isGuardian {
 				return nil, ErrNotGuardian
@@ -224,7 +236,10 @@ func (s *Service) ApproveByFamily(ctx context.Context, actorRole, actorID, actor
 		return ErrUnauthorized
 	}
 	if actorRole == "parent" {
-		if s.userRepo != nil {
+		if s.userRepo == nil {
+			return ErrNotGuardian
+		}
+		{
 			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, plan.StudentID)
 			if err != nil || !isGuardian {
 				return ErrNotGuardian
