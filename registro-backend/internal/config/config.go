@@ -110,6 +110,9 @@ func LoadConfig() (*Config, error) {
 		strings.EqualFold(viper.GetString("APP_ENV"), "production") ||
 		strings.EqualFold(viper.GetString("GIN_MODE"), "release")
 	if isProduction {
+		if strings.TrimSpace(viper.GetString("ALLOWED_ORIGINS")) == "" {
+			return nil, fmt.Errorf("ALLOWED_ORIGINS must be configured in production")
+		}
 		key := strings.TrimSpace(viper.GetString("ENCRYPTION_KEY"))
 		validEncryptionKey := false
 		if decoded, err := hex.DecodeString(key); err == nil && len(decoded) == 32 {
