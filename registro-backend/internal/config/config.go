@@ -121,7 +121,7 @@ func LoadConfig() (*Config, error) {
 			return nil, fmt.Errorf("ENCRYPTION_KEY is required in release mode (32 raw bytes or 64 hex characters)")
 		}
 		pepper := strings.TrimSpace(viper.GetString("PEPPER_SECRET"))
-		if len(pepper) < 32 || strings.HasPrefix(strings.ToUpper(pepper), "INSERISCI") {
+		if len(pepper) < 32 || strings.HasPrefix(strings.ToUpper(pepper), "INSERISCI") || pepper == "default_pepper_secret_registrov2" {
 			return nil, fmt.Errorf("PEPPER_SECRET must be a generated secret of at least 32 characters in production")
 		}
 		jwtSecret := strings.TrimSpace(viper.GetString("JWT_SECRET"))
