@@ -60,7 +60,10 @@ func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole, schoolID s
 		CreatedBy:     actorID,
 	}
 
-	// SchoolID must be populated — caller sets it from the auth context
+	// Every PDP/PEI record must be bound to a school, including records created by superadmins.
+	if schoolID == "" {
+		return nil, ErrUnauthorized
+	}
 	return s.repo.Create(ctx, plan)
 }
 
@@ -89,10 +92,13 @@ func (s *Service) GetByStudent(ctx context.Context, actorID, actorRole, actorSch
 		return nil, err
 	}
 
-	// Multi-tenant check & privacy filter
+	// Multi-tenant check & privacy filter. Missing tenant identifiers are denied, never treated as global access.
+	if actorRole != "superadmin" && actorSchoolID == "" {
+		return nil, ErrUnauthorized
+	}
 	var visible []*PdpPlan
 	for _, p := range plans {
-		if actorRole != "superadmin" && actorSchoolID != "" && p.SchoolID != "" && p.SchoolID != actorSchoolID {
+		if actorRole != "superadmin" && (p.SchoolID == "" || p.SchoolID != actorSchoolID) {
 			continue
 		}
 		if actorRole == "parent" || actorRole == "student" {
@@ -116,10 +122,13 @@ func (s *Service) GetByClass(ctx context.Context, actorRole, actorSchoolID, clas
 	if err != nil {
 		return nil, err
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" {
+			return nil, ErrUnauthorized
+		}
 		filtered := make([]*PdpPlan, 0, len(plans))
 		for _, p := range plans {
-			if p.SchoolID == "" || p.SchoolID == actorSchoolID {
+			if p.SchoolID == actorSchoolID {
 				filtered = append(filtered, p)
 			}
 		}
@@ -137,7 +146,7 @@ func (s *Service) GetByID(ctx context.Context, actorID, actorRole, actorSchoolID
 	if plan == nil {
 		return nil, ErrPlanNotFound
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
 	}
 
@@ -211,7 +220,7 @@ func (s *Service) ApproveByFamily(ctx context.Context, actorRole, actorID, actor
 	if err != nil || plan == nil {
 		return ErrPlanNotFound
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 	if actorRole == "parent" {
