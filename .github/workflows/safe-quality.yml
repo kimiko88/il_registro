@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SERVER_MODE: release
-      JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxx
+      JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxxxxxxxxxxx
       ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
       PEPPER_SECRET: ci-only-pepper-value-not-for-production-0123456789
     defaults:
