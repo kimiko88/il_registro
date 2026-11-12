@@ -8,8 +8,6 @@ import (
 	"encoding/pem"
 	"path/filepath"
 	"testing"
-	"context"
-	"time"
 	"time"
 
 	"github.com/stretchr/testify/assert"
