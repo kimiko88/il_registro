@@ -107,7 +107,7 @@ func LoadConfig() (*Config, error) {
 
 	// Production must never start with public/default cryptographic material.
 	if strings.EqualFold(viper.GetString("SERVER_MODE"), "release") {
-		key := strings.TrimSpace(os.Getenv("ENCRYPTION_KEY"))
+		key := strings.TrimSpace(viper.GetString("ENCRYPTION_KEY"))
 		validEncryptionKey := false
 		if decoded, err := hex.DecodeString(key); err == nil && len(decoded) == 32 {
 			validEncryptionKey = true
@@ -117,11 +117,20 @@ func LoadConfig() (*Config, error) {
 		if !validEncryptionKey {
 			return nil, fmt.Errorf("ENCRYPTION_KEY is required in release mode (32 raw bytes or 64 hex characters)")
 		}
-		if len(os.Getenv("PEPPER_SECRET")) < 32 {
+		if len(viper.GetString("PEPPER_SECRET")) < 32 {
 			return nil, fmt.Errorf("PEPPER_SECRET must contain at least 32 characters in release mode")
 		}
-		if len(os.Getenv("JWT_SECRET")) < 64 {
+		if len(viper.GetString("JWT_SECRET")) < 64 {
 			return nil, fmt.Errorf("JWT_SECRET must contain at least 64 characters in release mode")
+		}
+		// Crypto helpers read process environment directly; copy values loaded from .env
+		// into the process environment after validation.
+		for _, name := range []string{"ENCRYPTION_KEY", "PEPPER_SECRET"} {
+			if value := viper.GetString(name); value != "" && os.Getenv(name) == "" {
+				if err := os.Setenv(name, value); err != nil {
+					return nil, fmt.Errorf("failed to initialize %s: %w", name, err)
+				}
+			}
 		}
 	}
 
