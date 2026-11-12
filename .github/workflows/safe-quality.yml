@@ -31,8 +31,13 @@ jobs:
           cache: true
       - name: Check gofmt
         run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "Go files are not formatted. Run 'gofmt -w .' to fix them."
+          files="$(gofmt -l .)"
+          if [ -n "$files" ]; then
+            echo "Go files are not formatted:"
+            echo "$files"
+            for file in $files; do
+              gofmt -d "$file"
+            done
             exit 1
           fi
       - name: Vet
