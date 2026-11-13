@@ -51,31 +51,25 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
     }
 
     public func fetchClasses(token: String) async throws -> [TeacherClassSessionModel] {
-        var url = baseURL.appendingPathComponent("teacher/classes")
+        let url = baseURL.appendingPathComponent("teacher/classes")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \\(token)", forHTTPHeaderField: "Authorization")
 
-        var jsonArray: [[String: Any]] = []
-        if let (data, response) = try? await SecureURLSession.shared.data(for: request),
-           let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
-           let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]], !arr.isEmpty {
-            jsonArray = arr
-        } else {
-            url = baseURL.appendingPathComponent("classes")
-            request = URLRequest(url: url)
-            request.httpMethod = "GET"
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            if let (data, response) = try? await SecureURLSession.shared.data(for: request),
-               let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
-               let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-                jsonArray = arr
-            }
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NSError(domain: "TeacherAPI", code: (response as? HTTPURLResponse)?.statusCode ?? 500,
+                          userInfo: [NSLocalizedDescriptionKey: "Errore recupero classi"])
+        }
+        guard let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            throw NSError(domain: "TeacherAPI", code: 502,
+                          userInfo: [NSLocalizedDescriptionKey: "Formato risposta classi non valido"])
         }
 
         return jsonArray.enumerated().map { index, dict in
             TeacherClassSessionModel(
-                id: (dict["id"] as? String) ?? "\(index)",
+                id: (dict["id"] as? String) ?? "\\(index)",
                 className: (dict["name"] as? String) ?? (dict["class_name"] as? String) ?? "Classe",
                 subject: (dict["subject"] as? String) ?? (dict["subject_name"] as? String) ?? "Matematica",
                 isSigned: false,
