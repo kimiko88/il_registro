@@ -112,7 +112,6 @@ public class StudentViewModel: ObservableObject {
 
     public func loadFromDatabase(token: String) async {
         let requestGeneration = await MainActor.run {
-                guard self.sessionGeneration == requestGeneration else { return }
             self.isLoading = true
             self.errorMessage = nil
             return self.sessionGeneration
@@ -121,11 +120,9 @@ public class StudentViewModel: ObservableObject {
             async let fetchedGrades = apiService.fetchGrades(token: token)
             async let fetchedHomework = apiService.fetchHomework(token: token)
             async let fetchedAttendance = apiService.fetchAttendance(token: token)
-
             let (gradesResult, homeworkResult, attendanceResult) = try await (fetchedGrades, fetchedHomework, fetchedAttendance)
-            let isCurrentSession = await MainActor.run { self.sessionGeneration == requestGeneration }
-            guard isCurrentSession, !Task.isCancelled else { return }
-
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent, !Task.isCancelled else { return }
             await MainActor.run {
                 guard self.sessionGeneration == requestGeneration else { return }
                 self.grades = gradesResult
@@ -134,8 +131,9 @@ public class StudentViewModel: ObservableObject {
                 self.isLoading = false
             }
         } catch {
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent else { return }
             await MainActor.run {
-                guard self.sessionGeneration == requestGeneration else { return }
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
             }
