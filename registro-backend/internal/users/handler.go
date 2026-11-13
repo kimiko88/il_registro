@@ -571,6 +571,10 @@ func (h *Handler) DeleteGDPR(c *gin.Context) {
 		return
 	}
 	if err := h.service.GDPRDelete(c.Request.Context(), role, c.Param("id"), getSchoolID(c)); err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -626,6 +630,10 @@ func (h *Handler) DisableMFA(c *gin.Context) {
 		return
 	}
 	if err := h.service.DisableMFA(c.Request.Context(), role, c.Param("id"), getSchoolID(c)); err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
