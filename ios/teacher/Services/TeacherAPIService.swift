@@ -31,7 +31,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
         let body = ["email": cleanEmail, "password": password]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "TeacherAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "Credenziali errate"])
         }
@@ -56,7 +56,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         var jsonArray: [[String: Any]] = []
-        if let (data, response) = try? await URLSession.shared.data(for: request),
+        if let (data, response) = try? await SecureURLSession.shared.data(for: request),
            let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
            let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]], !arr.isEmpty {
             jsonArray = arr
@@ -65,7 +65,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
             request = URLRequest(url: url)
             request.httpMethod = "GET"
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            if let (data, response) = try? await URLSession.shared.data(for: request),
+            if let (data, response) = try? await SecureURLSession.shared.data(for: request),
                let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
                let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
                 jsonArray = arr
@@ -89,7 +89,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
+        guard let (data, response) = try? await SecureURLSession.shared.data(for: request),
               let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             return []
         }
@@ -126,7 +126,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
         let body = ["class_id": classId, "topic": topic]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "TeacherAPI", code: 400, userInfo: [NSLocalizedDescriptionKey: "Errore firma lezione"])
         }
@@ -155,7 +155,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
         let body: [String: Any] = ["class_id": classId, "records": recordsArray]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (_, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             return false
         }
