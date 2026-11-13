@@ -4,10 +4,12 @@ public struct TeacherRegisterView: View {
     @ObservedObject public var viewModel: TeacherViewModel
     public var token: String
     @State private var selectedTab = 0
+    public var onLogout: (() -> Void)?
 
-    public init(token: String = "", viewModel: TeacherViewModel = TeacherViewModel()) {
+    public init(token: String = "", viewModel: TeacherViewModel = TeacherViewModel(), onLogout: (() -> Void)? = nil) {
         self.token = token
         self.viewModel = viewModel
+        self.onLogout = onLogout
     }
 
     public var body: some View {
@@ -33,6 +35,23 @@ public struct TeacherRegisterView: View {
                 .tag(4)
         }
         .tint(Color.blue)
+        .safeAreaInset(edge: .top) {
+            HStack {
+                Spacer()
+                Button {
+                    viewModel.clearSession()
+                    OfflineCacheManager.shared.clear()
+                    onLogout?()
+                } label: {
+                    Label("Esci", systemImage: "rectangle.portrait.and.arrow.right")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .accessibilityIdentifier("logoutButton")
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+            }
+            .background(.bar)
+        }
         .task {
             if !token.isEmpty {
                 _ = await viewModel.loadFromDatabase(token: token)
