@@ -28,6 +28,15 @@ class StudentViewModel(
     var errorMessage: String? = null
         private set
 
+    fun clearSession() {
+        grades.clear()
+        homeworkList.clear()
+        attendanceRecords.clear()
+        reportCard = null
+        isLoading = false
+        errorMessage = null
+    }
+
     suspend fun loadFromDatabase(token: String): Boolean {
         isLoading = true
         errorMessage = null
