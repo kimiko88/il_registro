@@ -1,5 +1,6 @@
 package it.scuola.registro.parent.network
 
+import it.scuola.registro.parent.config.AppConfig
 import it.scuola.registro.parent.data.ColloquioBooking
 import it.scuola.registro.parent.data.ParentChild
 import it.scuola.registro.parent.data.PendingAbsence
@@ -22,7 +23,7 @@ interface ParentApiService {
 }
 
 class HttpParentApiService(
-    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
+    private val baseUrl: String = AppConfig.BASE_URL
 ) : ParentApiService {
 
     override suspend fun login(email: String, password: String): Result<String> =
