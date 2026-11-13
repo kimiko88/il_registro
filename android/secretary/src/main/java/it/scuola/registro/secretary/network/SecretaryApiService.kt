@@ -76,7 +76,6 @@ class HttpSecretaryApiService(
                         if (token.isBlank()) Result.failure(Exception("Token di accesso mancante")) else Result.success(Pair(token, profile))
                     }
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
                     Result.failure(Exception("Login fallito (HTTP $responseCode)"))
                 }
             } catch (e: Exception) {
@@ -208,8 +207,7 @@ class HttpSecretaryApiService(
                         )
                     )
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Errore creazione utente: $err"))
+                    Result.failure(Exception("Errore creazione utente (HTTP ${conn.responseCode})"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -244,8 +242,7 @@ class HttpSecretaryApiService(
                 if (conn.responseCode in 200..299) {
                     Result.success(true)
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Errore modifica utente: $err"))
+                    Result.failure(Exception("Errore modifica utente (HTTP ${conn.responseCode})"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -267,8 +264,7 @@ class HttpSecretaryApiService(
                 if (conn.responseCode in 200..299) {
                     Result.success(true)
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Errore eliminazione utente: $err"))
+                    Result.failure(Exception("Errore eliminazione utente (HTTP ${conn.responseCode})"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -418,8 +414,7 @@ class HttpSecretaryApiService(
                         )
                     )
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Errore generazione certificato: $err"))
+                    Result.failure(Exception("Errore generazione certificato (HTTP ${conn.responseCode})"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -537,13 +532,7 @@ class HttpSecretaryApiService(
                 if (conn.responseCode in 200..299) {
                     Result.success("Password aggiornata con successo")
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    val errMsg = try {
-                        JSONObject(err).optString("message", JSONObject(err).optString("error", err))
-                    } catch (_: Exception) {
-                        err
-                    }
-                    Result.failure(Exception("Errore aggiornamento password: $errMsg"))
+                    Result.failure(Exception("Errore aggiornamento password (HTTP ${conn.responseCode})"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
