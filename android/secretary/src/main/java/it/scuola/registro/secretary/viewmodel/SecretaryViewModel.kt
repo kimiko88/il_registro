@@ -11,7 +11,7 @@ import it.scuola.registro.secretary.network.SecretaryApiService
 class SecretaryViewModel(
     private val apiService: SecretaryApiService = HttpSecretaryApiService()
 ) {
-    private var sessionGeneration: Long = 0L
+    @Volatile private var sessionGeneration: Long = 0L
     val usersList = mutableStateListOf<ManagedUser>()
 
     var users: List<ManagedUser>
