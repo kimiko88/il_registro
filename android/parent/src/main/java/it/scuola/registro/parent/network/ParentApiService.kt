@@ -62,11 +62,11 @@ class HttpParentApiService(
                         Result.failure(Exception("Accesso non consentito: questo account non appartiene a un genitore."))
                     } else {
                         val token = json.optString("access_token", json.optString("token"))
-                        Result.success(token)
+                        if (token.isBlank()) Result.failure(Exception("Token di accesso mancante")) else Result.success(token)
                     }
                 } else {
                     val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
+                    Result.failure(Exception("Login fallito (HTTP $responseCode)"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
