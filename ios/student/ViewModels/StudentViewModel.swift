@@ -100,6 +100,14 @@ public class StudentViewModel: ObservableObject {
         // Le collezioni partono vuote in produzione; i dati vengono caricati dal server via loadFromDatabase(token:)
     }
 
+    public func clearSession() {
+        grades.removeAll()
+        homework.removeAll()
+        attendance.removeAll()
+        isLoading = false
+        errorMessage = nil
+    }
+
     public func loadFromDatabase(token: String) async {
         await MainActor.run {
             self.isLoading = true
