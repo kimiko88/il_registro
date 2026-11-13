@@ -53,6 +53,7 @@ public class ParentViewModel: ObservableObject {
     @Published public var isLoading: Bool = false
     @Published public var errorMessage: String? = nil
 
+    private var sessionGeneration = UUID()
     private let apiService: ParentAPIServiceProtocol
 
     public init(apiService: ParentAPIServiceProtocol = HttpParentAPIService()) {
@@ -60,6 +61,7 @@ public class ParentViewModel: ObservableObject {
     }
 
     public func clearSession() {
+        sessionGeneration = UUID()
         children.removeAll()
                 selectedChildId = ""
                 absences.removeAll()
@@ -68,17 +70,24 @@ public class ParentViewModel: ObservableObject {
     }
 
     public func loadFromDatabase(token: String) async {
-        await MainActor.run {
+        let requestGeneration = await MainActor.run {
+                guard self.sessionGeneration == requestGeneration else { return }
             self.isLoading = true
             self.errorMessage = nil
+            return self.sessionGeneration
         }
         do {
             let fetchedChildren = try await apiService.fetchChildren(token: token)
+            let isCurrentSession = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrentSession, !Task.isCancelled else { return }
             var allAbsences: [AbsenceModel] = []
             if let firstChild = fetchedChildren.first {
                 allAbsences = try await apiService.fetchAbsences(token: token, childId: firstChild.id)
+            let isCurrentSession = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrentSession, !Task.isCancelled else { return }
             }
             await MainActor.run {
+                guard self.sessionGeneration == requestGeneration else { return }
                 self.children = fetchedChildren.map {
                     ChildItemModel(id: $0.id, firstName: $0.firstName, lastName: $0.lastName, className: $0.className)
                 }
@@ -90,6 +99,7 @@ public class ParentViewModel: ObservableObject {
             }
         } catch {
             await MainActor.run {
+                guard self.sessionGeneration == requestGeneration else { return }
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
             }
