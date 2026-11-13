@@ -786,8 +786,9 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 	preNew := crypto.PrehashPassword(newPassword)
 	for _, oldHash := range history {
 		if bcrypt.CompareHashAndPassword([]byte(oldHash), preNew) == nil ||
-			bcrypt.CompareHashAndPassword([]byte(oldHash), crypto.PrehashPasswordLegacy(newPassword)) == nil ||
-			bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
+			(crypto.LegacyPasswordMigrationEnabled() &&
+				(bcrypt.CompareHashAndPassword([]byte(oldHash), crypto.PrehashPasswordLegacy(newPassword)) == nil ||
+					bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil)) {
 			return ErrPasswordReused
 		}
 	}
