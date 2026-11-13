@@ -105,6 +105,21 @@ func LoadConfig() (*Config, error) {
 	viper.SetDefault("REDIS_PORT", "6379")
 	viper.SetDefault("SUPABASE_STORAGE_BUCKET", "documents")
 
+	// Cryptographic helpers consume process environment directly. Mirror the
+	// effective Viper values (including .env-file values and defaults) so the
+	// values validated below are exactly the values used for encryption and
+	// password hashing at runtime.
+	for _, key := range []string{
+		"SERVER_MODE", "APP_ENV", "GIN_MODE", "ENCRYPTION_KEY", "PEPPER_SECRET",
+		"ALLOW_LEGACY_ENCRYPTION_KEY", "ALLOW_LEGACY_PASSWORD_PEPPER",
+	} {
+		if value := viper.GetString(key); value != "" {
+			if err := os.Setenv(key, value); err != nil {
+				return nil, fmt.Errorf("failed to apply %s to process environment: %w", key, err)
+			}
+		}
+	}
+
 	// Production must never start with public/default cryptographic material.
 	isProduction := strings.EqualFold(viper.GetString("SERVER_MODE"), "release") ||
 		strings.EqualFold(viper.GetString("APP_ENV"), "production") ||
