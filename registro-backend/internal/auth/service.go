@@ -84,34 +84,40 @@ func normalizeEmail(email string) string {
 }
 
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, error) {
-	normalizedEmail := normalizeEmail(req.Email)
+	if req == nil {
+		return nil, errors.New("registration request is required")
+	}
+	if s.repo == nil {
+		return nil, errors.New("user repository is not configured")
+	}
+	if strings.TrimSpace(req.SchoolID) == "" {
+		return nil, errors.New("school ID is required for user registration")
+	}
+	if !IsValidRole(req.Role) {
+		return nil, ErrInvalidRole
+	}
 
-	// Hash password
+	normalizedEmail := normalizeEmail(req.Email)
 	passwordHash, err := bcrypt.GenerateFromPassword(crypto.PrehashPassword(req.Password), s.bcryptCost)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.SchoolID != "" && s.repo != nil {
-		exists, err := s.repo.SchoolExists(ctx, req.SchoolID)
-		if err != nil {
-			return nil, fmt.Errorf("school check failed: %w", err)
-		}
-		if !exists {
-			return nil, fmt.Errorf("invalid school ID")
-		}
+	exists, err := s.repo.SchoolExists(ctx, req.SchoolID)
+	if err != nil {
+		return nil, fmt.Errorf("school check failed: %w", err)
+	}
+	if !exists {
+		return nil, fmt.Errorf("invalid school ID")
 	}
 
-	// Create user
 	user := &User{
 		Email:        normalizedEmail,
 		PasswordHash: string(passwordHash),
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
 		Role:         req.Role,
-	}
-	if req.SchoolID != "" {
-		user.SchoolID = &req.SchoolID
+		SchoolID:     &req.SchoolID,
 	}
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
@@ -125,11 +131,9 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 		return nil, err
 	}
 
-	// Seed password history so ResetPassword can detect immediate re-use.
 	if err := s.repo.AddPasswordHistory(ctx, user.ID, string(passwordHash)); err != nil {
 		logger.Log.Warnf("Register: failed to seed initial password history for user %s: %v", user.ID, err)
 	}
-
 	return user, nil
 }
 
