@@ -315,3 +315,22 @@ class HttpTeacherApiService(
             }
         }
 }
+
+suspend fun HttpTeacherApiService.logout(token: String): Result<Unit> = withContext(Dispatchers.IO) {
+    try {
+        val connection = (URL("${AppConfig.BASE_URL}/auth/logout").openConnection() as HttpURLConnection).apply {
+            instanceFollowRedirects = false
+            requestMethod = "POST"
+            setRequestProperty("Authorization", "Bearer $token")
+            setRequestProperty("Accept", "application/json")
+            connectTimeout = 10000
+            readTimeout = 10000
+        }
+        val status = connection.responseCode
+        connection.disconnect()
+        if (status in 200..299) Result.success(Unit)
+        else Result.failure(IllegalStateException("Logout server non riuscito (HTTP $status)"))
+    } catch (error: Exception) {
+        Result.failure(error)
+    }
+}
