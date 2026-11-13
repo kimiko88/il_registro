@@ -9,7 +9,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type testGuardianChecker struct { allowed bool }
+type testGuardianChecker struct {
+	allowed bool
+}
 
 func (g testGuardianChecker) IsGuardian(context.Context, string, string) (bool, error) {
 	return g.allowed, nil
