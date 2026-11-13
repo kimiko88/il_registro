@@ -9,6 +9,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: registro-backend
     env:
       SERVER_MODE: release
       ALLOWED_ORIGINS: http://localhost:3000
