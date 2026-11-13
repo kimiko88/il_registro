@@ -749,7 +749,8 @@ func TestService_DisableMFA(t *testing.T) {
 			actorRole: "admin",
 			userID:    "user-123",
 			mockSetup: func() {
-				user := &User{ID: "user-123", MFAEnabled: true, MFASecret: "secret"}
+				schoolID := "school-1"
+				user := &User{ID: "user-123", SchoolID: &schoolID, MFAEnabled: true, MFASecret: "secret"}
 				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
 				mockRepo.On("ClearTempMFASecret", mock.Anything, "user-123").Return(nil)
 				mockRepo.On("RevokeAllUserTokens", mock.Anything, "user-123").Return(nil)
@@ -771,7 +772,7 @@ func TestService_DisableMFA(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			err := service.DisableMFA(context.Background(), tt.actorRole, tt.userID)
+			err := service.DisableMFA(context.Background(), tt.actorRole, tt.userID, "school-1")
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -922,7 +923,8 @@ func TestService_GDPRConvert(t *testing.T) {
 	})
 
 	t.Run("GDPR Delete", func(t *testing.T) {
-		user := &User{ID: "user-del", Email: "del@e.com", FirstName: "F", LastName: "L"}
+		schoolID := "school-1"
+		user := &User{ID: "user-del", SchoolID: &schoolID, Email: "del@e.com", FirstName: "F", LastName: "L"}
 
 		mockRepo.On("GetByID", mock.Anything, "user-del").Return(user, nil).Once()
 		// Update should be called with modified user
@@ -931,7 +933,7 @@ func TestService_GDPRConvert(t *testing.T) {
 		})).Return(nil).Once()
 		mockRepo.On("RevokeAllUserTokens", mock.Anything, "user-del").Return(nil).Once()
 
-		err := service.GDPRDelete(context.Background(), "admin", "user-del")
+		err := service.GDPRDelete(context.Background(), "admin", "user-del", "school-1")
 		assert.NoError(t, err)
 	})
 }
