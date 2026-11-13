@@ -181,12 +181,13 @@ func TestPDPService_ApproveByFamily(t *testing.T) {
 		plan := &PdpPlan{
 			ID:               "pdp-100",
 			StudentID:        "student-1",
+			SchoolID:         "school-1",
 			SharedWithFamily: true,
 		}
 		mockRepo.On("GetByID", ctx, "pdp-100").Return(plan, nil).Once()
 		mockRepo.On("ApproveByFamily", ctx, "pdp-100", "parent-1").Return(nil).Once()
 
-		err := svc.ApproveByFamily(ctx, "parent", "parent-1", "", "pdp-100")
+		err := svc.ApproveByFamily(ctx, "parent", "parent-1", "school-1", "pdp-100")
 		assert.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})
