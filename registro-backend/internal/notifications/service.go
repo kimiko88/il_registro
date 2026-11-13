@@ -97,13 +97,12 @@ func (s *serviceImpl) SendPushNotification(ctx context.Context, req SendNotifica
 	for _, t := range tokens {
 		if s.pushProvider != nil {
 			if err := s.pushProvider.SendPush(ctx, t, req.Title, req.Body, payload); err != nil {
-				log.Printf("[WARN] notifications.SendPushNotification: push failed to %s (%s): %v", t.DeviceToken, t.Platform, err)
+				log.Printf("[WARN] notifications.SendPushNotification: push failed for platform %s: %v", t.Platform, err)
 			} else {
 				sentCount++
 			}
 		} else {
-			log.Printf("[WARN] notifications.SendPushNotification: no push provider configured — logging dispatch to %s (%s): %q — %q",
-				t.DeviceToken, t.Platform, req.Title, req.Body)
+			log.Printf("[WARN] notifications.SendPushNotification: no push provider configured — dispatch not sent (platform %s)", t.Platform)
 		}
 	}
 	return sentCount, nil
