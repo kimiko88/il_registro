@@ -455,11 +455,21 @@ func (h *Handler) IssueWSTicket(c *gin.Context) {
 		return
 	}
 
+	jtiValue, jtiExists := c.Get("jti")
+	jti, jtiOK := jtiValue.(string)
+	issuedAtValue, issuedAtExists := c.Get("token_issued_at")
+	issuedAt, issuedAtOK := issuedAtValue.(time.Time)
+	if !jtiExists || !jtiOK || jti == "" || !issuedAtExists || !issuedAtOK || issuedAt.IsZero() {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing originating session metadata"})
+		return
+	}
+
 	ticket, err := h.wsTicketStore.Issue(
 		userID,
 		emailStr,
 		role,
 		schoolIDStr,
+		wsticket.TicketSecurity{JTI: jti, IssuedAt: issuedAt},
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "could not issue ws ticket"})
