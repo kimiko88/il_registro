@@ -482,6 +482,7 @@ func TestService_DeleteUser(t *testing.T) {
 }
 
 func TestService_ChangePassword(t *testing.T) {
+	t.Setenv("ALLOW_LEGACY_PASSWORD_PEPPER", "true")
 	mockRepo := new(MockRepository)
 	service := NewService(mockRepo)
 
