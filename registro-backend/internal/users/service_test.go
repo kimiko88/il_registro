@@ -939,6 +939,31 @@ func TestService_GDPRConvert(t *testing.T) {
 	})
 }
 
+func TestGDPRGenerateDataExport_MinimizesThirdPartyAuditData(t *testing.T) {
+	user := &User{
+		ID: "subject-1", Email: "subject@example.test", FirstName: "Subject",
+		LastName: "User", PasswordHash: "must-not-export", MFASecret: "must-not-export",
+	}
+	logs := []AuditLog{{
+		UserID: "subject-1", ActorID: "third-party-actor", Action: "profile.updated",
+		Details: `{"other_user":"third-party"}`, IPAddress: "192.0.2.10",
+		CreatedAt: time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC),
+	}}
+	data := NewGDPRHandler(nil).GenerateDataExport(user, logs, map[string]interface{}{"grades": []interface{}{}})
+	assert.Contains(t, data, "personal_data")
+	assert.NotContains(t, data, "audit_logs")
+	events := data["audit_events"].([]map[string]interface{})
+	if assert.Len(t, events, 1) {
+		assert.Equal(t, "profile.updated", events[0]["action"])
+		assert.NotContains(t, events[0], "actor_id")
+		assert.NotContains(t, events[0], "ip_address")
+		assert.NotContains(t, events[0], "details")
+	}
+	profile := data["profile"].(map[string]interface{})
+	assert.NotContains(t, profile, "password_hash")
+	assert.NotContains(t, profile, "mfa_secret")
+}
+
 func TestService_DeleteUser_SchoolIDIsolation(t *testing.T) {
 	mockRepo := new(MockRepository)
 	service := NewService(mockRepo)
