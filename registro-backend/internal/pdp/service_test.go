@@ -9,6 +9,12 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+type testGuardianChecker struct { allowed bool }
+
+func (g testGuardianChecker) IsGuardian(context.Context, string, string) (bool, error) {
+	return g.allowed, nil
+}
+
 type MockRepository struct {
 	mock.Mock
 }
@@ -168,7 +174,7 @@ func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 
 func TestPDPService_ApproveByFamily(t *testing.T) {
 	mockRepo := new(MockRepository)
-	svc := NewService(mockRepo)
+	svc := NewService(mockRepo, testGuardianChecker{allowed: true})
 	ctx := context.Background()
 
 	t.Run("parent approves shared plan", func(t *testing.T) {
