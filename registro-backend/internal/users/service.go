@@ -973,15 +973,31 @@ func (s *Service) GetUserAssignments(ctx context.Context, actorRole, targetUserI
 	if len(actorContext) > 1 {
 		schoolID = actorContext[1]
 	}
+	if actorRole != "superadmin" && actorID == "" {
+		return nil, ErrUnauthorized
+	}
 	target, err := s.repo.GetByID(ctx, targetUserID)
 	if err != nil {
 		return nil, err
 	}
-	if isPrivileged(actorRole) {
+	switch {
+	case isPrivileged(actorRole), actorRole == "teacher":
 		if !hasSchoolAccess(actorRole, schoolID, target) {
 			return nil, ErrUnauthorized
 		}
-	} else if actorID == "" || actorID != targetUserID {
+	case actorRole == "parent":
+		if !hasSchoolAccess(actorRole, schoolID, target) {
+			return nil, ErrUnauthorized
+		}
+		isGuardian, err := s.repo.IsGuardian(ctx, actorID, targetUserID)
+		if err != nil || !isGuardian {
+			return nil, ErrUnauthorized
+		}
+	case actorRole == "student":
+		if actorID != targetUserID {
+			return nil, ErrUnauthorized
+		}
+	default:
 		return nil, ErrUnauthorized
 	}
 	return s.repo.GetAssignments(ctx, targetUserID)
