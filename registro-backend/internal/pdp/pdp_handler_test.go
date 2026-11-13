@@ -25,6 +25,10 @@ type mockPdpRepo struct {
 	mock.Mock
 }
 
+func (m *mockPdpRepo) ValidatePlanScope(ctx context.Context, schoolID, studentID, classID string, coordinatorID, referenteID *string) (bool, error) {
+	return true, nil
+}
+
 func (m *mockPdpRepo) Create(ctx context.Context, plan *pdp.PdpPlan) (*pdp.PdpPlan, error) {
 	args := m.Called(ctx, plan)
 	if args.Get(0) == nil {
