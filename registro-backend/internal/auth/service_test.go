@@ -248,8 +248,10 @@ func TestRegister(t *testing.T) {
 			FirstName: "John",
 			LastName:  "Doe",
 			Role:      "student",
+			SchoolID:  "school-1",
 		}
 
+		mockRepo.On("SchoolExists", mock.Anything, "school-1").Return(true, nil).Once()
 		mockRepo.On("CreateUser", mock.Anything, mock.MatchedBy(func(u *User) bool {
 			return u.Email == req.Email && u.FirstName == req.FirstName
 		})).Return(nil).Once()
@@ -271,8 +273,10 @@ func TestRegister(t *testing.T) {
 			FirstName: "John",
 			LastName:  "Doe",
 			Role:      "student",
+			SchoolID:  "school-1",
 		}
 
+		mockRepo.On("SchoolExists", mock.Anything, "school-1").Return(true, nil).Once()
 		mockRepo.On("CreateUser", mock.Anything, mock.Anything).Return(ErrEmailAlreadyExists).Once()
 
 		user, err := s.Register(context.Background(), req)
