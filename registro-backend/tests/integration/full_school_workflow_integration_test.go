@@ -125,7 +125,7 @@ func TestFullSchoolWorkflowIntegration(t *testing.T) {
 		mockUserRepo.On("GetParentProfile", mock.Anything, "parent-1").Return("parent-profile-1", nil)
 		mockUserRepo.On("AddGuardian", mock.Anything, "student-profile-1", "parent-profile-1", "padre").Return(nil)
 
-		err := userSvc.AddGuardian(ctx, "secretary", "student-1", "parent-1", "padre")
+		err := userSvc.AddGuardian(ctx, "secretary", "student-1", "parent-1", "padre", schoolID)
 		assert.NoError(t, err)
 	})
 
