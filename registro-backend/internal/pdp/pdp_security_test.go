@@ -213,7 +213,6 @@ func TestApproveByFamily_NonGuardian_Forbidden(t *testing.T) {
 	assert.ErrorIs(t, err, ErrNotGuardian)
 }
 
-
 // A tenantless or cross-school principal must never read a PDP/PEI record.
 func TestGetByID_CrossTenantForbidden(t *testing.T) {
 	pRepo := &mockPdpRepoForSecTest{plans: map[string]*PdpPlan{
