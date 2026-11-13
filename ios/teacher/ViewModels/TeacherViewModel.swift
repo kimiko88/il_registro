@@ -76,15 +76,14 @@ public class TeacherViewModel: ObservableObject {
 
     public func signLessonViaApi(token: String, classId: String, topic: String) async -> Bool {
         let requestGeneration = await MainActor.run {
-                guard self.sessionGeneration == requestGeneration else { return }
             self.isLoading = true
             self.errorMessage = nil
             return self.sessionGeneration
         }
         do {
             let session = try await apiService.signLesson(token: token, classId: classId, topic: topic)
-            let isCurrentSession = await MainActor.run { self.sessionGeneration == requestGeneration }
-            guard isCurrentSession, !Task.isCancelled else { return false }
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent, !Task.isCancelled else { return false }
             await MainActor.run {
                 guard self.sessionGeneration == requestGeneration else { return }
                 self.currentSession = session
@@ -94,8 +93,9 @@ public class TeacherViewModel: ObservableObject {
             }
             return true
         } catch {
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent else { return false }
             await MainActor.run {
-                guard self.sessionGeneration == requestGeneration else { return }
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
             }
@@ -116,21 +116,20 @@ public class TeacherViewModel: ObservableObject {
 
     public func loadFromDatabase(token: String) async -> Bool {
         let requestGeneration = await MainActor.run {
-                guard self.sessionGeneration == requestGeneration else { return }
             self.isLoading = true
             self.errorMessage = nil
             return self.sessionGeneration
         }
         do {
             let classes = try await apiService.fetchClasses(token: token)
-            let isCurrentSession = await MainActor.run { self.sessionGeneration == requestGeneration }
-            guard isCurrentSession, !Task.isCancelled else { return false }
-            var session = classes.first
+            let isCurrentAfterClasses = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrentAfterClasses, !Task.isCancelled else { return false }
+            let session = classes.first
             var classStudents: [RollCallStudent] = []
             if let firstClass = session {
                 classStudents = try await apiService.fetchClassStudents(token: token, classId: firstClass.id)
-            let isCurrentSession = await MainActor.run { self.sessionGeneration == requestGeneration }
-            guard isCurrentSession, !Task.isCancelled else { return false }
+                let isCurrentAfterStudents = await MainActor.run { self.sessionGeneration == requestGeneration }
+                guard isCurrentAfterStudents, !Task.isCancelled else { return false }
             }
             await MainActor.run {
                 guard self.sessionGeneration == requestGeneration else { return }
@@ -140,8 +139,9 @@ public class TeacherViewModel: ObservableObject {
             }
             return true
         } catch {
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent else { return false }
             await MainActor.run {
-                guard self.sessionGeneration == requestGeneration else { return }
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
             }
