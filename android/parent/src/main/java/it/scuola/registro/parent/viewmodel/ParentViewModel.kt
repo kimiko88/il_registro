@@ -14,7 +14,7 @@ import it.scuola.registro.parent.ui.ParentGradeDisplayItem
 class ParentViewModel(
     private val apiService: ParentApiService = HttpParentApiService()
 ) {
-    private var sessionGeneration: Long = 0L
+    @Volatile private var sessionGeneration: Long = 0L
     var children by mutableStateOf<List<ParentChild>>(emptyList())
         private set
 
