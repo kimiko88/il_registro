@@ -633,7 +633,7 @@ func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID strin
 				result.Errors = append(result.Errors, fmt.Sprintf("utente %s: password non conforme (%v)", u.Email, err))
 				continue
 			}
-			hash, err := bcrypt.GenerateFromPassword([]byte(u.PasswordHash), bcryptCost)
+			hash, err := bcrypt.GenerateFromPassword(crypto.PrehashPassword(u.PasswordHash), bcryptCost)
 			if err != nil {
 				result.Failed++
 				result.Errors = append(result.Errors, fmt.Sprintf("utente %s: errore hashing password", u.Email))
@@ -772,7 +772,8 @@ func (s *Service) AddGuardian(ctx context.Context, actorRole, studentUserID, par
 		return err
 	}
 	scope := actorSchoolScope(actorSchoolIDs)
-	if !hasSchoolAccess(actorRole, scope, student) || !hasSchoolAccess(actorRole, scope, parent) {
+	if !hasSchoolAccess(actorRole, scope, student) || !hasSchoolAccess(actorRole, scope, parent) ||
+		student.SchoolID == nil || parent.SchoolID == nil || *student.SchoolID != *parent.SchoolID {
 		return ErrUnauthorized
 	}
 	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
