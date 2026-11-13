@@ -2,29 +2,38 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"registro-backend/internal/config"
 	"registro-backend/internal/pdfworker"
 )
 
 func main() {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		log.Printf("Warning: error reading config file: %v", err)
+	redisHost := os.Getenv("REDIS_HOST")
+	if redisHost == "" {
+		redisHost = "localhost"
 	}
-
-	redisAddr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
-	if cfg.Redis.Host == "" {
-		redisAddr = "localhost:6379"
+	redisPort := os.Getenv("REDIS_PORT")
+	if redisPort == "" {
+		redisPort = "6379"
 	}
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	if (os.Getenv("SERVER_MODE") == "release" || os.Getenv("APP_ENV") == "production") && redisPassword == "" {
+		log.Fatal("REDIS_PASSWORD is required in production")
+	}
+	redisAddr := net.JoinHostPort(redisHost, redisPort)
 
-	client := pdfworker.NewClient(redisAddr)
+	client := pdfworker.NewClient(redisAddr, redisPassword)
 	defer func() { _ = client.Close() }()
+
+	startupCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	if err := client.Ping(startupCtx); err != nil {
+		cancel()
+		log.Fatalf("PDF worker cannot connect to Redis: %v", err)
+	}
+	cancel()
 
 	// Handler functions for PDF generation
 	scrutinyHandlerFunc := func(ctx context.Context, payload pdfworker.ScrutinyPdfPayload) ([]byte, error) {
