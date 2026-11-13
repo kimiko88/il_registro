@@ -188,11 +188,25 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 				return nil, ErrInvalidCredentials
 			}
 		}
-		go func(uid string, passBytes []byte, cost int) {
-			if newHash, err := bcrypt.GenerateFromPassword(passBytes, cost); err == nil {
-				_ = s.repo.UpdatePassword(context.Background(), uid, string(newHash))
-			}
-		}(user.ID, prehashedPassword, s.bcryptCost)
+		// Upgrade synchronously with compare-and-swap. A concurrent password
+		// reset/change must win rather than being overwritten by this legacy hash.
+		newHash, hashErr := bcrypt.GenerateFromPassword(prehashedPassword, s.bcryptCost)
+		if hashErr != nil {
+			return nil, fmt.Errorf("legacy password migration failed: %w", hashErr)
+		}
+		updater, ok := s.repo.(interface {
+			UpdatePasswordIfHashMatches(context.Context, string, string, string) (bool, error)
+		})
+		if !ok {
+			return nil, errors.New("repository does not support atomic legacy password migration")
+		}
+		updated, updateErr := updater.UpdatePasswordIfHashMatches(ctx, user.ID, user.PasswordHash, string(newHash))
+		if updateErr != nil {
+			return nil, fmt.Errorf("legacy password migration failed: %w", updateErr)
+		}
+		if !updated {
+			return nil, ErrInvalidCredentials
+		}
 	}
 
 	if !user.IsActive {
