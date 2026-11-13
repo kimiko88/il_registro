@@ -536,7 +536,7 @@ func main() {
 			textbooksH.RegisterRoutes(protected)
 
 			redisAddr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
-			pdfWorkerClient := pdfworker.NewClient(redisAddr)
+			pdfWorkerClient := pdfworker.NewClient(redisAddr, cfg.Redis.Password)
 			defer func() { _ = pdfWorkerClient.Close() }()
 
 			gradesH.SetPdfWorkerClient(pdfWorkerClient)
