@@ -72,31 +72,18 @@ class HttpTeacherApiService(
     override suspend fun getClasses(token: String): Result<List<ClassSession>> =
         withContext(Dispatchers.IO) {
             try {
-                var url = URL("$baseUrl/teacher/classes")
-                var conn = (url.openConnection() as HttpURLConnection).apply {
+                val url = URL("$baseUrl/teacher/classes")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
+                    setRequestProperty("Accept", "application/json")
                     connectTimeout = 10000
                     readTimeout = 10000
                 }
-                var response = if (conn.responseCode in 200..299) {
-                    BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
-                } else {
-                    ""
+                if (conn.responseCode !in 200..299) {
+                    return@withContext Result.failure(Exception("Errore recupero classi: HTTP ${conn.responseCode}"))
                 }
-                if (response.isEmpty() || response == "[]" || response == "null") {
-                    url = URL("$baseUrl/classes")
-                    conn = (url.openConnection() as HttpURLConnection).apply {
-                        requestMethod = "GET"
-                        setRequestProperty("Authorization", "Bearer $token")
-                        connectTimeout = 10000
-                        readTimeout = 10000
-                    }
-                    if (conn.responseCode in 200..299) {
-                        response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
-                    }
-                }
-
+                val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
                 val list = mutableListOf<ClassSession>()
                 if (response.startsWith("[")) {
                     val arr = JSONArray(response)
@@ -113,6 +100,8 @@ class HttpTeacherApiService(
                             )
                         )
                     }
+                } else if (response.isNotEmpty() && response != "null") {
+                    return@withContext Result.failure(Exception("Formato risposta classi non valido"))
                 }
                 Result.success(list)
             } catch (e: Exception) {
