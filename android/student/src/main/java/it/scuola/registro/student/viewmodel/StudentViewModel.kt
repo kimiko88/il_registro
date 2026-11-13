@@ -10,7 +10,7 @@ import it.scuola.registro.student.network.StudentApiService
 class StudentViewModel(
     private val apiService: StudentApiService = HttpStudentApiService()
 ) {
-    private var sessionGeneration: Long = 0L
+    @Volatile private var sessionGeneration: Long = 0L
     var grades = mutableListOf<GradeEntry>()
         private set
 
