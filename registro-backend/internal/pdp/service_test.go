@@ -21,6 +21,11 @@ type MockRepository struct {
 	mock.Mock
 }
 
+func (m *MockRepository) ValidatePlanScope(ctx context.Context, schoolID, studentID, classID string, coordinatorID, referenteID *string) (bool, error) {
+	args := m.Called(ctx, schoolID, studentID, classID, coordinatorID, referenteID)
+	return args.Bool(0), args.Error(1)
+}
+
 func (m *MockRepository) Create(ctx context.Context, plan *PdpPlan) (*PdpPlan, error) {
 	args := m.Called(ctx, plan)
 	if args.Get(0) == nil {
@@ -102,6 +107,7 @@ func TestPDPService_CreatePlan(t *testing.T) {
 			Diagnosis:    "DSA Dislessia Evolutiva",
 		}
 
+		mockRepo.On("ValidatePlanScope", ctx, "school-1", "student-1", "class-1", req.CoordinatorID, req.ReferenteID).Return(true, nil).Once()
 		mockRepo.On("Create", ctx, mock.AnythingOfType("*pdp.PdpPlan")).Return(expectedPlan, nil).Once()
 
 		plan, err := svc.CreatePlan(ctx, "teacher-1", "teacher", "school-1", &req)
