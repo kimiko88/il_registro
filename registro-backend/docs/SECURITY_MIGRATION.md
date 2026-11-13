@@ -14,11 +14,14 @@ Do not commit the resulting `.env` file.
 
 ## Existing password hashes
 
-Older accounts may have bcrypt hashes preprocessed with the historical public pepper. Set
-`ALLOW_LEGACY_PASSWORD_PEPPER=true` temporarily. Successful login transparently rehashes
-the password using the configured `PEPPER_SECRET`. Accounts that do not log in must have
-their passwords reset through the supported administrative recovery flow. Once every
-account has been migrated or reset, set the flag to `false` and redeploy.
+Older accounts may contain bcrypt hashes made with the historical public pepper or with
+raw passwords (without the current HMAC pre-hash). Set `ALLOW_LEGACY_PASSWORD_PEPPER=true`
+temporarily to verify either legacy format. A successful login transparently rehashes the
+password using the configured `PEPPER_SECRET`. The same switch gates legacy raw-hash
+verification during password changes and password-history checks; it is not a permanent
+compatibility mode. Accounts that do not log in must have their passwords reset through
+the supported administrative recovery flow. Once every account has been migrated or
+reset, set the flag to `false` and redeploy.
 
 ## Existing encrypted records
 
