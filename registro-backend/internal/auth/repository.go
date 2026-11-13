@@ -522,7 +522,7 @@ func (r *repository) UpdatePassword(ctx context.Context, userID, passwordHash st
 func (r *repository) UpdatePasswordIfHashMatches(ctx context.Context, userID, expectedHash, passwordHash string) (bool, error) {
 	now := time.Now()
 	result, err := r.db.ExecContext(ctx,
-		`UPDATE users SET password_hash = $1, updated_at = $2, password_changed_at = $2
+		`UPDATE users SET password_hash = $1, updated_at = $2
 		 WHERE id = $3 AND password_hash = $4`,
 		passwordHash, now, userID, expectedHash)
 	if err != nil {
