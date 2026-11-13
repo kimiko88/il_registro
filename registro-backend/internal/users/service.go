@@ -442,8 +442,10 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 	// Field is CurrentPassword in ChangePasswordRequest DTO (supports pre-hashed and legacy raw)
 	preCurrent := crypto.PrehashPassword(req.CurrentPassword)
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), preCurrent); err != nil {
-		if legacyPepperedErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), crypto.PrehashPasswordLegacy(req.CurrentPassword)); legacyPepperedErr != nil {
-			if legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); legacyErr != nil {
+		legacyPepperedErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), crypto.PrehashPasswordLegacy(req.CurrentPassword))
+		if legacyPepperedErr != nil {
+			if !crypto.LegacyPasswordMigrationEnabled() ||
+				bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)) != nil {
 				return ErrCurrentPasswordIncorrect
 			}
 		}
@@ -457,8 +459,9 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 	preNew := crypto.PrehashPassword(req.NewPassword)
 	for _, old := range history {
 		if bcrypt.CompareHashAndPassword([]byte(old), preNew) == nil ||
-			bcrypt.CompareHashAndPassword([]byte(old), crypto.PrehashPasswordLegacy(req.NewPassword)) == nil ||
-			bcrypt.CompareHashAndPassword([]byte(old), []byte(req.NewPassword)) == nil {
+			(crypto.LegacyPasswordMigrationEnabled() &&
+				(bcrypt.CompareHashAndPassword([]byte(old), crypto.PrehashPasswordLegacy(req.NewPassword)) == nil ||
+					bcrypt.CompareHashAndPassword([]byte(old), []byte(req.NewPassword)) == nil)) {
 			return ErrPasswordRecentlyUsed
 		}
 	}
@@ -539,8 +542,9 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 	{
 		for _, old := range history {
 			if bcrypt.CompareHashAndPassword([]byte(old), preNew) == nil ||
-				bcrypt.CompareHashAndPassword([]byte(old), crypto.PrehashPasswordLegacy(newPassword)) == nil ||
-				bcrypt.CompareHashAndPassword([]byte(old), []byte(newPassword)) == nil {
+				(crypto.LegacyPasswordMigrationEnabled() &&
+					(bcrypt.CompareHashAndPassword([]byte(old), crypto.PrehashPasswordLegacy(newPassword)) == nil ||
+						bcrypt.CompareHashAndPassword([]byte(old), []byte(newPassword)) == nil)) {
 				return errors.New("la nuova password non può essere uguale a una delle ultime 5 password utilizzate")
 			}
 		}
