@@ -7,6 +7,10 @@ struct SecretaryApp: App {
     @State private var isLoggedIn = false
     @State private var token = ""
 
+    init() {
+        MdmConfigManager.shared.applyManagedConfiguration()
+    }
+
     var body: some Scene {
         WindowGroup {
             if isLoggedIn {
