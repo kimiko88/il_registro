@@ -1004,20 +1004,26 @@ func (r *PostgresRepository) GetUserPersonalDataExport(ctx context.Context, user
 			FROM grades g JOIN students s ON s.id = g.student_id
 			WHERE s.user_id = $1::uuid AND g.deleted_at IS NULL
 			ORDER BY g.date, g.created_at`, userID)
-		if err != nil { return nil, fmt.Errorf("export student grades: %w", err) }
+		if err != nil {
+			return nil, fmt.Errorf("export student grades: %w", err)
+		}
 		data["grades"] = grades
 		attendance, err := queryPersonalExportRows(ctx, r.db, `
 			SELECT a.date, a.hour, a.status, a.justified, a.justified_at, a.created_at, a.updated_at
 			FROM attendance a JOIN students s ON s.id = a.student_id
 			WHERE s.user_id = $1::uuid
 			ORDER BY a.date, a.hour`, userID)
-		if err != nil { return nil, fmt.Errorf("export student attendance: %w", err) }
+		if err != nil {
+			return nil, fmt.Errorf("export student attendance: %w", err)
+		}
 		data["attendance"] = attendance
 	}
 	if role == "teacher" {
 		profile, err := queryPersonalExportRows(ctx, r.db, `
 			SELECT is_staff FROM teachers WHERE user_id = $1::uuid`, userID)
-		if err != nil { return nil, fmt.Errorf("export teacher profile: %w", err) }
+		if err != nil {
+			return nil, fmt.Errorf("export teacher profile: %w", err)
+		}
 		data["teacher_profile"] = profile
 	}
 	if role == "parent" {
@@ -1025,13 +1031,17 @@ func (r *PostgresRepository) GetUserPersonalDataExport(ctx context.Context, user
 			SELECT COALESCE(sp.relationship_type, '') AS relationship_type
 			FROM student_parents sp JOIN parents p ON p.id = sp.parent_id
 			WHERE p.user_id = $1::uuid ORDER BY relationship_type`, userID)
-		if err != nil { return nil, fmt.Errorf("export parent relationships: %w", err) }
+		if err != nil {
+			return nil, fmt.Errorf("export parent relationships: %w", err)
+		}
 		data["guardian_relationships"] = relationships
 	}
 	assignments, err := queryPersonalExportRows(ctx, r.db, `
 		SELECT assignment_type, scope_type, valid_from, valid_to, is_active, created_at, updated_at
 		FROM user_assignments WHERE user_id = $1::uuid ORDER BY created_at`, userID)
-	if err != nil { return nil, fmt.Errorf("export user assignments: %w", err) }
+	if err != nil {
+		return nil, fmt.Errorf("export user assignments: %w", err)
+	}
 	data["assignments"] = assignments
 	return data, nil
 }
@@ -1039,24 +1049,36 @@ func (r *PostgresRepository) GetUserPersonalDataExport(ctx context.Context, user
 // queryPersonalExportRows converts a fixed, reviewed SELECT into JSON-safe maps.
 func queryPersonalExportRows(ctx context.Context, db *sql.DB, query string, args ...interface{}) ([]map[string]interface{}, error) {
 	rows, err := db.QueryContext(ctx, query, args...)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	defer func() { _ = rows.Close() }()
 	columns, err := rows.Columns()
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 	result := make([]map[string]interface{}, 0)
 	for rows.Next() {
 		values := make([]interface{}, len(columns))
 		dest := make([]interface{}, len(columns))
-		for i := range values { dest[i] = &values[i] }
-		if err := rows.Scan(dest...); err != nil { return nil, err }
+		for i := range values {
+			dest[i] = &values[i]
+		}
+		if err := rows.Scan(dest...); err != nil {
+			return nil, err
+		}
 		item := make(map[string]interface{}, len(columns))
 		for i, column := range columns {
 			value := values[i]
-			if raw, ok := value.([]byte); ok { value = string(raw) }
+			if raw, ok := value.([]byte); ok {
+				value = string(raw)
+			}
 			item[column] = value
 		}
 		result = append(result, item)
 	}
-	if err := rows.Err(); err != nil { return nil, err }
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
