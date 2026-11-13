@@ -114,6 +114,7 @@ func TestUsersHandler_AllEndpoints(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// 8. GET /users/:id/audit-log
+	repo.On("GetByID", mock.Anything, "u1").Return(&User{ID: "u1", SchoolID: &schID}, nil).Once()
 	repo.On("GetAuditLogs", mock.Anything, "u1", 50, 0).Return([]AuditLog{{ID: "a1", Action: "CREATE"}}, 1, nil).Once()
 	req, _ = http.NewRequest(http.MethodGet, "/api/v1/users/u1/audit-log", nil)
 	w = httptest.NewRecorder()
