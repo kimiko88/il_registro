@@ -7,7 +7,7 @@ import androidx.activity.compose.setContent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-it.scuola.registro.parent.network.HttpParentApiService
+import it.scuola.registro.parent.network.HttpParentApiService
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
