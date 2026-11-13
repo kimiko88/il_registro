@@ -65,7 +65,7 @@ services:
   pdf-worker:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.prod
     command: ["./pdf-worker"]
     restart: unless-stopped
     depends_on: [db, pgbouncer, redis]
