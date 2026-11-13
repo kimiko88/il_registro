@@ -87,7 +87,7 @@ func TestLoadConfig_ProductionRequiresRedisAuthentication(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected production config without Redis authentication to fail")
 	}
-	if !strings.Contains(err.Error(), "Redis authentication is required") {
+	if !strings.Contains(err.Error(), "redis authentication is required") {
 		t.Fatalf("expected Redis authentication error, got: %v", err)
 	}
 }
