@@ -36,6 +36,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/auth/login")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                     doOutput = true
@@ -88,6 +89,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/admin/dashboard/stats")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -119,6 +121,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/users?page_size=200")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -167,6 +170,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/users")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -217,6 +221,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/users/$id")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "PATCH"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -252,6 +257,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/users/$id")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "DELETE"
                     setRequestProperty("Authorization", "Bearer $token")
                     connectTimeout = 10000
@@ -274,6 +280,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/scrutiny/overview")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -311,6 +318,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/certificates")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -366,6 +374,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/certificates/generate")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -422,6 +431,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/audit-log?limit=50")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -468,6 +478,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/auth/me")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -506,6 +517,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/users/$userId/change-password")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
