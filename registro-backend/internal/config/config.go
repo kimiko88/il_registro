@@ -165,8 +165,8 @@ func LoadConfig() (*Config, error) {
 			SSLMode:  viper.GetString("DB_SSLMODE"),
 		},
 		Redis: RedisConfig{
-			Host: viper.GetString("REDIS_HOST"),
-			Port: viper.GetString("REDIS_PORT"),
+			Host:     viper.GetString("REDIS_HOST"),
+			Port:     viper.GetString("REDIS_PORT"),
 			Password: viper.GetString("REDIS_PASSWORD"),
 		},
 
