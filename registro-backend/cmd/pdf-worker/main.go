@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"registro-backend/internal/pdfworker"
 )
@@ -56,7 +58,7 @@ func main() {
 		return []byte("%PDF-1.4 Async Verbale PDF Generated Successfully"), nil
 	}
 
-	server := pdfworker.NewServer(redisAddr, 10, client, scrutinyHandlerFunc)
+	server := pdfworker.NewServer(redisAddr, 10, client, scrutinyHandlerFunc, redisPassword)
 	server.SetReportCardHandler(reportCardHandlerFunc)
 	server.SetRegisterHandler(registerHandlerFunc)
 	server.SetVerbaleHandler(verbaleHandlerFunc)
