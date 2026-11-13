@@ -96,6 +96,16 @@ public class TeacherViewModel: ObservableObject {
         }
     }
 
+    public func clearSession() {
+        isHourSigned = false
+                lessonTopic = ""
+                students.removeAll()
+                grades.removeAll()
+                currentSession = nil
+                isLoading = false
+                errorMessage = nil
+    }
+
     public func loadFromDatabase(token: String) async -> Bool {
         await MainActor.run {
             self.isLoading = true
