@@ -14,7 +14,7 @@ struct ParentApp: App {
     var body: some Scene {
         WindowGroup {
             if isLoggedIn {
-                ParentDashboardView(token: token)
+                ParentDashboardView(token: token, onLogout: { token = ""; isLoggedIn = false })
             } else {
                 LoginView(isLoggedIn: $isLoggedIn, token: $token)
             }
