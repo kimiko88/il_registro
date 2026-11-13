@@ -106,6 +106,21 @@ func TestWSTicketStore_InvalidRedisURL_FailsClosed(t *testing.T) {
 	assert.Nil(t, store.tickets, "configured Redis failure must not initialise a local ticket map")
 }
 
+func TestWSTicketStore_PreservesJWTRevocationMetadata(t *testing.T) {
+	store := NewStore()
+	issuedAt := time.Now().UTC().Truncate(time.Second)
+	ticket, err := store.Issue("user-1", "a@test.it", "teacher", "school-1", TicketSecurity{
+		JTI: "jwt-id-123",
+		IssuedAt: issuedAt,
+	})
+	require.NoError(t, err)
+
+	claims, ok := store.ConsumeTicket(ticket)
+	require.True(t, ok)
+	assert.Equal(t, "jwt-id-123", claims.JTI)
+	assert.Equal(t, issuedAt, claims.IssuedAt)
+}
+
 // TestWSTicketStore_AllFieldsPreserved verifies all claim fields are preserved through issue+consume.
 func TestWSTicketStore_AllFieldsPreserved(t *testing.T) {
 	store := NewStore()
