@@ -110,6 +110,23 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
+
+// hasSchoolAccess verifies that a privileged actor can operate on a target user.
+// Superadmins are global; every other actor must have an explicit matching tenant.
+func hasSchoolAccess(actorRole, actorSchoolID string, target *User) bool {
+	if actorRole == "superadmin" {
+		return true
+	}
+	return actorSchoolID != "" && target != nil && target.SchoolID != nil && *target.SchoolID == actorSchoolID
+}
+
+func actorSchoolScope(scopes []string) string {
+	if len(scopes) == 0 {
+		return ""
+	}
+	return scopes[0]
+}
+
 // ─── Auth helpers ────────────────────────────────────────────────────────────
 
 func isPrivileged(role string) bool {
@@ -546,14 +563,17 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 	return s.repo.AddPasswordHistory(ctx, userID, string(hash))
 }
 
-// DisableMFA disables MFA for the given user (admin only).
-func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID string) error {
+// DisableMFA disables MFA only for an administrator operating within their own school.
+func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID string, actorSchoolIDs ...string) error {
 	if actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
 	}
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return err
+	}
+	if !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), user) {
+		return ErrUnauthorized
 	}
 	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
 		return fmt.Errorf("failed to revoke sessions before disabling MFA: %w", err)
@@ -640,8 +660,8 @@ func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID strin
 
 // ─── GDPR ────────────────────────────────────────────────────────────────────
 
-// GDPRDataExport exports all personal data for a user (GDPR right of access).
-func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, targetID string) (map[string]interface{}, error) {
+// GDPRDataExport exports personal data for the user or an administrator's own school.
+func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, targetID string, actorSchoolIDs ...string) (map[string]interface{}, error) {
 	if actorID != targetID && actorRole != "admin" && actorRole != "superadmin" {
 		return nil, ErrUnauthorized
 	}
@@ -649,18 +669,19 @@ func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, target
 	if err != nil {
 		return nil, err
 	}
-	// Fetch audit logs for the export (max 1000, offset 0)
+	if actorID != targetID && !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), user) {
+		return nil, ErrUnauthorized
+	}
 	logs, _, err := s.repo.GetAuditLogs(ctx, targetID, 1000, 0)
 	if err != nil {
 		return nil, err
 	}
-	// NewExporter takes no arguments; GenerateDataExport is on GDPRHandler
 	gdpr := NewGDPRHandler(s.repo)
 	return gdpr.GenerateDataExport(user, logs), nil
 }
 
-// GDPRDelete pseudonymizes a user (GDPR right to erasure).
-func (s *Service) GDPRDelete(ctx context.Context, actorRole string, targetID string) error {
+// GDPRDelete pseudonymizes a user after verifying tenant ownership and revoking sessions.
+func (s *Service) GDPRDelete(ctx context.Context, actorRole string, targetID string, actorSchoolIDs ...string) error {
 	if actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
 	}
@@ -668,40 +689,67 @@ func (s *Service) GDPRDelete(ctx context.Context, actorRole string, targetID str
 	if err != nil {
 		return err
 	}
+	if !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), user) {
+		return ErrUnauthorized
+	}
+	if err := s.repo.RevokeAllUserTokens(ctx, targetID); err != nil {
+		return fmt.Errorf("failed to revoke sessions before GDPR deletion: %w", err)
+	}
 	gdpr := NewGDPRHandler(s.repo)
 	gdpr.PseudonymizeUser(user)
-	// Persist the pseudonymized data
-	if err := s.repo.Update(ctx, user); err != nil {
-		return err
-	}
-	_ = s.repo.RevokeAllUserTokens(ctx, targetID)
-	return nil
+	return s.repo.Update(ctx, user)
 }
 
 // ─── Audit ───────────────────────────────────────────────────────────────────
 
-// GetAuditLogs returns the audit log for a specific user (paginated).
-// Access: the user themselves, or admin/superadmin.
-func (s *Service) GetAuditLogs(ctx context.Context, actorID, actorRole, targetID string, limit, offset int) ([]AuditLog, int, error) {
+// GetAuditLogs returns audit logs only to the user or an administrator in the same school.
+func (s *Service) GetAuditLogs(ctx context.Context, actorID, actorRole, targetID string, limit, offset int, actorSchoolIDs ...string) ([]AuditLog, int, error) {
 	if actorID != targetID && actorRole != "admin" && actorRole != "superadmin" {
 		return nil, 0, ErrUnauthorized
+	}
+	if actorID != targetID {
+		target, err := s.repo.GetByID(ctx, targetID)
+		if err != nil {
+			return nil, 0, err
+		}
+		if !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), target) {
+			return nil, 0, ErrUnauthorized
+		}
 	}
 	return s.repo.GetAuditLogs(ctx, targetID, limit, offset)
 }
 
 // ─── Relationships ───────────────────────────────────────────────────────────
 
-// GetChildren returns the list of students linked to a parent.
-func (s *Service) GetChildren(ctx context.Context, actorRole, actorID, parentUserID string) ([]StudentChild, error) {
-	if actorID != parentUserID && !isPrivileged(actorRole) {
+// GetChildren returns linked students to the parent or to authorized staff in the same school.
+func (s *Service) GetChildren(ctx context.Context, actorRole, actorID, parentUserID string, actorSchoolIDs ...string) ([]StudentChild, error) {
+	if actorRole == "parent" {
+		if actorID != parentUserID {
+			return nil, ErrUnauthorized
+		}
+	} else if isPrivileged(actorRole) {
+		parent, err := s.repo.GetByID(ctx, parentUserID)
+		if err != nil {
+			return nil, err
+		}
+		if !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), parent) {
+			return nil, ErrUnauthorized
+		}
+	} else {
 		return nil, ErrUnauthorized
 	}
 	return s.repo.GetChildren(ctx, parentUserID)
 }
 
-// GetGuardians returns all guardians linked to a student.
-func (s *Service) GetGuardians(ctx context.Context, actorRole string, studentUserID string) ([]GuardianInfo, error) {
+func (s *Service) GetGuardians(ctx context.Context, actorRole string, studentUserID string, actorSchoolIDs ...string) ([]GuardianInfo, error) {
 	if !isPrivileged(actorRole) {
+		return nil, ErrUnauthorized
+	}
+	student, err := s.repo.GetByID(ctx, studentUserID)
+	if err != nil {
+		return nil, err
+	}
+	if !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), student) {
 		return nil, ErrUnauthorized
 	}
 	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
@@ -711,9 +759,20 @@ func (s *Service) GetGuardians(ctx context.Context, actorRole string, studentUse
 	return s.repo.GetGuardians(ctx, studentProfileID)
 }
 
-// AddGuardian links a parent to a student.
-func (s *Service) AddGuardian(ctx context.Context, actorRole, studentUserID, parentUserID, relationship string) error {
+func (s *Service) AddGuardian(ctx context.Context, actorRole, studentUserID, parentUserID, relationship string, actorSchoolIDs ...string) error {
 	if !isPrivileged(actorRole) {
+		return ErrUnauthorized
+	}
+	student, err := s.repo.GetByID(ctx, studentUserID)
+	if err != nil {
+		return err
+	}
+	parent, err := s.repo.GetByID(ctx, parentUserID)
+	if err != nil {
+		return err
+	}
+	scope := actorSchoolScope(actorSchoolIDs)
+	if !hasSchoolAccess(actorRole, scope, student) || !hasSchoolAccess(actorRole, scope, parent) {
 		return ErrUnauthorized
 	}
 	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
@@ -727,9 +786,20 @@ func (s *Service) AddGuardian(ctx context.Context, actorRole, studentUserID, par
 	return s.repo.AddGuardian(ctx, studentProfileID, parentProfileID, relationship)
 }
 
-// RemoveGuardian unlinks a parent from a student.
-func (s *Service) RemoveGuardian(ctx context.Context, actorRole, studentUserID, parentUserID string) error {
+func (s *Service) RemoveGuardian(ctx context.Context, actorRole, studentUserID, parentUserID string, actorSchoolIDs ...string) error {
 	if !isPrivileged(actorRole) {
+		return ErrUnauthorized
+	}
+	student, err := s.repo.GetByID(ctx, studentUserID)
+	if err != nil {
+		return err
+	}
+	parent, err := s.repo.GetByID(ctx, parentUserID)
+	if err != nil {
+		return err
+	}
+	scope := actorSchoolScope(actorSchoolIDs)
+	if !hasSchoolAccess(actorRole, scope, student) || !hasSchoolAccess(actorRole, scope, parent) {
 		return ErrUnauthorized
 	}
 	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
@@ -826,7 +896,14 @@ func (s *Service) ExportUsers(ctx context.Context, actorRole, actorSchoolID stri
 	return json.Marshal(dtos)
 }
 
-func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, studentID string) (*StudentFascicolo, error) {
+func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, studentID string, actorSchoolIDs ...string) (*StudentFascicolo, error) {
+	student, err := s.repo.GetByID(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+	if actorRole != "superadmin" && !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), student) {
+		return nil, ErrUnauthorized
+	}
 	if !isPrivileged(actorRole) {
 		if actorRole == "parent" {
 			isGuard, err := s.repo.IsGuardian(ctx, actorID, studentID)
@@ -836,11 +913,6 @@ func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, s
 		} else if actorID != studentID {
 			return nil, ErrUnauthorized
 		}
-	}
-
-	student, err := s.repo.GetByID(ctx, studentID)
-	if err != nil {
-		return nil, err
 	}
 
 	var guardians []GuardianInfo
@@ -895,9 +967,27 @@ func canAssignDuty(actorRole string, dutyType string) bool {
 	}
 }
 
-// GetUserAssignments returns active assignments for a user.
-func (s *Service) GetUserAssignments(ctx context.Context, actorRole, targetUserID string) ([]UserAssignment, error) {
+// GetUserAssignments returns assignments only to the user or authorized staff in the same school.
+func (s *Service) GetUserAssignments(ctx context.Context, actorRole, targetUserID string, actorContext ...string) ([]UserAssignment, error) {
 	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "student" && actorRole != "parent" {
+		return nil, ErrUnauthorized
+	}
+	actorID, schoolID := "", ""
+	if len(actorContext) > 0 {
+		actorID = actorContext[0]
+	}
+	if len(actorContext) > 1 {
+		schoolID = actorContext[1]
+	}
+	target, err := s.repo.GetByID(ctx, targetUserID)
+	if err != nil {
+		return nil, err
+	}
+	if isPrivileged(actorRole) {
+		if !hasSchoolAccess(actorRole, schoolID, target) {
+			return nil, ErrUnauthorized
+		}
+	} else if actorID == "" || actorID != targetUserID {
 		return nil, ErrUnauthorized
 	}
 	return s.repo.GetAssignments(ctx, targetUserID)
