@@ -110,7 +110,6 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-
 // hasSchoolAccess verifies that a privileged actor can operate on a target user.
 // Superadmins are global; every other actor must have an explicit matching tenant.
 func hasSchoolAccess(actorRole, actorSchoolID string, target *User) bool {
