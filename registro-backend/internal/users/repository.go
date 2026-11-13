@@ -987,7 +987,6 @@ func (r *PostgresRepository) SetCoordinatedClasses(ctx context.Context, schoolID
 	return tx.Commit()
 }
 
-
 // GetUserPersonalDataExport returns records directly associated with a user.
 // It deliberately excludes free-form notes, credentials, MFA secrets, and
 // identifiers/details belonging to other users.
