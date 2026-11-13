@@ -93,22 +93,17 @@ func TestWSTicketStore_OneShotConsumption(t *testing.T) {
 	assert.False(t, ok2, "second consume of same ticket should fail")
 }
 
-// TestWSTicketStore_InvalidRedisURL_FallsBackToMemory verifies that an invalid Redis URL
-// falls back to in-memory store and everything still works.
-func TestWSTicketStore_InvalidRedisURL_FallsBackToMemory(t *testing.T) {
+// TestWSTicketStore_InvalidRedisURL_FailsClosed verifies configured Redis errors never fall back to local memory.
+func TestWSTicketStore_InvalidRedisURL_FailsClosed(t *testing.T) {
 	store := NewStore("not-a-valid-url://???")
 	require.NotNil(t, store)
 
-	ticket, err := store.Issue("user-fallback", "fallback@test.it", "admin", "school-99")
-	require.NoError(t, err)
-	require.NotEmpty(t, ticket)
+	_, err := store.Issue("user-fallback", "fallback@test.it", "admin", "school-99")
+	require.Error(t, err)
 
-	uid, email, role, schoolID, ok := store.Consume(ticket)
-	require.True(t, ok)
-	assert.Equal(t, "user-fallback", uid)
-	assert.Equal(t, "fallback@test.it", email)
-	assert.Equal(t, "admin", role)
-	assert.Equal(t, "school-99", schoolID)
+	_, _, _, _, ok := store.Consume("any-ticket")
+	assert.False(t, ok)
+	assert.Nil(t, store.tickets, "configured Redis failure must not initialise a local ticket map")
 }
 
 // TestWSTicketStore_AllFieldsPreserved verifies all claim fields are preserved through issue+consume.
