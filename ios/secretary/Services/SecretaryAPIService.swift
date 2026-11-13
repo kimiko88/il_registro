@@ -147,3 +147,18 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         return "cert_ok"
     }
 }
+
+public extension HttpSecretaryAPIService {
+    /// Revokes the authenticated server session during an explicit user logout.
+    func revokeSession(token: String) async {
+        var request = URLRequest(url: baseURL.appendingPathComponent("auth/logout"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        guard let (_, response) = try? await SecureURLSession.shared.data(for: request),
+              let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            return
+        }
+    }
+}
