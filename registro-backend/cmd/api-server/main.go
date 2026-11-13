@@ -145,7 +145,8 @@ func main() {
 	}
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
-	mfaService := auth.NewMFAService("RegistroElettronico")
+	mfaService := auth.NewMFAService("RegistroElettronico", redisURL)
+	defer func() { _ = mfaService.Close() }()
 	wsHub := ws.NewHub(redisURL)
 	go wsHub.Run(ctx)
 	appCache := cache.NewCache(redisURL)
