@@ -42,7 +42,8 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
             guard role == "teacher" || role == "coordinator" else {
                 throw NSError(domain: "TeacherAPI", code: 403, userInfo: [NSLocalizedDescriptionKey: "Accesso non consentito: questo account non appartiene a un docente."])
             }
-            if let token = json["token"] as? String ?? json["access_token"] as? String {
+            if let token = json["token"] as? String ?? json["access_token"] as? String,
+               !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return token
             }
         }
