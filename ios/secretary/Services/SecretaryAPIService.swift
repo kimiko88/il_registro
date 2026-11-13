@@ -31,7 +31,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         let body = ["email": cleanEmail, "password": password]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "SecretaryAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "Credenziali errate"])
         }
@@ -56,7 +56,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "SecretaryAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "Non autorizzato"])
         }
@@ -88,7 +88,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
+        guard let (data, response) = try? await SecureURLSession.shared.data(for: request),
               let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
               let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return []
@@ -108,7 +108,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
+        guard let (data, response) = try? await SecureURLSession.shared.data(for: request),
               let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
               let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return []
@@ -134,7 +134,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         let body = ["student_id": studentId, "type": type]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "SecretaryAPI", code: 400, userInfo: [NSLocalizedDescriptionKey: "Errore emissione certificato"])
         }
