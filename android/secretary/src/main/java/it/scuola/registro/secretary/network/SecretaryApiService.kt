@@ -1,5 +1,6 @@
 package it.scuola.registro.secretary.network
 
+import android.net.Uri
 import it.scuola.registro.secretary.config.AppConfig
 import it.scuola.registro.secretary.data.*
 import kotlinx.coroutines.Dispatchers
@@ -217,7 +218,7 @@ class HttpSecretaryApiService(
     override suspend fun updateUser(token: String, id: String, payload: UpdateUserPayload): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/users/$id")
+                val url = URL("$baseUrl/users/${Uri.encode(id)}")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     instanceFollowRedirects = false
                     requestMethod = "PATCH"
@@ -252,7 +253,7 @@ class HttpSecretaryApiService(
     override suspend fun deleteUser(token: String, id: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/users/$id")
+                val url = URL("$baseUrl/users/${Uri.encode(id)}")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     instanceFollowRedirects = false
                     requestMethod = "DELETE"
@@ -510,7 +511,7 @@ class HttpSecretaryApiService(
     ): Result<String> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/users/$userId/change-password")
+                val url = URL("$baseUrl/users/${Uri.encode(userId)}/change-password")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     instanceFollowRedirects = false
                     requestMethod = "POST"
