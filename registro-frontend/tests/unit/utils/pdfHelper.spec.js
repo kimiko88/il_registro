@@ -94,4 +94,48 @@ describe('pdfHelper - handleAsyncPdfDownload', () => {
             handleAsyncPdfDownload(fetchFn, 'failed.pdf', { pollIntervalMs: 10, maxPollAttempts: 5 })
         ).rejects.toThrow('Rendering engine failed')
     })
+
+    it('rejects a PDF job status URL on another origin before sending authenticated requests', async () => {
+        const jobResponse = {
+            job_id: 'job-external',
+            status_url: 'https://attacker.example/collect'
+        }
+        const jsonBlob = new Blob([JSON.stringify(jobResponse)], { type: 'application/json' })
+        const fetchFn = vi.fn().mockResolvedValue({
+            status: 202,
+            headers: { 'content-type': 'application/json' },
+            data: jsonBlob
+        })
+
+        await expect(
+            handleAsyncPdfDownload(fetchFn, 'external.pdf', { pollIntervalMs: 1, maxPollAttempts: 1 })
+        ).rejects.toThrow('URL non consentito')
+        expect(api.get).not.toHaveBeenCalled()
+    })
+
+    it('rejects a completed PDF download URL on another origin', async () => {
+        const jobResponse = {
+            job_id: 'job-external-download',
+            status_url: '/api/v1/scrutiny/pdf-jobs/job-external-download'
+        }
+        const jsonBlob = new Blob([JSON.stringify(jobResponse)], { type: 'application/json' })
+        const fetchFn = vi.fn().mockResolvedValue({
+            status: 202,
+            headers: { 'content-type': 'application/json' },
+            data: jsonBlob
+        })
+        api.get.mockResolvedValue({
+            data: {
+                status: 'completed',
+                download_url: 'https://attacker.example/collect'
+            }
+        })
+
+        await expect(
+            handleAsyncPdfDownload(fetchFn, 'external-download.pdf', { pollIntervalMs: 1, maxPollAttempts: 1 })
+        ).rejects.toThrow('URL non consentito')
+        expect(api.get).toHaveBeenCalledTimes(1)
+        expect(api.get).toHaveBeenCalledWith('/api/v1/scrutiny/pdf-jobs/job-external-download')
+    })
+
 })
