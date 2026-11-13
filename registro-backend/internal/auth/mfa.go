@@ -55,6 +55,7 @@ func NewMFAService(issuer string, redisURLs ...string) *MFAService {
 	return s
 }
 
+// Close releases the shared Redis client used for TOTP replay protection.
 func (m *MFAService) Close() error {
 	if m.redisClient != nil {
 		return m.redisClient.Close()
