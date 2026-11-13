@@ -37,6 +37,17 @@ class ParentViewModel(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    fun clearSession() {
+        children = emptyList()
+        selectedChildId = ""
+        pendingAbsences.clear()
+        availableColloqui.clear()
+        gradesList = emptyList()
+        circularsList = emptyList()
+        isLoading = false
+        errorMessage = null
+    }
+
     suspend fun loadFromDatabase(token: String): Boolean {
         isLoading = true
         errorMessage = null
