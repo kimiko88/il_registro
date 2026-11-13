@@ -684,7 +684,9 @@ func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, target
 		GetUserPersonalDataExport(context.Context, string, string) (map[string]interface{}, error)
 	}); ok {
 		personalData, err = exporter.GetUserPersonalDataExport(ctx, targetID, user.Role)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		// Non-Postgres repositories used by isolated tests may not expose domain exports.
 		personalData = map[string]interface{}{}
