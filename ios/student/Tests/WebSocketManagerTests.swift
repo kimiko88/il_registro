@@ -1,7 +1,7 @@
 import XCTest
 @testable import StudentApp
 
-class MockWebSocketDelegate: WebSocketDelegate {
+final class MockWebSocketDelegate: WebSocketDelegate {
     var connected = false
     var lastMessage = ""
     var disconnected = false
@@ -36,17 +36,15 @@ final class WebSocketManagerTests: XCTestCase {
         super.tearDown()
     }
 
-    func testConnectAndReceive() {
-        guard let url = URL(string: "wss://registro-backend-fdu2.onrender.com/api/v1/ws") else { return }
+    func testPlaceholderNeverClaimsConnectionOrDeliversSyntheticMessages() {
+        let url = URL(string: "wss://registro-backend-fdu2.onrender.com/api/v1/ws")!
         manager.connect(url: url, token: "test_token")
-        XCTAssertTrue(manager.isConnected)
-        XCTAssertTrue(delegate.connected)
+
+        XCTAssertFalse(manager.isConnected)
+        XCTAssertFalse(delegate.connected)
+        XCTAssertTrue(delegate.disconnected)
 
         manager.simulateMessage("LIVE_UPDATE")
-        XCTAssertEqual(delegate.lastMessage, "LIVE_UPDATE")
-
-        manager.disconnect()
-        XCTAssertFalse(manager.isConnected)
-        XCTAssertTrue(delegate.disconnected)
+        XCTAssertEqual(delegate.lastMessage, "")
     }
 }
