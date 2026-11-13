@@ -188,6 +188,11 @@ func (m *MockRepository) UpdatePassword(ctx context.Context, userID, hash string
 	return args.Error(0)
 }
 
+func (m *MockRepository) UpdatePasswordIfHashMatches(ctx context.Context, userID, expectedHash, newHash string) (bool, error) {
+	args := m.Called(ctx, userID, expectedHash, newHash)
+	return args.Bool(0), args.Error(1)
+}
+
 func (m *MockRepository) ResetPasswordTx(ctx context.Context, userID, hash, tokenID string) error {
 	args := m.Called(ctx, userID, hash, tokenID)
 	return args.Error(0)
@@ -336,26 +341,17 @@ func TestLogin(t *testing.T) {
 			EmailVerified: true,
 		}
 
-		migrationDone := make(chan struct{})
 		mockRepo.On("GetRecentLoginAttempts", mock.Anything, legacyUser.Email, mock.Anything, mock.Anything).Return(0, nil).Once()
 		mockRepo.On("GetUserByEmail", mock.Anything, legacyUser.Email).Return(legacyUser, nil).Once()
 		mockRepo.On("CreateRefreshToken", mock.Anything, mock.Anything).Return(nil).Once()
 		mockRepo.On("UpdateLastLogin", mock.Anything, legacyUser.ID).Return(nil).Once()
 		mockRepo.On("RecordLoginAttempt", mock.Anything, mock.Anything).Return(nil).Once()
-		mockRepo.On("UpdatePassword", mock.Anything, legacyUser.ID, mock.Anything).Run(func(args mock.Arguments) {
-			close(migrationDone)
-		}).Return(nil).Once()
+		mockRepo.On("UpdatePasswordIfHashMatches", mock.Anything, legacyUser.ID, string(legacyHashed), mock.Anything).Return(true, nil).Once()
 
 		req := &LoginRequest{Email: legacyUser.Email, Password: password}
 		resp, err := s.Login(context.Background(), req, "127.0.0.1", "test-agent")
 		assert.NoError(t, err)
 		assert.NotNil(t, resp)
-
-		select {
-		case <-migrationDone:
-		case <-time.After(2 * time.Second):
-			t.Fatal("timed out waiting for background password re-hash migration")
-		}
 		mockRepo.AssertExpectations(t)
 	})
 
