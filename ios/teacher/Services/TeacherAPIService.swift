@@ -54,7 +54,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
         let url = baseURL.appendingPathComponent("teacher/classes")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Bearer \\(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse,
@@ -69,7 +69,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
 
         return jsonArray.enumerated().map { index, dict in
             TeacherClassSessionModel(
-                id: (dict["id"] as? String) ?? "\\(index)",
+                id: (dict["id"] as? String) ?? "\(index)",
                 className: (dict["name"] as? String) ?? (dict["class_name"] as? String) ?? "Classe",
                 subject: (dict["subject"] as? String) ?? (dict["subject_name"] as? String) ?? "Matematica",
                 isSigned: false,
