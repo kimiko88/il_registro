@@ -71,11 +71,11 @@ class HttpSecretaryApiService(
                                 schoolId = it.optString("school_id")
                             )
                         }
-                        Result.success(Pair(token, profile))
+                        if (token.isBlank()) Result.failure(Exception("Token di accesso mancante")) else Result.success(Pair(token, profile))
                     }
                 } else {
                     val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
+                    Result.failure(Exception("Login fallito (HTTP $responseCode)"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
