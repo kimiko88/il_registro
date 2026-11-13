@@ -187,6 +187,7 @@ func TestUsersHandler_AllEndpoints(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// 16. Assignments: GET & POST & DELETE /users/:id/assignments
+	repo.On("GetByID", mock.Anything, "u1").Return(&User{ID: "u1", SchoolID: &schID}, nil).Once()
 	repo.On("GetAssignments", mock.Anything, "u1").Return([]UserAssignment{{ID: "as-1", UserID: "u1"}}, nil).Once()
 	req, _ = http.NewRequest(http.MethodGet, "/api/v1/users/u1/assignments", nil)
 	w = httptest.NewRecorder()
