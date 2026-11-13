@@ -179,12 +179,11 @@ func LoadConfig() (*Config, error) {
 	}
 
 	redisPasswordConfig := strings.TrimSpace(viper.GetString("REDIS_PASSWORD"))
-	if redisPasswordConfig == "" {
-		if rawRedisURL := strings.TrimSpace(viper.GetString("REDIS_URL")); rawRedisURL != "" {
-			if parsedRedisURL, err := url.Parse(rawRedisURL); err == nil && parsedRedisURL.User != nil {
-				if password, hasPassword := parsedRedisURL.User.Password(); hasPassword {
-					redisPasswordConfig = password
-				}
+	if rawRedisURL := strings.TrimSpace(viper.GetString("REDIS_URL")); rawRedisURL != "" {
+		if parsedRedisURL, err := url.Parse(rawRedisURL); err == nil && parsedRedisURL.User != nil {
+			if password, hasPassword := parsedRedisURL.User.Password(); hasPassword && password != "" {
+				// Keep the worker/client password aligned with the authenticated URL.
+				redisPasswordConfig = password
 			}
 		}
 	}
