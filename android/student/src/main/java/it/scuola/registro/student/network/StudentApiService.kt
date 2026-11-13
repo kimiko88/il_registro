@@ -1,5 +1,6 @@
 package it.scuola.registro.student.network
 
+import it.scuola.registro.student.config.AppConfig
 import it.scuola.registro.student.data.AttendanceRecord
 import it.scuola.registro.student.data.GradeEntry
 import it.scuola.registro.student.data.HomeworkAssignment
@@ -24,7 +25,7 @@ interface StudentApiService {
 }
 
 class HttpStudentApiService(
-    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
+    private val baseUrl: String = AppConfig.BASE_URL
 ) : StudentApiService {
 
     override suspend fun login(email: String, password: String): Result<Pair<String, StudentUser>> =
