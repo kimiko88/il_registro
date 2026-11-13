@@ -359,10 +359,20 @@ func (r *repository) UseRecoveryCode(ctx context.Context, userID, plainCode stri
 		}
 		// bcrypt.CompareHashAndPassword is constant-time against timing attacks.
 		if bcrypt.CompareHashAndPassword([]byte(rc.Code), []byte(plainCode)) == nil {
-			// Found the matching code — mark it as used.
-			query := `UPDATE mfa_recovery_codes SET used = true, used_at = $1 WHERE id = $2`
-			_, err := r.db.ExecContext(ctx, query, time.Now(), rc.ID)
-			return err
+			// Consume atomically: concurrent requests must not both accept the same code.
+			query := `UPDATE mfa_recovery_codes SET used = true, used_at = $1 WHERE id = $2 AND user_id = $3 AND used = false`
+			result, err := r.db.ExecContext(ctx, query, time.Now(), rc.ID, userID)
+			if err != nil {
+				return err
+			}
+			rows, err := result.RowsAffected()
+			if err != nil {
+				return err
+			}
+			if rows != 1 {
+				return ErrInvalidMFAToken
+			}
+			return nil
 		}
 	}
 
