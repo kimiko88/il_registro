@@ -1,5 +1,6 @@
 package it.scuola.registro.secretary.network
 
+import it.scuola.registro.secretary.config.AppConfig
 import it.scuola.registro.secretary.data.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -27,7 +28,7 @@ interface SecretaryApiService {
 }
 
 class HttpSecretaryApiService(
-    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
+    private val baseUrl: String = AppConfig.BASE_URL
 ) : SecretaryApiService {
 
     override suspend fun login(email: String, password: String): Result<Pair<String, UserProfile?>> =
