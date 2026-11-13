@@ -14,7 +14,7 @@ struct SecretaryApp: App {
     var body: some Scene {
         WindowGroup {
             if isLoggedIn {
-                SecretaryDashboardView(token: token)
+                SecretaryDashboardView(token: token, onLogout: { token = ""; isLoggedIn = false })
             } else {
                 LoginView(isLoggedIn: $isLoggedIn, token: $token)
             }
