@@ -679,8 +679,18 @@ func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, target
 	if err != nil {
 		return nil, err
 	}
+	var personalData map[string]interface{}
+	if exporter, ok := s.repo.(interface {
+		GetUserPersonalDataExport(context.Context, string, string) (map[string]interface{}, error)
+	}); ok {
+		personalData, err = exporter.GetUserPersonalDataExport(ctx, targetID, user.Role)
+		if err != nil { return nil, err }
+	} else {
+		// Non-Postgres repositories used by isolated tests may not expose domain exports.
+		personalData = map[string]interface{}{}
+	}
 	gdpr := NewGDPRHandler(s.repo)
-	return gdpr.GenerateDataExport(user, logs), nil
+	return gdpr.GenerateDataExport(user, logs, personalData), nil
 }
 
 // GDPRDelete pseudonymizes a user after verifying tenant ownership and revoking sessions.
