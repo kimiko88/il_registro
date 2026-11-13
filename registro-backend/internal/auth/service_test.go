@@ -489,7 +489,6 @@ func TestRefreshToken(t *testing.T) {
 
 	t.Run("SoftDeletedUser", func(t *testing.T) {
 		s, mockRepo := setupTest(t)
-		deletedAt := time.Now()
 		rt := &RefreshToken{
 			ID: "rt-deleted", UserID: userID, Token: hashToken(token),
 			ExpiresAt: time.Now().Add(24 * time.Hour),
