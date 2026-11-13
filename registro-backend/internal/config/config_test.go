@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -58,5 +59,46 @@ func TestLoadConfig_TrimsHttpPrefix(t *testing.T) {
 
 	if cfg.Database.Host != "localhost" {
 		t.Errorf("expected Database.Host 'localhost', got '%s'", cfg.Database.Host)
+	}
+}
+
+func setProductionConfigEnv(t *testing.T) {
+	t.Helper()
+	t.Setenv("SERVER_MODE", "release")
+	t.Setenv("DB_PASSWORD", "db-secret-not-for-production-0123456789")
+	t.Setenv("ALLOWED_ORIGINS", "https://registro.example.it")
+	t.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+	t.Setenv("PEPPER_SECRET", "pepper-secret-not-for-production-0123456789")
+	t.Setenv("JWT_SECRET", "jwt-secret-not-for-production-0123456789-abcdefghijklmnopqrstuvwxyz-0123456789")
+}
+
+func TestLoadConfig_ProductionRequiresRedisAuthentication(t *testing.T) {
+	setProductionConfigEnv(t)
+	t.Setenv("REDIS_PASSWORD", "")
+	t.Setenv("REDIS_URL", "")
+
+	_, err := LoadConfig()
+	if err == nil {
+		t.Fatal("expected production config without Redis authentication to fail")
+	}
+	if !strings.Contains(err.Error(), "Redis authentication is required") {
+		t.Fatalf("expected Redis authentication error, got: %v", err)
+	}
+}
+
+func TestLoadConfig_UsesPasswordEmbeddedInRedisURL(t *testing.T) {
+	setProductionConfigEnv(t)
+	t.Setenv("REDIS_PASSWORD", "")
+	t.Setenv("REDIS_URL", "redis://:0123456789abcdef0123456789abcdef@localhost:6379/0")
+
+	cfg, err := LoadConfig()
+	if err != nil {
+		t.Fatalf("expected production config with authenticated Redis URL to succeed: %v", err)
+	}
+	if cfg.Redis.Password != "0123456789abcdef0123456789abcdef" {
+		t.Fatalf("expected Redis password to be extracted from REDIS_URL")
+	}
+	if !strings.Contains(cfg.RedisURL(), "0123456789abcdef0123456789abcdef") {
+		t.Fatalf("expected RedisURL to retain Redis authentication")
 	}
 }
