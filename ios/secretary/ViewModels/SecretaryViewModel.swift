@@ -65,6 +65,14 @@ public class SecretaryViewModel: ObservableObject {
         self.apiService = apiService
     }
 
+    public func clearSession() {
+        users.removeAll()
+                classes.removeAll()
+                certificates.removeAll()
+                isLoading = false
+                errorMessage = nil
+    }
+
     public func loadFromDatabase(token: String) async {
         await MainActor.run {
             self.isLoading = true
