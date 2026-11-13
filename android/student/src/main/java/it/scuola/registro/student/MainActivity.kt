@@ -10,12 +10,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import it.scuola.registro.student.theme.RegistroStudentTheme
+import it.scuola.registro.student.security.MdmConfigManager
 import it.scuola.registro.student.ui.StudentDashboardScreen
 import it.scuola.registro.student.ui.StudentLoginScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MdmConfigManager(this).applyMdmPolicies()
         // Student records and administrative data must not appear in screenshots or recents previews.
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         setContent {
