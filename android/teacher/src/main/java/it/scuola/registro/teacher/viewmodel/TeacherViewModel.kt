@@ -31,6 +31,16 @@ class TeacherViewModel(
     var errorMessage: String? = null
         private set
 
+    fun clearSession() {
+        activeSession = null
+        currentSession = null
+        rollCallList.clear()
+        gradesList.clear()
+        deferredResolutions.clear()
+        isLoading = false
+        errorMessage = null
+    }
+
     suspend fun loadFromDatabase(token: String): Boolean {
         isLoading = true
         errorMessage = null
