@@ -559,6 +559,7 @@ func TestPasswordReset(t *testing.T) {
 	})
 
 	t.Run("ChangePasswordSuccess", func(t *testing.T) {
+		t.Setenv("ALLOW_LEGACY_PASSWORD_PEPPER", "true")
 		s, mockRepo := setupTest(t)
 		userID := "user-change-123"
 		currentPass := "OldPass123!Valid"
