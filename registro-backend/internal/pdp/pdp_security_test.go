@@ -104,6 +104,10 @@ type mockPdpRepoForSecTest struct {
 	plans map[string]*PdpPlan
 }
 
+func (m *mockPdpRepoForSecTest) ValidatePlanScope(ctx context.Context, schoolID, studentID, classID string, coordinatorID, referenteID *string) (bool, error) {
+	return true, nil
+}
+
 func (m *mockPdpRepoForSecTest) Create(ctx context.Context, plan *PdpPlan) (*PdpPlan, error) {
 	plan.ID = "pdp-1"
 	m.plans[plan.ID] = plan
