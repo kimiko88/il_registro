@@ -14,6 +14,7 @@ func init() {
 }
 
 func TestCORSMiddleware(t *testing.T) {
+	t.Setenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
 	tests := []struct {
 		name           string
 		method         string
@@ -176,6 +177,7 @@ func TestLoggerMiddleware(t *testing.T) {
 }
 
 func TestCORSMiddleware_HeaderValues(t *testing.T) {
+	t.Setenv("ALLOWED_ORIGINS", "http://localhost:5173")
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Request, _ = http.NewRequest("GET", "/test", nil)
