@@ -14,7 +14,12 @@ struct TeacherApp: App {
     var body: some Scene {
         WindowGroup {
             if isLoggedIn {
-                TeacherRegisterView(token: token, onLogout: { token = ""; isLoggedIn = false })
+                TeacherRegisterView(token: token, onLogout: {
+                    let tokenToRevoke = token
+                    Task { await HttpTeacherAPIService().revokeSession(token: tokenToRevoke) }
+                    token = ""
+                    isLoggedIn = false
+                })
             } else {
                 LoginView(isLoggedIn: $isLoggedIn, token: $token)
             }
