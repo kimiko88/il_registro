@@ -16,6 +16,10 @@ public struct StudentDashboardView: View {
     }
 
     private func logout() {
+        if !token.isEmpty {
+            let tokenToRevoke = token
+            Task { await HttpStudentAPIService().revokeSession(token: tokenToRevoke) }
+        }
         viewModel.clearSession()
         OfflineCacheManager.shared.clear()
         onLogout?()
