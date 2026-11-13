@@ -68,6 +68,8 @@ services:
       dockerfile: docker/Dockerfile.prod
     command: ["./pdf-worker"]
     restart: unless-stopped
+    healthcheck:
+      disable: true
     depends_on: [db, pgbouncer, redis]
     environment:
       DB_HOST: pgbouncer
