@@ -38,6 +38,7 @@ class HttpParentApiService(
 
                 val url = URL("$baseUrl/auth/login")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                     doOutput = true
@@ -79,6 +80,7 @@ class HttpParentApiService(
             try {
                 val url = URL("$baseUrl/users/me/children")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -115,6 +117,7 @@ class HttpParentApiService(
             try {
                 val url = URL("$baseUrl/attendance/child-attendance/$childId")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -156,6 +159,7 @@ class HttpParentApiService(
             try {
                 val url = URL("$baseUrl/attendance/$absenceId/justify")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -186,6 +190,7 @@ class HttpParentApiService(
             try {
                 val url = URL("$baseUrl/colloqui/$colloquioId/book")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
