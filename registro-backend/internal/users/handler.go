@@ -517,7 +517,7 @@ func (h *Handler) GetAuditLog(c *gin.Context) {
 		pageSize = 100
 	}
 	offset := (page - 1) * pageSize
-	logs, total, err := h.service.GetAuditLogs(c.Request.Context(), actorID, actorRole, targetID, pageSize, offset)
+	logs, total, err := h.service.GetAuditLogs(c.Request.Context(), actorID, actorRole, targetID, pageSize, offset, getSchoolID(c))
 	if err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -542,7 +542,7 @@ func (h *Handler) ExportGDPR(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: can only export your own GDPR data or require admin role"})
 		return
 	}
-	data, err := h.service.GDPRDataExport(c.Request.Context(), actorID, role, targetID)
+	data, err := h.service.GDPRDataExport(c.Request.Context(), actorID, role, targetID, getSchoolID(c))
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) || err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -570,7 +570,7 @@ func (h *Handler) DeleteGDPR(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only admins can perform GDPR deletion"})
 		return
 	}
-	if err := h.service.GDPRDelete(c.Request.Context(), role, c.Param("id")); err != nil {
+	if err := h.service.GDPRDelete(c.Request.Context(), role, c.Param("id"), getSchoolID(c)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -625,7 +625,7 @@ func (h *Handler) DisableMFA(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "forbidden: only admins can disable MFA"})
 		return
 	}
-	if err := h.service.DisableMFA(c.Request.Context(), role, c.Param("id")); err != nil {
+	if err := h.service.DisableMFA(c.Request.Context(), role, c.Param("id"), getSchoolID(c)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -640,7 +640,7 @@ func (h *Handler) GetMyChildren(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	children, err := h.service.GetChildren(c.Request.Context(), actorRole, actorID, actorID)
+	children, err := h.service.GetChildren(c.Request.Context(), actorRole, actorID, actorID, getSchoolID(c))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -705,7 +705,7 @@ func (h *Handler) GetGuardians(c *gin.Context) {
 		return
 	}
 	studentID := c.Param("id")
-	guardians, err := h.service.GetGuardians(c.Request.Context(), getActorRole(c), studentID)
+	guardians, err := h.service.GetGuardians(c.Request.Context(), getActorRole(c), studentID, getSchoolID(c))
 	if err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
@@ -736,7 +736,7 @@ func (h *Handler) AddGuardian(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := h.service.AddGuardian(c.Request.Context(), role, studentID, req.ParentUserID, req.RelationshipType); err != nil {
+	if err := h.service.AddGuardian(c.Request.Context(), role, studentID, req.ParentUserID, req.RelationshipType, getSchoolID(c)); err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
@@ -759,7 +759,7 @@ func (h *Handler) RemoveGuardian(c *gin.Context) {
 	}
 	studentID := c.Param("id")
 	parentID := c.Param("guardianId")
-	if err := h.service.RemoveGuardian(c.Request.Context(), role, studentID, parentID); err != nil {
+	if err := h.service.RemoveGuardian(c.Request.Context(), role, studentID, parentID, getSchoolID(c)); err != nil {
 		if err == ErrUnauthorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
@@ -780,7 +780,7 @@ func (h *Handler) GetFascicolo(c *gin.Context) {
 		return
 	}
 
-	fascicolo, err := h.service.GetStudentFascicolo(c.Request.Context(), actorID, actorRole, studentID)
+	fascicolo, err := h.service.GetStudentFascicolo(c.Request.Context(), actorID, actorRole, studentID, getSchoolID(c))
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) || strings.Contains(err.Error(), "unauthorized") || strings.Contains(err.Error(), "forbidden") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -797,7 +797,7 @@ func (h *Handler) GetAssignments(c *gin.Context) {
 	userID := c.Param("id")
 	actorRole := getActorRole(c)
 
-	assignments, err := h.service.GetUserAssignments(c.Request.Context(), actorRole, userID)
+	assignments, err := h.service.GetUserAssignments(c.Request.Context(), actorRole, userID, getActorID(c), getSchoolID(c))
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden"})
