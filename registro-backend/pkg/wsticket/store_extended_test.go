@@ -110,7 +110,7 @@ func TestWSTicketStore_PreservesJWTRevocationMetadata(t *testing.T) {
 	store := NewStore()
 	issuedAt := time.Now().UTC().Truncate(time.Second)
 	ticket, err := store.Issue("user-1", "a@test.it", "teacher", "school-1", TicketSecurity{
-		JTI: "jwt-id-123",
+		JTI:      "jwt-id-123",
 		IssuedAt: issuedAt,
 	})
 	require.NoError(t, err)
