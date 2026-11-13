@@ -117,9 +117,11 @@ func (r *repository) Create(ctx context.Context, plan *PdpPlan) (*PdpPlan, error
 	// Encrypt clinical diagnosis at rest (GDPR Art. 9)
 	encDiagnosis := plan.Diagnosis
 	if encDiagnosis != "" {
-		if cipherText, err := crypto.EncryptString(encDiagnosis); err == nil {
-			encDiagnosis = cipherText
+		cipherText, encryptErr := crypto.EncryptString(encDiagnosis)
+		if encryptErr != nil {
+			return nil, fmt.Errorf("pdp.Create: encrypt diagnosis: %w", encryptErr)
 		}
+		encDiagnosis = cipherText
 	}
 
 	query := `
@@ -202,9 +204,11 @@ func (r *repository) Update(ctx context.Context, id string, req *UpdatePdpReques
 	if req.Diagnosis != nil {
 		encDiagnosis := *req.Diagnosis
 		if encDiagnosis != "" {
-			if cipherText, err := crypto.EncryptString(encDiagnosis); err == nil {
-				encDiagnosis = cipherText
+			cipherText, encryptErr := crypto.EncryptString(encDiagnosis)
+			if encryptErr != nil {
+				return nil, fmt.Errorf("pdp.Update: encrypt diagnosis: %w", encryptErr)
 			}
+			encDiagnosis = cipherText
 		}
 		set += fmt.Sprintf("diagnosis = $%d, ", i)
 		args = append(args, encDiagnosis)
