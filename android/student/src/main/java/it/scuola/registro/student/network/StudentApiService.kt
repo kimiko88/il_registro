@@ -71,11 +71,11 @@ class HttpStudentApiService(
                             email = userObj.optString("email", email),
                             className = userObj.optString("class_name", "Classe")
                         )
-                        Result.success(Pair(token, user))
+                        if (token.isBlank()) Result.failure(Exception("Token di accesso mancante")) else Result.success(Pair(token, user))
                     }
                 } else {
                     val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
+                    Result.failure(Exception("Login fallito (HTTP $responseCode)"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
