@@ -47,7 +47,8 @@ public class HttpParentAPIService: ParentAPIServiceProtocol {
             guard role == "parent" else {
                 throw NSError(domain: "ParentAPI", code: 403, userInfo: [NSLocalizedDescriptionKey: "Accesso non consentito: questo account non appartiene a un genitore."])
             }
-            if let token = json["access_token"] as? String ?? json["token"] as? String {
+            if let token = json["access_token"] as? String ?? json["token"] as? String,
+               !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return token
             }
         }
