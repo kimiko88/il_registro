@@ -52,12 +52,28 @@ func (h *Handler) Register(c *gin.Context) {
 	if err := ValidateRegisterRequest(callerRole, &req); err != nil {
 		statusCode := http.StatusBadRequest
 		switch err {
-		case ErrInsufficientRole:
-			statusCode = http.StatusForbidden
-		case ErrCannotCreateRole:
+		case ErrInsufficientRole, ErrCannotCreateRole:
 			statusCode = http.StatusForbidden
 		}
 		c.JSON(statusCode, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	// Tenant scope is derived from the authenticated principal, never from
+	// client-controlled JSON. Only superadmins may select another school.
+	actorSchoolID, hasSchool := GetSchoolID(c)
+	if callerRole != RoleSuperAdmin {
+		if !hasSchool {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "authenticated user has no school scope"})
+			return
+		}
+		if req.SchoolID != "" && req.SchoolID != actorSchoolID {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "cannot create users in another school"})
+			return
+		}
+		req.SchoolID = actorSchoolID
+	} else if strings.TrimSpace(req.SchoolID) == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "school_id is required"})
 		return
 	}
 
