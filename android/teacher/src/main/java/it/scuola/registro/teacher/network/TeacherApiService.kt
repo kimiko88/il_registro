@@ -1,5 +1,6 @@
 package it.scuola.registro.teacher.network
 
+import it.scuola.registro.teacher.config.AppConfig
 import it.scuola.registro.teacher.data.ClassSession
 import it.scuola.registro.teacher.data.DeferredScrutinyResolution
 import it.scuola.registro.teacher.data.GradeProposal
@@ -25,7 +26,7 @@ interface TeacherApiService {
 }
 
 class HttpTeacherApiService(
-    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
+    private val baseUrl: String = AppConfig.BASE_URL
 ) : TeacherApiService {
 
     override suspend fun login(email: String, password: String): Result<String> =
