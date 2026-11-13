@@ -334,30 +334,55 @@ func (s *Service) DeleteUser(ctx context.Context, actorRole, actorSchoolID, id s
 	return s.repo.Delete(ctx, id)
 }
 
-// BulkDeleteUsers soft-deletes multiple users at once.
+// BulkDeleteUsers soft-deletes users after verifying tenant ownership and revoking sessions.
 func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole, actorSchoolID string, ids []string) (int, error) {
 	if !isPrivileged(actorRole) {
 		return 0, ErrUnauthorized
 	}
-	if actorRole == "admin" || actorRole == "secretary" || actorRole == "dsga" || actorRole == "assistente_amministrativo" {
-		targetUsers, err := s.repo.ListByIDs(ctx, ids)
-		if err != nil {
-			return 0, fmt.Errorf("failed to verify target users: %w", err)
-		}
-		var safeIDs []string
-		for _, tu := range targetUsers {
-			if tu.Role != "admin" && tu.Role != "superadmin" && (actorRole == "dsga" || tu.Role != "dsga") {
-				if actorSchoolID != "" && tu.SchoolID != nil && *tu.SchoolID == actorSchoolID {
-					safeIDs = append(safeIDs, tu.ID)
-				}
-			}
-		}
-		ids = safeIDs
-	}
 	if len(ids) == 0 {
 		return 0, nil
 	}
-	return s.repo.BulkDelete(ctx, ids)
+
+	// Resolve every target before mutation. Never trust caller-supplied IDs as
+	// proof of tenant ownership, regardless of the caller's privileged role.
+	targetUsers, err := s.repo.ListByIDs(ctx, ids)
+	if err != nil {
+		return 0, fmt.Errorf("failed to verify target users: %w", err)
+	}
+
+	safeIDs := make([]string, 0, len(targetUsers))
+	seen := make(map[string]struct{}, len(targetUsers))
+	for _, target := range targetUsers {
+		if target.ID == "" {
+			continue
+		}
+		if _, duplicate := seen[target.ID]; duplicate {
+			continue
+		}
+		if actorRole != "superadmin" {
+			if actorSchoolID == "" || target.SchoolID == nil || *target.SchoolID != actorSchoolID {
+				continue
+			}
+		}
+		if (actorRole == "admin" || actorRole == "secretary" || actorRole == "dsga" || actorRole == "assistente_amministrativo") &&
+			(target.Role == "admin" || target.Role == "superadmin" || (actorRole != "dsga" && target.Role == "dsga")) {
+			continue
+		}
+		seen[target.ID] = struct{}{}
+		safeIDs = append(safeIDs, target.ID)
+	}
+	if len(safeIDs) == 0 {
+		return 0, nil
+	}
+
+	// Revocation must succeed before the soft-delete. A partial revocation
+	// leaves some sessions invalidated but never deletes users with live tokens.
+	for _, userID := range safeIDs {
+		if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+			return 0, fmt.Errorf("failed to revoke sessions before bulk deleting user %s: %w", userID, err)
+		}
+	}
+	return s.repo.BulkDelete(ctx, safeIDs)
 }
 
 // RestoreUser un-deletes a soft-deleted user.
