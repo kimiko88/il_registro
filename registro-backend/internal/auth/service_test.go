@@ -486,6 +486,24 @@ func TestRefreshToken(t *testing.T) {
 		assert.ErrorIs(t, err, ErrInvalidToken)
 		mockRepo.AssertExpectations(t)
 	})
+
+	t.Run("SoftDeletedUser", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
+		deletedAt := time.Now()
+		rt := &RefreshToken{
+			ID: "rt-deleted", UserID: userID, Token: hashToken(token),
+			ExpiresAt: time.Now().Add(24 * time.Hour),
+		}
+		user := &User{ID: userID, IsActive: true, DeletedAt: &deletedAt}
+		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
+		mockRepo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
+		mockRepo.On("RevokeRefreshToken", mock.Anything, "rt-deleted").Return(nil).Once()
+
+		_, err := s.RefreshToken(context.Background(), token, "", "")
+		assert.ErrorIs(t, err, ErrUserInactive)
+		mockRepo.AssertNotCalled(t, "RotateRefreshTokenTx", mock.Anything, mock.Anything, mock.Anything)
+		mockRepo.AssertExpectations(t)
+	})
 }
 
 func TestPasswordReset(t *testing.T) {
