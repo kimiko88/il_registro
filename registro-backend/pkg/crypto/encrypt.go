@@ -159,8 +159,12 @@ func PrehashPassword(password string) []byte {
 // PrehashPasswordLegacy computes the historical pre-hash used before PEPPER_SECRET
 // became mandatory. It exists only to verify and transparently migrate existing
 // password hashes. Remove it after all legacy accounts have authenticated or been reset.
+func LegacyPasswordMigrationEnabled() bool {
+	return strings.EqualFold(os.Getenv("ALLOW_LEGACY_PASSWORD_PEPPER"), "true")
+}
+
 func PrehashPasswordLegacy(password string) []byte {
-	if !strings.EqualFold(os.Getenv("ALLOW_LEGACY_PASSWORD_PEPPER"), "true") {
+	if !LegacyPasswordMigrationEnabled() {
 		return nil
 	}
 	h := hmac.New(sha256.New, []byte("default_pepper_secret_registrov2"))
