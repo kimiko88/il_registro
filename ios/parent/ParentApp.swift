@@ -14,7 +14,12 @@ struct ParentApp: App {
     var body: some Scene {
         WindowGroup {
             if isLoggedIn {
-                ParentDashboardView(token: token, onLogout: { token = ""; isLoggedIn = false })
+                ParentDashboardView(token: token, onLogout: {
+                    let tokenToRevoke = token
+                    Task { await HttpParentAPIService().revokeSession(token: tokenToRevoke) }
+                    token = ""
+                    isLoggedIn = false
+                })
             } else {
                 LoginView(isLoggedIn: $isLoggedIn, token: $token)
             }
