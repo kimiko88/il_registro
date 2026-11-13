@@ -297,18 +297,21 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 		}
 		userID, email, role, schoolID := ticketClaims.UserID, ticketClaims.Email, ticketClaims.Role, ticketClaims.SchoolID
 
-		if m.revocationStore != nil {
-			revoked, err := m.revocationStore.IsRevoked(c.Request.Context(), ticketClaims.JTI)
-			if err != nil {
-				c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "authentication temporarily unavailable"})
-				c.Abort()
-				return
-			}
-			if revoked {
-				c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "ticket session has been revoked"})
-				c.Abort()
-				return
-			}
+		if m.revocationStore == nil {
+			c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "session revocation service unavailable"})
+			c.Abort()
+			return
+		}
+		revoked, err := m.revocationStore.IsRevoked(c.Request.Context(), ticketClaims.JTI)
+		if err != nil {
+			c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "authentication temporarily unavailable"})
+			c.Abort()
+			return
+		}
+		if revoked {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "ticket session has been revoked"})
+			c.Abort()
+			return
 		}
 
 		if m.userRepo == nil {
