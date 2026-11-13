@@ -450,6 +450,10 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
 		return nil, ErrUserInactive
 	}
+	if user.PasswordChangedAt != nil && !rt.CreatedAt.After(*user.PasswordChangedAt) {
+		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
+		return nil, ErrTokenRevoked
+	}
 
 	if isPasswordExpired(user) {
 		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
