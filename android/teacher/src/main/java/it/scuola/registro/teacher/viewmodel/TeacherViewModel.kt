@@ -10,7 +10,7 @@ import it.scuola.registro.teacher.network.TeacherApiService
 class TeacherViewModel(
     private val apiService: TeacherApiService = HttpTeacherApiService()
 ) {
-    private var sessionGeneration: Long = 0L
+    @Volatile private var sessionGeneration: Long = 0L
     var activeSession: ClassSession? = null
         private set
 
