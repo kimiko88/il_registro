@@ -34,11 +34,13 @@ type entry struct {
 	Exp      time.Time `json:"exp"`
 }
 
+// TicketSecurity binds a one-time WebSocket ticket to its source JWT session.
 type TicketSecurity struct {
 	JTI      string
 	IssuedAt time.Time
 }
 
+// TicketClaims contains the identity and revocation metadata recovered from a ticket.
 type TicketClaims struct {
 	UserID   string
 	Email    string
