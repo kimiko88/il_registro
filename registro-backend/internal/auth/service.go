@@ -440,14 +440,23 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 	// Get user
 	user, err := s.repo.GetUserByID(ctx, rt.UserID)
 	if err != nil {
+		// GetUserByID excludes soft-deleted accounts (deleted_at IS NULL).
+		// Revoke the refresh token when the account no longer exists.
+		if errors.Is(err, ErrUserNotFound) {
+			if revokeErr := s.repo.RevokeRefreshToken(ctx, rt.ID); revokeErr != nil {
+				return nil, fmt.Errorf("revoke refresh token for unavailable account: %w", revokeErr)
+			}
+			return nil, ErrUserInactive
+		}
 		return nil, err
 	}
 
 	// Verify account is still active before issuing a new access token.
 	// A disabled account must not be able to obtain new tokens via refresh.
-	if !user.IsActive || user.DeletedAt != nil {
-		// Revoke the refresh token so disabled or soft-deleted accounts cannot retry.
-		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
+	if !user.IsActive {
+		if revokeErr := s.repo.RevokeRefreshToken(ctx, rt.ID); revokeErr != nil {
+			return nil, fmt.Errorf("revoke refresh token for inactive account: %w", revokeErr)
+		}
 		return nil, ErrUserInactive
 	}
 	if user.PasswordChangedAt != nil && !rt.CreatedAt.After(*user.PasswordChangedAt) {
