@@ -14,7 +14,12 @@ struct SecretaryApp: App {
     var body: some Scene {
         WindowGroup {
             if isLoggedIn {
-                SecretaryDashboardView(token: token, onLogout: { token = ""; isLoggedIn = false })
+                SecretaryDashboardView(token: token, onLogout: {
+                    let tokenToRevoke = token
+                    Task { await HttpSecretaryAPIService().revokeSession(token: tokenToRevoke) }
+                    token = ""
+                    isLoggedIn = false
+                })
             } else {
                 LoginView(isLoggedIn: $isLoggedIn, token: $token)
             }
