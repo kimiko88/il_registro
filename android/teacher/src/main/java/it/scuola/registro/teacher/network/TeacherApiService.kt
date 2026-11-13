@@ -1,5 +1,6 @@
 package it.scuola.registro.teacher.network
 
+import android.net.Uri
 import it.scuola.registro.teacher.config.AppConfig
 import it.scuola.registro.teacher.data.ClassSession
 import it.scuola.registro.teacher.data.DeferredScrutinyResolution
@@ -114,7 +115,7 @@ class HttpTeacherApiService(
     override suspend fun getClassStudents(token: String, classId: String): Result<List<StudentRollCall>> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/users?role=student&class_id=$classId")
+                val url = URL("$baseUrl/users?role=student&class_id=${Uri.encode(classId)}")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     instanceFollowRedirects = false
                     requestMethod = "GET"
