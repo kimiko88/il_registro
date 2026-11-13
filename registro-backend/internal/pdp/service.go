@@ -66,6 +66,17 @@ func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole, schoolID s
 	if schoolID == "" {
 		return nil, ErrUnauthorized
 	}
+	validator, ok := s.repo.(PlanScopeValidator)
+	if !ok {
+		return nil, ErrUnauthorized
+	}
+	validScope, err := validator.ValidatePlanScope(ctx, schoolID, req.StudentID, req.ClassID, req.CoordinatorID, req.ReferenteID)
+	if err != nil {
+		return nil, fmt.Errorf("pdp.CreatePlan: validate school ownership: %w", err)
+	}
+	if !validScope {
+		return nil, ErrUnauthorized
+	}
 	return s.repo.Create(ctx, plan)
 }
 
@@ -202,6 +213,24 @@ func (s *Service) UpdatePlan(ctx context.Context, actorRole, actorSchoolID, id s
 		return nil, ErrPlanNotFound
 	}
 	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
+		return nil, ErrUnauthorized
+	}
+	validator, ok := s.repo.(PlanScopeValidator)
+	if !ok {
+		return nil, ErrUnauthorized
+	}
+	coordinatorID, referenteID := plan.CoordinatorID, plan.ReferenteID
+	if req.CoordinatorID != nil {
+		coordinatorID = req.CoordinatorID
+	}
+	if req.ReferenteID != nil {
+		referenteID = req.ReferenteID
+	}
+	validScope, err := validator.ValidatePlanScope(ctx, plan.SchoolID, plan.StudentID, plan.ClassID, coordinatorID, referenteID)
+	if err != nil {
+		return nil, fmt.Errorf("pdp.UpdatePlan: validate school ownership: %w", err)
+	}
+	if !validScope {
 		return nil, ErrUnauthorized
 	}
 	return s.repo.Update(ctx, id, req)
