@@ -1,6 +1,7 @@
 package it.scuola.registro.student
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,8 @@ import it.scuola.registro.student.ui.StudentLoginScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Student records and administrative data must not appear in screenshots or recents previews.
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         setContent {
             RegistroStudentTheme {
                 Surface(
