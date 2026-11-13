@@ -4,12 +4,14 @@ public struct SecretaryDashboardView: View {
     @ObservedObject public var viewModel: SecretaryViewModel
     public var token: String
     @State private var selectedTab = 0
+    public var onLogout: (() -> Void)?
     public var auditLogs: [String] = []
 
-    public init(token: String = "", viewModel: SecretaryViewModel = SecretaryViewModel(), auditLogs: [String] = []) {
+    public init(token: String = "", viewModel: SecretaryViewModel = SecretaryViewModel(), auditLogs: [String] = [], onLogout: (() -> Void)? = nil) {
         self.token = token
         self.viewModel = viewModel
         self.auditLogs = auditLogs
+        self.onLogout = onLogout
     }
 
     public var body: some View {
@@ -35,6 +37,23 @@ public struct SecretaryDashboardView: View {
                 .tag(4)
         }
         .tint(Color.purple)
+        .safeAreaInset(edge: .top) {
+            HStack {
+                Spacer()
+                Button {
+                    viewModel.clearSession()
+                    OfflineCacheManager.shared.clear()
+                    onLogout?()
+                } label: {
+                    Label("Esci", systemImage: "rectangle.portrait.and.arrow.right")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .accessibilityIdentifier("logoutButton")
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+            }
+            .background(.bar)
+        }
         .task {
             if !token.isEmpty {
                 await viewModel.loadFromDatabase(token: token)
