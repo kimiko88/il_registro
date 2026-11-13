@@ -16,7 +16,7 @@ import (
 var (
 	ErrCiphertextTooShort          = errors.New("ciphertext too short")
 	ErrDecryptionFailed            = errors.New("decryption failed")
-	ErrEncryptionKeyNotConfigured  = errors.New("ENCRYPTION_KEY must be configured as 32 raw bytes or 64 hexadecimal characters")
+	ErrEncryptionKeyNotConfigured = errors.New("ENCRYPTION_KEY must be configured as 32 raw bytes or 64 hexadecimal characters")
 )
 
 // GetEncryptionKey returns the configured 256-bit encryption key.
@@ -155,7 +155,6 @@ func PrehashPassword(password string) []byte {
 	h.Write([]byte(password))
 	return h.Sum(nil)
 }
-
 
 // PrehashPasswordLegacy computes the historical pre-hash used before PEPPER_SECRET
 // became mandatory. It exists only to verify and transparently migrate existing
