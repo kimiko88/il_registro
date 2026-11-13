@@ -1,9 +1,15 @@
 package config
 
 import (
+	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
 	"strings"
 	"testing"
+
+	appcrypto "registro-backend/pkg/crypto"
 )
 
 func TestLoadConfig_DefaultsAndEnv(t *testing.T) {
@@ -100,5 +106,31 @@ func TestLoadConfig_UsesPasswordEmbeddedInRedisURL(t *testing.T) {
 	}
 	if !strings.Contains(cfg.RedisURL(), "0123456789abcdef0123456789abcdef") {
 		t.Fatalf("expected RedisURL to retain Redis authentication")
+	}
+}
+
+func TestLoadConfig_AppliesDotEnvSecretsToCryptoRuntime(t *testing.T) {
+	setProductionConfigEnv(t)
+	pepper := "runtime-pepper-secret-0123456789abcdef"
+	keyHex := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	t.Setenv("PEPPER_SECRET", pepper)
+	t.Setenv("ENCRYPTION_KEY", keyHex)
+	t.Setenv("REDIS_PASSWORD", "redis-secret-0123456789abcdef0123456789abcdef")
+	t.Setenv("ALLOW_LEGACY_PASSWORD_PEPPER", "false")
+
+	if _, err := LoadConfig(); err != nil {
+		t.Fatalf("expected production config to load: %v", err)
+	}
+	expectedKey, _ := hex.DecodeString(keyHex)
+	if !bytes.Equal(appcrypto.GetEncryptionKey(), expectedKey) {
+		t.Fatal("crypto runtime did not receive the validated ENCRYPTION_KEY")
+	}
+	mac := hmac.New(sha256.New, []byte(pepper))
+	_, _ = mac.Write([]byte("runtime-check"))
+	if !bytes.Equal(appcrypto.PrehashPassword("runtime-check"), mac.Sum(nil)) {
+		t.Fatal("password hashing did not receive the validated PEPPER_SECRET")
+	}
+	if appcrypto.LegacyPasswordMigrationEnabled() {
+		t.Fatal("legacy password migration should remain disabled")
 	}
 }
