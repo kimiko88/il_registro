@@ -71,35 +71,33 @@ public class ParentViewModel: ObservableObject {
 
     public func loadFromDatabase(token: String) async {
         let requestGeneration = await MainActor.run {
-                guard self.sessionGeneration == requestGeneration else { return }
             self.isLoading = true
             self.errorMessage = nil
             return self.sessionGeneration
         }
         do {
             let fetchedChildren = try await apiService.fetchChildren(token: token)
-            let isCurrentSession = await MainActor.run { self.sessionGeneration == requestGeneration }
-            guard isCurrentSession, !Task.isCancelled else { return }
+            let isCurrentAfterChildren = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrentAfterChildren, !Task.isCancelled else { return }
             var allAbsences: [AbsenceModel] = []
             if let firstChild = fetchedChildren.first {
                 allAbsences = try await apiService.fetchAbsences(token: token, childId: firstChild.id)
-            let isCurrentSession = await MainActor.run { self.sessionGeneration == requestGeneration }
-            guard isCurrentSession, !Task.isCancelled else { return }
+                let isCurrentAfterAbsences = await MainActor.run { self.sessionGeneration == requestGeneration }
+                guard isCurrentAfterAbsences, !Task.isCancelled else { return }
             }
             await MainActor.run {
                 guard self.sessionGeneration == requestGeneration else { return }
                 self.children = fetchedChildren.map {
                     ChildItemModel(id: $0.id, firstName: $0.firstName, lastName: $0.lastName, className: $0.className)
                 }
-                if let first = self.children.first {
-                    self.selectedChildId = first.id
-                }
+                self.selectedChildId = self.children.first?.id ?? ""
                 self.absences = allAbsences
                 self.isLoading = false
             }
         } catch {
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent else { return }
             await MainActor.run {
-                guard self.sessionGeneration == requestGeneration else { return }
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
             }
