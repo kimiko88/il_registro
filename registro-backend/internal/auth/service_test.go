@@ -592,3 +592,20 @@ func TestPasswordReset(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 }
+
+func TestLogoutWithoutRefreshTokenRevokesAllUserSessions(t *testing.T) {
+	service, mockRepo := setupTest(t)
+	userID := "native-user-123"
+	mockRepo.On("RevokeAllUserTokens", mock.Anything, userID).Return(nil).Once()
+
+	assert.NoError(t, service.Logout(context.Background(), "", userID))
+	mockRepo.AssertExpectations(t)
+}
+
+func TestLogoutWithoutRefreshTokenRequiresUserID(t *testing.T) {
+	service, mockRepo := setupTest(t)
+
+	assert.ErrorIs(t, service.Logout(context.Background(), "", "  "), ErrUnauthorized)
+	mockRepo.AssertNotCalled(t, "RevokeAllUserTokens", mock.Anything, mock.Anything)
+}
+
