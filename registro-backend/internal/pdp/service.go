@@ -17,13 +17,17 @@ var (
 )
 
 // Service defines the business logic for PDP/PEI plans.
+type GuardianChecker interface {
+	IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error)
+}
+
 type Service struct {
 	repo     Repository
-	userRepo users.Repository
+	userRepo GuardianChecker
 }
 
 // NewService creates a new PDP service.
-func NewService(repo Repository, uRepo ...users.Repository) *Service {
+func NewService(repo Repository, uRepo ...GuardianChecker) *Service {
 	svc := &Service{repo: repo}
 	if len(uRepo) > 0 && uRepo[0] != nil {
 		svc.userRepo = uRepo[0]
