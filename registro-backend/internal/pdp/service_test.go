@@ -150,6 +150,7 @@ func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 
 	t.Run("teacher sees full diagnosis", func(t *testing.T) {
 		mockRepo.On("GetByID", ctx, "pdp-100").Return(originalPlan, nil).Once()
+		mockRepo.On("ValidatePlanScope", ctx, "school-1", "student-1", "class-1", (*string)(nil), (*string)(nil)).Return(true, nil).Once()
 
 		plan, err := svc.GetByID(ctx, "teacher-1", "teacher", "school-1", "pdp-100")
 		assert.NoError(t, err)
@@ -158,6 +159,7 @@ func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 
 	t.Run("parent sees shared plan with redacted diagnosis", func(t *testing.T) {
 		mockRepo.On("GetByID", ctx, "pdp-100").Return(originalPlan, nil).Once()
+		mockRepo.On("ValidatePlanScope", ctx, "school-1", "student-1", "class-1", (*string)(nil), (*string)(nil)).Return(true, nil).Once()
 
 		plan, err := svc.GetByID(ctx, "parent-1", "parent", "school-1", "pdp-100")
 		assert.NoError(t, err)
@@ -172,6 +174,7 @@ func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 			SharedWithFamily: false,
 		}
 		mockRepo.On("GetByID", ctx, "pdp-200").Return(unsharedPlan, nil).Once()
+		mockRepo.On("ValidatePlanScope", ctx, "school-1", "student-1", "", (*string)(nil), (*string)(nil)).Return(true, nil).Once()
 
 		plan, err := svc.GetByID(ctx, "parent-1", "parent", "school-1", "pdp-200")
 		assert.Error(t, err)
@@ -193,6 +196,7 @@ func TestPDPService_ApproveByFamily(t *testing.T) {
 			SharedWithFamily: true,
 		}
 		mockRepo.On("GetByID", ctx, "pdp-100").Return(plan, nil).Once()
+		mockRepo.On("ValidatePlanScope", ctx, "school-1", "student-1", "", (*string)(nil), (*string)(nil)).Return(true, nil).Once()
 		mockRepo.On("ApproveByFamily", ctx, "pdp-100", "parent-1").Return(nil).Once()
 
 		err := svc.ApproveByFamily(ctx, "parent", "parent-1", "school-1", "pdp-100")
