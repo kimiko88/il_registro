@@ -494,9 +494,8 @@ func TestRefreshToken(t *testing.T) {
 			ID: "rt-deleted", UserID: userID, Token: hashToken(token),
 			ExpiresAt: time.Now().Add(24 * time.Hour),
 		}
-		user := &User{ID: userID, IsActive: true, DeletedAt: &deletedAt}
 		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
-		mockRepo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
+		mockRepo.On("GetUserByID", mock.Anything, userID).Return(nil, ErrUserNotFound).Once()
 		mockRepo.On("RevokeRefreshToken", mock.Anything, "rt-deleted").Return(nil).Once()
 
 		_, err := s.RefreshToken(context.Background(), token, "", "")
