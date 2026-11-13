@@ -93,6 +93,7 @@ public class StudentViewModel: ObservableObject {
     @Published public var isLoading: Bool = false
     @Published public var errorMessage: String? = nil
 
+    private var sessionGeneration = UUID()
     private let apiService: StudentAPIServiceProtocol
 
     public init(apiService: StudentAPIServiceProtocol = HttpStudentAPIService()) {
@@ -101,6 +102,7 @@ public class StudentViewModel: ObservableObject {
     }
 
     public func clearSession() {
+        sessionGeneration = UUID()
         grades.removeAll()
         homework.removeAll()
         attendance.removeAll()
@@ -109,9 +111,11 @@ public class StudentViewModel: ObservableObject {
     }
 
     public func loadFromDatabase(token: String) async {
-        await MainActor.run {
+        let requestGeneration = await MainActor.run {
+                guard self.sessionGeneration == requestGeneration else { return }
             self.isLoading = true
             self.errorMessage = nil
+            return self.sessionGeneration
         }
         do {
             async let fetchedGrades = apiService.fetchGrades(token: token)
@@ -119,8 +123,11 @@ public class StudentViewModel: ObservableObject {
             async let fetchedAttendance = apiService.fetchAttendance(token: token)
 
             let (gradesResult, homeworkResult, attendanceResult) = try await (fetchedGrades, fetchedHomework, fetchedAttendance)
+            let isCurrentSession = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrentSession, !Task.isCancelled else { return }
 
             await MainActor.run {
+                guard self.sessionGeneration == requestGeneration else { return }
                 self.grades = gradesResult
                 self.homework = homeworkResult
                 self.attendance = attendanceResult
@@ -128,6 +135,7 @@ public class StudentViewModel: ObservableObject {
             }
         } catch {
             await MainActor.run {
+                guard self.sessionGeneration == requestGeneration else { return }
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
             }
