@@ -77,7 +77,6 @@ public class SecretaryViewModel: ObservableObject {
 
     public func loadFromDatabase(token: String) async {
         let requestGeneration = await MainActor.run {
-                guard self.sessionGeneration == requestGeneration else { return }
             self.isLoading = true
             self.errorMessage = nil
             return self.sessionGeneration
@@ -86,24 +85,23 @@ public class SecretaryViewModel: ObservableObject {
             async let fetchedUsers = apiService.fetchUsers(token: token)
             async let fetchedClasses = apiService.fetchClasses(token: token)
             async let fetchedCertificates = apiService.fetchCertificates(token: token)
-
-            let (u, cl, cert) = try await (fetchedUsers, fetchedClasses, fetchedCertificates)
-            let isCurrentSession = await MainActor.run { self.sessionGeneration == requestGeneration }
-            guard isCurrentSession, !Task.isCancelled else { return }
-
+            let (users, classes, certificates) = try await (fetchedUsers, fetchedClasses, fetchedCertificates)
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent, !Task.isCancelled else { return }
             await MainActor.run {
                 guard self.sessionGeneration == requestGeneration else { return }
-                self.users = u.map {
+                self.users = users.map {
                     let fullName = "\($0.firstName) \($0.lastName)".trimmingCharacters(in: .whitespacesAndNewlines)
                     return ManagedUserModel(id: $0.id, name: fullName.isEmpty ? $0.email : fullName, role: $0.role)
                 }
-                self.classes = cl
-                self.certificates = cert
+                self.classes = classes
+                self.certificates = certificates
                 self.isLoading = false
             }
         } catch {
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent else { return }
             await MainActor.run {
-                guard self.sessionGeneration == requestGeneration else { return }
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
             }
