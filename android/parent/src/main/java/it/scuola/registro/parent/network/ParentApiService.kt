@@ -1,5 +1,6 @@
 package it.scuola.registro.parent.network
 
+import android.net.Uri
 import it.scuola.registro.parent.config.AppConfig
 import it.scuola.registro.parent.data.ColloquioBooking
 import it.scuola.registro.parent.data.ParentChild
@@ -114,7 +115,7 @@ class HttpParentApiService(
     override suspend fun getAbsences(token: String, childId: String): Result<List<PendingAbsence>> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/attendance/child-attendance/$childId")
+                val url = URL("$baseUrl/attendance/child-attendance/${Uri.encode(childId)}")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     instanceFollowRedirects = false
                     requestMethod = "GET"
@@ -156,7 +157,7 @@ class HttpParentApiService(
     override suspend fun submitJustification(token: String, absenceId: String, note: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/attendance/$absenceId/justify")
+                val url = URL("$baseUrl/attendance/${Uri.encode(absenceId)}/justify")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     instanceFollowRedirects = false
                     requestMethod = "POST"
@@ -187,7 +188,7 @@ class HttpParentApiService(
     override suspend fun bookColloquio(token: String, colloquioId: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/colloqui/$colloquioId/book")
+                val url = URL("$baseUrl/colloqui/${Uri.encode(colloquioId)}/book")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     instanceFollowRedirects = false
                     requestMethod = "POST"
