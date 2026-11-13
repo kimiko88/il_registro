@@ -81,7 +81,7 @@ public class HttpParentAPIService: ParentAPIServiceProtocol {
     }
 
     public func fetchAbsences(token: String, childId: String) async throws -> [AbsenceModel] {
-        let url = baseURL.appendingPathComponent("attendance/child-attendance/\(childId)")
+        let url = baseURL.appendingPathComponent("attendance").appendingPathComponent("child-attendance").appendingPathComponent(childId)
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -105,7 +105,7 @@ public class HttpParentAPIService: ParentAPIServiceProtocol {
     }
 
     public func justifyAbsence(token: String, childId: String, absenceId: String, reason: String) async throws -> Bool {
-        let url = baseURL.appendingPathComponent("attendance/child/\(childId)/justify/\(absenceId)")
+        let url = baseURL.appendingPathComponent("attendance").appendingPathComponent("child").appendingPathComponent(childId).appendingPathComponent("justify").appendingPathComponent(absenceId)
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
