@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"registro-backend/internal/users"
 )
 
 var (
