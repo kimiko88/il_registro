@@ -34,6 +34,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/auth/login")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                     doOutput = true
@@ -75,6 +76,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/teacher/classes")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -115,6 +117,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/users?role=student&class_id=$classId")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -160,6 +163,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/lessons")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -202,6 +206,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/attendance")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -244,6 +249,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/grades")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -279,6 +285,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/scrutiny/deferred-resolution")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
