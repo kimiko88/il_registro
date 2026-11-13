@@ -79,7 +79,12 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
     }
 
     public func fetchClassStudents(token: String, classId: String) async throws -> [RollCallStudent] {
-        let url = baseURL.appendingPathComponent("users?role=student&class_id=\(classId)")
+        var components = URLComponents(url: baseURL.appendingPathComponent("users"), resolvingAgainstBaseURL: false)
+        components?.queryItems = [
+            URLQueryItem(name: "role", value: "student"),
+            URLQueryItem(name: "class_id", value: classId)
+        ]
+        guard let url = components?.url else { return [] }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
