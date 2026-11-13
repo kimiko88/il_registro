@@ -1,5 +1,10 @@
 package it.scuola.registro.student.security
 
+/**
+ * Authentication is intentionally unavailable until a real platform BiometricPrompt
+ * is wired to a cryptographically protected session. Never report a biometric success
+ * without a system-authenticated prompt.
+ */
 interface BiometricAuthCallback {
     fun onSuccess()
     fun onError(errorCode: Int, errString: String)
@@ -7,16 +12,13 @@ interface BiometricAuthCallback {
 }
 
 class BiometricAuthHelper {
-    fun isBiometricAvailable(): Boolean {
-        // Return true if fingerprint/face hardware is available and enrolled
-        return true
-    }
+    fun isBiometricAvailable(): Boolean = false
 
     fun authenticate(callback: BiometricAuthCallback) {
-        if (isBiometricAvailable()) {
-            callback.onSuccess()
-        } else {
-            callback.onError(-1, "Biometric authentication not supported")
-        }
+        callback.onError(BIOMETRIC_UNAVAILABLE, "Biometric authentication is not configured")
+    }
+
+    companion object {
+        const val BIOMETRIC_UNAVAILABLE = -1
     }
 }
