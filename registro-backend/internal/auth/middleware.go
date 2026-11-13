@@ -152,7 +152,7 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 		if currentUser.PasswordChangedAt != nil &&
-			(claims.IssuedAt == nil || !claims.IssuedAt.Time.After(*currentUser.PasswordChangedAt)) {
+			(claims.IssuedAt == nil || !claims.IssuedAt.After(*currentUser.PasswordChangedAt)) {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "credentials changed; authenticate again"})
 			c.Abort()
 			return
