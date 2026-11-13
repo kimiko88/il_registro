@@ -163,6 +163,17 @@ func LoadConfig() (*Config, error) {
 		}
 	}
 
+	redisPasswordConfig := strings.TrimSpace(viper.GetString("REDIS_PASSWORD"))
+	if redisPasswordConfig == "" {
+		if rawRedisURL := strings.TrimSpace(viper.GetString("REDIS_URL")); rawRedisURL != "" {
+			if parsedRedisURL, err := url.Parse(rawRedisURL); err == nil && parsedRedisURL.User != nil {
+				if password, hasPassword := parsedRedisURL.User.Password(); hasPassword {
+					redisPasswordConfig = password
+				}
+			}
+		}
+	}
+
 	config := &Config{
 		Server: ServerConfig{
 			Port: viper.GetString("SERVER_PORT"),
@@ -179,7 +190,7 @@ func LoadConfig() (*Config, error) {
 		Redis: RedisConfig{
 			Host:     viper.GetString("REDIS_HOST"),
 			Port:     viper.GetString("REDIS_PORT"),
-			Password: viper.GetString("REDIS_PASSWORD"),
+			Password: redisPasswordConfig,
 		},
 
 		JWT: JWTConfig{
