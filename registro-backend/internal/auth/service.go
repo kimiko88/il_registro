@@ -524,6 +524,16 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 // It verifies that the refresh token presented belongs to the authenticated
 // user (from the JWT access token in context) to prevent cross-user logout.
 func (s *Service) Logout(ctx context.Context, refreshToken string, callerUserID string) error {
+	// Native clients may not retain the HttpOnly refresh-token cookie. In that
+	// case, an authenticated logout must still revoke every refresh session for
+	// the caller; the handler separately revokes the presented access-token JTI.
+	if strings.TrimSpace(refreshToken) == "" {
+		if strings.TrimSpace(callerUserID) == "" {
+			return ErrUnauthorized
+		}
+		return s.repo.RevokeAllUserTokens(ctx, callerUserID)
+	}
+
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
 	if err != nil {
 		if errors.Is(err, ErrInvalidToken) || errors.Is(err, sql.ErrNoRows) {
