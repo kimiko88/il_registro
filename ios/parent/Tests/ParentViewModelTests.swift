@@ -40,4 +40,12 @@ final class ParentViewModelTests: XCTestCase {
         XCTAssertTrue(absence?.isJustified ?? false)
         XCTAssertEqual(absence?.justificationNote, "Visita dentistica")
     }
+    func testClearSessionRemovesPersonalData() {
+        viewModel.clearSession()
+        XCTAssertTrue(viewModel.children.isEmpty)
+        XCTAssertTrue(viewModel.absences.isEmpty)
+        XCTAssertEqual(viewModel.selectedChildId, "")
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertFalse(viewModel.isLoading)
+    }
 }
