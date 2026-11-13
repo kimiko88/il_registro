@@ -41,11 +41,6 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
 
         let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let errMsg = json["error"] as? String ?? json["message"] as? String {
-                let code = (response as? HTTPURLResponse)?.statusCode ?? 401
-                throw NSError(domain: "StudentAPI", code: code, userInfo: [NSLocalizedDescriptionKey: "\(errMsg) (HTTP \(code))"])
-            }
             let code = (response as? HTTPURLResponse)?.statusCode ?? 401
             throw NSError(domain: "StudentAPI", code: code, userInfo: [NSLocalizedDescriptionKey: "Credenziali non valide o errore server (HTTP \(code))"])
         }
