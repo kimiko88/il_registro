@@ -48,6 +48,17 @@ class SecretaryViewModel(
     var successMessage by mutableStateOf<String?>(null)
         private set
 
+    fun clearSession() {
+        usersList.clear()
+        scrutinyClasses.clear()
+        certificateRequests.clear()
+        auditLogs.clear()
+        stats = DashboardStats()
+        currentUserProfile = null
+        isLoading = false
+        clearMessages()
+    }
+
     fun clearMessages() {
         errorMessage = null
         successMessage = null
