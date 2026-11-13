@@ -329,6 +329,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("LegacyPasswordMigration", func(t *testing.T) {
+		t.Setenv("ALLOW_LEGACY_PASSWORD_PEPPER", "true")
 		s, mockRepo := setupTest(t)
 
 		legacyHashed, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
