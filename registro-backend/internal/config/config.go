@@ -115,8 +115,20 @@ func LoadConfig() (*Config, error) {
 			return nil, fmt.Errorf("DB_PASSWORD must be a generated secret of at least 24 characters in production")
 		}
 		redisPassword := strings.TrimSpace(viper.GetString("REDIS_PASSWORD"))
-		if redisPassword != "" && (len(redisPassword) < 32 || strings.HasPrefix(strings.ToUpper(redisPassword), "CAMBIA") || strings.HasPrefix(strings.ToUpper(redisPassword), "INSERISCI")) {
-			return nil, fmt.Errorf("REDIS_PASSWORD must be a generated secret of at least 32 characters when configured")
+		redisURL := strings.TrimSpace(viper.GetString("REDIS_URL"))
+		if redisURL != "" {
+			parsedRedisURL, parseErr := url.Parse(redisURL)
+			if parseErr != nil || (parsedRedisURL.Scheme != "redis" && parsedRedisURL.Scheme != "rediss") {
+				return nil, fmt.Errorf("REDIS_URL must be a valid redis:// or rediss:// URL")
+			}
+			if parsedRedisURL.User != nil {
+				if urlPassword, hasPassword := parsedRedisURL.User.Password(); hasPassword && urlPassword != "" {
+					redisPassword = urlPassword
+				}
+			}
+		}
+		if len(redisPassword) < 32 || strings.HasPrefix(strings.ToUpper(redisPassword), "CAMBIA") || strings.HasPrefix(strings.ToUpper(redisPassword), "INSERISCI") {
+			return nil, fmt.Errorf("Redis authentication is required in production; configure REDIS_PASSWORD or a password in REDIS_URL (at least 32 characters)")
 		}
 		if strings.TrimSpace(viper.GetString("ALLOWED_ORIGINS")) == "" {
 			return nil, fmt.Errorf("ALLOWED_ORIGINS must be configured in production")
@@ -215,10 +227,10 @@ func LoadConfig() (*Config, error) {
 // or constructing redis://host:port from the host and port config.
 func (c *Config) RedisURL() string {
 	if redisURL := viper.GetString("REDIS_URL"); redisURL != "" {
-		return redisURL
+		return c.withRedisPassword(redisURL)
 	}
 	if redisURL := os.Getenv("REDIS_URL"); redisURL != "" {
-		return redisURL
+		return c.withRedisPassword(redisURL)
 	}
 	if c.Redis.Host != "" {
 		port := c.Redis.Port
@@ -231,4 +243,24 @@ func (c *Config) RedisURL() string {
 		return fmt.Sprintf("redis://%s:%s", c.Redis.Host, port)
 	}
 	return ""
+}
+
+func (c *Config) withRedisPassword(redisURL string) string {
+	if c.Redis.Password == "" {
+		return redisURL
+	}
+	parsed, err := url.Parse(redisURL)
+	if err != nil {
+		return redisURL
+	}
+	username := ""
+	if parsed.User != nil {
+		username = parsed.User.Username()
+	}
+	if parsed.User == nil {
+		parsed.User = url.UserPassword(username, c.Redis.Password)
+	} else if _, hasPassword := parsed.User.Password(); !hasPassword {
+		parsed.User = url.UserPassword(username, c.Redis.Password)
+	}
+	return parsed.String()
 }
