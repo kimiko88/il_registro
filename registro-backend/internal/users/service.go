@@ -725,21 +725,10 @@ func (s *Service) GetAuditLogs(ctx context.Context, actorID, actorRole, targetID
 
 // ─── Relationships ───────────────────────────────────────────────────────────
 
-// GetChildren returns linked students to the parent or to authorized staff in the same school.
-func (s *Service) GetChildren(ctx context.Context, actorRole, actorID, parentUserID string, actorSchoolIDs ...string) ([]StudentChild, error) {
-	if actorRole == "parent" {
-		if actorID != parentUserID {
-			return nil, ErrUnauthorized
-		}
-	} else if isPrivileged(actorRole) {
-		parent, err := s.repo.GetByID(ctx, parentUserID)
-		if err != nil {
-			return nil, err
-		}
-		if !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), parent) {
-			return nil, ErrUnauthorized
-		}
-	} else {
+// GetChildren exposes a parent's linked students only to that authenticated parent.
+// Staff-facing child searches must use a dedicated school-scoped endpoint.
+func (s *Service) GetChildren(ctx context.Context, actorRole, actorID, parentUserID string, _ ...string) ([]StudentChild, error) {
+	if actorRole != "parent" || actorID == "" || actorID != parentUserID {
 		return nil, ErrUnauthorized
 	}
 	return s.repo.GetChildren(ctx, parentUserID)
