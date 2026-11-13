@@ -21,7 +21,7 @@ type DummyUserRepo struct {
 	mock.Mock
 }
 
-func (m *DummyUserRepo) Create(ctx context.Context, u *users.User) error             { return nil }
+func (m *DummyUserRepo) Create(ctx context.Context, u *users.User) error { return nil }
 func (m *DummyUserRepo) GetByID(ctx context.Context, id string) (*users.User, error) {
 	schoolID := "school-1"
 	return &users.User{ID: id, Role: RoleTeacher, SchoolID: &schoolID, IsActive: true}, nil
