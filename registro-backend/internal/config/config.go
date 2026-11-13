@@ -143,7 +143,7 @@ func LoadConfig() (*Config, error) {
 			}
 		}
 		if len(redisPassword) < 32 || strings.HasPrefix(strings.ToUpper(redisPassword), "CAMBIA") || strings.HasPrefix(strings.ToUpper(redisPassword), "INSERISCI") {
-			return nil, fmt.Errorf("Redis authentication is required in production; configure REDIS_PASSWORD or a password in REDIS_URL (at least 32 characters)")
+			return nil, fmt.Errorf("redis authentication is required in production; configure redis_password or a password in redis_url (at least 32 characters)")
 		}
 		if strings.TrimSpace(viper.GetString("ALLOWED_ORIGINS")) == "" {
 			return nil, fmt.Errorf("ALLOWED_ORIGINS must be configured in production")
