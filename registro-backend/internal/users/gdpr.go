@@ -50,11 +50,13 @@ func (h *GDPRHandler) GenerateDataExport(user *User, logs []AuditLog, personalDa
 	auditEvents := make([]map[string]interface{}, 0, len(logs))
 	for _, log := range logs {
 		auditEvents = append(auditEvents, map[string]interface{}{
-			"action": log.Action,
+			"action":     log.Action,
 			"created_at": log.CreatedAt,
 		})
 	}
-	if personalData == nil { personalData = map[string]interface{}{} }
+	if personalData == nil {
+		personalData = map[string]interface{}{}
+	}
 	return map[string]interface{}{
 		"profile": map[string]interface{}{
 			"id": user.ID, "first_name": user.FirstName, "last_name": user.LastName,
@@ -66,7 +68,7 @@ func (h *GDPRHandler) GenerateDataExport(user *User, logs []AuditLog, personalDa
 			"last_login": user.LastLogin,
 		},
 		"personal_data": personalData,
-		"audit_events": auditEvents,
-		"generated_at": time.Now(),
+		"audit_events":  auditEvents,
+		"generated_at":  time.Now(),
 	}
 }
