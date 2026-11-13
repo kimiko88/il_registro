@@ -120,7 +120,6 @@ func TestNewLoginRateLimiter_InvalidURL(t *testing.T) {
 	assert.Nil(t, limiter)
 }
 
-
 // Existing access tokens are invalid as soon as role or tenant membership changes.
 func TestAuthMiddleware_RejectsStaleRoleClaim(t *testing.T) {
 	gin.SetMode(gin.TestMode)
