@@ -67,7 +67,6 @@ class HttpParentApiService(
                         if (token.isBlank()) Result.failure(Exception("Token di accesso mancante")) else Result.success(token)
                     }
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
                     Result.failure(Exception("Login fallito (HTTP $responseCode)"))
                 }
             } catch (e: Exception) {
