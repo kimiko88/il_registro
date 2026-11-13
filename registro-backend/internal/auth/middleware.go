@@ -166,6 +166,9 @@ func (m *Middleware) Authenticate() gin.HandlerFunc {
 		c.Set("is_staff", IsStaffRole(claims.Role))
 		c.Set("token", token)
 		c.Set("jti", claims.ID)
+		if claims.IssuedAt != nil {
+			c.Set("token_issued_at", claims.IssuedAt.Time)
+		}
 
 		c.Set("locale", parseAcceptLanguage(c.GetHeader("Accept-Language")))
 
@@ -271,8 +274,7 @@ func (m *Middleware) StartCacheCleaner(ctx context.Context, interval time.Durati
 	}()
 }
 
-// AuthenticateWSTicket validates a single-use opaque WS ticket for WebSocket upgrades.
-// It prevents JWT tokens from appearing in query parameters or Nginx/proxy access logs.
+// AuthenticateWSTicket validates a single-use opaque WS ticket and its originating JWT session.
 func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if store == nil {
@@ -287,11 +289,26 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 			return
 		}
 
-		userID, email, role, schoolID, ok := store.Consume(ticket)
-		if !ok {
+		ticketClaims, ok := store.ConsumeTicket(ticket)
+		if !ok || ticketClaims == nil || ticketClaims.JTI == "" || ticketClaims.IssuedAt.IsZero() {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "invalid or expired ws ticket"})
 			c.Abort()
 			return
+		}
+		userID, email, role, schoolID := ticketClaims.UserID, ticketClaims.Email, ticketClaims.Role, ticketClaims.SchoolID
+
+		if m.revocationStore != nil {
+			revoked, err := m.revocationStore.IsRevoked(c.Request.Context(), ticketClaims.JTI)
+			if err != nil {
+				c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "authentication temporarily unavailable"})
+				c.Abort()
+				return
+			}
+			if revoked {
+				c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "ticket session has been revoked"})
+				c.Abort()
+				return
+			}
 		}
 
 		if m.userRepo == nil {
@@ -301,7 +318,7 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 		}
 		isActive, err := m.isAccountActive(c.Request.Context(), userID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "auth check failed"})
+			c.JSON(http.StatusServiceUnavailable, ErrorResponse{Error: "authentication temporarily unavailable"})
 			c.Abort()
 			return
 		}
@@ -320,8 +337,14 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 		if currentUser != nil && currentUser.SchoolID != nil {
 			currentSchoolID = *currentUser.SchoolID
 		}
-		if currentUser == nil || !currentUser.IsActive || currentUser.DeletedAt != nil || currentUser.Role != role || currentSchoolID != schoolID {
+		if currentUser == nil || !currentUser.IsActive || currentUser.DeletedAt != nil ||
+			currentUser.Role != role || currentSchoolID != schoolID || currentUser.Email != email {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "account permissions changed; authenticate again"})
+			c.Abort()
+			return
+		}
+		if currentUser.PasswordChangedAt != nil && !ticketClaims.IssuedAt.After(*currentUser.PasswordChangedAt) {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "credentials changed; authenticate again"})
 			c.Abort()
 			return
 		}
@@ -331,6 +354,7 @@ func (m *Middleware) AuthenticateWSTicket(store *wsticket.Store) gin.HandlerFunc
 		c.Set("role", role)
 		c.Set("school_id", schoolID)
 		c.Set("is_staff", IsStaffRole(role))
+		c.Set("jti", ticketClaims.JTI)
 		c.Set("locale", parseAcceptLanguage(c.GetHeader("Accept-Language")))
 		c.Request = c.Request.WithContext(SetUserContext(c.Request.Context(), userID, email, role, schoolID))
 
