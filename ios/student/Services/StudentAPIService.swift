@@ -53,7 +53,7 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
         if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
             let userObj = json["user"] as? [String: Any]
             let role = userObj?["role"] as? String
-            guard role == nil || role == "student" else {
+            guard role == "student" else {
                 throw NSError(domain: "StudentAPI", code: 403, userInfo: [NSLocalizedDescriptionKey: "Accesso non consentito: questo account non appartiene a uno studente."])
             }
             if let firstName = userObj?["first_name"] as? String, let lastName = userObj?["last_name"] as? String {
@@ -62,7 +62,8 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
                 self.lastStudentName = name
             }
 
-            if let token = json["access_token"] as? String ?? json["token"] as? String {
+            if let token = json["access_token"] as? String ?? json["token"] as? String,
+               !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return token
             }
         }
