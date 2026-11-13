@@ -4,6 +4,10 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+it.scuola.registro.secretary.network.HttpSecretaryApiService
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -29,6 +33,12 @@ class MainActivity : ComponentActivity() {
                         SecretaryDashboardScreen(
                             token = authToken,
                             onLogout = {
+                                val tokenToRevoke = authToken
+                                if (!tokenToRevoke.isNullOrBlank()) {
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        HttpSecretaryApiService().logout(tokenToRevoke)
+                                    }
+                                }
                                 isLoggedIn = false
                                 authToken = null
                             }
