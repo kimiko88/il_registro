@@ -66,6 +66,8 @@ export const useAuthStore = defineStore('auth', () => {
 
     function login(userData, tokenData, _refreshTokenData = null, rememberMe = true) {
         authGeneration += 1
+        initPromise.value = null
+        isInitializing.value = false
         const sanitized = sanitizeUserData(userData)
         user.value = sanitized
         token.value = tokenData
