@@ -76,7 +76,6 @@ class HttpStudentApiService(
                         if (token.isBlank()) Result.failure(Exception("Token di accesso mancante")) else Result.success(Pair(token, user))
                     }
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
                     Result.failure(Exception("Login fallito (HTTP $responseCode)"))
                 }
             } catch (e: Exception) {
