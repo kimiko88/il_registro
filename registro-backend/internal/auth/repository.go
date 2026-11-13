@@ -517,6 +517,24 @@ func (r *repository) UpdatePassword(ctx context.Context, userID, passwordHash st
 	return err
 }
 
+// UpdatePasswordIfHashMatches upgrades a legacy password only if no concurrent
+// password reset/change has replaced the hash observed during authentication.
+func (r *repository) UpdatePasswordIfHashMatches(ctx context.Context, userID, expectedHash, passwordHash string) (bool, error) {
+	now := time.Now()
+	result, err := r.db.ExecContext(ctx,
+		`UPDATE users SET password_hash = $1, updated_at = $2, password_changed_at = $2
+		 WHERE id = $3 AND password_hash = $4`,
+		passwordHash, now, userID, expectedHash)
+	if err != nil {
+		return false, err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return rows == 1, nil
+}
+
 func (r *repository) ResetPasswordTx(ctx context.Context, userID, passwordHash, tokenID string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
