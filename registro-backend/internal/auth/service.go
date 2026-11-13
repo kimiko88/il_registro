@@ -445,8 +445,8 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 
 	// Verify account is still active before issuing a new access token.
 	// A disabled account must not be able to obtain new tokens via refresh.
-	if !user.IsActive {
-		// Revoke the refresh token so it cannot be retried.
+	if !user.IsActive || user.DeletedAt != nil {
+		// Revoke the refresh token so disabled or soft-deleted accounts cannot retry.
 		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
 		return nil, ErrUserInactive
 	}
