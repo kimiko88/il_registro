@@ -59,6 +59,14 @@ public class ParentViewModel: ObservableObject {
         self.apiService = apiService
     }
 
+    public func clearSession() {
+        children.removeAll()
+                selectedChildId = ""
+                absences.removeAll()
+                isLoading = false
+                errorMessage = nil
+    }
+
     public func loadFromDatabase(token: String) async {
         await MainActor.run {
             self.isLoading = true
