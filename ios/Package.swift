@@ -32,7 +32,7 @@ let package = Package(
         .target(
             name: "ParentApp",
             path: "parent",
-            exclude: ["Tests"],
+            exclude: ["Tests", "Theme/Localization.swift", "Theme/PlatformCompatibility.swift"],
             resources: [.process("Resources")]
         ),
         .testTarget(
@@ -45,7 +45,7 @@ let package = Package(
         .target(
             name: "TeacherApp",
             path: "teacher",
-            exclude: ["Tests"],
+            exclude: ["Tests", "Theme/PlatformCompatibility.swift"],
             resources: [.process("Resources")]
         ),
         .testTarget(
@@ -58,7 +58,7 @@ let package = Package(
         .target(
             name: "SecretaryApp",
             path: "secretary",
-            exclude: ["Tests"],
+            exclude: ["Tests", "Theme/Localization.swift", "Theme/PlatformCompatibility.swift"],
             resources: [.process("Resources")]
         ),
         .testTarget(
