@@ -173,6 +173,7 @@ func TestHandler_Logout(t *testing.T) {
 			setupMock: func(m *MockRepository) {
 				// Token not found → no-op, logout is idempotent
 				m.On("GetRefreshToken", mock.Anything, "").Return(nil, ErrInvalidToken)
+				m.On("RevokeAllUserTokens", mock.Anything, "user-123").Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, w *httptest.ResponseRecorder) {
