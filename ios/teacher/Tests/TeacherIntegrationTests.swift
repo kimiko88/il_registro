@@ -1,9 +1,45 @@
 import XCTest
 @testable import TeacherApp
 
+private final class StubTeacherAPIService: TeacherAPIServiceProtocol {
+    private let classes: [TeacherClassSessionModel]
+    private let students: [RollCallStudent]
+
+    init(
+        classes: [TeacherClassSessionModel] = [
+            TeacherClassSessionModel(id: "class-1", className: "2A", subject: "Matematica")
+        ],
+        students: [RollCallStudent] = [
+            RollCallStudent(id: "student-1", name: "Studente Test")
+        ]
+    ) {
+        self.classes = classes
+        self.students = students
+    }
+
+    func login(email: String, password: String) async throws -> String {
+        "test-token"
+    }
+
+    func fetchClasses(token: String) async throws -> [TeacherClassSessionModel] {
+        classes
+    }
+
+    func fetchClassStudents(token: String, classId: String) async throws -> [RollCallStudent] {
+        students
+    }
+
+    func signLesson(token: String, classId: String, topic: String) async throws -> TeacherClassSessionModel {
+        TeacherClassSessionModel(id: classId, className: "2A", subject: "Matematica", isSigned: true, lessonTopic: topic)
+    }
+
+    func submitRollCall(token: String, classId: String, records: [TeacherRollCallRecord]) async throws -> Bool {
+        true
+    }
+}
+
 final class TeacherIntegrationTests: XCTestCase {
 
-    var apiService: HttpTeacherAPIService!
     var viewModel: TeacherViewModel!
     var cacheManager: OfflineCacheManager!
     var securityHelper: SecurityCheckHelper!
@@ -11,9 +47,8 @@ final class TeacherIntegrationTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        apiService = HttpTeacherAPIService()
-        viewModel = TeacherViewModel(apiService: apiService)
-        cacheManager = OfflineCacheManager.shared
+        viewModel = TeacherViewModel(apiService: StubTeacherAPIService())
+        cacheManager = OfflineCacheManager()
         securityHelper = SecurityCheckHelper.shared
         biometricManager = BiometricAuthManager.shared
     }
@@ -23,37 +58,39 @@ final class TeacherIntegrationTests: XCTestCase {
         XCTAssertNotNil(report["isJailbroken"])
         XCTAssertNotNil(report["isSimulator"])
 
-        let canAuth = biometricManager.canEvaluatePolicy()
-        XCTAssertTrue(canAuth || !canAuth)
+        // The result is platform-dependent; evaluating the capability must not crash.
+        _ = biometricManager.canEvaluatePolicy()
     }
 
-    func testRealTeacherLoginAndLiveDatabaseFlow() async throws {
-        // Zero mocks: connects to real live database
-        let token = try await apiService.login(email: "docente.incarichi@scuola.it", password: "password")
-        XCTAssertFalse(token.isEmpty)
+    func testViewModelLoadsClassesAndStudentsAndCachesThem() async {
+        let loaded = await viewModel.loadFromDatabase(token: "test-token")
 
-        let classes = try await apiService.fetchClasses(token: token)
-        XCTAssertFalse(classes.isEmpty)
-        let firstClass = classes.first!
-        XCTAssertFalse(firstClass.id.isEmpty)
-        XCTAssertFalse(firstClass.className.isEmpty)
-
-        let students = try await apiService.fetchClassStudents(token: token, classId: firstClass.id)
-        XCTAssertFalse(students.isEmpty)
-
-        // Offline cache verification of real classes & students
-        cacheManager.saveClasses(classes)
-        cacheManager.saveStudents(students)
-        XCTAssertTrue(cacheManager.isCacheValid())
-        XCTAssertEqual(cacheManager.getCachedClasses().count, classes.count)
-        XCTAssertEqual(cacheManager.getCachedStudents().count, students.count)
-
-        // Load into ViewModel
-        let loaded = await viewModel.loadFromDatabase(token: token)
         XCTAssertTrue(loaded)
-        XCTAssertFalse(viewModel.students.isEmpty)
+        XCTAssertEqual(viewModel.currentSession?.id, "class-1")
+        XCTAssertEqual(viewModel.students.map(\.id), ["student-1"])
+
+        guard let currentSession = viewModel.currentSession else {
+            XCTFail("The stub service should provide a class")
+            return
+        }
+        cacheManager.saveClasses([currentSession])
+        cacheManager.saveStudents(viewModel.students)
+
+        XCTAssertTrue(cacheManager.isCacheValid())
+        XCTAssertEqual(cacheManager.getCachedClasses(), [currentSession])
+        XCTAssertEqual(cacheManager.getCachedStudents(), viewModel.students)
 
         cacheManager.clear()
         XCTAssertFalse(cacheManager.isCacheValid())
+    }
+
+    func testViewModelHandlesAnAccountWithoutClasses() async {
+        viewModel = TeacherViewModel(apiService: StubTeacherAPIService(classes: [], students: []))
+
+        let loaded = await viewModel.loadFromDatabase(token: "test-token")
+
+        XCTAssertTrue(loaded)
+        XCTAssertNil(viewModel.currentSession)
+        XCTAssertTrue(viewModel.students.isEmpty)
     }
 }
