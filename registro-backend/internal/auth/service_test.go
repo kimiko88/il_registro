@@ -608,4 +608,3 @@ func TestLogoutWithoutRefreshTokenRequiresUserID(t *testing.T) {
 	assert.ErrorIs(t, service.Logout(context.Background(), "", "  "), ErrUnauthorized)
 	mockRepo.AssertNotCalled(t, "RevokeAllUserTokens", mock.Anything, mock.Anything)
 }
-
