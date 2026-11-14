@@ -54,7 +54,7 @@ class SecretaryOfflineIntegrationTest {
     fun biometricAuthenticationFailsClosedWhenPlatformPromptIsUnavailable() {
         val helper = BiometricAuthHelper()
         var succeeded = false
-        var errorCode: Int? = null
+        var capturedErrorCode: Int? = null
 
         assertFalse(helper.isBiometricAvailable())
         helper.authenticate(object : BiometricAuthCallback {
@@ -63,15 +63,13 @@ class SecretaryOfflineIntegrationTest {
             }
 
             override fun onError(errorCode: Int, errString: String) {
-                this@SecretaryOfflineIntegrationTest.run {
-                    this@SecretaryOfflineIntegrationTest.let { errorCode = errorCode }
-                }
+                capturedErrorCode = errorCode
             }
 
             override fun onFailed() = Unit
         })
 
         assertFalse("Unavailable biometrics must never authenticate", succeeded)
-        assertEquals(BiometricAuthHelper.BIOMETRIC_UNAVAILABLE, errorCode)
+        assertEquals(BiometricAuthHelper.BIOMETRIC_UNAVAILABLE, capturedErrorCode)
     }
 }
