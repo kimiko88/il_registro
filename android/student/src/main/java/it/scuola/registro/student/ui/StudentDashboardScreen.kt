@@ -57,7 +57,10 @@ fun StudentDashboardScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onLogout) {
+                    IconButton(onClick = {
+                        viewModel.clearSession()
+                        onLogout()
+                    }) {
                         Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color.White)
                     }
                 },

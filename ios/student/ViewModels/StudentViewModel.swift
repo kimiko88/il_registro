@@ -93,6 +93,7 @@ public class StudentViewModel: ObservableObject {
     @Published public var isLoading: Bool = false
     @Published public var errorMessage: String? = nil
 
+    private var sessionGeneration = UUID()
     private let apiService: StudentAPIServiceProtocol
 
     public init(apiService: StudentAPIServiceProtocol = HttpStudentAPIService()) {
@@ -100,25 +101,38 @@ public class StudentViewModel: ObservableObject {
         // Le collezioni partono vuote in produzione; i dati vengono caricati dal server via loadFromDatabase(token:)
     }
 
+    public func clearSession() {
+        sessionGeneration = UUID()
+        grades.removeAll()
+        homework.removeAll()
+        attendance.removeAll()
+        isLoading = false
+        errorMessage = nil
+    }
+
     public func loadFromDatabase(token: String) async {
-        await MainActor.run {
+        let requestGeneration = await MainActor.run {
             self.isLoading = true
             self.errorMessage = nil
+            return self.sessionGeneration
         }
         do {
             async let fetchedGrades = apiService.fetchGrades(token: token)
             async let fetchedHomework = apiService.fetchHomework(token: token)
             async let fetchedAttendance = apiService.fetchAttendance(token: token)
-
             let (gradesResult, homeworkResult, attendanceResult) = try await (fetchedGrades, fetchedHomework, fetchedAttendance)
-
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent, !Task.isCancelled else { return }
             await MainActor.run {
+                guard self.sessionGeneration == requestGeneration else { return }
                 self.grades = gradesResult
                 self.homework = homeworkResult
                 self.attendance = attendanceResult
                 self.isLoading = false
             }
         } catch {
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent else { return }
             await MainActor.run {
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false

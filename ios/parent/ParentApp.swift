@@ -7,10 +7,19 @@ struct ParentApp: App {
     @State private var isLoggedIn = false
     @State private var token = ""
 
+    init() {
+        MdmConfigManager.shared.applyManagedConfiguration()
+    }
+
     var body: some Scene {
         WindowGroup {
             if isLoggedIn {
-                ParentDashboardView(token: token)
+                ParentDashboardView(token: token, onLogout: {
+                    let tokenToRevoke = token
+                    Task { await HttpParentAPIService().revokeSession(token: tokenToRevoke) }
+                    token = ""
+                    isLoggedIn = false
+                })
             } else {
                 LoginView(isLoggedIn: $isLoggedIn, token: $token)
             }

@@ -11,6 +11,7 @@ import it.scuola.registro.secretary.network.SecretaryApiService
 class SecretaryViewModel(
     private val apiService: SecretaryApiService = HttpSecretaryApiService()
 ) {
+    @Volatile private var sessionGeneration: Long = 0L
     val usersList = mutableStateListOf<ManagedUser>()
 
     var users: List<ManagedUser>
@@ -48,17 +49,31 @@ class SecretaryViewModel(
     var successMessage by mutableStateOf<String?>(null)
         private set
 
+    fun clearSession() {
+        sessionGeneration++
+        usersList.clear()
+        scrutinyClasses.clear()
+        certificateRequests.clear()
+        auditLogs.clear()
+        stats = DashboardStats()
+        currentUserProfile = null
+        isLoading = false
+        clearMessages()
+    }
+
     fun clearMessages() {
         errorMessage = null
         successMessage = null
     }
 
     suspend fun loadFromDatabase(token: String): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         try {
             // 1. Fetch Users
             val usersResult = apiService.getUsers(token)
+            if (requestGeneration != sessionGeneration) return false
             if (usersResult.isSuccess) {
                 val list = usersResult.getOrNull() ?: emptyList()
                 usersList.clear()
@@ -67,6 +82,7 @@ class SecretaryViewModel(
 
             // 2. Fetch Dashboard Stats
             val statsResult = apiService.getDashboardStats(token)
+            if (requestGeneration != sessionGeneration) return false
             if (statsResult.isSuccess) {
                 stats = statsResult.getOrNull() ?: DashboardStats()
             } else {
@@ -82,6 +98,7 @@ class SecretaryViewModel(
 
             // 3. Fetch Scrutiny Status
             val scrutinyResult = apiService.getScrutinyStatus(token)
+            if (requestGeneration != sessionGeneration) return false
             if (scrutinyResult.isSuccess) {
                 val list = scrutinyResult.getOrNull() ?: emptyList()
                 scrutinyClasses.clear()
@@ -90,6 +107,7 @@ class SecretaryViewModel(
 
             // 4. Fetch Certificates
             val certsResult = apiService.getCertificates(token)
+            if (requestGeneration != sessionGeneration) return false
             if (certsResult.isSuccess) {
                 val list = certsResult.getOrNull() ?: emptyList()
                 certificateRequests.clear()
@@ -98,6 +116,7 @@ class SecretaryViewModel(
 
             // 5. Fetch Audit Logs
             val auditResult = apiService.getAuditLogs(token)
+            if (requestGeneration != sessionGeneration) return false
             if (auditResult.isSuccess) {
                 val list = auditResult.getOrNull() ?: emptyList()
                 auditLogs.clear()
@@ -113,6 +132,7 @@ class SecretaryViewModel(
             isLoading = false
             return true
         } catch (e: Exception) {
+            if (requestGeneration != sessionGeneration) return false
             errorMessage = e.localizedMessage
             isLoading = false
             return false
@@ -120,10 +140,12 @@ class SecretaryViewModel(
     }
 
     suspend fun createUserOnline(token: String, payload: CreateUserPayload): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         successMessage = null
         val result = apiService.createUser(token, payload)
+            if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             val created = result.getOrNull()
@@ -144,10 +166,12 @@ class SecretaryViewModel(
     }
 
     suspend fun updateUserOnline(token: String, id: String, payload: UpdateUserPayload): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         successMessage = null
         val result = apiService.updateUser(token, id, payload)
+            if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             val idx = usersList.indexOfFirst { it.id == id }
@@ -170,10 +194,12 @@ class SecretaryViewModel(
     }
 
     suspend fun deleteUserOnline(token: String, id: String): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         successMessage = null
         val result = apiService.deleteUser(token, id)
+            if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             val oldUser = usersList.find { it.id == id }
@@ -200,10 +226,12 @@ class SecretaryViewModel(
         academicYear: String,
         notes: String
     ): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         successMessage = null
         val result = apiService.generateCertificate(token, studentId, type, academicYear, notes)
+            if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             val cert = result.getOrNull()
@@ -224,10 +252,12 @@ class SecretaryViewModel(
         currentPassword: String,
         newPassword: String
     ): Result<String> {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         successMessage = null
         val result = apiService.changePassword(token, userId, currentPassword, newPassword)
+            if (requestGeneration != sessionGeneration) return Result.failure(IllegalStateException("Sessione non attiva"))
         isLoading = false
         if (result.isSuccess) {
             successMessage = "Password aggiornata con successo"

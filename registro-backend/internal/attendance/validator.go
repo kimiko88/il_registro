@@ -30,7 +30,9 @@ func (v *Validator) ValidateEntry(a *Attendance) error {
 		loc = time.Local
 	}
 	nowInLoc := time.Now().In(loc)
-	date := a.Date
+	// Interpret stored attendance dates in the school's timezone so UTC
+	// midnight offsets cannot accidentally turn a future calendar day into today.
+	date := a.Date.In(loc)
 
 	// 1. Future Check: cannot mark attendance after today's end
 	todayEnd := time.Date(nowInLoc.Year(), nowInLoc.Month(), nowInLoc.Day(), 23, 59, 59, 999999999, loc)

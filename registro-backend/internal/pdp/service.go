@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
-	"registro-backend/internal/users"
 )
 
 var (
@@ -17,13 +15,17 @@ var (
 )
 
 // Service defines the business logic for PDP/PEI plans.
+type GuardianChecker interface {
+	IsGuardian(ctx context.Context, parentUserID, studentUserID string) (bool, error)
+}
+
 type Service struct {
 	repo     Repository
-	userRepo users.Repository
+	userRepo GuardianChecker
 }
 
 // NewService creates a new PDP service.
-func NewService(repo Repository, uRepo ...users.Repository) *Service {
+func NewService(repo Repository, uRepo ...GuardianChecker) *Service {
 	svc := &Service{repo: repo}
 	if len(uRepo) > 0 && uRepo[0] != nil {
 		svc.userRepo = uRepo[0]
@@ -60,16 +62,51 @@ func (s *Service) CreatePlan(ctx context.Context, actorID, actorRole, schoolID s
 		CreatedBy:     actorID,
 	}
 
-	// SchoolID must be populated — caller sets it from the auth context
+	// Every PDP/PEI record must be bound to a school, including records created by superadmins.
+	if schoolID == "" {
+		return nil, ErrUnauthorized
+	}
+	validator, ok := s.repo.(PlanScopeValidator)
+	if !ok {
+		return nil, ErrUnauthorized
+	}
+	validScope, err := validator.ValidatePlanScope(ctx, schoolID, req.StudentID, req.ClassID, req.CoordinatorID, req.ReferenteID)
+	if err != nil {
+		return nil, fmt.Errorf("pdp.CreatePlan: validate school ownership: %w", err)
+	}
+	if !validScope {
+		return nil, ErrUnauthorized
+	}
 	return s.repo.Create(ctx, plan)
+}
+
+func (s *Service) ensurePlanOwnership(ctx context.Context, plan *PdpPlan) error {
+	validator, ok := s.repo.(PlanScopeValidator)
+	if !ok || plan == nil {
+		return ErrUnauthorized
+	}
+	valid, err := validator.ValidatePlanScope(ctx, plan.SchoolID, plan.StudentID, plan.ClassID, plan.CoordinatorID, plan.ReferenteID)
+	if err != nil {
+		return fmt.Errorf("pdp: validate existing plan ownership: %w", err)
+	}
+	if !valid {
+		return ErrUnauthorized
+	}
+	return nil
 }
 
 // GetByStudent returns all PDP/PEI plans for a student for a given academic year.
 // Parents only see plans that have been shared with the family, and guardianship is verified.
 func (s *Service) GetByStudent(ctx context.Context, actorID, actorRole, actorSchoolID, studentID, academicYear string) ([]*PdpPlan, error) {
+	if actorRole != "superadmin" && actorRole != "parent" && actorRole != "student" && !canViewClassPDP(actorRole) {
+		return nil, ErrUnauthorized
+	}
 	switch actorRole {
 	case "parent":
-		if s.userRepo != nil {
+		if s.userRepo == nil {
+			return nil, ErrNotGuardian
+		}
+		{
 			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, studentID)
 			if err != nil {
 				return nil, fmt.Errorf("pdp.GetByStudent: guardian check failed: %w", err)
@@ -89,11 +126,22 @@ func (s *Service) GetByStudent(ctx context.Context, actorID, actorRole, actorSch
 		return nil, err
 	}
 
-	// Multi-tenant check & privacy filter
+	// Multi-tenant check & privacy filter. Missing tenant identifiers are denied, never treated as global access.
+	if actorRole != "superadmin" && actorSchoolID == "" {
+		return nil, ErrUnauthorized
+	}
 	var visible []*PdpPlan
 	for _, p := range plans {
-		if actorRole != "superadmin" && actorSchoolID != "" && p.SchoolID != "" && p.SchoolID != actorSchoolID {
-			continue
+		if actorRole != "superadmin" {
+			if p.SchoolID == "" || p.SchoolID != actorSchoolID {
+				continue
+			}
+			if err := s.ensurePlanOwnership(ctx, p); err != nil {
+				if errors.Is(err, ErrUnauthorized) {
+					continue
+				}
+				return nil, err
+			}
 		}
 		if actorRole == "parent" || actorRole == "student" {
 			if !p.SharedWithFamily {
@@ -116,12 +164,22 @@ func (s *Service) GetByClass(ctx context.Context, actorRole, actorSchoolID, clas
 	if err != nil {
 		return nil, err
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" {
+			return nil, ErrUnauthorized
+		}
 		filtered := make([]*PdpPlan, 0, len(plans))
 		for _, p := range plans {
-			if p.SchoolID == "" || p.SchoolID == actorSchoolID {
-				filtered = append(filtered, p)
+			if p.SchoolID != actorSchoolID {
+				continue
 			}
+			if err := s.ensurePlanOwnership(ctx, p); err != nil {
+				if errors.Is(err, ErrUnauthorized) {
+					continue
+				}
+				return nil, err
+			}
+			filtered = append(filtered, p)
 		}
 		return filtered, nil
 	}
@@ -130,6 +188,9 @@ func (s *Service) GetByClass(ctx context.Context, actorRole, actorSchoolID, clas
 
 // GetByID returns a single plan by ID.
 func (s *Service) GetByID(ctx context.Context, actorID, actorRole, actorSchoolID, id string) (*PdpPlan, error) {
+	if actorRole != "superadmin" && actorRole != "parent" && actorRole != "student" && !canViewClassPDP(actorRole) {
+		return nil, ErrUnauthorized
+	}
 	plan, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -137,13 +198,21 @@ func (s *Service) GetByID(ctx context.Context, actorID, actorRole, actorSchoolID
 	if plan == nil {
 		return nil, ErrPlanNotFound
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
+	}
+	if actorRole != "superadmin" {
+		if err := s.ensurePlanOwnership(ctx, plan); err != nil {
+			return nil, err
+		}
 	}
 
 	switch actorRole {
 	case "parent":
-		if s.userRepo != nil {
+		if s.userRepo == nil {
+			return nil, ErrNotGuardian
+		}
+		{
 			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, plan.StudentID)
 			if err != nil || !isGuardian {
 				return nil, ErrNotGuardian
@@ -178,7 +247,25 @@ func (s *Service) UpdatePlan(ctx context.Context, actorRole, actorSchoolID, id s
 	if err != nil || plan == nil {
 		return nil, ErrPlanNotFound
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
+		return nil, ErrUnauthorized
+	}
+	validator, ok := s.repo.(PlanScopeValidator)
+	if !ok {
+		return nil, ErrUnauthorized
+	}
+	coordinatorID, referenteID := plan.CoordinatorID, plan.ReferenteID
+	if req.CoordinatorID != nil {
+		coordinatorID = req.CoordinatorID
+	}
+	if req.ReferenteID != nil {
+		referenteID = req.ReferenteID
+	}
+	validScope, err := validator.ValidatePlanScope(ctx, plan.SchoolID, plan.StudentID, plan.ClassID, coordinatorID, referenteID)
+	if err != nil {
+		return nil, fmt.Errorf("pdp.UpdatePlan: validate school ownership: %w", err)
+	}
+	if !validScope {
 		return nil, ErrUnauthorized
 	}
 	return s.repo.Update(ctx, id, req)
@@ -193,8 +280,13 @@ func (s *Service) ShareWithFamily(ctx context.Context, actorRole, actorSchoolID,
 	if err != nil || plan == nil {
 		return nil, ErrPlanNotFound
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
+	}
+	if actorRole != "superadmin" {
+		if err := s.ensurePlanOwnership(ctx, plan); err != nil {
+			return nil, err
+		}
 	}
 	if err := s.repo.SetSharedWithFamily(ctx, id, share); err != nil {
 		return nil, fmt.Errorf("pdp.ShareWithFamily: %w", err)
@@ -211,11 +303,19 @@ func (s *Service) ApproveByFamily(ctx context.Context, actorRole, actorID, actor
 	if err != nil || plan == nil {
 		return ErrPlanNotFound
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
+	if actorRole != "superadmin" {
+		if err := s.ensurePlanOwnership(ctx, plan); err != nil {
+			return err
+		}
+	}
 	if actorRole == "parent" {
-		if s.userRepo != nil {
+		if s.userRepo == nil {
+			return ErrNotGuardian
+		}
+		{
 			isGuardian, err := s.userRepo.IsGuardian(ctx, actorID, plan.StudentID)
 			if err != nil || !isGuardian {
 				return ErrNotGuardian
@@ -240,8 +340,13 @@ func (s *Service) DeletePlan(ctx context.Context, actorRole, actorSchoolID, id s
 	if err != nil || plan == nil {
 		return ErrPlanNotFound
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && plan.SchoolID != "" && plan.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || plan.SchoolID == "" || plan.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
+	}
+	if actorRole != "superadmin" {
+		if err := s.ensurePlanOwnership(ctx, plan); err != nil {
+			return err
+		}
 	}
 	return s.repo.Delete(ctx, id)
 }

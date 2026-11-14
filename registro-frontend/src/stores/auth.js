@@ -65,6 +65,9 @@ export const useAuthStore = defineStore('auth', () => {
     })
 
     function login(userData, tokenData, _refreshTokenData = null, rememberMe = true) {
+        authGeneration += 1
+        initPromise.value = null
+        isInitializing.value = false
         const sanitized = sanitizeUserData(userData)
         user.value = sanitized
         token.value = tokenData
@@ -106,6 +109,9 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     function logout() {
+        authGeneration += 1
+        initPromise.value = null
+        isInitializing.value = false
         user.value = null
         token.value = null
 
@@ -159,6 +165,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     const initPromise = ref(null)
+    let authGeneration = 0
 
     async function initAuth() {
         if (initPromise.value) return initPromise.value
@@ -168,6 +175,7 @@ export const useAuthStore = defineStore('auth', () => {
         if (!hasSavedUser) return Promise.resolve(false)
 
         isInitializing.value = true
+        const requestGeneration = authGeneration
         initPromise.value = (async () => {
             try {
                 const refreshResponse = await axios.post(
@@ -175,6 +183,7 @@ export const useAuthStore = defineStore('auth', () => {
                     {},
                     { withCredentials: true }
                 )
+                if (requestGeneration !== authGeneration) return false
                 const { access_token, user: userData } = refreshResponse.data || {}
                 if (access_token) {
                     let fullUser = userData
@@ -183,22 +192,27 @@ export const useAuthStore = defineStore('auth', () => {
                             const meRes = await axios.get(`${getBaseURL()}/auth/me`, {
                                 headers: { Authorization: `Bearer ${access_token}` }
                             })
+                            if (requestGeneration !== authGeneration) return false
                             fullUser = meRes.data || fullUser
                         } catch (meErr) {
                             console.warn('Initial session restore: /auth/me fetch failed, falling back to minimal profile', meErr)
                         }
                     }
+                    if (requestGeneration !== authGeneration) return false
                     updateTokens(access_token, null, fullUser || user.value)
                 }
             } catch (err) {
+                if (requestGeneration !== authGeneration) return false
                 if (err.response && (err.response.status === 400 || err.response.status === 401 || err.response.status === 403)) {
                     logout()
                 } else {
                     console.warn('Initial session restore failed:', err)
                 }
             } finally {
-                isInitializing.value = false
-                initPromise.value = null
+                if (requestGeneration === authGeneration) {
+                    isInitializing.value = false
+                    initPromise.value = null
+                }
             }
         })()
 

@@ -15,8 +15,18 @@ import (
 	"registro-backend/internal/pdp"
 )
 
+type allowGuardianChecker struct{}
+
+func (allowGuardianChecker) IsGuardian(context.Context, string, string) (bool, error) {
+	return true, nil
+}
+
 type mockPdpRepo struct {
 	mock.Mock
+}
+
+func (m *mockPdpRepo) ValidatePlanScope(ctx context.Context, schoolID, studentID, classID string, coordinatorID, referenteID *string) (bool, error) {
+	return true, nil
 }
 
 func (m *mockPdpRepo) Create(ctx context.Context, plan *pdp.PdpPlan) (*pdp.PdpPlan, error) {
@@ -97,7 +107,7 @@ func setupTestPdpRouter(svc *pdp.Service, actorID, role, schoolID string) *gin.E
 
 func TestPDPHandler_Endpoints(t *testing.T) {
 	repo := new(mockPdpRepo)
-	svc := pdp.NewService(repo)
+	svc := pdp.NewService(repo, allowGuardianChecker{})
 
 	// Router for teacher/coordinator
 	r := setupTestPdpRouter(svc, "teacher-1", "teacher", "sch-1")
@@ -209,7 +219,7 @@ func TestPDPHandler_Endpoints(t *testing.T) {
 
 func TestPDPHandler_ErrorMappings(t *testing.T) {
 	repo := new(mockPdpRepo)
-	svc := pdp.NewService(repo)
+	svc := pdp.NewService(repo, allowGuardianChecker{})
 	parentRouter := setupTestPdpRouter(svc, "parent-1", "parent", "sch-1")
 
 	// Not shared yet -> 403 Forbidden

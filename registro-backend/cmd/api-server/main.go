@@ -145,7 +145,8 @@ func main() {
 	}
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
-	mfaService := auth.NewMFAService("RegistroElettronico")
+	mfaService := auth.NewMFAService("RegistroElettronico", redisURL)
+	defer func() { _ = mfaService.Close() }()
 	wsHub := ws.NewHub(redisURL)
 	go wsHub.Run(ctx)
 	appCache := cache.NewCache(redisURL)
@@ -536,7 +537,7 @@ func main() {
 			textbooksH.RegisterRoutes(protected)
 
 			redisAddr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
-			pdfWorkerClient := pdfworker.NewClient(redisAddr)
+			pdfWorkerClient := pdfworker.NewClient(redisAddr, cfg.Redis.Password)
 			defer func() { _ = pdfWorkerClient.Close() }()
 
 			gradesH.SetPdfWorkerClient(pdfWorkerClient)

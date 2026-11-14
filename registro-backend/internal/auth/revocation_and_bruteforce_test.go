@@ -18,13 +18,19 @@ import (
 
 type mockUserRepoForRevocation struct {
 	users.Repository
+	user *users.User
 }
 
 func (m *mockUserRepoForRevocation) GetByID(ctx context.Context, id string) (*users.User, error) {
+	if m.user != nil {
+		return m.user, nil
+	}
+	schoolID := "school-1"
 	return &users.User{
 		ID:       id,
 		Email:    "test@school.it",
 		Role:     "teacher",
+		SchoolID: &schoolID,
 		IsActive: true,
 	}, nil
 }
@@ -112,4 +118,27 @@ func TestLoginRateLimiter_FallbackOnNil(t *testing.T) {
 func TestNewLoginRateLimiter_InvalidURL(t *testing.T) {
 	limiter := NewLoginRateLimiter("redis://invalid-host:6379")
 	assert.Nil(t, limiter)
+}
+
+// Existing access tokens are invalid as soon as role or tenant membership changes.
+func TestAuthMiddleware_RejectsStaleRoleClaim(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	priv, pub, err := jwt.GetOrGenerateKeys("", "")
+	require.NoError(t, err)
+	tm := jwt.NewTokenManager(priv, pub)
+	token, err := tm.GenerateAccessToken("user-123", "teacher@school.it", "teacher", "school-1")
+	require.NoError(t, err)
+
+	schoolID := "school-1"
+	userRepo := &mockUserRepoForRevocation{user: &users.User{
+		ID: "user-123", Email: "teacher@school.it", Role: "principal", SchoolID: &schoolID, IsActive: true,
+	}}
+	middleware := NewMiddleware(tm, userRepo, jwt.NewMemoryRevocationStore())
+	r := gin.New()
+	r.GET("/protected", middleware.Authenticate(), func(c *gin.Context) { c.Status(http.StatusOK) })
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }

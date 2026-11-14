@@ -6,8 +6,8 @@ public struct LoginView: View {
     @Binding public var studentName: String
     public var apiService: StudentAPIServiceProtocol
     
-    @State private var email = "studentea_1@scuola.it"
-    @State private var password = "password"
+    @State private var email = ""
+    @State private var password = ""
     @State private var isLoading = false
     @State private var errorMessage: String? = nil
 

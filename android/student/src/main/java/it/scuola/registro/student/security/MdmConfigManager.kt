@@ -3,9 +3,21 @@ package it.scuola.registro.student.security
 import android.content.Context
 import android.content.RestrictionsManager
 import android.os.Bundle
+import java.net.URI
 import it.scuola.registro.student.config.AppConfig
 
 class MdmConfigManager(private val context: Context?) {
+
+    private fun isSecureServerUrl(value: String): Boolean = try {
+        val uri = URI(value.trim())
+        uri.scheme.equals("https", ignoreCase = true) &&
+            !uri.host.isNullOrBlank() &&
+            uri.userInfo == null &&
+            uri.query == null &&
+            uri.fragment == null
+    } catch (_: Exception) {
+        false
+    }
 
     fun applyMdmPolicies(): Bundle {
         val bundle = Bundle()
@@ -17,9 +29,11 @@ class MdmConfigManager(private val context: Context?) {
         if (appRestrictions != null) {
             if (appRestrictions.containsKey("server_url")) {
                 val serverUrl = appRestrictions.getString("server_url")
-                if (!serverUrl.isNullOrBlank()) {
-                    AppConfig.BASE_URL = serverUrl
-                    bundle.putString("server_url", serverUrl)
+                if (!serverUrl.isNullOrBlank() && isSecureServerUrl(serverUrl)) {
+                    AppConfig.BASE_URL = serverUrl.trim().trimEnd('/')
+                    bundle.putString("server_url", AppConfig.BASE_URL)
+                } else {
+                    bundle.putBoolean("server_url_rejected", true)
                 }
             }
 

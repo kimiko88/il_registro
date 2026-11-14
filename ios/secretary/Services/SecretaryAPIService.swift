@@ -31,7 +31,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         let body = ["email": cleanEmail, "password": password]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "SecretaryAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "Credenziali errate"])
         }
@@ -43,7 +43,8 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
             guard let role = role, allowedRoles.contains(role) else {
                 throw NSError(domain: "SecretaryAPI", code: 403, userInfo: [NSLocalizedDescriptionKey: "Accesso non consentito: questo account non ha i permessi di segreteria o amministrazione."])
             }
-            if let token = json["access_token"] as? String ?? json["token"] as? String {
+            if let token = json["access_token"] as? String ?? json["token"] as? String,
+               !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return token
             }
         }
@@ -56,7 +57,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "SecretaryAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "Non autorizzato"])
         }
@@ -88,7 +89,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
+        guard let (data, response) = try? await SecureURLSession.shared.data(for: request),
               let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
               let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return []
@@ -108,7 +109,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
+        guard let (data, response) = try? await SecureURLSession.shared.data(for: request),
               let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
               let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return []
@@ -134,7 +135,7 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
         let body = ["student_id": studentId, "type": type]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "SecretaryAPI", code: 400, userInfo: [NSLocalizedDescriptionKey: "Errore emissione certificato"])
         }
@@ -144,5 +145,20 @@ public class HttpSecretaryAPIService: SecretaryAPIServiceProtocol {
             return id
         }
         return "cert_ok"
+    }
+}
+
+public extension HttpSecretaryAPIService {
+    /// Revokes the authenticated server session during an explicit user logout.
+    func revokeSession(token: String) async {
+        var request = URLRequest(url: baseURL.appendingPathComponent("auth/logout"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        guard let (_, response) = try? await SecureURLSession.shared.data(for: request),
+              let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            return
+        }
     }
 }

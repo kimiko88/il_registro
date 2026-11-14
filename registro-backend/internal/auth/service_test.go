@@ -188,6 +188,11 @@ func (m *MockRepository) UpdatePassword(ctx context.Context, userID, hash string
 	return args.Error(0)
 }
 
+func (m *MockRepository) UpdatePasswordIfHashMatches(ctx context.Context, userID, expectedHash, newHash string) (bool, error) {
+	args := m.Called(ctx, userID, expectedHash, newHash)
+	return args.Bool(0), args.Error(1)
+}
+
 func (m *MockRepository) ResetPasswordTx(ctx context.Context, userID, hash, tokenID string) error {
 	args := m.Called(ctx, userID, hash, tokenID)
 	return args.Error(0)
@@ -248,8 +253,10 @@ func TestRegister(t *testing.T) {
 			FirstName: "John",
 			LastName:  "Doe",
 			Role:      "student",
+			SchoolID:  "school-1",
 		}
 
+		mockRepo.On("SchoolExists", mock.Anything, "school-1").Return(true, nil).Once()
 		mockRepo.On("CreateUser", mock.Anything, mock.MatchedBy(func(u *User) bool {
 			return u.Email == req.Email && u.FirstName == req.FirstName
 		})).Return(nil).Once()
@@ -271,8 +278,10 @@ func TestRegister(t *testing.T) {
 			FirstName: "John",
 			LastName:  "Doe",
 			Role:      "student",
+			SchoolID:  "school-1",
 		}
 
+		mockRepo.On("SchoolExists", mock.Anything, "school-1").Return(true, nil).Once()
 		mockRepo.On("CreateUser", mock.Anything, mock.Anything).Return(ErrEmailAlreadyExists).Once()
 
 		user, err := s.Register(context.Background(), req)
@@ -320,6 +329,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("LegacyPasswordMigration", func(t *testing.T) {
+		t.Setenv("ALLOW_LEGACY_PASSWORD_PEPPER", "true")
 		s, mockRepo := setupTest(t)
 
 		legacyHashed, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
@@ -332,26 +342,17 @@ func TestLogin(t *testing.T) {
 			EmailVerified: true,
 		}
 
-		migrationDone := make(chan struct{})
 		mockRepo.On("GetRecentLoginAttempts", mock.Anything, legacyUser.Email, mock.Anything, mock.Anything).Return(0, nil).Once()
 		mockRepo.On("GetUserByEmail", mock.Anything, legacyUser.Email).Return(legacyUser, nil).Once()
 		mockRepo.On("CreateRefreshToken", mock.Anything, mock.Anything).Return(nil).Once()
 		mockRepo.On("UpdateLastLogin", mock.Anything, legacyUser.ID).Return(nil).Once()
 		mockRepo.On("RecordLoginAttempt", mock.Anything, mock.Anything).Return(nil).Once()
-		mockRepo.On("UpdatePassword", mock.Anything, legacyUser.ID, mock.Anything).Run(func(args mock.Arguments) {
-			close(migrationDone)
-		}).Return(nil).Once()
+		mockRepo.On("UpdatePasswordIfHashMatches", mock.Anything, legacyUser.ID, string(legacyHashed), mock.Anything).Return(true, nil).Once()
 
 		req := &LoginRequest{Email: legacyUser.Email, Password: password}
 		resp, err := s.Login(context.Background(), req, "127.0.0.1", "test-agent")
 		assert.NoError(t, err)
 		assert.NotNil(t, resp)
-
-		select {
-		case <-migrationDone:
-		case <-time.After(2 * time.Second):
-			t.Fatal("timed out waiting for background password re-hash migration")
-		}
 		mockRepo.AssertExpectations(t)
 	})
 
@@ -485,6 +486,22 @@ func TestRefreshToken(t *testing.T) {
 		assert.ErrorIs(t, err, ErrInvalidToken)
 		mockRepo.AssertExpectations(t)
 	})
+
+	t.Run("SoftDeletedUser", func(t *testing.T) {
+		s, mockRepo := setupTest(t)
+		rt := &RefreshToken{
+			ID: "rt-deleted", UserID: userID, Token: hashToken(token),
+			ExpiresAt: time.Now().Add(24 * time.Hour),
+		}
+		mockRepo.On("GetRefreshToken", mock.Anything, token).Return(rt, nil).Once()
+		mockRepo.On("GetUserByID", mock.Anything, userID).Return(nil, ErrUserNotFound).Once()
+		mockRepo.On("RevokeRefreshToken", mock.Anything, "rt-deleted").Return(nil).Once()
+
+		_, err := s.RefreshToken(context.Background(), token, "", "")
+		assert.ErrorIs(t, err, ErrUserInactive)
+		mockRepo.AssertNotCalled(t, "RotateRefreshTokenTx", mock.Anything, mock.Anything, mock.Anything)
+		mockRepo.AssertExpectations(t)
+	})
 }
 
 func TestPasswordReset(t *testing.T) {
@@ -540,6 +557,7 @@ func TestPasswordReset(t *testing.T) {
 	})
 
 	t.Run("ChangePasswordSuccess", func(t *testing.T) {
+		t.Setenv("ALLOW_LEGACY_PASSWORD_PEPPER", "true")
 		s, mockRepo := setupTest(t)
 		userID := "user-change-123"
 		currentPass := "OldPass123!Valid"
@@ -574,3 +592,20 @@ func TestPasswordReset(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 }
+
+func TestLogoutWithoutRefreshTokenRevokesAllUserSessions(t *testing.T) {
+	service, mockRepo := setupTest(t)
+	userID := "native-user-123"
+	mockRepo.On("RevokeAllUserTokens", mock.Anything, userID).Return(nil).Once()
+
+	assert.NoError(t, service.Logout(context.Background(), "", userID))
+	mockRepo.AssertExpectations(t)
+}
+
+func TestLogoutWithoutRefreshTokenRequiresUserID(t *testing.T) {
+	service, mockRepo := setupTest(t)
+
+	assert.ErrorIs(t, service.Logout(context.Background(), "", "  "), ErrUnauthorized)
+	mockRepo.AssertNotCalled(t, "RevokeAllUserTokens", mock.Anything, mock.Anything)
+}
+

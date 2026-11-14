@@ -1,4 +1,5 @@
 import { setActivePinia, createPinia } from 'pinia'
+import axios from 'axios'
 import { useAuthStore } from 'src/stores/auth'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
@@ -114,6 +115,34 @@ describe('Auth Store', () => {
             expect(localStorage.getItem('user')).toBe(JSON.stringify({ id: '123', role: 'teacher' }))
             expect(localStorage.getItem('token')).toBeNull()
             expect(localStorage.getItem('refreshToken')).toBeNull()
+        })
+    })
+
+    describe('session restoration race', () => {
+
+        it('does not restore an old session when refresh completes after logout', async () => {
+            localStorage.setItem('user', JSON.stringify({ id: '123', role: 'teacher' }))
+            const store = useAuthStore()
+            let resolveRefresh
+            vi.spyOn(axios, 'post').mockImplementation(() => new Promise(resolve => {
+                resolveRefresh = resolve
+            }))
+
+            const restore = store.initAuth()
+            await vi.waitFor(() => expect(resolveRefresh).toBeDefined())
+            store.logout()
+            resolveRefresh({
+                data: {
+                    access_token: createMockJWT('teacher'),
+                    user: { id: '123', role: 'teacher', first_name: 'Old' }
+                }
+            })
+            await restore
+
+            expect(store.token).toBeNull()
+            expect(store.user).toBeNull()
+            expect(store.isInitializing).toBe(false)
+            vi.restoreAllMocks()
         })
     })
 

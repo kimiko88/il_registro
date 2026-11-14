@@ -24,7 +24,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: registro_user
-          POSTGRES_PASSWORD: testpassword
+          POSTGRES_PASSWORD: ci-test-db-password-not-for-production-0123456789
           POSTGRES_DB: registro_test
         ports:
           - 5432:5432
@@ -67,15 +67,19 @@ jobs:
         env:
           SERVER_PORT: 8080
           SERVER_MODE: release
+          ALLOWED_ORIGINS: http://localhost:3000
           DB_HOST: localhost
           DB_PORT: 5432
           DB_USER: registro_user
-          DB_PASSWORD: testpassword
+          DB_PASSWORD: ci-test-db-password-not-for-production-0123456789
           DB_NAME: registro_test
           DB_SSLMODE: disable
           REDIS_HOST: localhost
           REDIS_PORT: 6379
-          JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxx
+          JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxxxxxxxxxxx
+          ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          PEPPER_SECRET: ci-only-pepper-value-not-for-production-0123456789
+          ALLOW_LEGACY_PASSWORD_PEPPER: "true"
         run: go test -race -coverprofile=coverage.out ./...
 
       - name: Upload coverage

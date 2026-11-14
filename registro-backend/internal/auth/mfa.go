@@ -1,31 +1,66 @@
 package auth
 
 import (
+	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base32"
+	"encoding/hex"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/pquerna/otp/totp"
+	"github.com/redis/go-redis/v9"
 )
 
 // MFAService handles MFA operations
 type MFAService struct {
-	issuer   string
-	usedOTPs map[string]time.Time
-	mu       sync.RWMutex
+	issuer      string
+	usedOTPs    map[string]time.Time
+	redisClient *redis.Client
+	replayErr   error
+	mu          sync.RWMutex
 }
 
 // NewMFAService creates a new MFA service
-func NewMFAService(issuer string) *MFAService {
+func NewMFAService(issuer string, redisURLs ...string) *MFAService {
 	s := &MFAService{
 		issuer:   issuer,
 		usedOTPs: make(map[string]time.Time),
 	}
+	if len(redisURLs) > 0 && strings.TrimSpace(redisURLs[0]) != "" {
+		opt, err := redis.ParseURL(redisURLs[0])
+		if err != nil {
+			s.replayErr = err
+			return s
+		}
+		client := redis.NewClient(opt)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		err = client.Ping(ctx).Err()
+		cancel()
+		if err != nil {
+			_ = client.Close()
+			s.replayErr = err
+			return s
+		}
+		s.redisClient = client
+		return s
+	}
+	// Process-local replay protection is permitted only when no shared Redis
+	// backend was explicitly configured (development/test mode).
 	go s.cleanupLoop()
 	return s
+}
+
+// Close releases the shared Redis client used for TOTP replay protection.
+func (m *MFAService) Close() error {
+	if m.redisClient != nil {
+		return m.redisClient.Close()
+	}
+	return nil
 }
 
 func (m *MFAService) cleanupLoop() {
@@ -63,16 +98,24 @@ func (m *MFAService) GenerateQRCodeURL(email, secret string) string {
 	)
 }
 
-// VerifyTOTPUser verifies a TOTP code and prevents replay attacks by caching used codes for 90s per user
+// VerifyTOTPUser verifies a TOTP code and atomically prevents replay for 90s per user.
 func (m *MFAService) VerifyTOTPUser(userID, secret, code string) bool {
-	if !totp.Validate(code, secret) {
+	if !totp.Validate(code, secret) || m.replayErr != nil {
 		return false
 	}
-	key := fmt.Sprintf("%s:%s", userID, code)
+	sum := sha256.Sum256([]byte(fmt.Sprintf("%s:%s", userID, code)))
+	key := "mfa:otp:" + hex.EncodeToString(sum[:])
+	if m.redisClient != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		accepted, err := m.redisClient.SetNX(ctx, key, "1", 90*time.Second).Result()
+		return err == nil && accepted
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if exp, exists := m.usedOTPs[key]; exists && time.Now().Before(exp) {
-		return false // OTP code was already used within TTL
+		return false
 	}
 	m.usedOTPs[key] = time.Now().Add(90 * time.Second)
 	return true

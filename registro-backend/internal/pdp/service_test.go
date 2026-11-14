@@ -9,8 +9,21 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+type testGuardianChecker struct {
+	allowed bool
+}
+
+func (g testGuardianChecker) IsGuardian(context.Context, string, string) (bool, error) {
+	return g.allowed, nil
+}
+
 type MockRepository struct {
 	mock.Mock
+}
+
+func (m *MockRepository) ValidatePlanScope(ctx context.Context, schoolID, studentID, classID string, coordinatorID, referenteID *string) (bool, error) {
+	args := m.Called(ctx, schoolID, studentID, classID, coordinatorID, referenteID)
+	return args.Bool(0), args.Error(1)
 }
 
 func (m *MockRepository) Create(ctx context.Context, plan *PdpPlan) (*PdpPlan, error) {
@@ -94,6 +107,7 @@ func TestPDPService_CreatePlan(t *testing.T) {
 			Diagnosis:    "DSA Dislessia Evolutiva",
 		}
 
+		mockRepo.On("ValidatePlanScope", ctx, "school-1", "student-1", "class-1", req.CoordinatorID, req.ReferenteID).Return(true, nil).Once()
 		mockRepo.On("Create", ctx, mock.AnythingOfType("*pdp.PdpPlan")).Return(expectedPlan, nil).Once()
 
 		plan, err := svc.CreatePlan(ctx, "teacher-1", "teacher", "school-1", &req)
@@ -119,7 +133,8 @@ func TestPDPService_CreatePlan(t *testing.T) {
 
 func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 	mockRepo := new(MockRepository)
-	svc := NewService(mockRepo)
+	guardians := &mockUserRepoForPdp{guardians: map[string]string{"parent-1:student-1": "ok"}}
+	svc := NewService(mockRepo, guardians)
 	ctx := context.Background()
 
 	originalPlan := &PdpPlan{
@@ -135,16 +150,18 @@ func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 
 	t.Run("teacher sees full diagnosis", func(t *testing.T) {
 		mockRepo.On("GetByID", ctx, "pdp-100").Return(originalPlan, nil).Once()
+		mockRepo.On("ValidatePlanScope", ctx, "school-1", "student-1", "class-1", (*string)(nil), (*string)(nil)).Return(true, nil).Once()
 
-		plan, err := svc.GetByID(ctx, "teacher-1", "teacher", "", "pdp-100")
+		plan, err := svc.GetByID(ctx, "teacher-1", "teacher", "school-1", "pdp-100")
 		assert.NoError(t, err)
 		assert.Equal(t, "Diagnosi Riservata Clinica", plan.Diagnosis)
 	})
 
 	t.Run("parent sees shared plan with redacted diagnosis", func(t *testing.T) {
 		mockRepo.On("GetByID", ctx, "pdp-100").Return(originalPlan, nil).Once()
+		mockRepo.On("ValidatePlanScope", ctx, "school-1", "student-1", "class-1", (*string)(nil), (*string)(nil)).Return(true, nil).Once()
 
-		plan, err := svc.GetByID(ctx, "parent-1", "parent", "", "pdp-100")
+		plan, err := svc.GetByID(ctx, "parent-1", "parent", "school-1", "pdp-100")
 		assert.NoError(t, err)
 		assert.Equal(t, "", plan.Diagnosis)
 	})
@@ -153,11 +170,13 @@ func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 		unsharedPlan := &PdpPlan{
 			ID:               "pdp-200",
 			StudentID:        "student-1",
+			SchoolID:         "school-1",
 			SharedWithFamily: false,
 		}
 		mockRepo.On("GetByID", ctx, "pdp-200").Return(unsharedPlan, nil).Once()
+		mockRepo.On("ValidatePlanScope", ctx, "school-1", "student-1", "", (*string)(nil), (*string)(nil)).Return(true, nil).Once()
 
-		plan, err := svc.GetByID(ctx, "parent-1", "parent", "", "pdp-200")
+		plan, err := svc.GetByID(ctx, "parent-1", "parent", "school-1", "pdp-200")
 		assert.Error(t, err)
 		assert.Nil(t, plan)
 		assert.Equal(t, ErrNotSharedYet, err)
@@ -166,19 +185,21 @@ func TestPDPService_GetByID_DiagnosisRedaction(t *testing.T) {
 
 func TestPDPService_ApproveByFamily(t *testing.T) {
 	mockRepo := new(MockRepository)
-	svc := NewService(mockRepo)
+	svc := NewService(mockRepo, testGuardianChecker{allowed: true})
 	ctx := context.Background()
 
 	t.Run("parent approves shared plan", func(t *testing.T) {
 		plan := &PdpPlan{
 			ID:               "pdp-100",
 			StudentID:        "student-1",
+			SchoolID:         "school-1",
 			SharedWithFamily: true,
 		}
 		mockRepo.On("GetByID", ctx, "pdp-100").Return(plan, nil).Once()
+		mockRepo.On("ValidatePlanScope", ctx, "school-1", "student-1", "", (*string)(nil), (*string)(nil)).Return(true, nil).Once()
 		mockRepo.On("ApproveByFamily", ctx, "pdp-100", "parent-1").Return(nil).Once()
 
-		err := svc.ApproveByFamily(ctx, "parent", "parent-1", "", "pdp-100")
+		err := svc.ApproveByFamily(ctx, "parent", "parent-1", "school-1", "pdp-100")
 		assert.NoError(t, err)
 		mockRepo.AssertExpectations(t)
 	})

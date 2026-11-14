@@ -7,7 +7,6 @@ import org.junit.Before
 import org.junit.Test
 
 class StudentWebSocketClientTest {
-
     private lateinit var wsClient: StudentWebSocketClient
 
     @Before
@@ -16,7 +15,7 @@ class StudentWebSocketClientTest {
     }
 
     @Test
-    fun connectAndReceiveMessage_triggersCallbacks() {
+    fun placeholderNeverClaimsConnectionOrDeliversSyntheticMessages() {
         var connected = false
         var receivedMsg = ""
         var disconnected = false
@@ -39,14 +38,11 @@ class StudentWebSocketClientTest {
             }
         )
 
-        assertTrue(connected)
-        assertTrue(wsClient.isConnectionActive())
-
-        wsClient.simulateIncomingMessage("{\"event\":\"NEW_GRADE\",\"subject\":\"Matematica\",\"grade\":9.0}")
-        assertEquals("{\"event\":\"NEW_GRADE\",\"subject\":\"Matematica\",\"grade\":9.0}", receivedMsg)
-
-        wsClient.disconnect()
+        assertFalse(connected)
         assertFalse(wsClient.isConnectionActive())
         assertTrue(disconnected)
+
+        wsClient.simulateIncomingMessage("{\"event\":\"NEW_GRADE\",\"subject\":\"Matematica\",\"grade\":9.0}")
+        assertEquals("", receivedMsg)
     }
 }

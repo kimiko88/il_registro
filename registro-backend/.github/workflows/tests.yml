@@ -9,6 +9,17 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: registro-backend
+    env:
+      SERVER_MODE: release
+      ALLOWED_ORIGINS: http://localhost:3000
+      JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxxxxxxxxxxx
+      ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      PEPPER_SECRET: ci-only-pepper-value-not-for-production-0123456789
+      DB_PASSWORD: ci-test-db-password-not-for-production-0123456789
+      ALLOW_LEGACY_PASSWORD_PEPPER: "true"
     steps:
       - uses: actions/checkout@v4
 

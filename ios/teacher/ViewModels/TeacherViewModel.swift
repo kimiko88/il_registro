@@ -67,6 +67,7 @@ public class TeacherViewModel: ObservableObject {
     @Published public var isLoading: Bool = false
     @Published public var errorMessage: String? = nil
 
+    private var sessionGeneration = UUID()
     private let apiService: TeacherAPIServiceProtocol
 
     public init(apiService: TeacherAPIServiceProtocol = HttpTeacherAPIService()) {
@@ -74,13 +75,17 @@ public class TeacherViewModel: ObservableObject {
     }
 
     public func signLessonViaApi(token: String, classId: String, topic: String) async -> Bool {
-        await MainActor.run {
+        let requestGeneration = await MainActor.run {
             self.isLoading = true
             self.errorMessage = nil
+            return self.sessionGeneration
         }
         do {
             let session = try await apiService.signLesson(token: token, classId: classId, topic: topic)
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent, !Task.isCancelled else { return false }
             await MainActor.run {
+                guard self.sessionGeneration == requestGeneration else { return }
                 self.currentSession = session
                 self.isHourSigned = session.isSigned
                 self.lessonTopic = session.lessonTopic
@@ -88,6 +93,8 @@ public class TeacherViewModel: ObservableObject {
             }
             return true
         } catch {
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent else { return false }
             await MainActor.run {
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
@@ -96,25 +103,44 @@ public class TeacherViewModel: ObservableObject {
         }
     }
 
+    public func clearSession() {
+        sessionGeneration = UUID()
+        isHourSigned = false
+                lessonTopic = ""
+                students.removeAll()
+                grades.removeAll()
+                currentSession = nil
+                isLoading = false
+                errorMessage = nil
+    }
+
     public func loadFromDatabase(token: String) async -> Bool {
-        await MainActor.run {
+        let requestGeneration = await MainActor.run {
             self.isLoading = true
             self.errorMessage = nil
+            return self.sessionGeneration
         }
         do {
             let classes = try await apiService.fetchClasses(token: token)
-            var session = classes.first
+            let isCurrentAfterClasses = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrentAfterClasses, !Task.isCancelled else { return false }
+            let session = classes.first
             var classStudents: [RollCallStudent] = []
             if let firstClass = session {
                 classStudents = try await apiService.fetchClassStudents(token: token, classId: firstClass.id)
+                let isCurrentAfterStudents = await MainActor.run { self.sessionGeneration == requestGeneration }
+                guard isCurrentAfterStudents, !Task.isCancelled else { return false }
             }
             await MainActor.run {
+                guard self.sessionGeneration == requestGeneration else { return }
                 self.currentSession = session
                 self.students = classStudents
                 self.isLoading = false
             }
             return true
         } catch {
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent else { return false }
             await MainActor.run {
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false

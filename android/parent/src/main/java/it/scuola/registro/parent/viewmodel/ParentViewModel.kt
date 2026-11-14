@@ -14,6 +14,7 @@ import it.scuola.registro.parent.ui.ParentGradeDisplayItem
 class ParentViewModel(
     private val apiService: ParentApiService = HttpParentApiService()
 ) {
+    @Volatile private var sessionGeneration: Long = 0L
     var children by mutableStateOf<List<ParentChild>>(emptyList())
         private set
 
@@ -37,17 +38,32 @@ class ParentViewModel(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    fun clearSession() {
+        sessionGeneration++
+        children = emptyList()
+        selectedChildId = ""
+        pendingAbsences.clear()
+        availableColloqui.clear()
+        gradesList = emptyList()
+        circularsList = emptyList()
+        isLoading = false
+        errorMessage = null
+    }
+
     suspend fun loadFromDatabase(token: String): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         try {
             val childrenResult = apiService.getChildren(token)
+            if (requestGeneration != sessionGeneration) return false
             if (childrenResult.isSuccess) {
                 val apiChildren = childrenResult.getOrNull()
                 if (!apiChildren.isNullOrEmpty()) {
                     children = apiChildren
                     selectedChildId = apiChildren.first().id
                     val absencesResult = apiService.getAbsences(token, selectedChildId)
+            if (requestGeneration != sessionGeneration) return false
                     if (absencesResult.isSuccess) {
                         val apiAbsences = absencesResult.getOrNull()
                         if (!apiAbsences.isNullOrEmpty()) {
@@ -60,6 +76,7 @@ class ParentViewModel(
             isLoading = false
             return true
         } catch (e: Exception) {
+            if (requestGeneration != sessionGeneration) return false
             errorMessage = e.localizedMessage
             isLoading = false
             return false

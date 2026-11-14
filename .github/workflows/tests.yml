@@ -9,6 +9,14 @@ on:
 jobs:
   test-backend:
     runs-on: ubuntu-latest
+    env:
+      SERVER_MODE: release
+      ALLOWED_ORIGINS: http://localhost:3000
+      JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxxxxxxxxxxx
+      ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      PEPPER_SECRET: ci-only-pepper-value-not-for-production-0123456789
+      DB_PASSWORD: ci-test-db-password-not-for-production-0123456789
+      ALLOW_LEGACY_PASSWORD_PEPPER: "true"
     defaults:
       run:
         working-directory: ./registro-backend
@@ -16,7 +24,7 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ci-test-db-password-not-for-production-0123456789
           POSTGRES_DB: registro
         ports:
           - 5432:5432

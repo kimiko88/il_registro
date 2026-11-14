@@ -13,6 +13,14 @@ jobs:
   backend:
     name: Backend checks
     runs-on: ubuntu-latest
+    env:
+      SERVER_MODE: release
+      ALLOWED_ORIGINS: http://localhost:3000
+      JWT_SECRET: ci-test-secret-not-used-in-production-64chars-xxxxxxxxxxxxxxxxxxxx
+      ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      PEPPER_SECRET: ci-only-pepper-value-not-for-production-0123456789
+      DB_PASSWORD: ci-test-db-password-not-for-production-0123456789
+      ALLOW_LEGACY_PASSWORD_PEPPER: "true"
     defaults:
       run:
         working-directory: registro-backend
@@ -24,8 +32,13 @@ jobs:
           cache: true
       - name: Check gofmt
         run: |
-          if [ -n "$(gofmt -l .)" ]; then
-            echo "Go files are not formatted. Run 'gofmt -w .' to fix them."
+          files="$(gofmt -l .)"
+          if [ -n "$files" ]; then
+            echo "Go files are not formatted:"
+            echo "$files"
+            for file in $files; do
+              gofmt -d "$file"
+            done
             exit 1
           fi
       - name: Vet

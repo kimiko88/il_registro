@@ -344,9 +344,11 @@ func TestAttendance_Validator_EntryChecks(t *testing.T) {
 	assert.NoError(t, v.ValidateEntry(validPastEntry))
 
 	// Future entry (tomorrow) must be rejected
+	rome, err := time.LoadLocation("Europe/Rome")
+	assert.NoError(t, err)
 	tomorrowEntry := &Attendance{
 		Status: StatusPresent,
-		Date:   time.Now().AddDate(0, 0, 1).Truncate(24 * time.Hour).Add(12 * time.Hour),
+		Date:   time.Now().In(rome).AddDate(0, 0, 1).Add(12 * time.Hour),
 		Hour:   &h,
 	}
 	assert.Error(t, v.ValidateEntry(tomorrowEntry))

@@ -39,13 +39,8 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
         let body = ["email": cleanEmail, "password": password]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let errMsg = json["error"] as? String ?? json["message"] as? String {
-                let code = (response as? HTTPURLResponse)?.statusCode ?? 401
-                throw NSError(domain: "StudentAPI", code: code, userInfo: [NSLocalizedDescriptionKey: "\(errMsg) (HTTP \(code))"])
-            }
             let code = (response as? HTTPURLResponse)?.statusCode ?? 401
             throw NSError(domain: "StudentAPI", code: code, userInfo: [NSLocalizedDescriptionKey: "Credenziali non valide o errore server (HTTP \(code))"])
         }
@@ -53,7 +48,7 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
         if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
             let userObj = json["user"] as? [String: Any]
             let role = userObj?["role"] as? String
-            guard role == nil || role == "student" else {
+            guard role == "student" else {
                 throw NSError(domain: "StudentAPI", code: 403, userInfo: [NSLocalizedDescriptionKey: "Accesso non consentito: questo account non appartiene a uno studente."])
             }
             if let firstName = userObj?["first_name"] as? String, let lastName = userObj?["last_name"] as? String {
@@ -62,7 +57,8 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
                 self.lastStudentName = name
             }
 
-            if let token = json["access_token"] as? String ?? json["token"] as? String {
+            if let token = json["access_token"] as? String ?? json["token"] as? String,
+               !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return token
             }
         }
@@ -75,7 +71,7 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
+        guard let (data, response) = try? await SecureURLSession.shared.data(for: request),
               let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
               let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             return [:]
@@ -98,7 +94,7 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "StudentAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "Non autorizzato"])
         }
@@ -170,7 +166,7 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             return []
         }
@@ -200,7 +196,7 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             return []
         }
@@ -220,6 +216,21 @@ public class HttpStudentAPIService: StudentAPIServiceProtocol {
                 type: (dict["type"] as? String) ?? (dict["status"] as? String) ?? "Assenza",
                 isJustified: (dict["is_justified"] as? Bool) ?? (dict["justified"] as? Bool) ?? false
             )
+        }
+    }
+}
+
+public extension HttpStudentAPIService {
+    /// Revokes the authenticated server session during an explicit user logout.
+    func revokeSession(token: String) async {
+        var request = URLRequest(url: baseURL.appendingPathComponent("auth/logout"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        guard let (_, response) = try? await SecureURLSession.shared.data(for: request),
+              let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            return
         }
     }
 }

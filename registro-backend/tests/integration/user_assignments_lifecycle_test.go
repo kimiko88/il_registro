@@ -78,6 +78,7 @@ func TestUserAssignmentsLifecycle_HTTP(t *testing.T) {
 			},
 		}
 
+		mockRepo.On("GetByID", mock.Anything, targetUserID).Return(&targetTeacher, nil).Once()
 		mockRepo.On("GetAssignments", mock.Anything, targetUserID).Return(existingAssignments, nil).Once()
 
 		req := httptest.NewRequest("GET", "/api/v1/users/"+targetUserID+"/assignments", nil)

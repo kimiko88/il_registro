@@ -84,34 +84,40 @@ func normalizeEmail(email string) string {
 }
 
 func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, error) {
-	normalizedEmail := normalizeEmail(req.Email)
+	if req == nil {
+		return nil, errors.New("registration request is required")
+	}
+	if s.repo == nil {
+		return nil, errors.New("user repository is not configured")
+	}
+	if strings.TrimSpace(req.SchoolID) == "" {
+		return nil, errors.New("school ID is required for user registration")
+	}
+	if !IsValidRole(req.Role) {
+		return nil, ErrInvalidRole
+	}
 
-	// Hash password
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), s.bcryptCost)
+	normalizedEmail := normalizeEmail(req.Email)
+	passwordHash, err := bcrypt.GenerateFromPassword(crypto.PrehashPassword(req.Password), s.bcryptCost)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.SchoolID != "" && s.repo != nil {
-		exists, err := s.repo.SchoolExists(ctx, req.SchoolID)
-		if err != nil {
-			return nil, fmt.Errorf("school check failed: %w", err)
-		}
-		if !exists {
-			return nil, fmt.Errorf("invalid school ID")
-		}
+	exists, err := s.repo.SchoolExists(ctx, req.SchoolID)
+	if err != nil {
+		return nil, fmt.Errorf("school check failed: %w", err)
+	}
+	if !exists {
+		return nil, fmt.Errorf("invalid school ID")
 	}
 
-	// Create user
 	user := &User{
 		Email:        normalizedEmail,
 		PasswordHash: string(passwordHash),
 		FirstName:    req.FirstName,
 		LastName:     req.LastName,
 		Role:         req.Role,
-	}
-	if req.SchoolID != "" {
-		user.SchoolID = &req.SchoolID
+		SchoolID:     &req.SchoolID,
 	}
 
 	if err := s.repo.CreateUser(ctx, user); err != nil {
@@ -125,11 +131,9 @@ func (s *Service) Register(ctx context.Context, req *RegisterRequest) (*User, er
 		return nil, err
 	}
 
-	// Seed password history so ResetPassword can detect immediate re-use.
 	if err := s.repo.AddPasswordHistory(ctx, user.ID, string(passwordHash)); err != nil {
 		logger.Log.Warnf("Register: failed to seed initial password history for user %s: %v", user.ID, err)
 	}
-
 	return user, nil
 }
 
@@ -178,18 +182,35 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, ipAddress, userA
 	prehashedPassword := crypto.PrehashPassword(req.Password)
 	bcryptErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), prehashedPassword)
 	if bcryptErr != nil {
-		// Fallback check against legacy raw password (for existing user accounts)
-		legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
-		if legacyErr != nil {
-			s.recordFailedAttempt(ctx, req.Email, ipAddress)
+		// First accept hashes made with the old built-in pepper, then legacy raw
+		// bcrypt hashes. Successful legacy authentication is transparently upgraded.
+		legacyPepperedErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), crypto.PrehashPasswordLegacy(req.Password))
+		if legacyPepperedErr != nil {
+			if !crypto.LegacyPasswordMigrationEnabled() ||
+				bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)) != nil {
+				s.recordFailedAttempt(ctx, req.Email, ipAddress)
+				return nil, ErrInvalidCredentials
+			}
+		}
+		// Upgrade synchronously with compare-and-swap. A concurrent password
+		// reset/change must win rather than being overwritten by this legacy hash.
+		newHash, hashErr := bcrypt.GenerateFromPassword(prehashedPassword, s.bcryptCost)
+		if hashErr != nil {
+			return nil, fmt.Errorf("legacy password migration failed: %w", hashErr)
+		}
+		updater, ok := s.repo.(interface {
+			UpdatePasswordIfHashMatches(context.Context, string, string, string) (bool, error)
+		})
+		if !ok {
+			return nil, errors.New("repository does not support atomic legacy password migration")
+		}
+		updated, updateErr := updater.UpdatePasswordIfHashMatches(ctx, user.ID, user.PasswordHash, string(newHash))
+		if updateErr != nil {
+			return nil, fmt.Errorf("legacy password migration failed: %w", updateErr)
+		}
+		if !updated {
 			return nil, ErrInvalidCredentials
 		}
-		// Transparent auto-migration: re-hash with pre-hashed format and update in DB
-		go func(uid string, passBytes []byte, cost int) {
-			if newHash, err := bcrypt.GenerateFromPassword(passBytes, cost); err == nil {
-				_ = s.repo.UpdatePassword(context.Background(), uid, string(newHash))
-			}
-		}(user.ID, prehashedPassword, s.bcryptCost)
 	}
 
 	if !user.IsActive {
@@ -419,15 +440,28 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 	// Get user
 	user, err := s.repo.GetUserByID(ctx, rt.UserID)
 	if err != nil {
+		// GetUserByID excludes soft-deleted accounts (deleted_at IS NULL).
+		// Revoke the refresh token when the account no longer exists.
+		if errors.Is(err, ErrUserNotFound) {
+			if revokeErr := s.repo.RevokeRefreshToken(ctx, rt.ID); revokeErr != nil {
+				return nil, fmt.Errorf("revoke refresh token for unavailable account: %w", revokeErr)
+			}
+			return nil, ErrUserInactive
+		}
 		return nil, err
 	}
 
 	// Verify account is still active before issuing a new access token.
 	// A disabled account must not be able to obtain new tokens via refresh.
 	if !user.IsActive {
-		// Revoke the refresh token so it cannot be retried.
-		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
+		if revokeErr := s.repo.RevokeRefreshToken(ctx, rt.ID); revokeErr != nil {
+			return nil, fmt.Errorf("revoke refresh token for inactive account: %w", revokeErr)
+		}
 		return nil, ErrUserInactive
+	}
+	if user.PasswordChangedAt != nil && !rt.CreatedAt.After(*user.PasswordChangedAt) {
+		_ = s.repo.RevokeRefreshToken(ctx, rt.ID)
+		return nil, ErrTokenRevoked
 	}
 
 	if isPasswordExpired(user) {
@@ -490,6 +524,16 @@ func (s *Service) RefreshToken(ctx context.Context, refreshToken, ipAddress, use
 // It verifies that the refresh token presented belongs to the authenticated
 // user (from the JWT access token in context) to prevent cross-user logout.
 func (s *Service) Logout(ctx context.Context, refreshToken string, callerUserID string) error {
+	// Native clients may not retain the HttpOnly refresh-token cookie. In that
+	// case, an authenticated logout must still revoke every refresh session for
+	// the caller; the handler separately revokes the presented access-token JTI.
+	if strings.TrimSpace(refreshToken) == "" {
+		if strings.TrimSpace(callerUserID) == "" {
+			return ErrUnauthorized
+		}
+		return s.repo.RevokeAllUserTokens(ctx, callerUserID)
+	}
+
 	rt, err := s.repo.GetRefreshToken(ctx, refreshToken)
 	if err != nil {
 		if errors.Is(err, ErrInvalidToken) || errors.Is(err, sql.ErrNoRows) {
@@ -675,25 +719,29 @@ func (s *Service) ResetPassword(ctx context.Context, token, newPassword string) 
 		return fmt.Errorf("failed to fetch password history: %w", err)
 	}
 	for _, oldHash := range history {
-		if bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
+		if bcrypt.CompareHashAndPassword([]byte(oldHash), crypto.PrehashPassword(newPassword)) == nil ||
+			(crypto.LegacyPasswordMigrationEnabled() &&
+				(bcrypt.CompareHashAndPassword([]byte(oldHash), crypto.PrehashPasswordLegacy(newPassword)) == nil ||
+					bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil)) {
 			return ErrPasswordReused
 		}
 	}
 
 	// Hash new password
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), s.bcryptCost)
+	passwordHash, err := bcrypt.GenerateFromPassword(crypto.PrehashPassword(newPassword), s.bcryptCost)
 	if err != nil {
 		return err
 	}
 
-	// Atomically update password, burn reset token, and add to password history in a single DB transaction
-	if err := s.repo.ResetPasswordTx(ctx, prt.UserID, string(passwordHash), prt.ID); err != nil {
-		return err
+	// Revoke sessions before committing the new password. If revocation fails,
+	// leave the reset token usable and do not report a successful password change.
+	if err := s.repo.RevokeAllUserTokens(ctx, prt.UserID); err != nil {
+		return fmt.Errorf("failed to revoke existing sessions: %w", err)
 	}
 
-	// Revoke all refresh tokens for security
-	if err := s.repo.RevokeAllUserTokens(ctx, prt.UserID); err != nil {
-		logger.Log.Warnf("ResetPassword: failed to revoke user tokens for user %s: %v", prt.UserID, err)
+	// Atomically update password, burn reset token, and add to password history.
+	if err := s.repo.ResetPasswordTx(ctx, prt.UserID, string(passwordHash), prt.ID); err != nil {
+		return err
 	}
 
 	return nil
@@ -738,8 +786,12 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 	// Verify current password (supports prehashed or legacy raw)
 	preCurrent := crypto.PrehashPassword(currentPassword)
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), preCurrent); err != nil {
-		if legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)); legacyErr != nil {
-			return ErrInvalidCredentials
+		legacyPepperedErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), crypto.PrehashPasswordLegacy(currentPassword))
+		if legacyPepperedErr != nil {
+			if !crypto.LegacyPasswordMigrationEnabled() ||
+				bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)) != nil {
+				return ErrInvalidCredentials
+			}
 		}
 	}
 
@@ -757,7 +809,9 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 	preNew := crypto.PrehashPassword(newPassword)
 	for _, oldHash := range history {
 		if bcrypt.CompareHashAndPassword([]byte(oldHash), preNew) == nil ||
-			bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil {
+			(crypto.LegacyPasswordMigrationEnabled() &&
+				(bcrypt.CompareHashAndPassword([]byte(oldHash), crypto.PrehashPasswordLegacy(newPassword)) == nil ||
+					bcrypt.CompareHashAndPassword([]byte(oldHash), []byte(newPassword)) == nil)) {
 			return ErrPasswordReused
 		}
 	}
@@ -768,12 +822,12 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 		return err
 	}
 
+	// Revoke existing sessions before changing the password.
+	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+		return fmt.Errorf("failed to revoke existing sessions: %w", err)
+	}
 	if err := s.repo.ChangePasswordTx(ctx, userID, string(passwordHash)); err != nil {
 		return err
-	}
-
-	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
-		logger.Log.Warnf("ChangePassword: failed to revoke user tokens for user %s: %v", userID, err)
 	}
 	return nil
 }

@@ -54,4 +54,15 @@ class SecretaryViewModelTest {
         assertEquals("completato", cert.status)
         assertTrue(cert.generatedPdfUrl.endsWith(".pdf"))
     }
+    @Test
+    fun clearSession_removesPersonalData() {
+        viewModel.clearSession()
+        assertTrue(viewModel.usersList.isEmpty())
+        assertTrue(viewModel.scrutinyClasses.isEmpty())
+        assertTrue(viewModel.certificateRequests.isEmpty())
+        assertTrue(viewModel.auditLogs.isEmpty())
+        assertEquals(null, viewModel.currentUserProfile)
+        assertEquals(null, viewModel.errorMessage)
+        assertEquals(false, viewModel.isLoading)
+    }
 }

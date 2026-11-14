@@ -113,22 +113,33 @@ func (s *MemoryRevocationStore) cleanupLoop() {
 	}
 }
 
-// NewRevocationStore creates a RevocationStore connected to Redis, falling back to memory if unreachable.
+// unavailableRevocationStore makes revocation checks fail closed when Redis is
+// configured but its URL is invalid. It must never silently fall back to local memory.
+type unavailableRevocationStore struct {
+	err error
+}
+
+func (s *unavailableRevocationStore) Revoke(context.Context, string, time.Duration) error {
+	return s.err
+}
+func (s *unavailableRevocationStore) IsRevoked(context.Context, string) (bool, error) {
+	return false, s.err
+}
+func (s *unavailableRevocationStore) Close() error { return nil }
+
+// NewRevocationStore uses Redis whenever a URL is configured. A Redis outage is
+// surfaced by each operation so authentication middleware can fail closed.
+// In-memory revocation is retained only for explicit local/development use with
+// an empty URL; production config must require Redis.
 func NewRevocationStore(redisURL string) RevocationStore {
-	if strings.TrimSpace(redisURL) != "" {
-		opt, err := redis.ParseURL(redisURL)
-		if err == nil {
-			client := redis.NewClient(opt)
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			defer cancel()
-			pingErr := client.Ping(ctx).Err()
-			if pingErr == nil {
-				log.Println("jwt: connected to Redis backend for distributed JTI token revocation")
-				return NewRedisRevocationStore(client)
-			}
-			log.Printf("jwt: Redis ping failed (%v), falling back to in-memory revocation store", pingErr)
-			_ = client.Close()
-		}
+	if strings.TrimSpace(redisURL) == "" {
+		log.Println("jwt: no Redis URL configured; using in-memory revocation store (development only)")
+		return NewMemoryRevocationStore()
 	}
-	return NewMemoryRevocationStore()
+	opt, err := redis.ParseURL(redisURL)
+	if err != nil {
+		log.Printf("jwt: invalid Redis URL; revocation store unavailable: %v", err)
+		return &unavailableRevocationStore{err: err}
+	}
+	return NewRedisRevocationStore(redis.NewClient(opt))
 }

@@ -45,4 +45,14 @@ class ParentViewModelTest {
         val updated = viewModel.availableColloqui.first { it.id == "col1" }
         assertTrue(updated.isConfirmed)
     }
+    @Test
+    fun clearSession_removesPersonalData() {
+        viewModel.clearSession()
+        assertTrue(viewModel.children.isEmpty())
+        assertEquals("", viewModel.selectedChildId)
+        assertTrue(viewModel.pendingAbsences.isEmpty())
+        assertTrue(viewModel.availableColloqui.isEmpty())
+        assertTrue(viewModel.gradesList.isEmpty())
+        assertTrue(viewModel.circularsList.isEmpty())
+    }
 }

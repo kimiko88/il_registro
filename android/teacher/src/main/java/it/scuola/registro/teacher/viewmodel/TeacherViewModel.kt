@@ -10,6 +10,7 @@ import it.scuola.registro.teacher.network.TeacherApiService
 class TeacherViewModel(
     private val apiService: TeacherApiService = HttpTeacherApiService()
 ) {
+    @Volatile private var sessionGeneration: Long = 0L
     var activeSession: ClassSession? = null
         private set
 
@@ -31,10 +32,23 @@ class TeacherViewModel(
     var errorMessage: String? = null
         private set
 
+    fun clearSession() {
+        sessionGeneration++
+        activeSession = null
+        currentSession = null
+        rollCallList.clear()
+        gradesList.clear()
+        deferredResolutions.clear()
+        isLoading = false
+        errorMessage = null
+    }
+
     suspend fun loadFromDatabase(token: String): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         val result = apiService.getClasses(token)
+            if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             val classes = result.getOrNull() ?: emptyList()
@@ -50,9 +64,11 @@ class TeacherViewModel(
     }
 
     suspend fun signLessonViaApi(token: String, classId: String, topic: String): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         val result = apiService.signLesson(token, classId, topic)
+            if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             activeSession = result.getOrNull()
@@ -65,9 +81,11 @@ class TeacherViewModel(
     }
 
     suspend fun submitRollCallViaApi(token: String, classId: String, records: List<StudentRollCall>): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         val result = apiService.submitRollCall(token, classId, records)
+            if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             true
@@ -78,9 +96,11 @@ class TeacherViewModel(
     }
 
     suspend fun submitGradeViaApi(token: String, proposal: GradeProposal): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         val result = apiService.submitGrade(token, proposal)
+            if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             gradesList.add(proposal)

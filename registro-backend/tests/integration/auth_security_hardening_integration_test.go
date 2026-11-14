@@ -26,10 +26,12 @@ type mockUserRepoForSecurityIntegration struct {
 }
 
 func (m *mockUserRepoForSecurityIntegration) GetByID(ctx context.Context, id string) (*users.User, error) {
+	schoolID := "school-1"
 	return &users.User{
 		ID:       id,
 		Email:    "security-test@school.it",
 		Role:     "teacher",
+		SchoolID: &schoolID,
 		IsActive: true,
 	}, nil
 }

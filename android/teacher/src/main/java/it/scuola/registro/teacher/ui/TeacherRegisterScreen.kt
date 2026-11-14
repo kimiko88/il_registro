@@ -50,7 +50,10 @@ fun TeacherRegisterScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onLogout) {
+                    IconButton(onClick = {
+                        viewModel.clearSession()
+                        onLogout()
+                    }) {
                         Icon(Icons.Default.Logout, contentDescription = "Esci", tint = Color.White)
                     }
                 },

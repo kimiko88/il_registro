@@ -1,5 +1,7 @@
 package it.scuola.registro.parent.network
 
+import android.net.Uri
+import it.scuola.registro.parent.config.AppConfig
 import it.scuola.registro.parent.data.ColloquioBooking
 import it.scuola.registro.parent.data.ParentChild
 import it.scuola.registro.parent.data.PendingAbsence
@@ -22,7 +24,7 @@ interface ParentApiService {
 }
 
 class HttpParentApiService(
-    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
+    private val baseUrl: String = AppConfig.BASE_URL
 ) : ParentApiService {
 
     override suspend fun login(email: String, password: String): Result<String> =
@@ -37,6 +39,7 @@ class HttpParentApiService(
 
                 val url = URL("$baseUrl/auth/login")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                     doOutput = true
@@ -62,11 +65,10 @@ class HttpParentApiService(
                         Result.failure(Exception("Accesso non consentito: questo account non appartiene a un genitore."))
                     } else {
                         val token = json.optString("access_token", json.optString("token"))
-                        Result.success(token)
+                        if (token.isBlank()) Result.failure(Exception("Token di accesso mancante")) else Result.success(token)
                     }
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
+                    Result.failure(Exception("Login fallito (HTTP $responseCode)"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -78,6 +80,7 @@ class HttpParentApiService(
             try {
                 val url = URL("$baseUrl/users/me/children")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -112,8 +115,9 @@ class HttpParentApiService(
     override suspend fun getAbsences(token: String, childId: String): Result<List<PendingAbsence>> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/attendance/child-attendance/$childId")
+                val url = URL("$baseUrl/attendance/child-attendance/${Uri.encode(childId)}")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -153,8 +157,9 @@ class HttpParentApiService(
     override suspend fun submitJustification(token: String, absenceId: String, note: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/attendance/$absenceId/justify")
+                val url = URL("$baseUrl/attendance/${Uri.encode(absenceId)}/justify")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -183,8 +188,9 @@ class HttpParentApiService(
     override suspend fun bookColloquio(token: String, colloquioId: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/colloqui/$colloquioId/book")
+                val url = URL("$baseUrl/colloqui/${Uri.encode(colloquioId)}/book")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -203,4 +209,23 @@ class HttpParentApiService(
                 Result.failure(e)
             }
         }
+}
+
+suspend fun HttpParentApiService.logout(token: String): Result<Unit> = withContext(Dispatchers.IO) {
+    try {
+        val connection = (URL("${AppConfig.BASE_URL}/auth/logout").openConnection() as HttpURLConnection).apply {
+            instanceFollowRedirects = false
+            requestMethod = "POST"
+            setRequestProperty("Authorization", "Bearer $token")
+            setRequestProperty("Accept", "application/json")
+            connectTimeout = 10000
+            readTimeout = 10000
+        }
+        val status = connection.responseCode
+        connection.disconnect()
+        if (status in 200..299) Result.success(Unit)
+        else Result.failure(IllegalStateException("Logout server non riuscito (HTTP $status)"))
+    } catch (error: Exception) {
+        Result.failure(error)
+    }
 }

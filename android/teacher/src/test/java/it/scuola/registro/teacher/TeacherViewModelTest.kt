@@ -57,4 +57,13 @@ class TeacherViewModelTest {
         assertTrue(success)
         assertEquals(1, viewModel.deferredResolutions.size)
     }
+    @Test
+    fun clearSession_removesPersonalData() {
+        viewModel.clearSession()
+        assertEquals(null, viewModel.activeSession)
+        assertEquals(null, viewModel.currentSession)
+        assertTrue(viewModel.rollCallList.isEmpty())
+        assertTrue(viewModel.gradesList.isEmpty())
+        assertTrue(viewModel.deferredResolutions.isEmpty())
+    }
 }

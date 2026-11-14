@@ -1,8 +1,10 @@
 package config
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 
@@ -22,8 +24,9 @@ type Config struct {
 }
 
 type RedisConfig struct {
-	Host string
-	Port string
+	Host     string
+	Port     string
+	Password string
 }
 
 type ElearningConfig struct {
@@ -102,6 +105,89 @@ func LoadConfig() (*Config, error) {
 	viper.SetDefault("REDIS_PORT", "6379")
 	viper.SetDefault("SUPABASE_STORAGE_BUCKET", "documents")
 
+	// Cryptographic helpers consume process environment directly. Mirror the
+	// effective Viper values (including .env-file values and defaults) so the
+	// values validated below are exactly the values used for encryption and
+	// password hashing at runtime.
+	for _, key := range []string{
+		"SERVER_MODE", "APP_ENV", "GIN_MODE", "ENCRYPTION_KEY", "PEPPER_SECRET",
+		"ALLOW_LEGACY_ENCRYPTION_KEY", "ALLOW_LEGACY_PASSWORD_PEPPER",
+	} {
+		if value := viper.GetString(key); value != "" {
+			if err := os.Setenv(key, value); err != nil {
+				return nil, fmt.Errorf("failed to apply %s to process environment: %w", key, err)
+			}
+		}
+	}
+
+	// Production must never start with public/default cryptographic material.
+	isProduction := strings.EqualFold(viper.GetString("SERVER_MODE"), "release") ||
+		strings.EqualFold(viper.GetString("APP_ENV"), "production") ||
+		strings.EqualFold(viper.GetString("GIN_MODE"), "release")
+	if isProduction {
+		dbPassword := strings.TrimSpace(viper.GetString("DB_PASSWORD"))
+		if len(dbPassword) < 24 || strings.HasPrefix(strings.ToUpper(dbPassword), "CAMBIA") || strings.HasPrefix(strings.ToUpper(dbPassword), "INSERISCI") {
+			return nil, fmt.Errorf("DB_PASSWORD must be a generated secret of at least 24 characters in production")
+		}
+		redisPassword := strings.TrimSpace(viper.GetString("REDIS_PASSWORD"))
+		redisURL := strings.TrimSpace(viper.GetString("REDIS_URL"))
+		if redisURL != "" {
+			parsedRedisURL, parseErr := url.Parse(redisURL)
+			if parseErr != nil || (parsedRedisURL.Scheme != "redis" && parsedRedisURL.Scheme != "rediss") {
+				return nil, fmt.Errorf("REDIS_URL must be a valid redis:// or rediss:// URL")
+			}
+			if parsedRedisURL.User != nil {
+				if urlPassword, hasPassword := parsedRedisURL.User.Password(); hasPassword && urlPassword != "" {
+					redisPassword = urlPassword
+				}
+			}
+		}
+		if len(redisPassword) < 32 || strings.HasPrefix(strings.ToUpper(redisPassword), "CAMBIA") || strings.HasPrefix(strings.ToUpper(redisPassword), "INSERISCI") {
+			return nil, fmt.Errorf("redis authentication is required in production; configure redis_password or a password in redis_url (at least 32 characters)")
+		}
+		if strings.TrimSpace(viper.GetString("ALLOWED_ORIGINS")) == "" {
+			return nil, fmt.Errorf("ALLOWED_ORIGINS must be configured in production")
+		}
+		key := strings.TrimSpace(viper.GetString("ENCRYPTION_KEY"))
+		validEncryptionKey := false
+		if decoded, err := hex.DecodeString(key); err == nil && len(decoded) == 32 {
+			validEncryptionKey = true
+		} else if len(key) == 32 {
+			validEncryptionKey = true
+		}
+		if !validEncryptionKey {
+			return nil, fmt.Errorf("ENCRYPTION_KEY is required in release mode (32 raw bytes or 64 hex characters)")
+		}
+		pepper := strings.TrimSpace(viper.GetString("PEPPER_SECRET"))
+		if len(pepper) < 32 || strings.HasPrefix(strings.ToUpper(pepper), "INSERISCI") || pepper == "default_pepper_secret_registrov2" {
+			return nil, fmt.Errorf("PEPPER_SECRET must be a generated secret of at least 32 characters in production")
+		}
+		jwtSecret := strings.TrimSpace(viper.GetString("JWT_SECRET"))
+		if len(jwtSecret) < 64 || strings.HasPrefix(strings.ToUpper(jwtSecret), "INSERISCI") {
+			return nil, fmt.Errorf("JWT_SECRET must be a generated secret of at least 64 characters in production")
+		}
+	}
+
+	// Crypto helpers read process environment directly. Promote values loaded
+	// from .env only after validating them, so .env deployments work as intended.
+	for _, name := range []string{"ENCRYPTION_KEY", "PEPPER_SECRET", "ALLOW_LEGACY_ENCRYPTION_KEY", "ALLOW_LEGACY_PASSWORD_PEPPER", "ALLOWED_ORIGINS"} {
+		if value := viper.GetString(name); value != "" && os.Getenv(name) == "" {
+			if err := os.Setenv(name, value); err != nil {
+				return nil, fmt.Errorf("failed to initialize %s: %w", name, err)
+			}
+		}
+	}
+
+	redisPasswordConfig := strings.TrimSpace(viper.GetString("REDIS_PASSWORD"))
+	if rawRedisURL := strings.TrimSpace(viper.GetString("REDIS_URL")); rawRedisURL != "" {
+		if parsedRedisURL, err := url.Parse(rawRedisURL); err == nil && parsedRedisURL.User != nil {
+			if password, hasPassword := parsedRedisURL.User.Password(); hasPassword && password != "" {
+				// Keep the worker/client password aligned with the authenticated URL.
+				redisPasswordConfig = password
+			}
+		}
+	}
+
 	config := &Config{
 		Server: ServerConfig{
 			Port: viper.GetString("SERVER_PORT"),
@@ -116,8 +202,9 @@ func LoadConfig() (*Config, error) {
 			SSLMode:  viper.GetString("DB_SSLMODE"),
 		},
 		Redis: RedisConfig{
-			Host: viper.GetString("REDIS_HOST"),
-			Port: viper.GetString("REDIS_PORT"),
+			Host:     viper.GetString("REDIS_HOST"),
+			Port:     viper.GetString("REDIS_PORT"),
+			Password: redisPasswordConfig,
 		},
 
 		JWT: JWTConfig{
@@ -164,15 +251,41 @@ func LoadConfig() (*Config, error) {
 // RedisURL resolves the Redis connection string, preferring REDIS_URL if set,
 // or constructing redis://host:port from the host and port config.
 func (c *Config) RedisURL() string {
-	if url := os.Getenv("REDIS_URL"); url != "" {
-		return url
+	if redisURL := viper.GetString("REDIS_URL"); redisURL != "" {
+		return c.withRedisPassword(redisURL)
+	}
+	if redisURL := os.Getenv("REDIS_URL"); redisURL != "" {
+		return c.withRedisPassword(redisURL)
 	}
 	if c.Redis.Host != "" {
 		port := c.Redis.Port
 		if port == "" {
 			port = "6379"
 		}
+		if c.Redis.Password != "" {
+			return (&url.URL{Scheme: "redis", Host: fmt.Sprintf("%s:%s", c.Redis.Host, port), User: url.UserPassword("", c.Redis.Password)}).String()
+		}
 		return fmt.Sprintf("redis://%s:%s", c.Redis.Host, port)
 	}
 	return ""
+}
+
+func (c *Config) withRedisPassword(redisURL string) string {
+	if c.Redis.Password == "" {
+		return redisURL
+	}
+	parsed, err := url.Parse(redisURL)
+	if err != nil {
+		return redisURL
+	}
+	username := ""
+	if parsed.User != nil {
+		username = parsed.User.Username()
+	}
+	if parsed.User == nil {
+		parsed.User = url.UserPassword(username, c.Redis.Password)
+	} else if _, hasPassword := parsed.User.Password(); !hasPassword {
+		parsed.User = url.UserPassword(username, c.Redis.Password)
+	}
+	return parsed.String()
 }

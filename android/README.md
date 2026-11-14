@@ -72,6 +72,8 @@ var WS_URL: String = "ws://10.0.2.2:8080/api/v1/ws"
 
 ---
 
+> **Sicurezza rete:** le build **release** rifiutano traffico HTTP in chiaro e accettano solo endpoint HTTPS. Gli endpoint HTTP locali (ad esempio `http://10.0.2.2:8080/api/v1`) sono abilitati esclusivamente nelle build **debug**. Gli URL distribuiti via MDM devono usare HTTPS; gli URL non sicuri vengono ignorati.
+
 ## 🌍 Localizzazione (11 Lingue)
 Tutti i moduli contengono risorse tradotte in:
 Italiano (`values`), Inglese (`values-en`), Spagnolo (`values-es`), Francese (`values-fr`), Tedesco (`values-de`), Rumeno (`values-ro`), Albanese (`values-sq`), Arabo (`values-ar` con supporto RTL), Cinese (`values-zh`), Ucraino (`values-uk`), Russo (`values-ru`).

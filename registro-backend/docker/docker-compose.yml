@@ -1,80 +1,95 @@
-version: '3.8'
-
 services:
   db:
-    image: postgres:15-alpine
-    restart: always
+    image: postgres:15.10-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_USER: ${DB_USER:?DB_USER must be set}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       POSTGRES_DB: ${DB_NAME:-registro}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks: [backend]
 
   redis:
-    image: redis:7-alpine
-    restart: always
-    ports:
-      - "6379:6379"
+    image: redis:7.4.2-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}"]
+    networks: [backend]
 
   pgbouncer:
-    image: edoburu/pgbouncer:latest
-    restart: always
-    ports:
-      - "6432:6432"
+    image: edoburu/pgbouncer:1.23.1
+    restart: unless-stopped
     environment:
       DB_HOST: db
       DB_PORT: 5432
-      DB_USER: ${DB_USER:-user}
-      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_USER: ${DB_USER:?DB_USER must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       DB_NAME: ${DB_NAME:-registro}
       LISTEN_PORT: 6432
+      AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
-      MAX_CLIENT_CONN: 1000
+      MAX_CLIENT_CONN: 300
       DEFAULT_POOL_SIZE: 20
-    depends_on:
-      - db
+    depends_on: [db]
+    networks: [backend]
 
   api:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.prod
+    restart: unless-stopped
     ports:
       - "${SERVER_PORT:-8080}:8080"
-    volumes:
-      - ..:/app
-    depends_on:
-      - db
-      - pgbouncer
-      - redis
+    depends_on: [db, pgbouncer, redis]
     environment:
+      SERVER_MODE: ${SERVER_MODE:-release}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?ALLOWED_ORIGINS must be set}
       DB_HOST: pgbouncer
       DB_PORT: 6432
-      DB_USER: ${DB_USER:-user}
-      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_USER: ${DB_USER:?DB_USER must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       DB_NAME: ${DB_NAME:-registro}
       DB_SSLMODE: disable
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      SUPABASE_URL: ${SUPABASE_URL}
-      SUPABASE_KEY: ${SUPABASE_KEY}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set}
+      PEPPER_SECRET: ${PEPPER_SECRET:?PEPPER_SECRET must be set}
+      ALLOW_LEGACY_ENCRYPTION_KEY: ${ALLOW_LEGACY_ENCRYPTION_KEY:-false}
+      ALLOW_LEGACY_PASSWORD_PEPPER: ${ALLOW_LEGACY_PASSWORD_PEPPER:?Set true only during legacy password migration}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_KEY: ${SUPABASE_KEY:-}
+    networks: [backend]
 
   pdf-worker:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
-    command: ["./pdf-worker.exe"]
-    depends_on:
-      - db
-      - redis
+      dockerfile: docker/Dockerfile.prod
+    command: ["./pdf-worker"]
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    depends_on: [db, pgbouncer, redis]
     environment:
       DB_HOST: pgbouncer
       DB_PORT: 6432
+      DB_USER: ${DB_USER:?DB_USER must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      DB_NAME: ${DB_NAME:-registro}
+      DB_SSLMODE: disable
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD must be set}
+      SERVER_MODE: ${SERVER_MODE:-release}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY must be set}
+      PEPPER_SECRET: ${PEPPER_SECRET:?PEPPER_SECRET must be set}
+      ALLOW_LEGACY_ENCRYPTION_KEY: ${ALLOW_LEGACY_ENCRYPTION_KEY:-false}
+    networks: [backend]
+
+networks:
+  backend:
+    driver: bridge
 
 volumes:
   postgres_data:
-

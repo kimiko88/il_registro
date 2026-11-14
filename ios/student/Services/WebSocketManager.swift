@@ -6,6 +6,10 @@ public protocol WebSocketDelegate: AnyObject {
     func webSocketDidDisconnect()
 }
 
+/**
+ * Placeholder until a real authenticated WSS transport is implemented.
+ * Never report a successful connection or deliver synthetic messages.
+ */
 public class WebSocketManager {
     public static let shared = WebSocketManager()
     public weak var delegate: WebSocketDelegate?
@@ -14,14 +18,12 @@ public class WebSocketManager {
     public init() {}
 
     public func connect(url: URL, token: String) {
-        guard !token.isEmpty else { return }
-        isConnected = true
-        delegate?.webSocketDidConnect()
+        isConnected = false
+        delegate?.webSocketDidDisconnect()
     }
 
     public func simulateMessage(_ message: String) {
-        guard isConnected else { return }
-        delegate?.webSocketDidReceiveMessage(message)
+        // No network transport exists; synthetic messages are deliberately disabled.
     }
 
     public func disconnect() {

@@ -93,22 +93,32 @@ func TestWSTicketStore_OneShotConsumption(t *testing.T) {
 	assert.False(t, ok2, "second consume of same ticket should fail")
 }
 
-// TestWSTicketStore_InvalidRedisURL_FallsBackToMemory verifies that an invalid Redis URL
-// falls back to in-memory store and everything still works.
-func TestWSTicketStore_InvalidRedisURL_FallsBackToMemory(t *testing.T) {
+// TestWSTicketStore_InvalidRedisURL_FailsClosed verifies configured Redis errors never fall back to local memory.
+func TestWSTicketStore_InvalidRedisURL_FailsClosed(t *testing.T) {
 	store := NewStore("not-a-valid-url://???")
 	require.NotNil(t, store)
 
-	ticket, err := store.Issue("user-fallback", "fallback@test.it", "admin", "school-99")
-	require.NoError(t, err)
-	require.NotEmpty(t, ticket)
+	_, err := store.Issue("user-fallback", "fallback@test.it", "admin", "school-99")
+	require.Error(t, err)
 
-	uid, email, role, schoolID, ok := store.Consume(ticket)
+	_, _, _, _, ok := store.Consume("any-ticket")
+	assert.False(t, ok)
+	assert.Nil(t, store.tickets, "configured Redis failure must not initialise a local ticket map")
+}
+
+func TestWSTicketStore_PreservesJWTRevocationMetadata(t *testing.T) {
+	store := NewStore()
+	issuedAt := time.Now().UTC().Truncate(time.Second)
+	ticket, err := store.Issue("user-1", "a@test.it", "teacher", "school-1", TicketSecurity{
+		JTI:      "jwt-id-123",
+		IssuedAt: issuedAt,
+	})
+	require.NoError(t, err)
+
+	claims, ok := store.ConsumeTicket(ticket)
 	require.True(t, ok)
-	assert.Equal(t, "user-fallback", uid)
-	assert.Equal(t, "fallback@test.it", email)
-	assert.Equal(t, "admin", role)
-	assert.Equal(t, "school-99", schoolID)
+	assert.Equal(t, "jwt-id-123", claims.JTI)
+	assert.Equal(t, issuedAt, claims.IssuedAt)
 }
 
 // TestWSTicketStore_AllFieldsPreserved verifies all claim fields are preserved through issue+consume.

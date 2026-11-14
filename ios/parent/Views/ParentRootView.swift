@@ -9,9 +9,14 @@ public struct ParentRootView: View {
         self._token = State(initialValue: initialToken)
     }
 
+    private func logout() {
+        token = ""
+        isLoggedIn = false
+    }
+
     public var body: some View {
         if isLoggedIn {
-            ParentDashboardView(token: token)
+            ParentDashboardView(token: token, onLogout: logout)
         } else {
             LoginView(isLoggedIn: $isLoggedIn, token: $token)
         }
