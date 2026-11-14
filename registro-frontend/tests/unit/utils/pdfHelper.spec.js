@@ -3,6 +3,7 @@ import { handleAsyncPdfDownload } from '@/utils/pdfHelper'
 import api from '@/services/api'
 
 vi.mock('@/services/api', () => ({
+    getBaseURL: () => '/api/v1',
     default: {
         get: vi.fn()
     }
