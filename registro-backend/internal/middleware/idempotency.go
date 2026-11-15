@@ -2,54 +2,52 @@ package middleware
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-const idempotencyTTL = 10 * time.Minute
-const idempotencyHeader = "Idempotency-Key"
+const (
+	idempotencyTTL = 10 * time.Minute
+	idempotencyHeader = "Idempotency-Key"
+	maxIdempotencyBody = 2 << 20
+	maxIdempotencyEntries = 10000
+)
 
 type cachedResponse struct {
-	status   int
-	body     []byte
-	headers  map[string]string
+	status int
+	body []byte
+	headers map[string]string
 	storedAt time.Time
 }
 
+type idempotencyEntry struct {
+	requestHash string
+	done chan struct{}
+	response *cachedResponse
+}
+
 var (
-	idempotencyCache sync.Map
+	idempotencyMu sync.Mutex
+	idempotencyCache = make(map[string]*idempotencyEntry)
 )
 
-// IdempotencyMiddleware prevents duplicate mutations when a client retries a
-// request whose response was lost in transit (e.g. during an offline-sync replay).
-//
-// On first request with a given Idempotency-Key the response is cached for
-// idempotencyTTL (10 min). Subsequent requests with the same key receive the
-// cached response immediately without re-executing the handler.
-//
-// Only applies to mutating methods: POST, PUT, PATCH.
-// Keys without the header pass through unchanged.
-func IdempotencyMiddleware() gin.HandlerFunc {
-	// Background goroutine to evict expired entries every 5 minutes.
-	go func() {
-		ticker := time.NewTicker(5 * time.Minute)
-		defer ticker.Stop()
-		for range ticker.C {
-			now := time.Now()
-			idempotencyCache.Range(func(key, value any) bool {
-				if cached, ok := value.(cachedResponse); ok {
-					if now.Sub(cached.storedAt) > idempotencyTTL {
-						idempotencyCache.Delete(key)
-					}
-				}
-				return true
-			})
-		}
-	}()
+func idempotencyScopeKey(userID, schoolID, method, path, clientKey string) string {
+	sum := sha256.Sum256([]byte(strings.Join([]string{userID, schoolID, method, path, clientKey}, "\x00")))
+	return hex.EncodeToString(sum[:])
+}
 
+// IdempotencyMiddleware prevents duplicate mutations and prevents response
+// replay across users, schools, routes or payloads. Entries are process-local:
+// multi-replica deployments still need a shared Redis/database idempotency store.
+func IdempotencyMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		method := c.Request.Method
 		if method != http.MethodPost && method != http.MethodPut && method != http.MethodPatch {
@@ -57,51 +55,174 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		key := c.GetHeader(idempotencyHeader)
-		if key == "" {
+		clientKey := strings.TrimSpace(c.GetHeader(idempotencyHeader))
+		if clientKey == "" {
 			c.Next()
 			return
 		}
+		if len(clientKey) > 128 || strings.IndexFunc(clientKey, func(r rune) bool { return r < 0x21 || r == 0x7f }) >= 0 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Idempotency-Key non valido"})
+			return
+		}
 
-		// Check if we have a cached response for this key.
-		if cached, ok := idempotencyCache.Load(key); ok {
-			entry := cached.(cachedResponse)
-			// Re-play original response headers
-			for k, v := range entry.headers {
-				c.Header(k, v)
+		userID := c.GetString("user_id")
+		schoolID := c.GetString("school_id")
+		if userID == "" || schoolID == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "identità non disponibile per l'idempotenza"})
+			return
+		}
+
+		// Hash the complete bounded request body so the same key cannot be
+		// reused with a different mutation. Large uploads bypass this middleware
+		// cache rather than buffering an unbounded payload.
+		body, err := io.ReadAll(io.LimitReader(c.Request.Body, maxIdempotencyBody+1))
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "impossibile leggere il corpo della richiesta"})
+			return
+		}
+		c.Request.Body = io.NopCloser(io.MultiReader(bytes.NewReader(body), c.Request.Body))
+		if len(body) > maxIdempotencyBody {
+			c.Next()
+			return
+		}
+		bodyHash := sha256.Sum256(body)
+		requestHash := hex.EncodeToString(bodyHash[:])
+		path := c.FullPath()
+		if path == "" {
+			path = c.Request.URL.Path
+		}
+		cacheKey := idempotencyScopeKey(userID, schoolID, method, path, clientKey)
+
+		var entry *idempotencyEntry
+		owner := false
+		for {
+			now := time.Now()
+			idempotencyMu.Lock()
+			for key, candidate := range idempotencyCache {
+				if candidate.response != nil && now.Sub(candidate.response.storedAt) > idempotencyTTL {
+					delete(idempotencyCache, key)
+				}
+			}
+
+			existing := idempotencyCache[cacheKey]
+			if existing == nil {
+				if len(idempotencyCache) >= maxIdempotencyEntries {
+					idempotencyMu.Unlock()
+					c.Next()
+					return
+				}
+				entry = &idempotencyEntry{requestHash: requestHash, done: make(chan struct{})}
+				idempotencyCache[cacheKey] = entry
+				owner = true
+				idempotencyMu.Unlock()
+				break
+			}
+			if existing.requestHash != requestHash {
+				idempotencyMu.Unlock()
+				c.AbortWithStatusJSON(http.StatusConflict, gin.H{"error": "Idempotency-Key già utilizzata con un payload differente"})
+				return
+			}
+			done := existing.done
+			idempotencyMu.Unlock()
+
+			select {
+			case <-done:
+			case <-c.Request.Context().Done():
+				c.Abort()
+				return
+			}
+
+			idempotencyMu.Lock()
+			response := existing.response
+			if response == nil {
+				if idempotencyCache[cacheKey] == existing {
+					delete(idempotencyCache, cacheKey)
+				}
+				idempotencyMu.Unlock()
+				continue
+			}
+			if time.Since(response.storedAt) > idempotencyTTL {
+				if idempotencyCache[cacheKey] == existing {
+					delete(idempotencyCache, cacheKey)
+				}
+				idempotencyMu.Unlock()
+				continue
+			}
+			copyResponse := cachedResponse{
+				status: response.status,
+				body: append([]byte(nil), response.body...),
+				headers: make(map[string]string, len(response.headers)),
+				storedAt: response.storedAt,
+			}
+			for key, value := range response.headers {
+				copyResponse.headers[key] = value
+			}
+			idempotencyMu.Unlock()
+
+			for key, value := range copyResponse.headers {
+				c.Header(key, value)
 			}
 			c.Header("X-Idempotency-Replayed", "true")
-			c.Data(entry.status, "application/json", entry.body)
+			c.Data(copyResponse.status, "application/json", copyResponse.body)
 			c.Abort()
 			return
 		}
 
-		// Intercept the response writer so we can cache it.
-		rw := &responseWriter{ResponseWriter: c.Writer, body: &bytes.Buffer{}}
-		c.Writer = rw
+		if !owner {
+			return
+		}
+		writer := &responseWriter{ResponseWriter: c.Writer, body: &bytes.Buffer{}}
+		c.Writer = writer
+		completed := false
+		defer func() {
+			if completed {
+				return
+			}
+			idempotencyMu.Lock()
+			if idempotencyCache[cacheKey] == entry {
+				delete(idempotencyCache, cacheKey)
+			}
+			close(entry.done)
+			idempotencyMu.Unlock()
+		}()
 
 		c.Next()
+		completed = true
 
-		// Cache the response.
-		headers := make(map[string]string)
-		for k, vals := range rw.Header() {
-			if len(vals) > 0 {
-				headers[k] = vals[0]
+		status := writer.status
+		if status == 0 {
+			status = http.StatusOK
+		}
+		var response *cachedResponse
+		if status >= 200 && status < 500 {
+			headers := make(map[string]string)
+			for key, values := range writer.Header() {
+				if len(values) > 0 {
+					headers[key] = values[0]
+				}
+			}
+			response = &cachedResponse{
+				status: status,
+				body: append([]byte(nil), writer.body.Bytes()...),
+				headers: headers,
+				storedAt: time.Now(),
 			}
 		}
-		idempotencyCache.Store(key, cachedResponse{
-			status:   rw.status,
-			body:     rw.body.Bytes(),
-			headers:  headers,
-			storedAt: time.Now(),
-		})
+
+		idempotencyMu.Lock()
+		entry.response = response
+		if response == nil && idempotencyCache[cacheKey] == entry {
+			delete(idempotencyCache, cacheKey)
+		}
+		close(entry.done)
+		idempotencyMu.Unlock()
 	}
 }
 
-// responseWriter wraps gin.ResponseWriter to capture body and status code.
+// responseWriter captures the response body without changing normal Gin writes.
 type responseWriter struct {
 	gin.ResponseWriter
-	body   *bytes.Buffer
+	body *bytes.Buffer
 	status int
 }
 
@@ -111,11 +232,19 @@ func (rw *responseWriter) WriteHeader(status int) {
 }
 
 func (rw *responseWriter) Write(b []byte) (int, error) {
-	rw.body.Write(b)
+	if rw.status == 0 {
+		rw.status = http.StatusOK
+	}
+	_, _ = rw.body.Write(b)
 	return rw.ResponseWriter.Write(b)
 }
 
 func (rw *responseWriter) WriteString(s string) (int, error) {
-	rw.body.WriteString(s)
+	if rw.status == 0 {
+		rw.status = http.StatusOK
+	}
+	_, _ = rw.body.WriteString(s)
 	return rw.ResponseWriter.WriteString(s)
 }
+
+var _ = errors.New
