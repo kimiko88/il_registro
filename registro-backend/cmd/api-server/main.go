@@ -323,10 +323,10 @@ func main() {
 	inventoryH := inventory.NewHandler(inventorySvc)
 
 	privacySvc := privacy.NewService(nil)
-	privacyH := privacy.NewHandler(privacySvc)
+	privacyH := privacy.NewHandler(privacySvc, usersRepo)
 
 	psychologySvc := psychology.NewService(nil)
-	psychologyH := psychology.NewHandler(psychologySvc)
+	psychologyH := psychology.NewHandler(psychologySvc, usersRepo)
 
 	// 8. Setup Router
 	r := gin.New()
