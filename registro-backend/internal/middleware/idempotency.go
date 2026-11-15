@@ -174,7 +174,11 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 			for key, value := range copyResponse.headers {
 				c.Header(key, value)
 			}
-			c.Data(copyResponse.status, "application/json", copyResponse.body)
+			contentType := copyResponse.headers["Content-Type"]
+			if contentType == "" {
+				contentType = "application/json"
+			}
+			c.Data(copyResponse.status, contentType, copyResponse.body)
 			c.Abort()
 			return
 		}

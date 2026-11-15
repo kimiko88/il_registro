@@ -57,7 +57,7 @@ func (h *Handler) SignConsent(c *gin.Context) {
 		return
 	}
 	parent, err := h.userRepo.GetByID(c.Request.Context(), userID)
-	if err != nil || parent.SchoolID == nil || *parent.SchoolID != schoolID {
+	if err != nil || parent == nil || parent.SchoolID == nil || *parent.SchoolID != schoolID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "genitore non associato alla scuola"})
 		return
 	}
@@ -67,7 +67,7 @@ func (h *Handler) SignConsent(c *gin.Context) {
 		return
 	}
 	student, err := h.userRepo.GetByID(c.Request.Context(), req.StudentID)
-	if err != nil || student.SchoolID == nil || *student.SchoolID != schoolID {
+	if err != nil || student == nil || student.SchoolID == nil || *student.SchoolID != schoolID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "studente non associato alla scuola"})
 		return
 	}
@@ -93,12 +93,12 @@ func (h *Handler) BookSession(c *gin.Context) {
 		return
 	}
 	student, err := h.userRepo.GetByID(c.Request.Context(), userID)
-	if err != nil || student.Role != "student" || student.SchoolID == nil || *student.SchoolID != schoolID {
+	if err != nil || student == nil || student.Role != "student" || student.SchoolID == nil || *student.SchoolID != schoolID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "profilo studente non valido"})
 		return
 	}
 	psychologist, err := h.userRepo.GetByID(c.Request.Context(), req.PsychologistID)
-	if err != nil || psychologist.Role != "psychologist" || psychologist.SchoolID == nil || *psychologist.SchoolID != schoolID {
+	if err != nil || psychologist == nil || psychologist.Role != "psychologist" || psychologist.SchoolID == nil || *psychologist.SchoolID != schoolID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "psicologo non assegnato alla scuola"})
 		return
 	}

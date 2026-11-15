@@ -56,7 +56,7 @@ func (h *Handler) authorizeStudent(c *gin.Context, studentID string, allowGuardi
 	role := c.GetString("role")
 	if allowGuardian && role == "parent" {
 		parent, err := h.userRepo.GetByID(c.Request.Context(), c.GetString("user_id"))
-		if err != nil || parent.SchoolID == nil || *parent.SchoolID != c.GetString("school_id") {
+		if err != nil || parent == nil || parent.SchoolID == nil || *parent.SchoolID != c.GetString("school_id") {
 			return false
 		}
 		ok, err := h.userRepo.IsGuardian(c.Request.Context(), c.GetString("user_id"), studentID)
@@ -66,7 +66,7 @@ func (h *Handler) authorizeStudent(c *gin.Context, studentID string, allowGuardi
 		return false
 	}
 	student, err := h.userRepo.GetByID(c.Request.Context(), studentID)
-	if err != nil || student.SchoolID == nil || *student.SchoolID != c.GetString("school_id") {
+	if err != nil || student == nil || student.SchoolID == nil || *student.SchoolID != c.GetString("school_id") {
 		return false
 	}
 	if role == "student" {
