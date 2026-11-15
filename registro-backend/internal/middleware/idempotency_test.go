@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 
@@ -14,12 +15,15 @@ func TestIdempotencyScopesResponsesAndRejectsPayloadReuse(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	var calls atomic.Int32
 	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", c.GetHeader("X-Test-User"))
+		c.Set("school_id", c.GetHeader("X-Test-School"))
+		c.Next()
+	})
 	router.Use(IdempotencyMiddleware())
 	router.POST("/mutate", func(c *gin.Context) {
-		userID := c.GetHeader("X-Test-User")
-		schoolID := c.GetHeader("X-Test-School")
-		c.Set("user_id", userID)
-		c.Set("school_id", schoolID)
+		userID := c.GetString("user_id")
+		schoolID := c.GetString("school_id")
 		calls.Add(1)
 		var body map[string]string
 		_ = c.ShouldBindJSON(&body)

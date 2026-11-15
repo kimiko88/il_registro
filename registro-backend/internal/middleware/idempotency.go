@@ -4,8 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
-	"io"
+		"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -246,5 +245,3 @@ func (rw *responseWriter) WriteString(s string) (int, error) {
 	_, _ = rw.body.WriteString(s)
 	return rw.ResponseWriter.WriteString(s)
 }
-
-var _ = errors.New

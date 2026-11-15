@@ -95,7 +95,7 @@ func ValidateTimesheetEntry(entry *TimesheetVerification) error {
 		return errors.New("la data dell'attività è obbligatoria")
 	}
 	date, err := time.Parse("2006-01-02", entry.ActivityDate)
-	if err != nil || date.After(time.Now().Add(24*time.Hour)) {
+	if err != nil || date.After(time.Now()) {
 		return errors.New("la data dell'attività non è valida o è futura")
 	}
 	if entry.HoursDeclared <= 0 {
