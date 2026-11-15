@@ -62,8 +62,12 @@ func (h *Handler) authorizeStudent(c *gin.Context, studentID string, allowGuardi
 	}
 	if !isSchoolStaffRole(role) && role != "student" { return false }
 	student, err := h.userRepo.GetByID(c.Request.Context(), studentID)
-	if err != nil || student.SchoolID == nil || *student.SchoolID != c.GetString("school_id") { return false }
-	if role == "student" { return student.ID == c.GetString("user_id") }
+	if err != nil || student.SchoolID == nil || *student.SchoolID != c.GetString("school_id") {
+		return false
+	}
+	if role == "student" {
+		return student.ID == c.GetString("user_id")
+	}
 	return true
 }
 

@@ -274,7 +274,9 @@ func (s *Service) UpdateClinicalNotes(ctx context.Context, sessionID, psychologi
 func (s *Service) ListMySessions(ctx context.Context, userID, role string) ([]*PsychologySession, error) {
 	if role == "psychologist" {
 		sessions, err := s.repo.ListSessionsByPsychologist(ctx, userID)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		decrypted := make([]*PsychologySession, 0, len(sessions))
 		for _, sess := range sessions {
 			safe := *sess
