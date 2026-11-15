@@ -199,7 +199,7 @@ class SecretaryViewModel(
         errorMessage = null
         successMessage = null
         val result = apiService.deleteUser(token, id)
-            if (requestGeneration != sessionGeneration) return false
+        if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             val oldUser = usersList.find { it.id == id }
@@ -231,7 +231,7 @@ class SecretaryViewModel(
         errorMessage = null
         successMessage = null
         val result = apiService.generateCertificate(token, studentId, type, academicYear, notes)
-            if (requestGeneration != sessionGeneration) return false
+        if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             val cert = result.getOrNull()
@@ -257,7 +257,7 @@ class SecretaryViewModel(
         errorMessage = null
         successMessage = null
         val result = apiService.changePassword(token, userId, currentPassword, newPassword)
-            if (requestGeneration != sessionGeneration) return Result.failure(IllegalStateException("Sessione non attiva"))
+        if (requestGeneration != sessionGeneration) return Result.failure(IllegalStateException("Sessione non attiva"))
         isLoading = false
         if (result.isSuccess) {
             successMessage = "Password aggiornata con successo"
