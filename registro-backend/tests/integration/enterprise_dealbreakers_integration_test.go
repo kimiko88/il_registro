@@ -38,9 +38,9 @@ func newEnterpriseIntegrationUsers() *mockEnterpriseUsers {
 	return &mockEnterpriseUsers{byID: map[string]*users.User{
 		"student-priv-01": {ID: "student-priv-01", Role: "student", SchoolID: &schoolID, IsActive: true},
 		"minor-student-1": {ID: "minor-student-1", Role: "student", SchoolID: &schoolID, DateOfBirth: &birth, IsActive: true},
-		"parent-1": {ID: "parent-1", Role: "parent", SchoolID: &schoolID, IsActive: true},
-		"parent-2": {ID: "parent-2", Role: "parent", SchoolID: &schoolID, IsActive: true},
-		"psy-01": {ID: "psy-01", Role: "psychologist", SchoolID: &schoolID, IsActive: true},
+		"parent-1":        {ID: "parent-1", Role: "parent", SchoolID: &schoolID, IsActive: true},
+		"parent-2":        {ID: "parent-2", Role: "parent", SchoolID: &schoolID, IsActive: true},
+		"psy-01":          {ID: "psy-01", Role: "psychologist", SchoolID: &schoolID, IsActive: true},
 	}}
 }
 
@@ -873,7 +873,7 @@ func TestIntegration_Psychology_Secrecy_And_Dual_Consent(t *testing.T) {
 
 	// 2. Both parents sign informed consent
 	consentReq := psychology.SaveConsentRequest{
-		StudentID:  "minor-student-1",
+		StudentID: "minor-student-1",
 		SchoolYear: func() string {
 			start := time.Now().Year()
 			if time.Now().Month() < time.September {
