@@ -36,7 +36,9 @@ func (s *Service) RegisterTutor(ctx context.Context, tutor *CompanyTutor) error 
 	}
 
 	token, expiresAt, err := GenerateMagicLinkToken(14 * 24 * time.Hour)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	tutor.TokenExpiresAt = &expiresAt
 	tutor.IsActive = true
 	tutor.AccessToken = hashTutorToken(token)

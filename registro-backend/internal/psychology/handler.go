@@ -17,13 +17,17 @@ type Handler struct {
 
 func NewHandler(s *Service, repos ...users.Repository) *Handler {
 	h := &Handler{service: s}
-	if len(repos) > 0 { h.userRepo = repos[0] }
+	if len(repos) > 0 {
+		h.userRepo = repos[0]
+	}
 	return h
 }
 
 func currentSchoolYear(now time.Time) string {
 	startYear := now.Year()
-	if now.Month() < time.September { startYear-- }
+	if now.Month() < time.September {
+		startYear--
+	}
 	return fmt.Sprintf("%d/%d", startYear, startYear+1)
 }
 
@@ -102,7 +106,9 @@ func (h *Handler) BookSession(c *gin.Context) {
 	if student.DateOfBirth != nil {
 		birth := *student.DateOfBirth
 		age := time.Now().Year() - birth.Year()
-		if time.Now().Before(birth.AddDate(age, 0, 0)) { age-- }
+		if time.Now().Before(birth.AddDate(age, 0, 0)) {
+			age--
+		}
 		isMinor = age < 18
 	}
 	session, err := h.service.BookSession(c.Request.Context(), schoolID, userID, currentSchoolYear(time.Now()), isMinor, req)

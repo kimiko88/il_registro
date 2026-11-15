@@ -44,7 +44,7 @@ func TestValidateEvaluationRatings(t *testing.T) {
 
 func TestVerifyTimesheetHours(t *testing.T) {
 	entry := TimesheetVerification{
-		ActivityDate: time.Now().Add(-24 * time.Hour).Format("2006-01-02"),
+		ActivityDate:  time.Now().Add(-24 * time.Hour).Format("2006-01-02"),
 		HoursDeclared: 8.0,
 		HoursApproved: 8.0,
 	}
@@ -53,7 +53,7 @@ func TestVerifyTimesheetHours(t *testing.T) {
 	}
 
 	invalidEntry := TimesheetVerification{
-		ActivityDate: time.Now().Add(-24 * time.Hour).Format("2006-01-02"),
+		ActivityDate:  time.Now().Add(-24 * time.Hour).Format("2006-01-02"),
 		HoursDeclared: 8.0,
 		HoursApproved: 10.0, // Approved cannot exceed declared
 	}
@@ -62,7 +62,7 @@ func TestVerifyTimesheetHours(t *testing.T) {
 	}
 
 	negativeEntry := TimesheetVerification{
-		ActivityDate: time.Now().Add(-24 * time.Hour).Format("2006-01-02"),
+		ActivityDate:  time.Now().Add(-24 * time.Hour).Format("2006-01-02"),
 		HoursDeclared: -2.0,
 		HoursApproved: 0,
 	}

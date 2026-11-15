@@ -168,7 +168,9 @@ func (s *Service) BookSession(ctx context.Context, schoolID, studentID, schoolYe
 	}
 
 	dur := req.DurationMinutes
-	if dur == 0 { dur = 45 }
+	if dur == 0 {
+		dur = 45
+	}
 	if dur < 15 || dur > 120 {
 		return nil, errors.New("la durata del colloquio deve essere compresa tra 15 e 120 minuti")
 	}
@@ -176,12 +178,18 @@ func (s *Service) BookSession(ctx context.Context, schoolID, studentID, schoolYe
 		return nil, errors.New("l'orario del colloquio deve essere futuro")
 	}
 	existing, err := s.repo.ListSessionsByPsychologist(ctx, req.PsychologistID)
-	if err != nil { return nil, err }
+	if err != nil {
+			return nil, err
+		}
 	for _, booked := range existing {
-		if booked.Status == "annullato" { continue }
+		if booked.Status == "annullato" {
+			continue
+		}
 		startA, endA := slotTime, slotTime.Add(time.Duration(dur)*time.Minute)
 		startB, endB := booked.SlotTime, booked.SlotTime.Add(time.Duration(booked.DurationMinutes)*time.Minute)
-		if startA.Before(endB) && startB.Before(endA) { return nil, ErrSlotAlreadyBooked }
+		if startA.Before(endB) && startB.Before(endA) {
+			return nil, ErrSlotAlreadyBooked
+		}
 	}
 	randBytes := make([]byte, 16)
 	if _, err := rand.Read(randBytes); err != nil {
@@ -248,11 +256,15 @@ func (s *Service) UpdateClinicalNotes(ctx context.Context, sessionID, psychologi
 		return nil, errors.New("le note cliniche superano il limite consentito")
 	}
 	encrypted, err := crypto.EncryptString(notes)
-	if err != nil { return nil, fmt.Errorf("cifratura note cliniche fallita: %w", err) }
+	if err != nil {
+		return nil, fmt.Errorf("cifratura note cliniche fallita: %w", err)
+	}
 	sess.EncryptedClinicalNotes = encrypted
 	sess.ClinicalNotes = ""
 	sess.Status = "svolto"
-	if err := s.repo.SaveSession(ctx, sess); err != nil { return nil, err }
+	if err := s.repo.SaveSession(ctx, sess); err != nil {
+		return nil, err
+	}
 	safeCopy := *sess
 	safeCopy.EncryptedClinicalNotes = ""
 	safeCopy.ClinicalNotes = notes
@@ -276,7 +288,9 @@ func (s *Service) ListMySessions(ctx context.Context, userID, role string) ([]*P
 		}
 		return decrypted, nil
 	}
-	if role != "student" { return nil, ErrProfessionalSecrecyViolation }
+	if role != "student" {
+		return nil, ErrProfessionalSecrecyViolation
+	}
 	// For students, sanitize notes
 	sessions, err := s.repo.ListSessionsByStudent(ctx, userID)
 	if err != nil {

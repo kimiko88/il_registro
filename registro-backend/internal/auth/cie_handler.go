@@ -14,17 +14,17 @@ func NewCIEHandler(_ *Service) *CIEHandler { return &CIEHandler{} }
 
 func (h *CIEHandler) GetCIEInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"name": "Entra con CIE (Carta d'Identità Elettronica)",
-		"entity_id": "https://idserver.servizicie.interno.gov.it/idp/profile/SAML2/POST/SSO",
+		"name":         "Entra con CIE (Carta d'Identità Elettronica)",
+		"entity_id":    "https://idserver.servizicie.interno.gov.it/idp/profile/SAML2/POST/SSO",
 		"sso_endpoint": "https://idserver.servizicie.interno.gov.it/idp/profile/SAML2/POST/SSO",
-		"logo_url": "https://www.cartaidentita.interno.gov.it/assets/images/logo_cie_header.svg",
-		"enabled": false,
+		"logo_url":     "https://www.cartaidentita.interno.gov.it/assets/images/logo_cie_header.svg",
+		"enabled":      false,
 	})
 }
 
 func (h *CIEHandler) InitiateCIELogin(c *gin.Context) {
 	c.JSON(http.StatusServiceUnavailable, ErrorResponse{
-		Error: "cie_temporarily_unavailable",
+		Error:   "cie_temporarily_unavailable",
 		Message: "Autenticazione CIE disabilitata: il flusso SAML non è ancora sottoposto a verifica crittografica completa.",
 	})
 }

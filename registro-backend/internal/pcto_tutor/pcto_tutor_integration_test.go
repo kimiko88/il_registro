@@ -97,7 +97,7 @@ func setupTutorRouter(repo Repository) *gin.Engine {
 	svc := NewService(repo)
 	handler := NewHandler(svc)
 	api := r.Group("/api/v1")
-	handler.RegisterRoutes(api)
+	handler.RegisterRoutes(api, api)
 
 	return r
 }
@@ -120,26 +120,29 @@ func TestPCTOTutorWorkflow(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200 on register tutor, got %d: %s", w.Code, w.Body.String())
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201 on register tutor, got %d: %s", w.Code, w.Body.String())
 	}
 
 	var regRes struct {
-		Tutor CompanyTutor `json:"tutor"`
+		MagicLinkToken string `json:"magic_link_token"`
 	}
 	_ = json.Unmarshal(w.Body.Bytes(), &regRes)
-	token := regRes.Tutor.AccessToken
+	token := regRes.MagicLinkToken
 	if token == "" {
 		t.Fatalf("expected magic link access token")
 	}
 
 	// Step 2: Tutor accesses session with token
-	req = httptest.NewRequest(http.MethodGet, "/api/v1/pcto-tutor/session?token="+token, nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/v1/pcto-tutor/session", nil)
+	req.Header.Set("X-Tutor-Token", token)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 on session fetch, got %d", w.Code)
 	}
+
+	repo.AssignStudent("tutor-mock-1", "proj-001", "student-001")
 
 	// Step 3: Tutor lists assigned students
 	req = httptest.NewRequest(http.MethodGet, "/api/v1/pcto-tutor/students", nil)
