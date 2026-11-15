@@ -79,7 +79,7 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 
 		// Permissions-Policy: restrict powerful browser APIs not needed by the app
 		c.Writer.Header().Set("Permissions-Policy",
-			"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()")
+			"camera=(), microphone=(self), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()")
 
 		// Content Security Policy — strict nonce-based CSP without 'unsafe-inline'
 		nonce, err := generateNonce()
