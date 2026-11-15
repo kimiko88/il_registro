@@ -17,7 +17,8 @@ const (
 	idempotencyTTL = 10 * time.Minute
 	idempotencyHeader = "Idempotency-Key"
 	maxIdempotencyBody = 2 << 20
-	maxIdempotencyEntries = 10000
+	maxIdempotencyResponse = 64 << 10
+	maxIdempotencyEntries = 1000
 )
 
 type cachedResponse struct {
@@ -25,6 +26,7 @@ type cachedResponse struct {
 	body []byte
 	headers map[string]string
 	storedAt time.Time
+	replayable bool
 }
 
 type idempotencyEntry struct {
@@ -90,6 +92,9 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 		if path == "" {
 			path = c.Request.URL.Path
 		}
+		if rawQuery := c.Request.URL.RawQuery; rawQuery != "" {
+			path += "?" + rawQuery
+		}
 		cacheKey := idempotencyScopeKey(userID, schoolID, method, path, clientKey)
 
 		var entry *idempotencyEntry
@@ -107,7 +112,7 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 			if existing == nil {
 				if len(idempotencyCache) >= maxIdempotencyEntries {
 					idempotencyMu.Unlock()
-					c.Next()
+					c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "servizio temporaneamente occupato: cache di idempotenza piena"})
 					return
 				}
 				entry = &idempotencyEntry{requestHash: requestHash, done: make(chan struct{})}
@@ -152,16 +157,23 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 				body: append([]byte(nil), response.body...),
 				headers: make(map[string]string, len(response.headers)),
 				storedAt: response.storedAt,
+				replayable: response.replayable,
 			}
 			for key, value := range response.headers {
 				copyResponse.headers[key] = value
 			}
 			idempotencyMu.Unlock()
 
+			c.Header("X-Idempotency-Replayed", "true")
+			if !copyResponse.replayable {
+				c.AbortWithStatusJSON(http.StatusConflict, gin.H{
+					"error": "operazione già completata; la risposta supera il limite di replay, ricaricare la risorsa prima di riprovare",
+				})
+				return
+			}
 			for key, value := range copyResponse.headers {
 				c.Header(key, value)
 			}
-			c.Header("X-Idempotency-Replayed", "true")
 			c.Data(copyResponse.status, "application/json", copyResponse.body)
 			c.Abort()
 			return
@@ -200,11 +212,17 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 					headers[key] = values[0]
 				}
 			}
+			body := writer.body.Bytes()
+			replayable := len(body) <= maxIdempotencyResponse
+			if !replayable {
+				body = nil
+			}
 			response = &cachedResponse{
 				status: status,
-				body: append([]byte(nil), writer.body.Bytes()...),
+				body: append([]byte(nil), body...),
 				headers: headers,
 				storedAt: time.Now(),
+				replayable: replayable,
 			}
 		}
 

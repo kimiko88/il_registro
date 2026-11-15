@@ -144,8 +144,6 @@ func TestPCTOTutorWorkflow(t *testing.T) {
 
 	repo.AssignStudent("tutor-mock-1", "proj-001", "student-001")
 
-	repo.AssignStudent("tutor-mock-1", "proj-001", "student-001")
-
 	// Step 3: Tutor lists assigned students
 	req = httptest.NewRequest(http.MethodGet, "/api/v1/pcto-tutor/students", nil)
 	req.Header.Set("X-Tutor-Token", token)
