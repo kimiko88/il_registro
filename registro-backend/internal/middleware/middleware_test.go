@@ -196,6 +196,7 @@ func TestCORSMiddleware_HeaderValues(t *testing.T) {
 	assert.Contains(t, allowedHeaders, "Authorization")
 	assert.Contains(t, allowedHeaders, "Content-Type")
 	assert.Contains(t, allowedHeaders, "X-CSRF-Token")
+	assert.Contains(t, allowedHeaders, "X-Tutor-Token")
 
 	allowedMethods := headers.Get("Access-Control-Allow-Methods")
 	assert.Contains(t, allowedMethods, "GET")

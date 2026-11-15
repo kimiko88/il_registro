@@ -72,7 +72,7 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		}
 
 		// Referrer Policy
-		c.Writer.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		c.Writer.Header().Set("Referrer-Policy", "no-referrer")
 
 		// X-XSS-Protection (legacy IE/Edge compatibility)
 		c.Writer.Header().Set("X-XSS-Protection", "1; mode=block")
