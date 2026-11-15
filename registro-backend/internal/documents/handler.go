@@ -1,8 +1,8 @@
 package documents
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -103,25 +103,29 @@ func (h *Handler) UploadFile(c *gin.Context) {
 	}
 	defer func() { _ = file.Close() }()
 
-	// Validate size + real MIME type via magic bytes
-	if err := upload.ValidateUpload(file, header); err != nil {
+	// Validate the real MIME and strip privacy-invasive image metadata before
+	// sending bytes to storage. Do not trust Content-Type or the filename.
+	sanitizedBytes, detectedMIME, err := upload.ValidateAndSanitize(file, header)
+	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
-	}
-
-	// Rewind file reader after validation
-	if seeker, ok := file.(io.Seeker); ok {
-		_, _ = seeker.Seek(0, io.SeekStart)
 	}
 
 	// Generate a unique safe storage key using UUID and pure sanitized extension
 	cleanFilename := filepath.Base(header.Filename)
 	ext := strings.ToLower(filepath.Ext(cleanFilename))
-	allowedExts := map[string]bool{
-		".pdf": true, ".docx": true, ".doc": true, ".xlsx": true, ".xls": true,
-		".txt": true, ".jpg": true, ".jpeg": true, ".png": true, ".csv": true,
+	allowedExts := map[string]map[string]bool{
+		".pdf":  {"application/pdf": true},
+		".docx": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true},
+		".xlsx": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true},
+		".xls":  {"application/vnd.ms-excel": true},
+		".txt":  {"text/plain": true},
+		".csv":  {"text/csv": true, "text/plain": true},
+		".jpg":  {"image/jpeg": true},
+		".jpeg": {"image/jpeg": true},
+		".png":  {"image/png": true},
 	}
-	if !allowedExts[ext] {
+	if !allowedExts[ext][detectedMIME] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "estensione file non consentita"})
 		return
 	}
@@ -129,15 +133,7 @@ func (h *Handler) UploadFile(c *gin.Context) {
 
 	var publicURL string
 	if h.uploader != nil {
-		detectedMIME, errMIME := upload.DetectMIME(file)
-		if errMIME != nil {
-			detectedMIME = header.Header.Get("Content-Type")
-		}
-		// Rewind file reader again before uploading payload
-		if seeker, ok := file.(io.Seeker); ok {
-			_, _ = seeker.Seek(0, io.SeekStart)
-		}
-		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, detectedMIME, file)
+		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, detectedMIME, bytes.NewReader(sanitizedBytes))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore caricamento storage"})
 			return
@@ -158,7 +154,7 @@ func (h *Handler) UploadFile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":     "File caricato con successo",
 		"filename":    header.Filename,
-		"size_bytes":  header.Size,
+		"size_bytes":  len(sanitizedBytes),
 		"url":         publicURL,
 		"uploaded_by": userID,
 	})
