@@ -156,7 +156,7 @@
 
       <div class="text-caption text-grey-6 text-center q-mt-sm" role="status">
         L'accesso SPID/CIE sarà riattivato dopo l'implementazione della verifica crittografica completa.
-      </div>      
+      </div>
       <div class="text-center q-mt-lg text-caption text-grey-6">
         {{ t('login.noAccount') }} <span class="text-primary text-weight-bold cursor-pointer hover-underline" @click="openContactSecretary">{{ t('login.contactSecretary') }}</span>
       </div>
@@ -281,17 +281,15 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import api from '@/services/api'
-import { getUserDashboard } from '@/utils/roleUtils'
 import { SUPPORTED_LOCALES, applyLocale, normalizeLocale } from '@/utils/locale'
 
 const $q = useQuasar()
 const { locale, t } = useI18n()
-const router = useRouter()
 const email = ref('')
 const password = ref('')
 const passwordInputRef = ref(null)
