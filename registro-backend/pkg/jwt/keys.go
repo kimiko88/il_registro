@@ -125,9 +125,13 @@ func GetOrGenerateKeys(privatePath, publicPath string) (*rsa.PrivateKey, *rsa.Pu
 		if envPub != "" {
 			envPub = strings.ReplaceAll(envPub, "\\n", "\n")
 			pubKey, err := ParsePublicKeyPEM([]byte(envPub))
-			if err == nil {
-				return privKey, pubKey, nil
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to parse RSA_PUBLIC_KEY / JWT_PUBLIC_KEY from env: %w", err)
 			}
+			if pubKey.N.Cmp(privKey.N) != 0 || pubKey.E != privKey.E {
+				return nil, nil, errors.New("RSA public key does not match configured private key")
+			}
+			return privKey, pubKey, nil
 		}
 		// If public key is not explicitly supplied in env, derive public key from private key
 		return privKey, &privKey.PublicKey, nil
@@ -138,9 +142,12 @@ func GetOrGenerateKeys(privatePath, publicPath string) (*rsa.PrivateKey, *rsa.Pu
 		return LoadRSAKeys(privatePath, publicPath)
 	}
 
-	// 3. In production, ephemeral in-memory generated keys are strictly forbidden
-	// as they invalidate existing tokens across server restarts and cluster replicas.
-	if os.Getenv("APP_ENV") == "production" {
+	// Match the production-mode definition used by config.LoadConfig. Release
+	// builds must never generate per-process ephemeral signing keys.
+	isProduction := strings.EqualFold(os.Getenv("APP_ENV"), "production") ||
+		strings.EqualFold(os.Getenv("SERVER_MODE"), "release") ||
+		strings.EqualFold(os.Getenv("GIN_MODE"), "release")
+	if isProduction {
 		return nil, nil, errors.New("security error: RSA_PRIVATE_KEY or JWT_PRIVATE_KEY environment variable is strictly required in production (cannot use ephemeral in-memory keys)")
 	}
 

@@ -63,7 +63,7 @@ class ParentViewModel(
                     children = apiChildren
                     selectedChildId = apiChildren.first().id
                     val absencesResult = apiService.getAbsences(token, selectedChildId)
-            if (requestGeneration != sessionGeneration) return false
+                    if (requestGeneration != sessionGeneration) return false
                     if (absencesResult.isSuccess) {
                         val apiAbsences = absencesResult.getOrNull()
                         if (!apiAbsences.isNullOrEmpty()) {
