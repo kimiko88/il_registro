@@ -51,14 +51,14 @@ func isSchoolStaffRole(role string) bool {
 
 func (h *Handler) authorizeStudent(c *gin.Context, studentID string, allowGuardian bool) bool {
 	if h.userRepo == nil || c.GetString("user_id") == "" || c.GetString("school_id") == "" {
-			return false
-		}
+		return false
+	}
 	role := c.GetString("role")
 	if allowGuardian && role == "parent" {
 		parent, err := h.userRepo.GetByID(c.Request.Context(), c.GetString("user_id"))
 		if err != nil || parent.SchoolID == nil || *parent.SchoolID != c.GetString("school_id") {
-		return false
-	}
+			return false
+		}
 		ok, err := h.userRepo.IsGuardian(c.Request.Context(), c.GetString("user_id"), studentID)
 		return err == nil && ok
 	}
@@ -132,7 +132,9 @@ func (h *Handler) GetClassBadges(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if req.SchoolYear == "" { req.SchoolYear = privacySchoolYear(time.Now()) }
+	if req.SchoolYear == "" {
+		req.SchoolYear = privacySchoolYear(time.Now())
+	}
 	if len(req.StudentIDs) == 0 || len(req.StudentIDs) > 100 || !isSchoolStaffRole(c.GetString("role")) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "accesso o parametri non autorizzati"})
 		return

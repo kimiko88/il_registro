@@ -876,7 +876,9 @@ func TestIntegration_Psychology_Secrecy_And_Dual_Consent(t *testing.T) {
 		StudentID:  "minor-student-1",
 		SchoolYear: func() string {
 		start := time.Now().Year()
-		if time.Now().Month() < time.September { start-- }
+		if time.Now().Month() < time.September {
+			start--
+		}
 		return fmt.Sprintf("%d/%d", start, start+1)
 	}(),
 	}
