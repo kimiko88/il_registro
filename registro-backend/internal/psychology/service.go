@@ -185,8 +185,8 @@ func (s *Service) BookSession(ctx context.Context, schoolID, studentID, schoolYe
 		if booked.Status == "annullato" {
 			continue
 		}
-		startA, endA := slotTime, slotTime.Add(time.Duration(dur) * time.Minute)
-		startB, endB := booked.SlotTime, booked.SlotTime.Add(time.Duration(booked.DurationMinutes) * time.Minute)
+		startA, endA := slotTime, slotTime.Add(time.Duration(dur)*time.Minute)
+		startB, endB := booked.SlotTime, booked.SlotTime.Add(time.Duration(booked.DurationMinutes)*time.Minute)
 		if startA.Before(endB) && startB.Before(endA) {
 			return nil, ErrSlotAlreadyBooked
 		}
