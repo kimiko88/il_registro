@@ -142,7 +142,9 @@ func TestPCTOTutorWorkflow(t *testing.T) {
 		t.Fatalf("expected 200 on session fetch, got %d", w.Code)
 	}
 
-	repo.AssignStudent("tutor-mock-1", "proj-001", "student-001")
+	if err := repo.AssignStudent(context.Background(), "tutor-mock-1", "proj-001", "student-001"); err != nil {
+		t.Fatalf("assign student to tutor: %v", err)
+	}
 
 	// Step 3: Tutor lists assigned students
 	req = httptest.NewRequest(http.MethodGet, "/api/v1/pcto-tutor/students", nil)

@@ -16,6 +16,11 @@ import (
 
 func TestIdempotencyMiddleware_ReplayOnSecondRequest(t *testing.T) {
 	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", "test-user")
+		c.Set("school_id", "test-school")
+		c.Next()
+	})
 	r.Use(IdempotencyMiddleware())
 
 	var callCount int

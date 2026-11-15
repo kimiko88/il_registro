@@ -42,7 +42,7 @@ func (m *mockUserRepoForRevocation) IsActive(ctx context.Context, userID string)
 func TestAuthMiddleware_RevocationCheck(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	priv, pub, err := jwt.GetOrGenerateKeys("", "")
+	priv, pub, err := jwt.GenerateRSAKeys()
 	require.NoError(t, err)
 
 	tm := jwt.NewTokenManager(priv, pub)

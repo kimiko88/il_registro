@@ -43,7 +43,7 @@ func (m *mockUserRepoForSecurityIntegration) IsActive(ctx context.Context, userI
 func TestIntegration_AuthSecurityHardening_RevocationAndProtection(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	priv, pub, err := jwt.GetOrGenerateKeys("", "")
+	priv, pub, err := jwt.GenerateRSAKeys()
 	require.NoError(t, err)
 
 	tm := jwt.NewTokenManager(priv, pub)

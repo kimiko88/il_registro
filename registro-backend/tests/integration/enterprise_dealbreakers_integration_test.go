@@ -20,11 +20,43 @@ import (
 	"registro-backend/internal/psychology"
 	"registro-backend/internal/sidi"
 	"registro-backend/internal/signatures"
+	"registro-backend/internal/users"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+type mockEnterpriseUsers struct {
+	users.Repository
+	byID map[string]*users.User
+}
+
+func newEnterpriseIntegrationUsers() *mockEnterpriseUsers {
+	schoolID := "school-1"
+	birth := time.Date(2010, time.January, 1, 0, 0, 0, 0, time.UTC)
+	return &mockEnterpriseUsers{byID: map[string]*users.User{
+		"student-priv-01": {ID: "student-priv-01", Role: "student", SchoolID: &schoolID, IsActive: true},
+		"minor-student-1": {ID: "minor-student-1", Role: "student", SchoolID: &schoolID, DateOfBirth: &birth, IsActive: true},
+		"parent-1": {ID: "parent-1", Role: "parent", SchoolID: &schoolID, IsActive: true},
+		"parent-2": {ID: "parent-2", Role: "parent", SchoolID: &schoolID, IsActive: true},
+		"psy-01": {ID: "psy-01", Role: "psychologist", SchoolID: &schoolID, IsActive: true},
+	}}
+}
+
+func (m *mockEnterpriseUsers) GetByID(_ context.Context, id string) (*users.User, error) {
+	user, ok := m.byID[id]
+	if !ok {
+		return nil, users.ErrUserNotFound
+	}
+	return user, nil
+}
+
+func (m *mockEnterpriseUsers) IsGuardian(_ context.Context, parentID, studentID string) (bool, error) {
+	_, parentOK := m.byID[parentID]
+	student, studentOK := m.byID[studentID]
+	return parentOK && studentOK && student.Role == "student" && (parentID == "parent-1" || parentID == "parent-2"), nil
+}
 
 // Helper router setup for enterprise dealbreakers integration tests
 func setupEnterpriseIntegrationTestRouter() (
@@ -81,8 +113,9 @@ func setupEnterpriseIntegrationTestRouter() (
 	invH := inventory.NewHandler(invSvc)
 
 	// 8. Privacy
+	enterpriseUsers := newEnterpriseIntegrationUsers()
 	privSvc := privacy.NewService(nil)
-	privH := privacy.NewHandler(privSvc)
+	privH := privacy.NewHandler(privSvc, enterpriseUsers)
 
 	// 9. SIDI
 	sidiSvc := sidi.NewService(nil)
@@ -90,7 +123,7 @@ func setupEnterpriseIntegrationTestRouter() (
 
 	// 10. Psychology
 	psySvc := psychology.NewService(nil)
-	psyH := psychology.NewHandler(psySvc)
+	psyH := psychology.NewHandler(psySvc, enterpriseUsers)
 
 	authMiddleware := func(c *gin.Context) {
 		role := c.GetHeader("X-Role")
@@ -726,6 +759,8 @@ func TestIntegration_Privacy_Treatments_And_Traffic_Light(t *testing.T) {
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("POST", "/api/v1/privacy/consent", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Role", "parent")
+	req.Header.Set("X-User-ID", "parent-1")
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -738,6 +773,8 @@ func TestIntegration_Privacy_Treatments_And_Traffic_Light(t *testing.T) {
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("POST", "/api/v1/privacy/class-badges", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Role", "teacher")
+	req.Header.Set("X-User-ID", "teacher-1")
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -837,7 +874,11 @@ func TestIntegration_Psychology_Secrecy_And_Dual_Consent(t *testing.T) {
 	// 2. Both parents sign informed consent
 	consentReq := psychology.SaveConsentRequest{
 		StudentID:  "minor-student-1",
-		SchoolYear: "2025/2026",
+		SchoolYear: func() string {
+		start := time.Now().Year()
+		if time.Now().Month() < time.September { start-- }
+		return fmt.Sprintf("%d/%d", start, start+1)
+	}(),
 	}
 	body, _ = json.Marshal(consentReq)
 
