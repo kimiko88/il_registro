@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	idempotencyTTL          = 10 * time.Minute
-	idempotencyHeader       = "Idempotency-Key"
-	maxIdempotencyBody      = 2 << 20
-	maxIdempotencyResponse  = 64 << 10
-	maxIdempotencyEntries   = 1000
+	idempotencyTTL         = 10 * time.Minute
+	idempotencyHeader      = "Idempotency-Key"
+	maxIdempotencyBody     = 2 << 20
+	maxIdempotencyResponse = 64 << 10
+	maxIdempotencyEntries  = 1000
 )
 
 type cachedResponse struct {
@@ -243,7 +243,7 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 // responseWriter captures the response body without changing normal Gin writes.
 type responseWriter struct {
 	gin.ResponseWriter
-	body *bytes.Buffer
+	body   *bytes.Buffer
 	status int
 }
 
