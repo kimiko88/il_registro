@@ -15,7 +15,7 @@ type CompanyTutor struct {
 	TutorLastName  string     `json:"tutor_last_name"`
 	Email          string     `json:"email"`
 	Phone          string     `json:"phone,omitempty"`
-	AccessToken    string     `json:"access_token,omitempty"`
+	AccessToken    string     `json:"-"`
 	TokenExpiresAt *time.Time `json:"token_expires_at,omitempty"`
 	IsActive       bool       `json:"is_active"`
 	CreatedAt      time.Time  `json:"created_at"`
@@ -88,6 +88,16 @@ func ValidateEvaluation(eval *CompanyEvaluation) error {
 }
 
 func ValidateTimesheetEntry(entry *TimesheetVerification) error {
+	if entry.HoursDeclared <= 0 || entry.HoursDeclared > 24 {
+		return errors.New("le ore dichiarate devono essere comprese tra 0 e 24")
+	}
+	if entry.ActivityDate == "" {
+		return errors.New("la data dell'attività è obbligatoria")
+	}
+	date, err := time.Parse("2006-01-02", entry.ActivityDate)
+	if err != nil || date.After(time.Now().Add(24*time.Hour)) {
+		return errors.New("la data dell'attività non è valida o è futura")
+	}
 	if entry.HoursDeclared <= 0 {
 		return errors.New("le ore dichiarate devono essere maggiori di zero")
 	}

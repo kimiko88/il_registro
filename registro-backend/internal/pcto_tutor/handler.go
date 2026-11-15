@@ -14,26 +14,21 @@ func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
-	pt := rg.Group("/pcto-tutor")
-	{
-		// Internal admin/secretary endpoint to register tutor and generate link
-		pt.POST("/tutors", h.RegisterTutor)
+func (h *Handler) RegisterRoutes(public, protected *gin.RouterGroup) {
+	// Tutor provisioning is an authenticated school operation.
+	protected.Group("/pcto-tutor").POST("/tutors", h.RegisterTutor)
 
-		// Public endpoints for company tutor using magic link
-		pt.GET("/session", h.GetSession)
-		pt.GET("/students", h.ListAssignedStudents)
-		pt.POST("/timesheets/verify", h.VerifyTimesheet)
-		pt.POST("/evaluations", h.SubmitEvaluation)
-	}
+	// External-company portal: every endpoint requires the one-time-issued,
+	// high-entropy magic token in X-Tutor-Token. Tokens in URLs are rejected.
+	pt := public.Group("/pcto-tutor")
+	pt.GET("/session", h.GetSession)
+	pt.GET("/students", h.ListAssignedStudents)
+	pt.POST("/timesheets/verify", h.VerifyTimesheet)
+	pt.POST("/evaluations", h.SubmitEvaluation)
 }
 
 func (h *Handler) extractTutorToken(c *gin.Context) string {
-	token := c.GetHeader("X-Tutor-Token")
-	if token == "" {
-		token = c.Query("token")
-	}
-	return token
+	return c.GetHeader("X-Tutor-Token")
 }
 
 func (h *Handler) RegisterTutor(c *gin.Context) {
@@ -61,7 +56,8 @@ func (h *Handler) RegisterTutor(c *gin.Context) {
 
 	schoolID := c.GetString("school_id")
 	if schoolID == "" {
-		schoolID = "00000000-0000-0000-0000-000000000001"
+		c.JSON(http.StatusForbidden, gin.H{"error": "scuola non associata all'utente autenticato"})
+		return
 	}
 
 	tutor := &CompanyTutor{
@@ -78,9 +74,14 @@ func (h *Handler) RegisterTutor(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Tutor aziendale registrato e magic link generato",
-		"tutor":   tutor,
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Tutor aziendale registrato. Consegna il token una sola volta tramite un canale sicuro.",
+		"tutor": gin.H{
+			"id": tutor.ID, "school_id": tutor.SchoolID, "company_name": tutor.CompanyName,
+			"tutor_first_name": tutor.TutorFirstName, "tutor_last_name": tutor.TutorLastName,
+			"email": tutor.Email, "token_expires_at": tutor.TokenExpiresAt,
+		},
+		"magic_link_token": tutor.AccessToken,
 	})
 }
 

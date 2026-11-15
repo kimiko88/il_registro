@@ -726,7 +726,7 @@ func main() {
 			pctoTutorRepo := pcto_tutor.NewPostgresRepository(database)
 			pctoTutorSvc := pcto_tutor.NewService(pctoTutorRepo)
 			pctoTutorH := pcto_tutor.NewHandler(pctoTutorSvc)
-			pctoTutorH.RegisterRoutes(api)
+			pctoTutorH.RegisterRoutes(api, protected)
 
 			// Elezioni Organi Collegiali (Urna Digitale & Voto Online Anonimo)
 			electionsRepo := elections.NewPostgresRepository(database)

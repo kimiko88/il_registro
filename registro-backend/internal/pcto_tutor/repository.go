@@ -31,6 +31,7 @@ func (r *postgresRepo) GetTutorByToken(ctx context.Context, token string) (*Comp
 		       COALESCE(phone, ''), access_token, token_expires_at, is_active, created_at, updated_at
 		FROM pcto_company_tutors
 		WHERE access_token = $1 AND is_active = true
+		  AND token_expires_at IS NOT NULL AND token_expires_at > CURRENT_TIMESTAMP
 	`
 	var t CompanyTutor
 	var expiresAt sql.NullTime
@@ -41,19 +42,17 @@ func (r *postgresRepo) GetTutorByToken(ctx context.Context, token string) (*Comp
 	if err != nil {
 		return nil, err
 	}
-	if expiresAt.Valid {
-		t.TokenExpiresAt = &expiresAt.Time
-		if t.TokenExpiresAt.Before(time.Now()) {
-			return nil, errors.New("il link di accesso è scaduto")
-		}
+	if !expiresAt.Valid || !expiresAt.Time.After(time.Now()) {
+		return nil, errors.New("il link di accesso è scaduto o privo di scadenza")
 	}
+	t.TokenExpiresAt = &expiresAt.Time
 	return &t, nil
 }
 
 func (r *postgresRepo) GetTutorByID(ctx context.Context, id string) (*CompanyTutor, error) {
 	query := `
 		SELECT id, school_id, company_name, tutor_first_name, tutor_last_name, email,
-		       COALESCE(phone, ''), COALESCE(access_token, ''), token_expires_at, is_active, created_at, updated_at
+		       COALESCE(phone, ''), ''::text, token_expires_at, is_active, created_at, updated_at
 		FROM pcto_company_tutors
 		WHERE id = $1
 	`
@@ -136,7 +135,12 @@ func (r *postgresRepo) SaveTimesheetVerification(ctx context.Context, entry *Tim
 	query := `
 		INSERT INTO pcto_timesheet_verifications (
 			project_id, student_id, activity_date, hours_declared, hours_approved, tutor_id, tutor_notes
-		) VALUES ($1, $2, $3::date, $4, $5, $6, $7)
+		)
+		SELECT $1, $2, $3::date, $4, $5, $6, $7
+		WHERE EXISTS (
+			SELECT 1 FROM pcto_tutor_assignments
+			WHERE tutor_id = $6 AND project_id = $1 AND student_id = $2
+		)
 		RETURNING id, signed_at;
 	`
 	return r.db.QueryRowContext(ctx, query,
@@ -148,7 +152,12 @@ func (r *postgresRepo) SaveCompanyEvaluation(ctx context.Context, eval *CompanyE
 	query := `
 		INSERT INTO pcto_company_evaluations (
 			tutor_id, student_id, project_id, reliability_level, technical_skills, teamwork_skills, final_feedback
-		) VALUES ($1, $2, $3, $4, $5, $6, $7)
+		)
+		SELECT $1, $2, $3, $4, $5, $6, $7
+		WHERE EXISTS (
+			SELECT 1 FROM pcto_tutor_assignments
+			WHERE tutor_id = $1 AND student_id = $2 AND project_id = $3
+		)
 		ON CONFLICT (tutor_id, student_id, project_id)
 		DO UPDATE SET
 			reliability_level = EXCLUDED.reliability_level,
