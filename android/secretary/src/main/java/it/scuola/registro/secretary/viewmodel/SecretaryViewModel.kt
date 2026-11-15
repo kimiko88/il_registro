@@ -171,7 +171,7 @@ class SecretaryViewModel(
         errorMessage = null
         successMessage = null
         val result = apiService.updateUser(token, id, payload)
-            if (requestGeneration != sessionGeneration) return false
+        if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             val idx = usersList.indexOfFirst { it.id == id }

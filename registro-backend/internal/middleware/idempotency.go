@@ -14,19 +14,19 @@ import (
 )
 
 const (
-	idempotencyTTL           = 10 * time.Minute
-	idempotencyHeader        = "Idempotency-Key"
-	maxIdempotencyBody       = 2 << 20
-	maxIdempotencyResponse   = 64 << 10
-	maxIdempotencyEntries    = 1000
+	idempotencyTTL          = 10 * time.Minute
+	idempotencyHeader       = "Idempotency-Key"
+	maxIdempotencyBody      = 2 << 20
+	maxIdempotencyResponse  = 64 << 10
+	maxIdempotencyEntries   = 1000
 )
 
 type cachedResponse struct {
-	status      int
-	body        []byte
-	headers     map[string]string
-	storedAt    time.Time
-	replayable  bool
+	status     int
+	body       []byte
+	headers    map[string]string
+	storedAt   time.Time
+	replayable bool
 }
 
 type idempotencyEntry struct {

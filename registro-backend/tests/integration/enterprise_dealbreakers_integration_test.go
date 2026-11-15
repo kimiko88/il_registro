@@ -875,12 +875,12 @@ func TestIntegration_Psychology_Secrecy_And_Dual_Consent(t *testing.T) {
 	consentReq := psychology.SaveConsentRequest{
 		StudentID:  "minor-student-1",
 		SchoolYear: func() string {
-		start := time.Now().Year()
-		if time.Now().Month() < time.September {
-			start--
-		}
-		return fmt.Sprintf("%d/%d", start, start+1)
-	}(),
+			start := time.Now().Year()
+			if time.Now().Month() < time.September {
+				start--
+			}
+			return fmt.Sprintf("%d/%d", start, start+1)
+		}(),
 	}
 	body, _ = json.Marshal(consentReq)
 

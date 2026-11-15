@@ -43,7 +43,7 @@ func TestMemoryRevocationStore(t *testing.T) {
 }
 
 func TestTokenManager_ExtractJTI(t *testing.T) {
-	priv, pub, err := GetOrGenerateKeys("", "")
+	priv, pub, err := GenerateRSAKeys()
 	require.NoError(t, err)
 
 	tm := NewTokenManager(priv, pub)

@@ -48,7 +48,7 @@ func (h *SPIDHandler) InitiateSPIDLogin(c *gin.Context) {
 func (h *SPIDHandler) HandleSPIDCallback(c *gin.Context) {
 	// Never trust email/fiscal_code from a request body or unsigned XML.
 	c.JSON(http.StatusServiceUnavailable, ErrorResponse{
-		Error: "spid_temporarily_unavailable",
+		Error:   "spid_temporarily_unavailable",
 		Message: "Callback SPID disabilitato finché la risposta SAML non può essere verificata integralmente.",
 	})
 }

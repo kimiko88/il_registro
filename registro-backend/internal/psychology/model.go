@@ -42,7 +42,7 @@ type PsychologySession struct {
 	AnonymousAlias         string    `json:"anonymous_alias" db:"anonymous_alias"`
 	SlotTime               time.Time `json:"slot_time" db:"slot_time"`
 	DurationMinutes        int       `json:"duration_minutes" db:"duration_minutes"`
-	Status                 string    `json:"status" db:"status"`                 // "prenotato", "svolto", "annullato"
+	Status                 string    `json:"status" db:"status"` // "prenotato", "svolto", "annullato"
 	EncryptedClinicalNotes string    `json:"-" db:"encrypted_clinical_notes"`
 	ClinicalNotes          string    `json:"clinical_notes,omitempty" db:"-"`
 	CreatedAt              time.Time `json:"created_at" db:"created_at"`

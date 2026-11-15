@@ -123,7 +123,7 @@ func TestNewLoginRateLimiter_InvalidURL(t *testing.T) {
 // Existing access tokens are invalid as soon as role or tenant membership changes.
 func TestAuthMiddleware_RejectsStaleRoleClaim(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	priv, pub, err := jwt.GetOrGenerateKeys("", "")
+	priv, pub, err := jwt.GenerateRSAKeys()
 	require.NoError(t, err)
 	tm := jwt.NewTokenManager(priv, pub)
 	token, err := tm.GenerateAccessToken("user-123", "teacher@school.it", "teacher", "school-1")
