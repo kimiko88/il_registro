@@ -48,7 +48,7 @@ class TeacherViewModel(
         isLoading = true
         errorMessage = null
         val result = apiService.getClasses(token)
-            if (requestGeneration != sessionGeneration) return false
+        if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             val classes = result.getOrNull() ?: emptyList()
@@ -68,7 +68,7 @@ class TeacherViewModel(
         isLoading = true
         errorMessage = null
         val result = apiService.signLesson(token, classId, topic)
-            if (requestGeneration != sessionGeneration) return false
+        if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             activeSession = result.getOrNull()
@@ -85,7 +85,7 @@ class TeacherViewModel(
         isLoading = true
         errorMessage = null
         val result = apiService.submitRollCall(token, classId, records)
-            if (requestGeneration != sessionGeneration) return false
+        if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             true
@@ -100,7 +100,7 @@ class TeacherViewModel(
         isLoading = true
         errorMessage = null
         val result = apiService.submitGrade(token, proposal)
-            if (requestGeneration != sessionGeneration) return false
+        if (requestGeneration != sessionGeneration) return false
         isLoading = false
         return if (result.isSuccess) {
             gradesList.add(proposal)
