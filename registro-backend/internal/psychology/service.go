@@ -179,14 +179,14 @@ func (s *Service) BookSession(ctx context.Context, schoolID, studentID, schoolYe
 	}
 	existing, err := s.repo.ListSessionsByPsychologist(ctx, req.PsychologistID)
 	if err != nil {
-			return nil, err
-		}
+		return nil, err
+	}
 	for _, booked := range existing {
 		if booked.Status == "annullato" {
 			continue
 		}
-		startA, endA := slotTime, slotTime.Add(time.Duration(dur)*time.Minute)
-		startB, endB := booked.SlotTime, booked.SlotTime.Add(time.Duration(booked.DurationMinutes)*time.Minute)
+		startA, endA := slotTime, slotTime.Add(time.Duration(dur) * time.Minute)
+		startB, endB := booked.SlotTime, booked.SlotTime.Add(time.Duration(booked.DurationMinutes) * time.Minute)
 		if startA.Before(endB) && startB.Before(endA) {
 			return nil, ErrSlotAlreadyBooked
 		}

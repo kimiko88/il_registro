@@ -67,7 +67,9 @@ func (s *Service) VerifyTimesheet(ctx context.Context, entry *TimesheetVerificat
 	if entry.TutorID == "" || entry.StudentID == "" || entry.ProjectID == "" {
 		return errors.New("tutor_id, student_id e project_id obbligatori")
 	}
-	if err := ValidateTimesheetEntry(entry); err != nil { return err }
+	if err := ValidateTimesheetEntry(entry); err != nil {
+		return err
+	}
 	return s.repo.SaveTimesheetVerification(ctx, entry)
 }
 

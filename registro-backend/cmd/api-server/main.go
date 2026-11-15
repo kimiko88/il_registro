@@ -114,7 +114,6 @@ import (
 	"registro-backend/pkg/wsticket"
 )
 
-
 func memoryBackedEnterpriseFeaturesEnabled(cfg *config.Config) bool {
 	if cfg == nil {
 		return false
@@ -126,7 +125,7 @@ func memoryBackedEnterpriseFeaturesEnabled(cfg *config.Config) bool {
 
 func unavailableMemoryBackedFeature(c *gin.Context) {
 	c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
-		"error": "feature_unavailable",
+		"error":   "feature_unavailable",
 		"message": "Funzionalità temporaneamente disabilitata: il modulo non dispone ancora di persistenza PostgreSQL condivisa in questa configurazione.",
 	})
 }

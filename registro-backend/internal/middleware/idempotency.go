@@ -14,29 +14,29 @@ import (
 )
 
 const (
-	idempotencyTTL = 10 * time.Minute
-	idempotencyHeader = "Idempotency-Key"
-	maxIdempotencyBody = 2 << 20
-	maxIdempotencyResponse = 64 << 10
-	maxIdempotencyEntries = 1000
+	idempotencyTTL           = 10 * time.Minute
+	idempotencyHeader        = "Idempotency-Key"
+	maxIdempotencyBody       = 2 << 20
+	maxIdempotencyResponse   = 64 << 10
+	maxIdempotencyEntries    = 1000
 )
 
 type cachedResponse struct {
-	status int
-	body []byte
-	headers map[string]string
-	storedAt time.Time
-	replayable bool
+	status      int
+	body        []byte
+	headers     map[string]string
+	storedAt    time.Time
+	replayable  bool
 }
 
 type idempotencyEntry struct {
 	requestHash string
-	done chan struct{}
-	response *cachedResponse
+	done        chan struct{}
+	response    *cachedResponse
 }
 
 var (
-	idempotencyMu sync.Mutex
+	idempotencyMu    sync.Mutex
 	idempotencyCache = make(map[string]*idempotencyEntry)
 )
 
@@ -153,10 +153,10 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 				continue
 			}
 			copyResponse := cachedResponse{
-				status: response.status,
-				body: append([]byte(nil), response.body...),
-				headers: make(map[string]string, len(response.headers)),
-				storedAt: response.storedAt,
+				status:     response.status,
+				body:       append([]byte(nil), response.body...),
+				headers:    make(map[string]string, len(response.headers)),
+				storedAt:   response.storedAt,
 				replayable: response.replayable,
 			}
 			for key, value := range response.headers {
@@ -218,10 +218,10 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 				body = nil
 			}
 			response = &cachedResponse{
-				status: status,
-				body: append([]byte(nil), body...),
-				headers: headers,
-				storedAt: time.Now(),
+				status:     status,
+				body:       append([]byte(nil), body...),
+				headers:    headers,
+				storedAt:   time.Now(),
 				replayable: replayable,
 			}
 		}

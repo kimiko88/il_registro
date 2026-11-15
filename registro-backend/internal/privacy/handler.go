@@ -25,7 +25,9 @@ func NewHandler(s *Service, repos ...users.Repository) *Handler {
 
 func privacySchoolYear(now time.Time) string {
 	startYear := now.Year()
-	if now.Month() < time.September { startYear-- }
+	if now.Month() < time.September {
+		startYear--
+	}
 	return fmt.Sprintf("%d/%d", startYear, startYear+1)
 }
 
@@ -60,7 +62,9 @@ func (h *Handler) authorizeStudent(c *gin.Context, studentID string, allowGuardi
 		ok, err := h.userRepo.IsGuardian(c.Request.Context(), c.GetString("user_id"), studentID)
 		return err == nil && ok
 	}
-	if !isSchoolStaffRole(role) && role != "student" { return false }
+	if !isSchoolStaffRole(role) && role != "student" {
+		return false
+	}
 	student, err := h.userRepo.GetByID(c.Request.Context(), studentID)
 	if err != nil || student.SchoolID == nil || *student.SchoolID != c.GetString("school_id") {
 		return false

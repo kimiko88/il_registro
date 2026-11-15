@@ -32,7 +32,7 @@ func (h *CIEHandler) InitiateCIELogin(c *gin.Context) {
 func (h *CIEHandler) HandleCIECallback(c *gin.Context) {
 	// Direct identity fields and unsigned SAML payloads must never create sessions.
 	c.JSON(http.StatusServiceUnavailable, ErrorResponse{
-		Error: "cie_temporarily_unavailable",
+		Error:   "cie_temporarily_unavailable",
 		Message: "Callback CIE disabilitato finché la risposta SAML non può essere verificata integralmente.",
 	})
 }
