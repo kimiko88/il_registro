@@ -536,7 +536,7 @@ func (s *service) AttachFile(ctx context.Context, actorRole, schoolID, docID, fi
 		parsedURL.User != nil || parsedURL.RawQuery != "" || parsedURL.Fragment != "" ||
 		!strings.HasPrefix(parsedURL.Path, expectedPrefix) || objectName == "" ||
 		strings.Contains(objectName, "/") || objectName == "." || objectName == ".." ||
-		strings.ContainsAny(cleanURL, "\\?#\\r\\n\\x00") {
+		strings.ContainsAny(cleanURL, "\\?#\r\n\x00") {
 		return errors.New("fileURL non valida: chiave privata non appartenente alla scuola e al documento")
 	}
 
