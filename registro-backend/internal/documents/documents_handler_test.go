@@ -151,6 +151,14 @@ func (u *MockStorageUploader) UploadFile(ctx context.Context, storagePath, mimeT
 	return args.String(0), args.Error(1)
 }
 
+func (u *MockStorageUploader) DownloadFile(ctx context.Context, storageKey string) (io.ReadCloser, string, int64, error) {
+	args := u.Called(ctx, storageKey)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Get(2).(int64), args.Error(3)
+	}
+	return args.Get(0).(io.ReadCloser), args.String(1), args.Get(2).(int64), args.Error(3)
+}
+
 func (u *MockStorageUploader) DeleteFile(ctx context.Context, storagePath string) error {
 	args := u.Called(ctx, storagePath)
 	return args.Error(0)
