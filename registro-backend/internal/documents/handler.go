@@ -3,10 +3,10 @@ package documents
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
-	"io"
 	"strings"
 
 	"registro-backend/pkg/upload"
@@ -93,6 +93,17 @@ func (h *Handler) UploadFile(c *gin.Context) {
 		return
 	}
 
+	// Bound the full multipart body before parsing form fields or file contents.
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, upload.MaxUploadSize+(1<<10))
+	if err := c.Request.ParseMultipartForm(upload.MaxUploadSize + (1 << 10)); err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "request body too large") {
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "file troppo grande"})
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Impossibile leggere il form"})
+		}
+		return
+	}
+
 	// The file must be attached to an authorized document; otherwise the upload
 	// would create orphaned private objects that no user can retrieve.
 	docID := strings.TrimSpace(c.PostForm("document_id"))
@@ -106,12 +117,6 @@ func (h *Handler) UploadFile(c *gin.Context) {
 	}
 	if _, ok := h.uploader.(upload.PrivateStorageDownloader); !ok {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "private document storage is not configured"})
-		return
-	}
-
-	// Parse multipart form (limits to MaxUploadSize + small overhead for form fields)
-	if err := c.Request.ParseMultipartForm(upload.MaxUploadSize + (1 << 10)); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Impossibile leggere il form: " + err.Error()})
 		return
 	}
 
@@ -213,7 +218,7 @@ func (h *Handler) DownloadFile(c *gin.Context) {
 		return
 	}
 	var storageKey string
-	for _, line := range strings.Split(detail.Content, "\\n") {
+	for _, line := range strings.Split(detail.Content, "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "Attachment: supabase://") {
 			storageKey = strings.TrimSpace(strings.TrimPrefix(line, "Attachment:"))

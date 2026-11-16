@@ -288,6 +288,9 @@ func main() {
 	gradesH := grades.NewHandler(gradesSvc, gradesAnalytics)
 	attendanceH := attendance.NewHandler(attendanceSvc)
 	docsUploader := upload.NewSupabaseUploader(cfg.Supabase.URL, cfg.Supabase.Key, cfg.Supabase.Bucket)
+	if err := docsUploader.VerifyPrivateBucket(context.Background()); err != nil {
+		log.Printf("WARNING: document uploads/downloads disabled until private Supabase storage is verified: %v", err)
+	}
 	docsH := documents.NewHandler(docsSvc, docsUploader)
 	schedH := scheduling.NewHandler(schedSvc)
 

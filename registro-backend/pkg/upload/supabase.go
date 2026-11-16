@@ -2,6 +2,7 @@ package upload
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -33,7 +34,8 @@ type SupabaseUploader struct {
 	URL        string
 	Key        string
 	Bucket     string
-	HTTPClient *http.Client
+	HTTPClient            *http.Client
+	PrivateBucketVerified bool
 }
 
 // NewSupabaseUploader initializes a new SupabaseUploader instance.
@@ -46,11 +48,50 @@ func NewSupabaseUploader(url, key, bucket string) *SupabaseUploader {
 	}
 }
 
+// VerifyPrivateBucket checks the actual Storage bucket configuration before enabling file access.
+// Public buckets bypass object read authorization, so an unverified bucket fails closed.
+func (s *SupabaseUploader) VerifyPrivateBucket(ctx context.Context) error {
+	if err := s.validateConfig(); err != nil {
+		return err
+	}
+	endpoint := fmt.Sprintf("%s/storage/v1/bucket/%s", s.URL, url.PathEscape(s.bucket()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return fmt.Errorf("impossibile creare la richiesta di verifica bucket: %w", err)
+	}
+	s.setAuthHeaders(req)
+	resp, err := s.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("verifica bucket Supabase non riuscita: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("verifica bucket Supabase fallita (status %d)", resp.StatusCode)
+	}
+	var info struct {
+		Public *bool \`json:"public"\`
+	}
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 16<<10)).Decode(&info); err != nil {
+		return fmt.Errorf("risposta verifica bucket non valida: %w", err)
+	}
+	if info.Public == nil {
+		return fmt.Errorf("risposta verifica bucket priva del flag public")
+	}
+	if *info.Public {
+		return fmt.Errorf("il bucket Supabase %q è pubblico: configurarlo come privato", s.bucket())
+	}
+	s.PrivateBucketVerified = true
+	return nil
+}
+
 // UploadFile uploads to a private bucket and returns an opaque storage key.
 // The returned value is not a public URL and cannot be fetched without server authorization.
 func (s *SupabaseUploader) UploadFile(ctx context.Context, storagePath string, contentType string, reader io.Reader) (string, error) {
 	if err := s.validateConfig(); err != nil {
 		return "", err
+	}
+	if !s.PrivateBucketVerified {
+		return "", fmt.Errorf("bucket documenti non verificato come privato")
 	}
 	bucket := s.bucket()
 	if err := validateObjectName(storagePath); err != nil {
@@ -89,6 +130,12 @@ func (s *SupabaseUploader) UploadFile(ctx context.Context, storagePath string, c
 func (s *SupabaseUploader) DownloadFile(ctx context.Context, storageKey string) (io.ReadCloser, string, int64, error) {
 	if err := s.validateConfig(); err != nil {
 		return nil, "", 0, err
+	}
+	if !s.PrivateBucketVerified {
+		return nil, "", 0, fmt.Errorf("bucket documenti non verificato come privato")
+	}
+	if !s.PrivateBucketVerified {
+		return fmt.Errorf("bucket documenti non verificato come privato")
 	}
 	bucket, objectName, err := s.parseStorageKey(storageKey)
 	if err != nil {

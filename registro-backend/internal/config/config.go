@@ -188,6 +188,11 @@ func LoadConfig() (*Config, error) {
 		}
 	}
 
+	supabaseServerKey := strings.TrimSpace(viper.GetString("SUPABASE_SECRET_KEY"))
+	if supabaseServerKey == "" {
+		supabaseServerKey = strings.TrimSpace(viper.GetString("SUPABASE_KEY"))
+	}
+
 	config := &Config{
 		Server: ServerConfig{
 			Port: viper.GetString("SERVER_PORT"),
@@ -212,7 +217,7 @@ func LoadConfig() (*Config, error) {
 		},
 		Supabase: SupabaseConfig{
 			URL:    viper.GetString("SUPABASE_URL"),
-			Key:    viper.GetString("SUPABASE_KEY"),
+			Key:    supabaseServerKey,
 			Bucket: viper.GetString("SUPABASE_STORAGE_BUCKET"),
 		},
 		SPID: SPIDConfig{
