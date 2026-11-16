@@ -22,7 +22,15 @@ func TestSupabaseUploaderRequiresVerifiedPrivateBucket(t *testing.T) {
 	require.ErrorContains(t, err, "non verificato come privato")
 }
 
+func setStorageTestMode(t *testing.T) {
+	t.Helper()
+	t.Setenv("APP_ENV", "test")
+	t.Setenv("SERVER_MODE", "test")
+	t.Setenv("GIN_MODE", "test")
+}
+
 func TestSupabaseUploaderVerifiesPrivateBucketAndUsesOpaqueStorageKeys(t *testing.T) {
+	setStorageTestMode(t)
 	var uploadCalled, downloadCalled bool
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/object/sign/") {
@@ -80,6 +88,7 @@ func TestSupabaseUploaderVerifiesPrivateBucketAndUsesOpaqueStorageKeys(t *testin
 }
 
 func TestSupabaseUploaderRejectsPublicBucket(t *testing.T) {
+	setStorageTestMode(t)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = io.WriteString(w, `{"id":"documents","public":true}`)
@@ -125,6 +134,7 @@ func TestSupabaseUploaderRejectsClientKeys(t *testing.T) {
 }
 
 func TestSupabaseUploaderReverificationFailsClosedWhenBucketBecomesPublic(t *testing.T) {
+	setStorageTestMode(t)
 	isPublic := false
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -147,6 +157,7 @@ func TestSupabaseUploaderReverificationFailsClosedWhenBucketBecomesPublic(t *tes
 }
 
 func TestSupabaseUploaderRejectsSignedURLOutsideExpectedOriginOrObject(t *testing.T) {
+	setStorageTestMode(t)
 	for _, signedURL := range []string{
 		"https://evil.example/object/sign/documents/file.pdf?token=x",
 		"/object/sign/documents/other-file.pdf?token=x",
@@ -176,4 +187,33 @@ func TestSupabaseUploaderRejectsSignedURLOutsideExpectedOriginOrObject(t *testin
 			require.False(t, unexpectedDownload, "untrusted signed URL must never be fetched")
 		})
 	}
+}
+
+func TestSupabaseUploaderRequiresHTTPSInRelease(t *testing.T) {
+	t.Setenv("APP_ENV", "production")
+	t.Setenv("SERVER_MODE", "release")
+	t.Setenv("GIN_MODE", "release")
+	uploader := NewSupabaseUploader("http://storage.example.test", "sb_secret_test", "documents")
+	require.ErrorContains(t, uploader.VerifyPrivateBucket(context.Background()), "esclusivamente con HTTPS")
+	require.False(t, uploader.PrivateBucketVerified)
+}
+
+func TestSupabaseUploaderDoesNotFollowRedirectsWithServerCredentials(t *testing.T) {
+	setStorageTestMode(t)
+	var redirectedRequestReached bool
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		redirectedRequestReached = true
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer target.Close()
+	source := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, target.URL+"/collect-api-key", http.StatusFound)
+	}))
+	defer source.Close()
+
+	uploader := NewSupabaseUploader(source.URL, "sb_secret_test", "documents")
+	uploader.HTTPClient = source.Client()
+	err := uploader.VerifyPrivateBucket(context.Background())
+	require.ErrorContains(t, err, "status 302")
+	require.False(t, redirectedRequestReached, "server key must never be forwarded to a redirect target")
 }
