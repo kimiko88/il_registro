@@ -37,7 +37,7 @@ func TestSupabaseUploaderVerifiesPrivateBucketAndUsesOpaqueStorageKeys(t *testin
 			w.WriteHeader(http.StatusCreated)
 		case r.Method == http.MethodPost && r.URL.Path == "/storage/v1/object/sign/documents/communications/school-1/user-1/test.pdf":
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = io.WriteString(w, "{"signedURL":"/object/sign/documents/communications/school-1/user-1/test.pdf?token=signed-test-token"}")
+			_, _ = io.WriteString(w, `{"signedURL":"/object/sign/documents/communications/school-1/user-1/test.pdf?token=signed-test-token"}`)
 		case r.Method == http.MethodGet && r.URL.Path == "/storage/v1/object/sign/documents/communications/school-1/user-1/test.pdf":
 			downloadCalled = true
 			require.Equal(t, "token=signed-test-token", r.URL.RawQuery)
