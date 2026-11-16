@@ -35,3 +35,22 @@ func TestCommunications_SendMessage_SSRFProtection(t *testing.T) {
 		assert.Contains(t, err.Error(), "SSRF protection")
 	}
 }
+
+func TestCommunications_SendMessage_RejectsForeignPrivateAttachmentKeys(t *testing.T) {
+	mockRepo := new(MockRepository)
+	mockUsers := new(MockUserRepoForComms)
+	svc := NewService(mockRepo, mockUsers)
+
+	foreignKeys := []string{
+		"supabase://documents/communications/school-2/teacher-1/file.pdf",
+		"supabase://documents/communications/school-1/other-user/file.pdf",
+		"supabase://documents/communications/school-1/teacher-1/../secret.pdf",
+	}
+	for _, key := range foreignKeys {
+		attachment := key
+		_, err := svc.SendMessage(context.Background(), "teacher", "school-1", "teacher-1", CreateMessageRequest{
+			Subject: "Private attachment", Body: "Test", Recipients: []string{"user-1"}, AttachmentURL: &attachment,
+		})
+		assert.Error(t, err, "foreign or unsafe key should be rejected: %s", key)
+	}
+}

@@ -49,46 +49,52 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 
 	if req.AttachmentURL != nil && *req.AttachmentURL != "" {
 		urlStr := strings.TrimSpace(*req.AttachmentURL)
-		// Fix SSRF: blocca URL non-HTTPS e indirizzi interni/privati.
-		// La blocklist copre ora anche IPv6 loopback, 0.0.0.0 e la subnet 172.16.0.0/12 (Docker).
-		if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
-			return nil, errors.New("attachment_url non valido: deve iniziare con http:// o https://")
-		}
 		parsedAtt, parseErr := url.Parse(urlStr)
-		if parseErr != nil || parsedAtt.Host == "" {
+		if parseErr != nil || parsedAtt.Host == "" || parsedAtt.User != nil || parsedAtt.RawQuery != "" || parsedAtt.Fragment != "" {
 			return nil, errors.New("attachment_url non valido")
 		}
-		hostname := strings.ToLower(parsedAtt.Hostname())
-		if strings.Contains(hostname, "localhost") ||
-			hostname == "0.0.0.0" ||
-			hostname == "[::1]" || hostname == "::1" ||
-			strings.HasPrefix(hostname, "[::ffff:") || strings.HasPrefix(hostname, "::ffff:") ||
-			strings.HasPrefix(hostname, "127.") ||
-			hostname == "169.254.169.254" || // AWS metadata
-			strings.HasPrefix(hostname, "10.") ||
-			strings.HasPrefix(hostname, "192.168.") ||
-			// 172.16.0.0/12: da 172.16.x.x a 172.31.x.x (Docker default)
-			func() bool {
-				parts := strings.Split(hostname, ".")
-				if len(parts) != 4 || parts[0] != "172" {
-					return false
-				}
-				var second int
-				if _, scanErr := fmt.Sscanf(parts[1], "%d", &second); scanErr != nil {
-					return false
-				}
-				return second >= 16 && second <= 31
-			}() {
-			return nil, errors.New("attachment_url non valido: indirizzo interno o privato non consentito (SSRF protection)")
+		if parsedAtt.Scheme == "supabase" {
+			if strings.Contains(parsedAtt.Path, "..") || strings.ContainsAny(urlStr, "\r\n\x00") {
+				return nil, errors.New("attachment_url non valido")
+			}
+		} else if parsedAtt.Scheme == "http" || parsedAtt.Scheme == "https" {
+			hostname := strings.ToLower(parsedAtt.Hostname())
+			if strings.Contains(hostname, "localhost") ||
+				hostname == "0.0.0.0" || hostname == "::1" ||
+				strings.HasPrefix(hostname, "[::ffff:") || strings.HasPrefix(hostname, "::ffff:") ||
+				strings.HasPrefix(hostname, "127.") || hostname == "169.254.169.254" ||
+				strings.HasPrefix(hostname, "10.") || strings.HasPrefix(hostname, "192.168.") ||
+				func() bool {
+					parts := strings.Split(hostname, ".")
+					if len(parts) != 4 || parts[0] != "172" { return false }
+					var second int
+					if _, scanErr := fmt.Sscanf(parts[1], "%d", &second); scanErr != nil { return false }
+					return second >= 16 && second <= 31
+				}() {
+				return nil, errors.New("attachment_url non valido: indirizzo interno o privato non consentito (SSRF protection)")
+			}
+		} else {
+			return nil, errors.New("attachment_url scheme non consentito")
 		}
 	}
-
 	targetSchoolID := schoolID
 	if req.SchoolID != nil && *req.SchoolID != "" {
 		if actorRole != "superadmin" && *req.SchoolID != schoolID {
 			return nil, errors.New("unauthorized: non puoi inviare messaggi a nome di un'altra scuola")
 		}
 		targetSchoolID = *req.SchoolID
+	}
+
+	if req.AttachmentURL != nil && strings.HasPrefix(*req.AttachmentURL, "supabase://") {
+		parsedAtt, _ := url.Parse(*req.AttachmentURL)
+		expectedPrefix := "/communications/" + targetSchoolID + "/" + senderID + "/"
+		if targetSchoolID == "" || !strings.HasPrefix(parsedAtt.Path, expectedPrefix) {
+			return nil, errors.New("unauthorized: allegato non appartenente alla scuola o al mittente")
+		}
+		if strings.Count(strings.TrimPrefix(parsedAtt.Path, expectedPrefix), "/") != 0 ||
+			strings.TrimPrefix(parsedAtt.Path, expectedPrefix) == "" {
+			return nil, errors.New("attachment_url non valido")
+		}
 	}
 
 	if s.userRepo != nil && len(req.Recipients) > 0 && targetSchoolID != "" {
@@ -109,7 +115,7 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 	}
 
 	msg := &Message{
-		SchoolID:          req.SchoolID,
+		SchoolID:          &targetSchoolID,
 		SenderID:          senderID,
 		ReceiverIDs:       req.Recipients,
 		Subject:           req.Subject,

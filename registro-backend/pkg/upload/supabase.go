@@ -97,7 +97,7 @@ func (s *SupabaseUploader) UploadFile(ctx context.Context, storagePath string, c
 	if err := validateObjectName(storagePath); err != nil {
 		return "", err
 	}
-	uploadEndpoint := fmt.Sprintf("%s/storage/v1/object/%s/%s", s.URL, url.PathEscape(bucket), url.PathEscape(storagePath))
+	uploadEndpoint := fmt.Sprintf("%s/storage/v1/object/%s/%s", s.URL, url.PathEscape(bucket), escapeObjectPath(storagePath))
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, uploadEndpoint, reader)
 	if err != nil {
 		return "", fmt.Errorf("impossibile creare la richiesta di upload: %w", err)
@@ -138,7 +138,7 @@ func (s *SupabaseUploader) DownloadFile(ctx context.Context, storageKey string) 
 	if err != nil {
 		return nil, "", 0, err
 	}
-	endpoint := fmt.Sprintf("%s/storage/v1/object/%s/%s", s.URL, url.PathEscape(bucket), url.PathEscape(objectName))
+	endpoint := fmt.Sprintf("%s/storage/v1/object/%s/%s", s.URL, url.PathEscape(bucket), escapeObjectPath(objectName))
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return nil, "", 0, fmt.Errorf("impossibile creare la richiesta di download: %w", err)
@@ -223,11 +223,24 @@ func (s *SupabaseUploader) setAuthHeaders(req *http.Request) {
 }
 
 func validateObjectName(name string) error {
-	if name == "" || name == "." || name == ".." || path.Base(name) != name ||
-		strings.ContainsAny(name, "/\\?#") || strings.ContainsAny(name, "\r\n\x00") {
+	if name == "" || path.IsAbs(name) || path.Clean(name) != name ||
+		strings.ContainsAny(name, "\\?#") || strings.ContainsAny(name, "\r\n\x00") {
 		return fmt.Errorf("storage object name non valido")
 	}
+	for _, segment := range strings.Split(name, "/") {
+		if segment == "" || segment == "." || segment == ".." {
+			return fmt.Errorf("storage object name non valido")
+		}
+	}
 	return nil
+}
+
+func escapeObjectPath(name string) string {
+	segments := strings.Split(name, "/")
+	for i := range segments {
+		segments[i] = url.PathEscape(segments[i])
+	}
+	return strings.Join(segments, "/")
 }
 func (s *SupabaseUploader) parseStorageKey(storageKey string) (string, string, error) {
 	parsed, err := url.Parse(strings.TrimSpace(storageKey))
@@ -236,7 +249,7 @@ func (s *SupabaseUploader) parseStorageKey(storageKey string) (string, string, e
 	}
 	bucket := s.bucket()
 	objectName := strings.TrimPrefix(parsed.Path, "/")
-	if parsed.Host != bucket || objectName == "" || strings.Contains(objectName, "/") {
+	if parsed.Host != bucket || objectName == "" {
 		return "", "", fmt.Errorf("storage key non valida")
 	}
 	if err := validateObjectName(objectName); err != nil {

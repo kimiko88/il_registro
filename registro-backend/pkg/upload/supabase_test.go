@@ -30,11 +30,11 @@ func TestSupabaseUploaderVerifiesPrivateBucketAndUsesOpaqueStorageKeys(t *testin
 		case r.Method == http.MethodGet && r.URL.Path == "/storage/v1/bucket/documents":
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = io.WriteString(w, \`{"id":"documents","public":false}\`)
-		case r.Method == http.MethodPost && r.URL.Path == "/storage/v1/object/documents/test.pdf":
+		case r.Method == http.MethodPost && r.URL.Path == "/storage/v1/object/documents/communications/school-1/user-1/test.pdf":
 			uploadCalled = true
 			_, _ = io.Copy(io.Discard, r.Body)
 			w.WriteHeader(http.StatusCreated)
-		case r.Method == http.MethodGet && r.URL.Path == "/storage/v1/object/documents/test.pdf":
+		case r.Method == http.MethodGet && r.URL.Path == "/storage/v1/object/documents/communications/school-1/user-1/test.pdf":
 			downloadCalled = true
 			w.Header().Set("Content-Type", "application/pdf")
 			w.Header().Set("Content-Length", "9")
@@ -49,9 +49,9 @@ func TestSupabaseUploaderVerifiesPrivateBucketAndUsesOpaqueStorageKeys(t *testin
 	uploader.HTTPClient = server.Client()
 	require.NoError(t, uploader.VerifyPrivateBucket(context.Background()))
 
-	key, err := uploader.UploadFile(context.Background(), "test.pdf", "application/pdf", strings.NewReader("%PDF-test"))
+	key, err := uploader.UploadFile(context.Background(), "communications/school-1/user-1/test.pdf", "application/pdf", strings.NewReader("%PDF-test"))
 	require.NoError(t, err)
-	require.Equal(t, "supabase://documents/test.pdf", key)
+	require.Equal(t, "supabase://documents/communications/school-1/user-1/test.pdf", key)
 	require.NotContains(t, key, "/object/public/")
 
 	reader, contentType, size, err := uploader.DownloadFile(context.Background(), key)

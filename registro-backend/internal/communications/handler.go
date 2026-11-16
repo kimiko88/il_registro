@@ -1,9 +1,12 @@
 package communications
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"registro-backend/pkg/upload"
 	"strings"
@@ -36,6 +39,7 @@ func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 		g.PUT("/:id", h.Update)
 		g.POST("", h.Send)
 		g.POST("/upload", h.UploadAttachment)
+		g.GET("/:id/attachment", h.DownloadAttachment)
 		g.DELETE("/:id", h.Delete)
 		g.POST("/:id/sign", h.Sign)
 		g.POST("/:id/read", h.MarkAsRead)
@@ -58,6 +62,7 @@ func (h *Handler) List(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.decorateMessages(msgs)
 	c.JSON(http.StatusOK, msgs)
 }
 
@@ -73,6 +78,7 @@ func (h *Handler) ListBacheca(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.decorateMessages(msgs)
 	c.JSON(http.StatusOK, msgs)
 }
 
@@ -92,6 +98,7 @@ func (h *Handler) ListCircolari(c *gin.Context) {
 	if msgs == nil {
 		msgs = []*Message{}
 	}
+	h.decorateMessages(msgs)
 	c.JSON(http.StatusOK, msgs)
 }
 
@@ -118,6 +125,7 @@ func (h *Handler) Send(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	h.decorateMessageAttachment(msg)
 	c.JSON(http.StatusCreated, msg)
 }
 
@@ -227,6 +235,7 @@ func (h *Handler) GetByID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	h.decorateMessageAttachment(msg)
 	c.JSON(http.StatusOK, msg)
 }
 
@@ -314,12 +323,33 @@ func (h *Handler) GetUnreadCount(c *gin.Context) {
 }
 
 func (h *Handler) UploadAttachment(c *gin.Context) {
-	uid := c.GetString("user_id")
-	if uid == "" {
+	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
+	if userID == "" || schoolID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-
+	if _, err := uuid.Parse(userID); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "identità utente non valida"})
+		return
+	}
+	if _, err := uuid.Parse(schoolID); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "scuola non valida"})
+		return
+	}
+	if _, ok := h.uploader.(upload.PrivateStorageDownloader); !ok {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "private communication storage is not configured"})
+		return
+	}
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, upload.MaxUploadSize+(1<<10))
+	if err := c.Request.ParseMultipartForm(upload.MaxUploadSize + (1 << 10)); err != nil {
+		if strings.Contains(strings.ToLower(err.Error()), "request body too large") {
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "allegato troppo grande"})
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "form allegato non valido"})
+		}
+		return
+	}
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "allegato mancante"})
@@ -327,36 +357,108 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	}
 	defer func() { _ = file.Close() }()
 
-	// Validate size + magic bytes Content-Type check
-	if err := upload.ValidateUpload(file, header); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	sanitizedBytes, detectedMIME, err := upload.ValidateAndSanitize(file, header)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	ext := strings.ToLower(filepath.Ext(filepath.Base(header.Filename)))
+	allowedExtensions := map[string]map[string]bool{
+		".pdf":  {"application/pdf": true},
+		".jpg":  {"image/jpeg": true},
+		".jpeg": {"image/jpeg": true},
+		".png":  {"image/png": true},
+		".doc":  {"application/msword": true},
+		".docx": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true},
+		".xls":  {"application/vnd.ms-excel": true},
+		".xlsx": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true},
+		".txt":  {"text/plain": true},
+	}
+	if !isAllowedMIMEType(detectedMIME) || !allowedExtensions[ext][detectedMIME] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "tipo o estensione di allegato non consentiti"})
 		return
 	}
 
-	ext := filepath.Ext(header.Filename)
-	detectedMIME, errMIME := upload.DetectMIME(file)
-	if errMIME != nil {
-		detectedMIME = header.Header.Get("Content-Type")
-	}
-	if !isAllowedMIMEType(detectedMIME) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "tipo di allegato non consentito"})
+	storagePath := fmt.Sprintf("communications/%s/%s/%s%s", schoolID, userID, uuid.New().String(), ext)
+	storageKey, err := h.uploader.UploadFile(c.Request.Context(), storagePath, detectedMIME, bytes.NewReader(sanitizedBytes))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "caricamento allegato non riuscito"})
 		return
 	}
+	c.JSON(http.StatusCreated, gin.H{"attachment_url": storageKey})
+}
 
-	var publicURL string
-	if h.uploader != nil {
-		storagePath := fmt.Sprintf("communications/%s%s", uuid.New().String(), ext)
-		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, detectedMIME, file)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-	} else {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "storage provider not configured"})
+func (h *Handler) decorateMessageAttachment(msg *Message) {
+	if msg == nil || msg.AttachmentURL == nil {
 		return
 	}
+	parsed, err := url.Parse(*msg.AttachmentURL)
+	if err != nil || parsed.Scheme != "supabase" {
+		return
+	}
+	proxyURL := "/api/v1/communications/" + url.PathEscape(msg.ID) + "/attachment"
+	msg.AttachmentURL = &proxyURL
+}
 
-	c.JSON(http.StatusOK, gin.H{"attachment_url": publicURL})
+func (h *Handler) decorateMessages(messages []*Message) {
+	for _, msg := range messages {
+		h.decorateMessageAttachment(msg)
+	}
+}
+
+// DownloadAttachment only serves an attachment after the current user is verified
+// as the message sender or a recipient by GetMessageByID.
+func (h *Handler) DownloadAttachment(c *gin.Context) {
+	userID := c.GetString("user_id")
+	schoolID := c.GetString("school_id")
+	role := c.GetString("role")
+	if userID == "" || schoolID == "" || role == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	msg, err := h.service.GetMessageByID(c.Request.Context(), userID, schoolID, role, c.Param("id"))
+	if err != nil || msg == nil || msg.AttachmentURL == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "allegato non trovato o non accessibile"})
+		return
+	}
+	parsed, err := url.Parse(*msg.AttachmentURL)
+	if err != nil || parsed.Scheme != "supabase" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "allegato privato non disponibile"})
+		return
+	}
+	downloader, ok := h.uploader.(upload.PrivateStorageDownloader)
+	if !ok {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "private communication storage is not configured"})
+		return
+	}
+	reader, contentType, contentLength, err := downloader.DownloadFile(c.Request.Context(), *msg.AttachmentURL)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "download allegato non riuscito"})
+		return
+	}
+	defer func() { _ = reader.Close() }()
+	if contentLength > upload.MaxUploadSize {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "allegato troppo grande"})
+		return
+	}
+	data, err := io.ReadAll(io.LimitReader(reader, upload.MaxUploadSize+1))
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "lettura allegato non riuscita"})
+		return
+	}
+	if int64(len(data)) > upload.MaxUploadSize {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "allegato troppo grande"})
+		return
+	}
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	filename := filepath.Base(strings.TrimPrefix(parsed.Path, "/"))
+	c.Header("Cache-Control", "private, no-store, max-age=0")
+	c.Header("Pragma", "no-cache")
+	c.Header("X-Content-Type-Options", "nosniff")
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
+	c.Data(http.StatusOK, contentType, data)
 }
 
 // isAllowedMIMEType validates that the MIME type is in the allowed allowlist.
