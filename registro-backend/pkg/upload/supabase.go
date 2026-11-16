@@ -177,18 +177,20 @@ func (s *SupabaseUploader) DownloadFile(ctx context.Context, storageKey string) 
 		return nil, "", 0, fmt.Errorf("URL Supabase non valida")
 	}
 	signedURL, err := url.Parse(signed.SignedURL)
-	if err != nil || signedURL.User != nil || signedURL.Fragment != "" {
+	if err != nil || signedURL.User != nil || signedURL.Fragment != "" || signedURL.RawQuery == "" {
 		return nil, "", 0, fmt.Errorf("URL firmata non valida")
 	}
+	expectedObjectPath := "/object/sign/" + bucket + "/" + escapeObjectPath(objectName)
+	expectedStoragePath := strings.TrimRight(baseURL.Path, "/") + "/storage/v1" + expectedObjectPath
 	if signedURL.IsAbs() {
-		if signedURL.Scheme != baseURL.Scheme || !strings.EqualFold(signedURL.Host, baseURL.Host) {
-			return nil, "", 0, fmt.Errorf("URL firmata punta a un host non autorizzato")
+		if signedURL.Scheme != baseURL.Scheme || !strings.EqualFold(signedURL.Host, baseURL.Host) || signedURL.Path != expectedStoragePath {
+			return nil, "", 0, fmt.Errorf("URL firmata punta a un host o percorso non autorizzato")
 		}
 	} else {
-		if !strings.HasPrefix(signedURL.Path, "/object/sign/") || signedURL.RawQuery == "" {
+		if signedURL.Path != expectedObjectPath {
 			return nil, "", 0, fmt.Errorf("percorso URL firmata non valido")
 		}
-		baseURL.Path = strings.TrimRight(baseURL.Path, "/") + "/storage/v1" + signedURL.Path
+		baseURL.Path = expectedStoragePath
 		baseURL.RawQuery = signedURL.RawQuery
 		signedURL = baseURL
 	}
