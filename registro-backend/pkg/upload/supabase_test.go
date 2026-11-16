@@ -29,7 +29,7 @@ func TestSupabaseUploaderVerifiesPrivateBucketAndUsesOpaqueStorageKeys(t *testin
 		switch {
 		case r.Method == http.MethodGet && r.URL.Path == "/storage/v1/bucket/documents":
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = io.WriteString(w, \`{"id":"documents","public":false}\`)
+			_, _ = io.WriteString(w, `{"id":"documents","public":false}`)
 		case r.Method == http.MethodPost && r.URL.Path == "/storage/v1/object/documents/communications/school-1/user-1/test.pdf":
 			uploadCalled = true
 			_, _ = io.Copy(io.Discard, r.Body)
@@ -69,7 +69,7 @@ func TestSupabaseUploaderVerifiesPrivateBucketAndUsesOpaqueStorageKeys(t *testin
 func TestSupabaseUploaderRejectsPublicBucket(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = io.WriteString(w, \`{"id":"documents","public":true}\`)
+		_, _ = io.WriteString(w, `{"id":"documents","public":true}`)
 	}))
 	defer server.Close()
 
