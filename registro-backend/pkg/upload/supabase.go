@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -139,13 +140,66 @@ func (s *SupabaseUploader) DownloadFile(ctx context.Context, storageKey string) 
 	if err != nil {
 		return nil, "", 0, err
 	}
-	endpoint := fmt.Sprintf("%s/storage/v1/object/%s/%s", s.URL, url.PathEscape(bucket), escapeObjectPath(objectName))
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+
+	// Generate a short-lived URL with server-side credentials. The signed URL
+	// never leaves this process; the application authorizes the document first.
+	signEndpoint := fmt.Sprintf("%s/storage/v1/object/sign/%s/%s", s.URL, url.PathEscape(bucket), escapeObjectPath(objectName))
+	payload, err := json.Marshal(map[string]int{"expiresIn": 60})
+	if err != nil {
+		return nil, "", 0, fmt.Errorf("impossibile preparare la richiesta di firma: %w", err)
+	}
+	signReq, err := http.NewRequestWithContext(ctx, http.MethodPost, signEndpoint, bytes.NewReader(payload))
+	if err != nil {
+		return nil, "", 0, fmt.Errorf("impossibile creare la richiesta di firma: %w", err)
+	}
+	s.setAuthHeaders(signReq)
+	signReq.Header.Set("Content-Type", "application/json")
+	signResp, err := s.HTTPClient.Do(signReq)
+	if err != nil {
+		return nil, "", 0, fmt.Errorf("generazione URL firmata non riuscita: %w", err)
+	}
+	if signResp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(io.LimitReader(signResp.Body, 4096))
+		_ = signResp.Body.Close()
+		return nil, "", 0, fmt.Errorf("generazione URL firmata fallita (status %d): %s", signResp.StatusCode, string(bodyBytes))
+	}
+	var signed struct {
+		SignedURL string `json:"signedURL"`
+	}
+	decodeErr := json.NewDecoder(io.LimitReader(signResp.Body, 16<<10)).Decode(&signed)
+	_ = signResp.Body.Close()
+	if decodeErr != nil || signed.SignedURL == "" {
+		return nil, "", 0, fmt.Errorf("risposta URL firmata non valida")
+	}
+
+	baseURL, err := url.Parse(s.URL)
+	if err != nil {
+		return nil, "", 0, fmt.Errorf("URL Supabase non valida")
+	}
+	signedURL, err := url.Parse(signed.SignedURL)
+	if err != nil || signedURL.User != nil || signedURL.Fragment != "" {
+		return nil, "", 0, fmt.Errorf("URL firmata non valida")
+	}
+	if signedURL.IsAbs() {
+		if signedURL.Scheme != baseURL.Scheme || !strings.EqualFold(signedURL.Host, baseURL.Host) {
+			return nil, "", 0, fmt.Errorf("URL firmata punta a un host non autorizzato")
+		}
+	} else {
+		if !strings.HasPrefix(signedURL.Path, "/object/sign/") || signedURL.RawQuery == "" {
+			return nil, "", 0, fmt.Errorf("percorso URL firmata non valido")
+		}
+		baseURL.Path = strings.TrimRight(baseURL.Path, "/") + "/storage/v1" + signedURL.Path
+		baseURL.RawQuery = signedURL.RawQuery
+		signedURL = baseURL
+	}
+
+	// The signed token is the download capability; no Supabase API key or
+	// service credential is forwarded on this second request.
+	downloadReq, err := http.NewRequestWithContext(ctx, http.MethodGet, signedURL.String(), nil)
 	if err != nil {
 		return nil, "", 0, fmt.Errorf("impossibile creare la richiesta di download: %w", err)
 	}
-	s.setAuthHeaders(req)
-	resp, err := s.HTTPClient.Do(req)
+	resp, err := s.HTTPClient.Do(downloadReq)
 	if err != nil {
 		return nil, "", 0, fmt.Errorf("download da Supabase Storage non riuscito: %w", err)
 	}
