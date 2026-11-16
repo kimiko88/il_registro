@@ -763,7 +763,8 @@ func main() {
 			// Sportello Digitale Istanze Famiglie & Delegati Permanenti
 			familyDeskRepo := family_desk.NewPostgresRepository(database)
 			familyDeskSvc := family_desk.NewService(familyDeskRepo)
-			familyDeskH := family_desk.NewHandler(familyDeskSvc)
+			familyDeskH := family_desk.NewHandler(familyDeskSvc, usersRepo)
+			familyDeskH.SetUploader(docsUploader)
 			familyDeskH.RegisterRoutes(protected)
 
 			// Portale Esterno Tutor Aziendale PCTO
