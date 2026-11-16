@@ -322,10 +322,20 @@ func (h *Handler) GetUnreadCount(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"count": count})
 }
 
+func isCommunicationSenderRole(role string) bool {
+	switch role {
+	case "admin", "superadmin", "teacher", "coordinator", "coordinatore_classe", "secretary", "principal", "vice_principal", "collaboratore_ds":
+		return true
+	default:
+		return false
+	}
+}
+
 func (h *Handler) UploadAttachment(c *gin.Context) {
 	userID := c.GetString("user_id")
 	schoolID := c.GetString("school_id")
-	if userID == "" || schoolID == "" {
+	role := c.GetString("role")
+	if userID == "" || schoolID == "" || role == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
@@ -335,6 +345,10 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 	}
 	if _, err := uuid.Parse(schoolID); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "scuola non valida"})
+		return
+	}
+	if !isCommunicationSenderRole(role) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "ruolo non autorizzato a caricare allegati"})
 		return
 	}
 	if _, ok := h.uploader.(upload.PrivateStorageDownloader); !ok {
@@ -368,10 +382,13 @@ func (h *Handler) UploadAttachment(c *gin.Context) {
 		".jpg":  {"image/jpeg": true},
 		".jpeg": {"image/jpeg": true},
 		".png":  {"image/png": true},
+		".gif":  {"image/gif": true},
+		".webp": {"image/webp": true},
 		".doc":  {"application/msword": true},
 		".docx": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true},
 		".xls":  {"application/vnd.ms-excel": true},
 		".xlsx": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true},
+		".pptx": {"application/vnd.openxmlformats-officedocument.presentationml.presentation": true},
 		".txt":  {"text/plain": true},
 	}
 	if !isAllowedMIMEType(detectedMIME) || !allowedExtensions[ext][detectedMIME] {
