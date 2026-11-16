@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 	"time"
@@ -63,7 +64,7 @@ func (s *SupabaseUploader) VerifyPrivateBucket(ctx context.Context) error {
 		return fmt.Errorf("impossibile creare la richiesta di verifica bucket: %w", err)
 	}
 	s.setAuthHeaders(req)
-	resp, err := s.HTTPClient.Do(req)
+	resp, err := s.doNoRedirect(req)
 	if err != nil {
 		return fmt.Errorf("verifica bucket Supabase non riuscita: %w", err)
 	}
@@ -112,7 +113,7 @@ func (s *SupabaseUploader) UploadFile(ctx context.Context, storagePath string, c
 		req.Header.Set("Content-Type", "application/octet-stream")
 	}
 	_, err = circuitbreaker.Storage().Execute(func() (interface{}, error) {
-		resp, err := s.HTTPClient.Do(req)
+		resp, err := s.doNoRedirect(req)
 		if err != nil {
 			return nil, fmt.Errorf("impossibile eseguire la richiesta di upload su Supabase: %w", err)
 		}
@@ -155,7 +156,7 @@ func (s *SupabaseUploader) DownloadFile(ctx context.Context, storageKey string) 
 	}
 	s.setAuthHeaders(signReq)
 	signReq.Header.Set("Content-Type", "application/json")
-	signResp, err := s.HTTPClient.Do(signReq)
+	signResp, err := s.doNoRedirect(signReq)
 	if err != nil {
 		return nil, "", 0, fmt.Errorf("generazione URL firmata non riuscita: %w", err)
 	}
@@ -202,7 +203,7 @@ func (s *SupabaseUploader) DownloadFile(ctx context.Context, storageKey string) 
 	if err != nil {
 		return nil, "", 0, fmt.Errorf("impossibile creare la richiesta di download: %w", err)
 	}
-	resp, err := s.HTTPClient.Do(downloadReq)
+	resp, err := s.doNoRedirect(downloadReq)
 	if err != nil {
 		return nil, "", 0, fmt.Errorf("download da Supabase Storage non riuscito: %w", err)
 	}
@@ -238,7 +239,7 @@ func (s *SupabaseUploader) DeleteFile(ctx context.Context, storageKey string) er
 	}
 	s.setAuthHeaders(req)
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := s.HTTPClient.Do(req)
+	resp, err := s.doNoRedirect(req)
 	if err != nil {
 		return err
 	}
@@ -260,6 +261,12 @@ func (s *SupabaseUploader) validateConfig() error {
 	parsed, err := url.Parse(s.URL)
 	if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") || parsed.Host == "" || parsed.User != nil {
 		return fmt.Errorf("Supabase URL non valida")
+	}
+	isRelease := strings.EqualFold(os.Getenv("APP_ENV"), "production") ||
+		strings.EqualFold(os.Getenv("SERVER_MODE"), "release") ||
+		strings.EqualFold(os.Getenv("GIN_MODE"), "release")
+	if isRelease && parsed.Scheme != "https" {
+		return fmt.Errorf("in modalità release Supabase deve essere configurato esclusivamente con HTTPS")
 	}
 	if s.HTTPClient == nil {
 		return fmt.Errorf("client HTTP Supabase non configurato")
@@ -289,6 +296,17 @@ func validateServerStorageKey(key string) error {
 		return fmt.Errorf("la chiave Supabase deve avere role=service_role; le chiavi anon/client sono vietate")
 	}
 	return nil
+}
+
+
+// doNoRedirect prevents API keys from being forwarded to a different host through
+// an unexpected HTTP redirect. A 3xx response is returned to the caller as-is.
+func (s *SupabaseUploader) doNoRedirect(req *http.Request) (*http.Response, error) {
+	client := *s.HTTPClient
+	client.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	return client.Do(req)
 }
 
 func (s *SupabaseUploader) bucket() string {
