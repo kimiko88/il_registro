@@ -69,7 +69,7 @@ func (s *SupabaseUploader) VerifyPrivateBucket(ctx context.Context) error {
 		return fmt.Errorf("verifica bucket Supabase fallita (status %d)", resp.StatusCode)
 	}
 	var info struct {
-		Public *bool \`json:"public"\`
+		Public *bool `json:"public"`
 	}
 	if err := json.NewDecoder(io.LimitReader(resp.Body, 16<<10)).Decode(&info); err != nil {
 		return fmt.Errorf("risposta verifica bucket non valida: %w", err)
