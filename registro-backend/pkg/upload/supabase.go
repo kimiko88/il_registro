@@ -2,6 +2,7 @@ package upload
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -193,8 +194,11 @@ func (s *SupabaseUploader) DeleteFile(ctx context.Context, storageKey string) er
 }
 
 func (s *SupabaseUploader) validateConfig() error {
-	if s.URL == "" || s.Key == "" {
+	if s.URL == "" || strings.TrimSpace(s.Key) == "" {
 		return fmt.Errorf("Supabase URL o chiave server non configurate")
+	}
+	if err := validateServerStorageKey(strings.TrimSpace(s.Key)); err != nil {
+		return err
 	}
 	parsed, err := url.Parse(s.URL)
 	if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") || parsed.Host == "" || parsed.User != nil {
@@ -202,6 +206,30 @@ func (s *SupabaseUploader) validateConfig() error {
 	}
 	if s.HTTPClient == nil {
 		return fmt.Errorf("client HTTP Supabase non configurato")
+	}
+	return nil
+}
+
+// validateServerStorageKey rejects browser/client keys. Storage credentials in
+// this process must be a new sb_secret_* key or a legacy JWT with role=service_role.
+func validateServerStorageKey(key string) error {
+	if strings.HasPrefix(key, "sb_secret_") {
+		return nil
+	}
+	if strings.HasPrefix(key, "sb_publishable_") || strings.HasPrefix(key, "sb_anon_") {
+		return fmt.Errorf("le chiavi Supabase publishable/anon non sono ammesse per lo storage server-side")
+	}
+	parts := strings.Split(key, ".")
+	if len(parts) != 3 {
+		return fmt.Errorf("chiave Supabase server non valida: usare sb_secret_* o una legacy service_role")
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return fmt.Errorf("JWT Supabase server non valido")
+	}
+	var claims map[string]interface{}
+	if err := json.Unmarshal(payload, &claims); err != nil || claims["role"] != "service_role" {
+		return fmt.Errorf("la chiave Supabase deve avere role=service_role; le chiavi anon/client sono vietate")
 	}
 	return nil
 }
