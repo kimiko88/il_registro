@@ -3,6 +3,7 @@ package upload
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -24,8 +25,13 @@ func TestSupabaseUploaderRequiresVerifiedPrivateBucket(t *testing.T) {
 func TestSupabaseUploaderVerifiesPrivateBucketAndUsesOpaqueStorageKeys(t *testing.T) {
 	var uploadCalled, downloadCalled bool
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		require.Equal(t, "sb_secret_test", r.Header.Get("apikey"))
-		require.Empty(t, r.Header.Get("Authorization"), "new Supabase secret keys must not be sent as Bearer JWTs")
+		if r.Method == http.MethodGet && strings.Contains(r.URL.Path, "/object/sign/") {
+			require.Empty(t, r.Header.Get("apikey"))
+			require.Empty(t, r.Header.Get("Authorization"))
+		} else {
+			require.Equal(t, "sb_secret_test", r.Header.Get("apikey"))
+			require.Empty(t, r.Header.Get("Authorization"), "new Supabase secret keys must not be sent as Bearer JWTs")
+		}
 
 		switch {
 		case r.Method == http.MethodGet && r.URL.Path == "/storage/v1/bucket/documents":
@@ -116,4 +122,58 @@ func TestSupabaseUploaderRejectsClientKeys(t *testing.T) {
 	serviceJWT := header + "." + servicePayload + ".signature"
 	require.NoError(t, validateServerStorageKey(serviceJWT))
 	require.NoError(t, validateServerStorageKey("sb_secret_server_only_key"))
+}
+
+func TestSupabaseUploaderReverificationFailsClosedWhenBucketBecomesPublic(t *testing.T) {
+	isPublic := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if isPublic {
+			_, _ = io.WriteString(w, `{"id":"documents","public":true}`)
+			return
+		}
+		_, _ = io.WriteString(w, `{"id":"documents","public":false}`)
+	}))
+	defer server.Close()
+
+	uploader := NewSupabaseUploader(server.URL, "sb_secret_test", "documents")
+	uploader.HTTPClient = server.Client()
+	require.NoError(t, uploader.VerifyPrivateBucket(context.Background()))
+	require.True(t, uploader.PrivateBucketVerified)
+
+	isPublic = true
+	require.Error(t, uploader.VerifyPrivateBucket(context.Background()))
+	require.False(t, uploader.PrivateBucketVerified)
+}
+
+func TestSupabaseUploaderRejectsSignedURLOutsideExpectedOriginOrObject(t *testing.T) {
+	for _, signedURL := range []string{
+		"https://evil.example/object/sign/documents/file.pdf?token=x",
+		"/object/sign/documents/other-file.pdf?token=x",
+		"/object/sign/documents/file.pdf",
+	} {
+		t.Run(signedURL, func(t *testing.T) {
+			var unexpectedDownload bool
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch r.Method {
+				case http.MethodPost:
+					w.Header().Set("Content-Type", "application/json")
+					_, _ = fmt.Fprintf(w, `{"signedURL":%q}`, signedURL)
+				case http.MethodGet:
+					unexpectedDownload = true
+					w.WriteHeader(http.StatusOK)
+				default:
+					t.Fatalf("unexpected request %s", r.Method)
+				}
+			}))
+			defer server.Close()
+
+			uploader := NewSupabaseUploader(server.URL, "sb_secret_test", "documents")
+			uploader.HTTPClient = server.Client()
+			uploader.PrivateBucketVerified = true
+			_, _, _, err := uploader.DownloadFile(context.Background(), "supabase://documents/file.pdf")
+			require.Error(t, err)
+			require.False(t, unexpectedDownload, "untrusted signed URL must never be fetched")
+		})
+	}
 }
