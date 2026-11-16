@@ -66,9 +66,13 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 				strings.HasPrefix(hostname, "10.") || strings.HasPrefix(hostname, "192.168.") ||
 				func() bool {
 					parts := strings.Split(hostname, ".")
-					if len(parts) != 4 || parts[0] != "172" { return false }
+					if len(parts) != 4 || parts[0] != "172" {
+						return false
+					}
 					var second int
-					if _, scanErr := fmt.Sscanf(parts[1], "%d", &second); scanErr != nil { return false }
+					if _, scanErr := fmt.Sscanf(parts[1], "%d", &second); scanErr != nil {
+						return false
+					}
 					return second >= 16 && second <= 31
 				}() {
 				return nil, errors.New("attachment_url non valido: indirizzo interno o privato non consentito (SSRF protection)")
