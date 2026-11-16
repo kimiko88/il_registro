@@ -324,7 +324,7 @@ func TestDocumentsService_Extended(t *testing.T) {
 	repo.On("FindByID", "doc-1").Return(validDoc, nil).Once()
 	repo.On("GetContent", "doc-1", 1).Return("existing content", nil).Once()
 	repo.On("Update", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
-	err = svc.AttachFile(ctx, "admin", "sch-1", "doc-1", "https://storage.example.com/file.pdf")
+	err = svc.AttachFile(ctx, "admin", "sch-1", "doc-1", "supabase://documents/file.pdf")
 	assert.NoError(t, err)
 
 	repo.AssertExpectations(t)
