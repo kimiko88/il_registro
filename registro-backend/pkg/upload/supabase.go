@@ -53,6 +53,7 @@ func NewSupabaseUploader(url, key, bucket string) *SupabaseUploader {
 // VerifyPrivateBucket checks the actual Storage bucket configuration before enabling file access.
 // Public buckets bypass object read authorization, so an unverified bucket fails closed.
 func (s *SupabaseUploader) VerifyPrivateBucket(ctx context.Context) error {
+	s.PrivateBucketVerified = false
 	if err := s.validateConfig(); err != nil {
 		return err
 	}
@@ -298,11 +299,12 @@ func (s *SupabaseUploader) bucket() string {
 }
 
 func (s *SupabaseUploader) setAuthHeaders(req *http.Request) {
-	req.Header.Set("apikey", s.Key)
+	key := strings.TrimSpace(s.Key)
+	req.Header.Set("apikey", key)
 	// New Supabase secret keys are sent as apikey only. Legacy service_role JWT
 	// keys continue to use both headers for backward compatibility.
-	if !strings.HasPrefix(s.Key, "sb_secret_") {
-		req.Header.Set("Authorization", "Bearer "+s.Key)
+	if !strings.HasPrefix(key, "sb_secret_") {
+		req.Header.Set("Authorization", "Bearer "+key)
 	}
 }
 
