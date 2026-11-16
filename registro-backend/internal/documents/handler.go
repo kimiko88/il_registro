@@ -153,7 +153,7 @@ func (h *Handler) UploadFile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "estensione file non consentita"})
 		return
 	}
-	storagePath := uuid.New().String() + ext
+	storagePath := fmt.Sprintf("schools/%s/documents/%s/%s%s", schoolID, docID, uuid.New().String(), ext)
 
 	storageKey, err := h.uploader.UploadFile(c.Request.Context(), storagePath, detectedMIME, bytes.NewReader(sanitizedBytes))
 	if err != nil {
@@ -226,6 +226,18 @@ func (h *Handler) DownloadFile(c *gin.Context) {
 	}
 	if storageKey == "" {
 		c.JSON(http.StatusNotFound, gin.H{"error": "allegato privato non disponibile"})
+		return
+	}
+	parsedKey, parseErr := url.Parse(storageKey)
+	expectedPrefix := "/schools/" + schoolID + "/documents/" + c.Param("id") + "/"
+	objectName := ""
+	if parseErr == nil {
+		objectName = strings.TrimPrefix(parsedKey.Path, expectedPrefix)
+	}
+	if parseErr != nil || parsedKey.Scheme != "supabase" || parsedKey.Host == "" ||
+		!strings.HasPrefix(parsedKey.Path, expectedPrefix) || objectName == "" ||
+		strings.Contains(objectName, "/") || objectName == "." || objectName == ".." {
+		c.JSON(http.StatusNotFound, gin.H{"error": "allegato non appartenente al documento richiesto"})
 		return
 	}
 	downloader, ok := h.uploader.(upload.PrivateStorageDownloader)

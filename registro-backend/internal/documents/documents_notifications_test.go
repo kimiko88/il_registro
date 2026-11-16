@@ -18,7 +18,7 @@ func TestAttachFile_CrossSchool_Denied(t *testing.T) {
 
 	svc := NewService(mockRepo)
 
-	err := svc.AttachFile(context.Background(), "admin", "school-B", "doc-1", "supabase://documents/file.pdf")
+	err := svc.AttachFile(context.Background(), "admin", "school-B", "doc-1", "supabase://documents/schools/school-A/documents/doc-1/file.pdf")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "cannot access documents of another school")
 }
