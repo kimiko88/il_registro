@@ -31,9 +31,9 @@ type StorageObjectDeleter interface {
 
 // SupabaseUploader uploads files to Supabase Storage using its REST API.
 type SupabaseUploader struct {
-	URL        string
-	Key        string
-	Bucket     string
+	URL                   string
+	Key                   string
+	Bucket                string
 	HTTPClient            *http.Client
 	PrivateBucketVerified bool
 }
@@ -134,9 +134,6 @@ func (s *SupabaseUploader) DownloadFile(ctx context.Context, storageKey string) 
 	if !s.PrivateBucketVerified {
 		return nil, "", 0, fmt.Errorf("bucket documenti non verificato come privato")
 	}
-	if !s.PrivateBucketVerified {
-		return fmt.Errorf("bucket documenti non verificato come privato")
-	}
 	bucket, objectName, err := s.parseStorageKey(storageKey)
 	if err != nil {
 		return nil, "", 0, err
@@ -167,6 +164,9 @@ func (s *SupabaseUploader) DownloadFile(ctx context.Context, storageKey string) 
 func (s *SupabaseUploader) DeleteFile(ctx context.Context, storageKey string) error {
 	if err := s.validateConfig(); err != nil {
 		return err
+	}
+	if !s.PrivateBucketVerified {
+		return fmt.Errorf("bucket documenti non verificato come privato")
 	}
 	bucket, objectName, err := s.parseStorageKey(storageKey)
 	if err != nil {
@@ -224,12 +224,11 @@ func (s *SupabaseUploader) setAuthHeaders(req *http.Request) {
 
 func validateObjectName(name string) error {
 	if name == "" || name == "." || name == ".." || path.Base(name) != name ||
-		strings.ContainsAny(name, "/\\\\?#") || strings.ContainsAny(name, "\\r\\n\\x00") {
+		strings.ContainsAny(name, "/\\?#") || strings.ContainsAny(name, "\r\n\x00") {
 		return fmt.Errorf("storage object name non valido")
 	}
 	return nil
 }
-
 func (s *SupabaseUploader) parseStorageKey(storageKey string) (string, string, error) {
 	parsed, err := url.Parse(strings.TrimSpace(storageKey))
 	if err != nil || parsed.Scheme != "supabase" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {

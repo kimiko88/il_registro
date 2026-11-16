@@ -388,7 +388,7 @@ func TestDocumentsHandler_DownloadPrivateAttachmentRequiresDocumentAuthorization
 	svc.On("GetDocument", mock.Anything, "teacher", "school-1", "doc-1").
 		Return(&DocumentDetailResponse{
 			DocumentListResponse: DocumentListResponse{ID: "doc-1"},
-			Content: "verbale\\nAttachment: supabase://documents/file.pdf",
+			Content: "verbale\nAttachment: supabase://documents/file.pdf",
 		}, nil).Once()
 	upl.On("DownloadFile", mock.Anything, "supabase://documents/file.pdf").
 		Return(io.NopCloser(strings.NewReader("%PDF-private")), "application/pdf", int64(13), nil).Once()
