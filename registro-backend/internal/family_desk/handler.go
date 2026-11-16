@@ -352,3 +352,52 @@ func (h *Handler) ListDelegates(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"data": delegates})
 }
+
+func (h *Handler) DownloadAttachment(c *gin.Context) {
+	req, err := h.service.GetRequest(c.Request.Context(), c.Param("id"))
+	if err != nil || req == nil || !h.authorizeRequest(c, req) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "istanza non trovata o non accessibile"})
+		return
+	}
+	filename := c.Param("filename")
+	var storageKey string
+	for _, candidate := range req.AttachmentURLs {
+		if candidateName, valid := familyAttachmentKey(candidate, req.SchoolID, req.ParentID, req.StudentID); valid && candidateName == filename {
+			storageKey = candidate
+			break
+		}
+	}
+	if storageKey == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "allegato non trovato o non accessibile"})
+		return
+	}
+	downloader, ok := h.uploader.(upload.PrivateStorageDownloader)
+	if !ok {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "storage privato non configurato"})
+		return
+	}
+	reader, contentType, contentLength, err := downloader.DownloadFile(c.Request.Context(), storageKey)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "download allegato non riuscito"})
+		return
+	}
+	defer func() { _ = reader.Close() }()
+	if contentLength > upload.MaxUploadSize {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "allegato troppo grande"})
+		return
+	}
+	data, err := io.ReadAll(io.LimitReader(reader, upload.MaxUploadSize+1))
+	if err != nil || int64(len(data)) > upload.MaxUploadSize {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "lettura allegato non riuscita"})
+		return
+	}
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	c.Header("Cache-Control", "private, no-store, max-age=0")
+	c.Header("Pragma", "no-cache")
+	c.Header("X-Content-Type-Options", "nosniff")
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
+	c.Data(http.StatusOK, contentType, data)
+}
+
