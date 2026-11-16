@@ -2,6 +2,7 @@ package upload
 
 import (
 	"context"
+	"encoding/base64"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -94,4 +95,19 @@ func TestSupabaseUploaderRejectsMalformedStorageKeys(t *testing.T) {
 		_, _, _, err := uploader.DownloadFile(context.Background(), key)
 		require.Error(t, err, "storage key: %s", key)
 	}
+}
+
+func TestSupabaseUploaderRejectsClientKeys(t *testing.T) {
+	require.Error(t, validateServerStorageKey("sb_publishable_test"))
+	require.Error(t, validateServerStorageKey("sb_anon_test"))
+
+	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"HS256","typ":"JWT"}`))
+	anonPayload := base64.RawURLEncoding.EncodeToString([]byte(`{"role":"anon"}`))
+	anonJWT := header + "." + anonPayload + ".signature"
+	require.Error(t, validateServerStorageKey(anonJWT))
+
+	servicePayload := base64.RawURLEncoding.EncodeToString([]byte(`{"role":"service_role"}`))
+	serviceJWT := header + "." + servicePayload + ".signature"
+	require.NoError(t, validateServerStorageKey(serviceJWT))
+	require.NoError(t, validateServerStorageKey("sb_secret_server_only_key"))
 }
