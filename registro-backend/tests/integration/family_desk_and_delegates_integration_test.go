@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"registro-backend/internal/family_desk"
+	"registro-backend/internal/users"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -102,7 +103,34 @@ func (m *mockFamilyDeskRepoForIntegration) ListPermanentDelegates(ctx context.Co
 	return list, nil
 }
 
-func setupFamilyDeskTestServer(repo family_desk.Repository, role, userID, schoolID string) *gin.Engine {
+type mockFamilyDeskUsersForIntegration struct {
+	users.Repository
+	byID map[string]*users.User
+}
+
+func newFamilyDeskUsersForIntegration() *mockFamilyDeskUsersForIntegration {
+	schoolID := "school-001"
+	return &mockFamilyDeskUsersForIntegration{byID: map[string]*users.User{
+		"parent-101": {ID: "parent-101", Role: "parent", SchoolID: &schoolID},
+		"student-555": {ID: "student-555", Role: "student", SchoolID: &schoolID},
+		"student-301": {ID: "student-301", Role: "student", SchoolID: &schoolID},
+		"secr-201": {ID: "secr-201", Role: "secretary", SchoolID: &schoolID},
+	}}
+}
+
+func (m *mockFamilyDeskUsersForIntegration) GetByID(_ context.Context, id string) (*users.User, error) {
+	user, ok := m.byID[id]
+	if !ok {
+		return nil, users.ErrUserNotFound
+	}
+	return user, nil
+}
+
+func (m *mockFamilyDeskUsersForIntegration) IsGuardian(_ context.Context, parentID, studentID string) (bool, error) {
+	return parentID == "parent-101" && studentID == "student-555", nil
+}
+
+func setupFamilyDeskTestServer(repo family_desk.Repository, userRepo users.Repository, role, userID, schoolID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.Use(func(c *gin.Context) {
@@ -113,7 +141,7 @@ func setupFamilyDeskTestServer(repo family_desk.Repository, role, userID, school
 	})
 
 	svc := family_desk.NewService(repo)
-	handler := family_desk.NewHandler(svc)
+	handler := family_desk.NewHandler(svc, userRepo)
 	rg := r.Group("/api/v1")
 	handler.RegisterRoutes(rg)
 
@@ -122,9 +150,10 @@ func setupFamilyDeskTestServer(repo family_desk.Repository, role, userID, school
 
 func TestIntegration_FamilyDesk_PermanentDelegates_Lifecycle(t *testing.T) {
 	repo := newMockFamilyDeskRepoForIntegration()
-	parentServer := setupFamilyDeskTestServer(repo, "parent", "parent-101", "school-001")
-	secretaryServer := setupFamilyDeskTestServer(repo, "secretary", "secr-201", "school-001")
-	studentServer := setupFamilyDeskTestServer(repo, "student", "stud-301", "school-001")
+	userRepo := newFamilyDeskUsersForIntegration()
+	parentServer := setupFamilyDeskTestServer(repo, userRepo, "parent", "parent-101", "school-001")
+	secretaryServer := setupFamilyDeskTestServer(repo, userRepo, "secretary", "secr-201", "school-001")
+	studentServer := setupFamilyDeskTestServer(repo, userRepo, "student", "student-301", "school-001")
 
 	var createdRequestID string
 
@@ -139,10 +168,8 @@ func TestIntegration_FamilyDesk_PermanentDelegates_Lifecycle(t *testing.T) {
 				"tax_code":         "VRDGPP60A01H501U",
 				"relationship":     "nonno",
 				"phone":            "+393331234567",
-				"id_card_details":  "CI CA12345AA rilasciata da Roma",
-				"id_card_file_url": "https://storage.school.it/idcards/verdi_ci.pdf",
+				"id_card_details": "CI CA12345AA rilasciata da Roma",
 			},
-			"attachment_urls": []string{"https://storage.school.it/idcards/verdi_ci.pdf"},
 		}
 		body, _ := json.Marshal(payload)
 
