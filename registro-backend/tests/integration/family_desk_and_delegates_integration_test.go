@@ -89,6 +89,13 @@ func (m *mockFamilyDeskRepoForIntegration) CreatePermanentDelegate(ctx context.C
 	return nil
 }
 
+func (m *mockFamilyDeskRepoForIntegration) ApproveRequestWithDelegate(ctx context.Context, id, status, rejectionReason, protocolNumber, reviewerID string, delegate *family_desk.PermanentDelegate) error {
+	if err := m.UpdateRequestStatus(ctx, id, status, rejectionReason, protocolNumber, reviewerID); err != nil {
+		return err
+	}
+	return m.CreatePermanentDelegate(ctx, delegate)
+}
+
 func (m *mockFamilyDeskRepoForIntegration) ListPermanentDelegates(ctx context.Context, studentID, schoolID string) ([]family_desk.PermanentDelegate, error) {
 	var list []family_desk.PermanentDelegate
 	for _, d := range m.delegates {
@@ -178,7 +185,7 @@ func TestIntegration_FamilyDesk_PermanentDelegates_Lifecycle(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		parentServer.ServeHTTP(w, req)
 
-		require.Equal(t, http.StatusOK, w.Code)
+		require.Equal(t, http.StatusCreated, w.Code)
 
 		var resp struct {
 			Message string                    `json:"message"`
@@ -291,7 +298,7 @@ func TestIntegration_FamilyDesk_PermanentDelegates_Lifecycle(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		parentServer.ServeHTTP(w, req)
 
-		require.Equal(t, http.StatusOK, w.Code)
+		require.Equal(t, http.StatusCreated, w.Code)
 	})
 
 	// Step 7: Under 14 exit without consent is rejected with clear error

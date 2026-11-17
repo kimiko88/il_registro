@@ -498,6 +498,7 @@ func isAllowedMIMEType(contentType string) bool {
 		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
 		"application/vnd.ms-excel": true,
 		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true,
+		"application/vnd.openxmlformats-officedocument.presentationml.presentation": true,
 		"text/plain": true,
 	}
 	return allowed[contentType]
