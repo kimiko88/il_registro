@@ -437,4 +437,3 @@ func TestDocumentsHandler_DownloadPrivateAttachmentRejectsForeignDocumentKey(t *
 	upl.AssertNotCalled(t, "DownloadFile", mock.Anything, mock.Anything)
 	svc.AssertExpectations(t)
 }
-
