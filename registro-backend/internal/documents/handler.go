@@ -202,7 +202,6 @@ func (h *Handler) GetDocument(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-
 // DownloadFile authorizes document access before retrieving an object from private storage.
 // No public Supabase URL or storage credential is sent to the browser.
 func (h *Handler) DownloadFile(c *gin.Context) {

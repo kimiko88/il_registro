@@ -298,7 +298,6 @@ func validateServerStorageKey(key string) error {
 	return nil
 }
 
-
 // doNoRedirect prevents API keys from being forwarded to a different host through
 // an unexpected HTTP redirect. A 3xx response is returned to the caller as-is.
 func (s *SupabaseUploader) doNoRedirect(req *http.Request) (*http.Response, error) {
