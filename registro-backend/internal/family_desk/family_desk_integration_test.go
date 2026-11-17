@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -69,24 +68,6 @@ func (m *mockFamilyRepo) UpdateRequestStatus(ctx context.Context, id, status, re
 func (m *mockFamilyRepo) CreatePermanentDelegate(ctx context.Context, delegate *PermanentDelegate) error {
 	delegate.ID = "del-test-1"
 	delegate.CreatedAt = time.Now()
-	m.delegates[delegate.ID] = delegate
-	return nil
-}
-
-func (m *mockFamilyRepo) ApproveRequestWithDelegate(ctx context.Context, id, status, rejectionReason, protocolNumber, reviewerID string, delegate *PermanentDelegate) error {
-	req, ok := m.requests[id]
-	if !ok {
-		return errors.New("request not found")
-	}
-	req.Status = status
-	req.RejectionReason = rejectionReason
-	req.ProtocolNumber = protocolNumber
-	req.ReviewedBy = &reviewerID
-	now := time.Now()
-	req.ReviewedAt = &now
-	req.UpdatedAt = now
-	delegate.ID = "del-test-1"
-	delegate.CreatedAt = now
 	m.delegates[delegate.ID] = delegate
 	return nil
 }
@@ -170,8 +151,8 @@ func TestFamilyDeskIntegrationWorkflow(t *testing.T) {
 	w := httptest.NewRecorder()
 	parentRouter.ServeHTTP(w, req)
 
-	if w.Code != http.StatusCreated {
-		t.Fatalf("expected 201 on submit request, got %d: %s", w.Code, w.Body.String())
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 on submit request, got %d: %s", w.Code, w.Body.String())
 	}
 
 	// Step 2: Secretary approves request with protocol number

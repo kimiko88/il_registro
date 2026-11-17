@@ -8,9 +8,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -388,7 +388,7 @@ func TestDocumentsHandler_DownloadPrivateAttachmentRequiresDocumentAuthorization
 	svc.On("GetDocument", mock.Anything, "teacher", "school-1", "doc-1").
 		Return(&DocumentDetailResponse{
 			DocumentListResponse: DocumentListResponse{ID: "doc-1"},
-			Content:              "verbale\nAttachment: supabase://documents/schools/school-1/documents/doc-1/file.pdf",
+			Content: "verbale\nAttachment: supabase://documents/schools/school-1/documents/doc-1/file.pdf",
 		}, nil).Once()
 	upl.On("DownloadFile", mock.Anything, "supabase://documents/schools/school-1/documents/doc-1/file.pdf").
 		Return(io.NopCloser(strings.NewReader("%PDF-private")), "application/pdf", int64(13), nil).Once()
@@ -419,6 +419,7 @@ func TestDocumentsHandler_DownloadPrivateAttachmentDeniesUnauthorizedDocument(t 
 	upl.AssertNotCalled(t, "DownloadFile", mock.Anything, mock.Anything)
 }
 
+
 func TestDocumentsHandler_DownloadPrivateAttachmentRejectsForeignDocumentKey(t *testing.T) {
 	svc := new(MockDocumentService)
 	upl := new(MockStorageUploader)
@@ -427,7 +428,7 @@ func TestDocumentsHandler_DownloadPrivateAttachmentRejectsForeignDocumentKey(t *
 	svc.On("GetDocument", mock.Anything, "teacher", "school-1", "doc-1").
 		Return(&DocumentDetailResponse{
 			DocumentListResponse: DocumentListResponse{ID: "doc-1"},
-			Content:              "Attachment: supabase://documents/schools/school-2/documents/other-doc/file.pdf",
+			Content: "Attachment: supabase://documents/schools/school-2/documents/other-doc/file.pdf",
 		}, nil).Once()
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/documents/doc-1/file", nil)

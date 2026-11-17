@@ -401,16 +401,3 @@ func (h *Handler) DownloadAttachment(c *gin.Context) {
 	c.Data(http.StatusOK, contentType, data)
 }
 
-
-func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
-	g := rg.Group("/family-desk")
-	{
-		g.POST("/requests", h.SubmitRequest)
-		g.GET("/requests", h.ListRequests)
-		g.GET("/requests/:id", h.GetRequest)
-		g.PUT("/requests/:id/review", h.ReviewRequest)
-		g.GET("/requests/:id/attachments/:filename", h.DownloadAttachment)
-		g.POST("/students/:student_id/attachments", h.UploadAttachment)
-		g.GET("/delegates", h.ListDelegates)
-	}
-}
