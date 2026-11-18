@@ -53,11 +53,12 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 		if parseErr != nil || parsedAtt.Host == "" || parsedAtt.User != nil || parsedAtt.RawQuery != "" || parsedAtt.Fragment != "" {
 			return nil, errors.New("attachment_url non valido")
 		}
-		if parsedAtt.Scheme == "supabase" {
+		switch parsedAtt.Scheme {
+		case "supabase":
 			if strings.Contains(parsedAtt.Path, "..") || strings.ContainsAny(urlStr, "\r\n\x00") {
 				return nil, errors.New("attachment_url non valido")
 			}
-		} else if parsedAtt.Scheme == "http" || parsedAtt.Scheme == "https" {
+		case "http", "https":
 			hostname := strings.ToLower(parsedAtt.Hostname())
 			if strings.Contains(hostname, "localhost") ||
 				hostname == "0.0.0.0" || hostname == "::1" ||
@@ -77,7 +78,7 @@ func (s *Service) SendMessage(ctx context.Context, actorRole, schoolID, senderID
 				}() {
 				return nil, errors.New("attachment_url non valido: indirizzo interno o privato non consentito (SSRF protection)")
 			}
-		} else {
+		default:
 			return nil, errors.New("attachment_url scheme non consentito")
 		}
 	}

@@ -401,7 +401,6 @@ func (h *Handler) DownloadAttachment(c *gin.Context) {
 	c.Data(http.StatusOK, contentType, data)
 }
 
-
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
 	g := rg.Group("/family-desk")
 	{

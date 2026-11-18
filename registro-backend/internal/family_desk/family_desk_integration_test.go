@@ -109,7 +109,7 @@ type mockFamilyDeskUsers struct {
 func newMockFamilyDeskUsers() *mockFamilyDeskUsers {
 	schoolID := "school-123"
 	return &mockFamilyDeskUsers{byID: map[string]*users.User{
-		"parent-456": {ID: "parent-456", Role: "parent", SchoolID: &schoolID},
+		"parent-456":  {ID: "parent-456", Role: "parent", SchoolID: &schoolID},
 		"student-789": {ID: "student-789", Role: "student", SchoolID: &schoolID},
 		"secretary-1": {ID: "secretary-1", Role: "secretary", SchoolID: &schoolID},
 	}}

@@ -170,11 +170,11 @@ func TestIntegration_FamilyDesk_PermanentDelegates_Lifecycle(t *testing.T) {
 			"student_id":   "student-555",
 			"request_type": family_desk.TypeDelegaRitiro,
 			"form_data": map[string]interface{}{
-				"first_name":       "Giuseppe",
-				"last_name":        "Verdi",
-				"tax_code":         "VRDGPP60A01H501U",
-				"relationship":     "nonno",
-				"phone":            "+393331234567",
+				"first_name":      "Giuseppe",
+				"last_name":       "Verdi",
+				"tax_code":        "VRDGPP60A01H501U",
+				"relationship":    "nonno",
+				"phone":           "+393331234567",
 				"id_card_details": "CI CA12345AA rilasciata da Roma",
 			},
 		}

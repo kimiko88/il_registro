@@ -253,14 +253,14 @@ func (s *SupabaseUploader) DeleteFile(ctx context.Context, storageKey string) er
 
 func (s *SupabaseUploader) validateConfig() error {
 	if s.URL == "" || strings.TrimSpace(s.Key) == "" {
-		return fmt.Errorf("Supabase URL o chiave server non configurate")
+		return fmt.Errorf("supabase URL o chiave server non configurate")
 	}
 	if err := validateServerStorageKey(strings.TrimSpace(s.Key)); err != nil {
 		return err
 	}
 	parsed, err := url.Parse(s.URL)
 	if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") || parsed.Host == "" || parsed.User != nil {
-		return fmt.Errorf("Supabase URL non valida")
+		return fmt.Errorf("supabase URL non valida")
 	}
 	isRelease := strings.EqualFold(os.Getenv("APP_ENV"), "production") ||
 		strings.EqualFold(os.Getenv("SERVER_MODE"), "release") ||
