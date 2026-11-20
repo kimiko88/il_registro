@@ -23,9 +23,13 @@ type Server struct {
 	verbaleHandlerFunc    VerbalePdfHandlerFunc
 }
 
-func NewServer(redisAddr string, concurrency int, client *Client, scrutinyHandler ScrutinyPdfHandlerFunc) *Server {
+func NewServer(redisAddr string, concurrency int, client *Client, scrutinyHandler ScrutinyPdfHandlerFunc, redisPassword ...string) *Server {
+	password := ""
+	if len(redisPassword) > 0 {
+		password = redisPassword[0]
+	}
 	srv := asynq.NewServer(
-		asynq.RedisClientOpt{Addr: redisAddr},
+		asynq.RedisClientOpt{Addr: redisAddr, Password: password},
 		asynq.Config{
 			Concurrency: concurrency,
 			Queues: map[string]int{

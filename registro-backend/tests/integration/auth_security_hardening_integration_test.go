@@ -26,10 +26,12 @@ type mockUserRepoForSecurityIntegration struct {
 }
 
 func (m *mockUserRepoForSecurityIntegration) GetByID(ctx context.Context, id string) (*users.User, error) {
+	schoolID := "school-1"
 	return &users.User{
 		ID:       id,
 		Email:    "security-test@school.it",
 		Role:     "teacher",
+		SchoolID: &schoolID,
 		IsActive: true,
 	}, nil
 }
@@ -41,7 +43,7 @@ func (m *mockUserRepoForSecurityIntegration) IsActive(ctx context.Context, userI
 func TestIntegration_AuthSecurityHardening_RevocationAndProtection(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	priv, pub, err := jwt.GetOrGenerateKeys("", "")
+	priv, pub, err := jwt.GenerateRSAKeys()
 	require.NoError(t, err)
 
 	tm := jwt.NewTokenManager(priv, pub)

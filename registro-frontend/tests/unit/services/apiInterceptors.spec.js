@@ -214,3 +214,60 @@ describe('api.js - IDEMPOTENT_ENDPOINTS matching', () => {
         expect(shouldInjectKey('/auth/login')).toBe(false)
     })
 })
+
+
+describe('api.js - session request cancellation', () => {
+    beforeEach(() => {
+        vi.resetModules()
+    })
+
+    it('aborts an in-flight request when the session is cleared', async () => {
+        const { default: api, cancelInFlightRequests } = await import('@/services/api')
+        let resolveAdapter
+        let requestConfig
+        const adapter = vi.fn(config => {
+            requestConfig = config
+            return new Promise(resolve => {
+                resolveAdapter = () => resolve({
+                    data: { private: true },
+                    status: 200,
+                    statusText: 'OK',
+                    headers: {},
+                    config
+                })
+            })
+        })
+
+        const request = api.get('/__test/session-cancel', { adapter })
+        await vi.waitFor(() => expect(adapter).toHaveBeenCalledTimes(1))
+        expect(requestConfig.signal).toBeDefined()
+        expect(requestConfig.signal.aborted).toBe(false)
+
+        cancelInFlightRequests()
+        expect(requestConfig.signal.aborted).toBe(true)
+
+        resolveAdapter()
+        await expect(request).rejects.toMatchObject({ code: 'ERR_CANCELED' })
+    })
+
+    it('does not deliver a late response after the session generation changes', async () => {
+        const { default: api, cancelInFlightRequests } = await import('@/services/api')
+        let resolveAdapter
+        const adapter = vi.fn(config => new Promise(resolve => {
+            resolveAdapter = () => resolve({
+                data: { account: 'previous-user' },
+                status: 200,
+                statusText: 'OK',
+                headers: {},
+                config
+            })
+        }))
+
+        const request = api.get('/__test/late-response', { adapter })
+        await vi.waitFor(() => expect(adapter).toHaveBeenCalledTimes(1))
+        cancelInFlightRequests()
+        resolveAdapter()
+
+        await expect(request).rejects.toMatchObject({ code: 'ERR_CANCELED' })
+    })
+})

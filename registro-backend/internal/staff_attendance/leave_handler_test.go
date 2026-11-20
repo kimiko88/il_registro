@@ -123,6 +123,17 @@ func TestLeaveHandler_Timecard(t *testing.T) {
 	if w.Header().Get("Content-Type") == "" || w.Header().Get("Content-Type")[:8] != "text/csv" {
 		t.Fatalf("expected text/csv prefix, got %s", w.Header().Get("Content-Type"))
 	}
+	if w.Header().Get("X-Content-Type-Options") != "nosniff" {
+		t.Fatalf("expected nosniff header, got %s", w.Header().Get("X-Content-Type-Options"))
+	}
+
+	// 5. ExportTimecard rejects invalid/injected month query param -> 400
+	req, _ = http.NewRequest("GET", "/api/v1/staff-attendance/timecard/export?month=2026-09%22%3E%3Cscript%3E", nil)
+	w = httptest.NewRecorder()
+	rDsga.ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid month, got %d", w.Code)
+	}
 }
 
 func TestLeaveHandler_LeavesCRUD(t *testing.T) {

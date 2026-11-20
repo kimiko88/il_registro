@@ -50,39 +50,51 @@ public struct StudentAttendanceRecordModel: Identifiable, Equatable {
 
 extension GradeItemModel {
     public var localizedType: String {
+        localizedType(languageCode: nil)
+    }
+
+    func localizedType(languageCode: String?) -> String {
+        let key: String
         switch type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
         case "written", "scritto":
-            return studentLocalizedString("grade_type_written")
+            key = "grade_type_written"
         case "oral", "orale":
-            return studentLocalizedString("grade_type_oral")
+            key = "grade_type_oral"
         case "practical", "pratico":
-            return studentLocalizedString("grade_type_practical")
+            key = "grade_type_practical"
         case "test":
-            return studentLocalizedString("grade_type_test")
+            key = "grade_type_test"
         case "project", "progetto":
-            return studentLocalizedString("grade_type_project")
+            key = "grade_type_project"
         case "lab", "laboratory", "laboratorio":
-            return studentLocalizedString("grade_type_lab")
+            key = "grade_type_lab"
         default:
             return type
         }
+        return studentLocalizedString(key, languageCode: languageCode)
     }
 }
 
 extension StudentAttendanceRecordModel {
     public var localizedType: String {
+        localizedType(languageCode: nil)
+    }
+
+    func localizedType(languageCode: String?) -> String {
+        let key: String
         switch type.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
         case "present", "presenza":
-            return studentLocalizedString("attendance_present")
+            key = "attendance_present"
         case "absent", "assenza":
-            return studentLocalizedString("attendance_absent")
+            key = "attendance_absent"
         case "late", "ritardo":
-            return studentLocalizedString("attendance_late")
+            key = "attendance_late"
         case "early_exit", "uscita anticipata", "uscita_anticipata":
-            return studentLocalizedString("attendance_early_exit")
+            key = "attendance_early_exit"
         default:
             return type
         }
+        return studentLocalizedString(key, languageCode: languageCode)
     }
 }
 
@@ -93,32 +105,46 @@ public class StudentViewModel: ObservableObject {
     @Published public var isLoading: Bool = false
     @Published public var errorMessage: String? = nil
 
+    private var sessionGeneration = UUID()
     private let apiService: StudentAPIServiceProtocol
 
     public init(apiService: StudentAPIServiceProtocol = HttpStudentAPIService()) {
         self.apiService = apiService
-        // Le collezioni partono vuote in produzione; i dati vengono caricati dal server via loadFromDatabase(token:)
+        // Collections start empty in production; data is loaded from the server via loadFromDatabase(token:).
+    }
+
+    public func clearSession() {
+        sessionGeneration = UUID()
+        grades.removeAll()
+        homework.removeAll()
+        attendance.removeAll()
+        isLoading = false
+        errorMessage = nil
     }
 
     public func loadFromDatabase(token: String) async {
-        await MainActor.run {
+        let requestGeneration = await MainActor.run {
             self.isLoading = true
             self.errorMessage = nil
+            return self.sessionGeneration
         }
         do {
             async let fetchedGrades = apiService.fetchGrades(token: token)
             async let fetchedHomework = apiService.fetchHomework(token: token)
             async let fetchedAttendance = apiService.fetchAttendance(token: token)
-
             let (gradesResult, homeworkResult, attendanceResult) = try await (fetchedGrades, fetchedHomework, fetchedAttendance)
-
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent, !Task.isCancelled else { return }
             await MainActor.run {
+                guard self.sessionGeneration == requestGeneration else { return }
                 self.grades = gradesResult
                 self.homework = homeworkResult
                 self.attendance = attendanceResult
                 self.isLoading = false
             }
         } catch {
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent else { return }
             await MainActor.run {
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false

@@ -37,4 +37,12 @@ final class SecretaryViewModelTests: XCTestCase {
         XCTAssertTrue(cert.pdfUrl.contains(".pdf"))
         XCTAssertEqual(viewModel.certificates.count, 3)
     }
+    func testClearSessionRemovesPersonalData() {
+        viewModel.clearSession()
+        XCTAssertTrue(viewModel.users.isEmpty)
+        XCTAssertTrue(viewModel.classes.isEmpty)
+        XCTAssertTrue(viewModel.certificates.isEmpty)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertFalse(viewModel.isLoading)
+    }
 }

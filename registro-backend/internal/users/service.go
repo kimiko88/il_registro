@@ -110,6 +110,22 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
+// hasSchoolAccess verifies that a privileged actor can operate on a target user.
+// Superadmins are global; every other actor must have an explicit matching tenant.
+func hasSchoolAccess(actorRole, actorSchoolID string, target *User) bool {
+	if actorRole == "superadmin" {
+		return true
+	}
+	return actorSchoolID != "" && target != nil && target.SchoolID != nil && *target.SchoolID == actorSchoolID
+}
+
+func actorSchoolScope(scopes []string) string {
+	if len(scopes) == 0 {
+		return ""
+	}
+	return scopes[0]
+}
+
 // ─── Auth helpers ────────────────────────────────────────────────────────────
 
 func isPrivileged(role string) bool {
@@ -124,6 +140,22 @@ func isPrivileged(role string) bool {
 }
 
 // ─── CRUD ────────────────────────────────────────────────────────────────────
+
+// CreateUserForSchool prevents non-superadmin callers from selecting or omitting
+// the tenant. The HTTP handler must pass the authenticated school from context.
+func (s *Service) CreateUserForSchool(ctx context.Context, actorRole, actorSchoolID string, req CreateUserRequest) (*User, error) {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" {
+			return nil, ErrUnauthorized
+		}
+		if req.SchoolID != nil && *req.SchoolID != actorSchoolID {
+			return nil, ErrUnauthorized
+		}
+		schoolID := actorSchoolID
+		req.SchoolID = &schoolID
+	}
+	return s.CreateUser(ctx, actorRole, req)
+}
 
 // CreateUser creates a new user, enforcing role-based permission checks.
 func (s *Service) CreateUser(ctx context.Context, actorRole string, req CreateUserRequest) (*User, error) {
@@ -199,7 +231,10 @@ func (s *Service) ListUsers(ctx context.Context, actorRole, actorSchoolID string
 			return nil, 0, ErrUnauthorized
 		}
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" {
+			return nil, 0, ErrUnauthorized
+		}
 		filter.SchoolID = &actorSchoolID
 	}
 	return s.repo.List(ctx, filter)
@@ -214,7 +249,7 @@ func (s *Service) GetUser(ctx context.Context, actorRole, actorSchoolID string, 
 	if err != nil {
 		return nil, err
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || user.SchoolID == nil || *user.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
 	}
 	return user, nil
@@ -231,7 +266,7 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole, actorSchoolID, id s
 		return nil, err
 	}
 
-	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || user.SchoolID == nil || *user.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
 	}
 
@@ -282,6 +317,12 @@ func (s *Service) UpdateUser(ctx context.Context, actorRole, actorSchoolID, id s
 
 	user.UpdatedAt = time.Now()
 
+	// Changes to role, activation state or tenant invalidate all previously issued sessions.
+	if req.Role != nil || req.IsActive != nil || req.SchoolID != nil {
+		if err := s.repo.RevokeAllUserTokens(ctx, id); err != nil {
+			return nil, fmt.Errorf("failed to revoke sessions after security-sensitive account change: %w", err)
+		}
+	}
 	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, err
 	}
@@ -297,39 +338,67 @@ func (s *Service) DeleteUser(ctx context.Context, actorRole, actorSchoolID, id s
 	if err != nil {
 		return err
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || user.SchoolID == nil || *user.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 	if (actorRole == "secretary" || actorRole == "dsga" || actorRole == "assistente_amministrativo") && (user.Role == "admin" || user.Role == "superadmin" || (actorRole != "dsga" && user.Role == "dsga")) {
 		return ErrUnauthorized
 	}
+	if err := s.repo.RevokeAllUserTokens(ctx, id); err != nil {
+		return fmt.Errorf("failed to revoke sessions before deleting user: %w", err)
+	}
 	return s.repo.Delete(ctx, id)
 }
 
-// BulkDeleteUsers soft-deletes multiple users at once.
+// BulkDeleteUsers soft-deletes users after verifying tenant ownership and revoking sessions.
 func (s *Service) BulkDeleteUsers(ctx context.Context, actorRole, actorSchoolID string, ids []string) (int, error) {
 	if !isPrivileged(actorRole) {
 		return 0, ErrUnauthorized
 	}
-	if actorRole == "admin" || actorRole == "secretary" || actorRole == "dsga" || actorRole == "assistente_amministrativo" {
-		targetUsers, err := s.repo.ListByIDs(ctx, ids)
-		if err != nil {
-			return 0, fmt.Errorf("failed to verify target users: %w", err)
-		}
-		var safeIDs []string
-		for _, tu := range targetUsers {
-			if tu.Role != "admin" && tu.Role != "superadmin" && (actorRole == "dsga" || tu.Role != "dsga") {
-				if actorSchoolID != "" && tu.SchoolID != nil && *tu.SchoolID == actorSchoolID {
-					safeIDs = append(safeIDs, tu.ID)
-				}
-			}
-		}
-		ids = safeIDs
-	}
 	if len(ids) == 0 {
 		return 0, nil
 	}
-	return s.repo.BulkDelete(ctx, ids)
+
+	// Resolve every target before mutation. Never trust caller-supplied IDs as
+	// proof of tenant ownership, regardless of the caller's privileged role.
+	targetUsers, err := s.repo.ListByIDs(ctx, ids)
+	if err != nil {
+		return 0, fmt.Errorf("failed to verify target users: %w", err)
+	}
+
+	safeIDs := make([]string, 0, len(targetUsers))
+	seen := make(map[string]struct{}, len(targetUsers))
+	for _, target := range targetUsers {
+		if target.ID == "" {
+			continue
+		}
+		if _, duplicate := seen[target.ID]; duplicate {
+			continue
+		}
+		if actorRole != "superadmin" {
+			if actorSchoolID == "" || target.SchoolID == nil || *target.SchoolID != actorSchoolID {
+				continue
+			}
+		}
+		if (actorRole == "admin" || actorRole == "secretary" || actorRole == "dsga" || actorRole == "assistente_amministrativo") &&
+			(target.Role == "admin" || target.Role == "superadmin" || (actorRole != "dsga" && target.Role == "dsga")) {
+			continue
+		}
+		seen[target.ID] = struct{}{}
+		safeIDs = append(safeIDs, target.ID)
+	}
+	if len(safeIDs) == 0 {
+		return 0, nil
+	}
+
+	// Revocation must succeed before the soft-delete. A partial revocation
+	// leaves some sessions invalidated but never deletes users with live tokens.
+	for _, userID := range safeIDs {
+		if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+			return 0, fmt.Errorf("failed to revoke sessions before bulk deleting user %s: %w", userID, err)
+		}
+	}
+	return s.repo.BulkDelete(ctx, safeIDs)
 }
 
 // RestoreUser un-deletes a soft-deleted user.
@@ -341,7 +410,7 @@ func (s *Service) RestoreUser(ctx context.Context, actorRole, actorSchoolID stri
 	if err != nil {
 		return err
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || user.SchoolID == nil || *user.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 	return s.repo.Restore(ctx, id)
@@ -372,8 +441,12 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 	// Field is CurrentPassword in ChangePasswordRequest DTO (supports pre-hashed and legacy raw)
 	preCurrent := crypto.PrehashPassword(req.CurrentPassword)
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), preCurrent); err != nil {
-		if legacyErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); legacyErr != nil {
-			return ErrCurrentPasswordIncorrect
+		legacyPepperedErr := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), crypto.PrehashPasswordLegacy(req.CurrentPassword))
+		if legacyPepperedErr != nil {
+			if !crypto.LegacyPasswordMigrationEnabled() ||
+				bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)) != nil {
+				return ErrCurrentPasswordIncorrect
+			}
 		}
 	}
 
@@ -385,7 +458,9 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 	preNew := crypto.PrehashPassword(req.NewPassword)
 	for _, old := range history {
 		if bcrypt.CompareHashAndPassword([]byte(old), preNew) == nil ||
-			bcrypt.CompareHashAndPassword([]byte(old), []byte(req.NewPassword)) == nil {
+			(crypto.LegacyPasswordMigrationEnabled() &&
+				(bcrypt.CompareHashAndPassword([]byte(old), crypto.PrehashPasswordLegacy(req.NewPassword)) == nil ||
+					bcrypt.CompareHashAndPassword([]byte(old), []byte(req.NewPassword)) == nil)) {
 			return ErrPasswordRecentlyUsed
 		}
 	}
@@ -397,10 +472,12 @@ func (s *Service) ChangePassword(ctx context.Context, userID string, req ChangeP
 
 	// ChangePasswordTx aggiorna password e history in un'unica transazione atomica.
 	// Questo garantisce che se la history fallisce, anche la password non viene salvata.
+	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+		return fmt.Errorf("failed to revoke existing sessions: %w", err)
+	}
 	if err := s.repo.ChangePasswordTx(ctx, userID, string(hash)); err != nil {
 		return err
 	}
-	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return nil
 }
 
@@ -448,7 +525,7 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 		}
 	}
 
-	if actorRole != "superadmin" && actorSchoolID != "" && user.SchoolID != nil && *user.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || user.SchoolID == nil || *user.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 
@@ -458,10 +535,15 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 
 	preNew := crypto.PrehashPassword(newPassword)
 	history, err := s.repo.GetPasswordHistory(ctx, userID)
-	if err == nil {
+	if err != nil {
+		return fmt.Errorf("failed to fetch password history: %w", err)
+	}
+	{
 		for _, old := range history {
 			if bcrypt.CompareHashAndPassword([]byte(old), preNew) == nil ||
-				bcrypt.CompareHashAndPassword([]byte(old), []byte(newPassword)) == nil {
+				(crypto.LegacyPasswordMigrationEnabled() &&
+					(bcrypt.CompareHashAndPassword([]byte(old), crypto.PrehashPasswordLegacy(newPassword)) == nil ||
+						bcrypt.CompareHashAndPassword([]byte(old), []byte(newPassword)) == nil)) {
 				return errors.New("la nuova password non può essere uguale a una delle ultime 5 password utilizzate")
 			}
 		}
@@ -475,15 +557,17 @@ func (s *Service) ResetPassword(ctx context.Context, actorRole, actorSchoolID, u
 	now := time.Now()
 	user.PasswordHash = string(hash)
 	user.PasswordChangedAt = &now
+	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+		return fmt.Errorf("failed to revoke existing sessions: %w", err)
+	}
 	if err := s.repo.Update(ctx, user); err != nil {
 		return err
 	}
-	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return s.repo.AddPasswordHistory(ctx, userID, string(hash))
 }
 
-// DisableMFA disables MFA for the given user (admin only).
-func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID string) error {
+// DisableMFA disables MFA only for an administrator operating within their own school.
+func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID string, actorSchoolIDs ...string) error {
 	if actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
 	}
@@ -491,10 +575,17 @@ func (s *Service) DisableMFA(ctx context.Context, actorRole string, userID strin
 	if err != nil {
 		return err
 	}
+	if !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), user) {
+		return ErrUnauthorized
+	}
+	if err := s.repo.RevokeAllUserTokens(ctx, userID); err != nil {
+		return fmt.Errorf("failed to revoke sessions before disabling MFA: %w", err)
+	}
+	if err := s.repo.ClearTempMFASecret(ctx, userID); err != nil {
+		return fmt.Errorf("failed to clear temporary MFA secret: %w", err)
+	}
 	user.MFAEnabled = false
 	user.MFASecret = ""
-	_ = s.repo.ClearTempMFASecret(ctx, userID)
-	_ = s.repo.RevokeAllUserTokens(ctx, userID)
 	return s.repo.Update(ctx, user)
 }
 
@@ -514,7 +605,10 @@ func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID strin
 		return nil, err
 	}
 
-	if actorRole != "superadmin" && actorSchoolID != "" {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" {
+			return nil, ErrUnauthorized
+		}
 		for i := range users {
 			scID := actorSchoolID
 			users[i].SchoolID = &scID
@@ -542,7 +636,7 @@ func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID strin
 				result.Errors = append(result.Errors, fmt.Sprintf("utente %s: password non conforme (%v)", u.Email, err))
 				continue
 			}
-			hash, err := bcrypt.GenerateFromPassword([]byte(u.PasswordHash), bcryptCost)
+			hash, err := bcrypt.GenerateFromPassword(crypto.PrehashPassword(u.PasswordHash), bcryptCost)
 			if err != nil {
 				result.Failed++
 				result.Errors = append(result.Errors, fmt.Sprintf("utente %s: errore hashing password", u.Email))
@@ -569,8 +663,8 @@ func (s *Service) BulkImport(ctx context.Context, actorRole, actorSchoolID strin
 
 // ─── GDPR ────────────────────────────────────────────────────────────────────
 
-// GDPRDataExport exports all personal data for a user (GDPR right of access).
-func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, targetID string) (map[string]interface{}, error) {
+// GDPRDataExport exports personal data for the user or an administrator's own school.
+func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, targetID string, actorSchoolIDs ...string) (map[string]interface{}, error) {
 	if actorID != targetID && actorRole != "admin" && actorRole != "superadmin" {
 		return nil, ErrUnauthorized
 	}
@@ -578,18 +672,31 @@ func (s *Service) GDPRDataExport(ctx context.Context, actorID, actorRole, target
 	if err != nil {
 		return nil, err
 	}
-	// Fetch audit logs for the export (max 1000, offset 0)
+	if actorID != targetID && !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), user) {
+		return nil, ErrUnauthorized
+	}
 	logs, _, err := s.repo.GetAuditLogs(ctx, targetID, 1000, 0)
 	if err != nil {
 		return nil, err
 	}
-	// NewExporter takes no arguments; GenerateDataExport is on GDPRHandler
+	var personalData map[string]interface{}
+	if exporter, ok := s.repo.(interface {
+		GetUserPersonalDataExport(context.Context, string, string) (map[string]interface{}, error)
+	}); ok {
+		personalData, err = exporter.GetUserPersonalDataExport(ctx, targetID, user.Role)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Non-Postgres repositories used by isolated tests may not expose domain exports.
+		personalData = map[string]interface{}{}
+	}
 	gdpr := NewGDPRHandler(s.repo)
-	return gdpr.GenerateDataExport(user, logs), nil
+	return gdpr.GenerateDataExport(user, logs, personalData), nil
 }
 
-// GDPRDelete pseudonymizes a user (GDPR right to erasure).
-func (s *Service) GDPRDelete(ctx context.Context, actorRole string, targetID string) error {
+// GDPRDelete pseudonymizes a user after verifying tenant ownership and revoking sessions.
+func (s *Service) GDPRDelete(ctx context.Context, actorRole string, targetID string, actorSchoolIDs ...string) error {
 	if actorRole != "admin" && actorRole != "superadmin" {
 		return ErrUnauthorized
 	}
@@ -597,40 +704,56 @@ func (s *Service) GDPRDelete(ctx context.Context, actorRole string, targetID str
 	if err != nil {
 		return err
 	}
+	if !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), user) {
+		return ErrUnauthorized
+	}
+	if err := s.repo.RevokeAllUserTokens(ctx, targetID); err != nil {
+		return fmt.Errorf("failed to revoke sessions before GDPR deletion: %w", err)
+	}
 	gdpr := NewGDPRHandler(s.repo)
 	gdpr.PseudonymizeUser(user)
-	// Persist the pseudonymized data
-	if err := s.repo.Update(ctx, user); err != nil {
-		return err
-	}
-	_ = s.repo.RevokeAllUserTokens(ctx, targetID)
-	return nil
+	return s.repo.Update(ctx, user)
 }
 
 // ─── Audit ───────────────────────────────────────────────────────────────────
 
-// GetAuditLogs returns the audit log for a specific user (paginated).
-// Access: the user themselves, or admin/superadmin.
-func (s *Service) GetAuditLogs(ctx context.Context, actorID, actorRole, targetID string, limit, offset int) ([]AuditLog, int, error) {
+// GetAuditLogs returns audit logs only to the user or an administrator in the same school.
+func (s *Service) GetAuditLogs(ctx context.Context, actorID, actorRole, targetID string, limit, offset int, actorSchoolIDs ...string) ([]AuditLog, int, error) {
 	if actorID != targetID && actorRole != "admin" && actorRole != "superadmin" {
 		return nil, 0, ErrUnauthorized
+	}
+	if actorID != targetID {
+		target, err := s.repo.GetByID(ctx, targetID)
+		if err != nil {
+			return nil, 0, err
+		}
+		if !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), target) {
+			return nil, 0, ErrUnauthorized
+		}
 	}
 	return s.repo.GetAuditLogs(ctx, targetID, limit, offset)
 }
 
 // ─── Relationships ───────────────────────────────────────────────────────────
 
-// GetChildren returns the list of students linked to a parent.
-func (s *Service) GetChildren(ctx context.Context, actorRole, actorID, parentUserID string) ([]StudentChild, error) {
-	if actorID != parentUserID && !isPrivileged(actorRole) {
+// GetChildren exposes a parent's linked students only to that authenticated parent.
+// Staff-facing child searches must use a dedicated school-scoped endpoint.
+func (s *Service) GetChildren(ctx context.Context, actorRole, actorID, parentUserID string, _ ...string) ([]StudentChild, error) {
+	if actorRole != "parent" || actorID == "" || actorID != parentUserID {
 		return nil, ErrUnauthorized
 	}
 	return s.repo.GetChildren(ctx, parentUserID)
 }
 
-// GetGuardians returns all guardians linked to a student.
-func (s *Service) GetGuardians(ctx context.Context, actorRole string, studentUserID string) ([]GuardianInfo, error) {
+func (s *Service) GetGuardians(ctx context.Context, actorRole string, studentUserID string, actorSchoolIDs ...string) ([]GuardianInfo, error) {
 	if !isPrivileged(actorRole) {
+		return nil, ErrUnauthorized
+	}
+	student, err := s.repo.GetByID(ctx, studentUserID)
+	if err != nil {
+		return nil, err
+	}
+	if !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), student) {
 		return nil, ErrUnauthorized
 	}
 	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
@@ -640,9 +763,21 @@ func (s *Service) GetGuardians(ctx context.Context, actorRole string, studentUse
 	return s.repo.GetGuardians(ctx, studentProfileID)
 }
 
-// AddGuardian links a parent to a student.
-func (s *Service) AddGuardian(ctx context.Context, actorRole, studentUserID, parentUserID, relationship string) error {
+func (s *Service) AddGuardian(ctx context.Context, actorRole, studentUserID, parentUserID, relationship string, actorSchoolIDs ...string) error {
 	if !isPrivileged(actorRole) {
+		return ErrUnauthorized
+	}
+	student, err := s.repo.GetByID(ctx, studentUserID)
+	if err != nil {
+		return err
+	}
+	parent, err := s.repo.GetByID(ctx, parentUserID)
+	if err != nil {
+		return err
+	}
+	scope := actorSchoolScope(actorSchoolIDs)
+	if !hasSchoolAccess(actorRole, scope, student) || !hasSchoolAccess(actorRole, scope, parent) ||
+		student.SchoolID == nil || parent.SchoolID == nil || *student.SchoolID != *parent.SchoolID {
 		return ErrUnauthorized
 	}
 	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
@@ -656,9 +791,20 @@ func (s *Service) AddGuardian(ctx context.Context, actorRole, studentUserID, par
 	return s.repo.AddGuardian(ctx, studentProfileID, parentProfileID, relationship)
 }
 
-// RemoveGuardian unlinks a parent from a student.
-func (s *Service) RemoveGuardian(ctx context.Context, actorRole, studentUserID, parentUserID string) error {
+func (s *Service) RemoveGuardian(ctx context.Context, actorRole, studentUserID, parentUserID string, actorSchoolIDs ...string) error {
 	if !isPrivileged(actorRole) {
+		return ErrUnauthorized
+	}
+	student, err := s.repo.GetByID(ctx, studentUserID)
+	if err != nil {
+		return err
+	}
+	parent, err := s.repo.GetByID(ctx, parentUserID)
+	if err != nil {
+		return err
+	}
+	scope := actorSchoolScope(actorSchoolIDs)
+	if !hasSchoolAccess(actorRole, scope, student) || !hasSchoolAccess(actorRole, scope, parent) {
 		return ErrUnauthorized
 	}
 	studentProfileID, err := s.repo.GetStudentProfile(ctx, studentUserID)
@@ -712,7 +858,10 @@ func (s *Service) ExportUsers(ctx context.Context, actorRole, actorSchoolID stri
 	if !isPrivileged(actorRole) {
 		return nil, ErrUnauthorized
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" {
+	if actorRole != "superadmin" {
+		if actorSchoolID == "" {
+			return nil, ErrUnauthorized
+		}
 		filter.SchoolID = &actorSchoolID
 	}
 	users, _, err := s.repo.List(ctx, filter)
@@ -752,7 +901,14 @@ func (s *Service) ExportUsers(ctx context.Context, actorRole, actorSchoolID stri
 	return json.Marshal(dtos)
 }
 
-func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, studentID string) (*StudentFascicolo, error) {
+func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, studentID string, actorSchoolIDs ...string) (*StudentFascicolo, error) {
+	student, err := s.repo.GetByID(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+	if actorRole != "superadmin" && !hasSchoolAccess(actorRole, actorSchoolScope(actorSchoolIDs), student) {
+		return nil, ErrUnauthorized
+	}
 	if !isPrivileged(actorRole) {
 		if actorRole == "parent" {
 			isGuard, err := s.repo.IsGuardian(ctx, actorID, studentID)
@@ -762,11 +918,6 @@ func (s *Service) GetStudentFascicolo(ctx context.Context, actorID, actorRole, s
 		} else if actorID != studentID {
 			return nil, ErrUnauthorized
 		}
-	}
-
-	student, err := s.repo.GetByID(ctx, studentID)
-	if err != nil {
-		return nil, err
 	}
 
 	var guardians []GuardianInfo
@@ -821,9 +972,43 @@ func canAssignDuty(actorRole string, dutyType string) bool {
 	}
 }
 
-// GetUserAssignments returns active assignments for a user.
-func (s *Service) GetUserAssignments(ctx context.Context, actorRole, targetUserID string) ([]UserAssignment, error) {
+// GetUserAssignments returns assignments only to the user or authorized staff in the same school.
+func (s *Service) GetUserAssignments(ctx context.Context, actorRole, targetUserID string, actorContext ...string) ([]UserAssignment, error) {
 	if !isPrivileged(actorRole) && actorRole != "teacher" && actorRole != "student" && actorRole != "parent" {
+		return nil, ErrUnauthorized
+	}
+	actorID, schoolID := "", ""
+	if len(actorContext) > 0 {
+		actorID = actorContext[0]
+	}
+	if len(actorContext) > 1 {
+		schoolID = actorContext[1]
+	}
+	if actorRole != "superadmin" && actorID == "" {
+		return nil, ErrUnauthorized
+	}
+	target, err := s.repo.GetByID(ctx, targetUserID)
+	if err != nil {
+		return nil, err
+	}
+	switch {
+	case isPrivileged(actorRole), actorRole == "teacher":
+		if !hasSchoolAccess(actorRole, schoolID, target) {
+			return nil, ErrUnauthorized
+		}
+	case actorRole == "parent":
+		if !hasSchoolAccess(actorRole, schoolID, target) {
+			return nil, ErrUnauthorized
+		}
+		isGuardian, err := s.repo.IsGuardian(ctx, actorID, targetUserID)
+		if err != nil || !isGuardian {
+			return nil, ErrUnauthorized
+		}
+	case actorRole == "student":
+		if actorID != targetUserID {
+			return nil, ErrUnauthorized
+		}
+	default:
 		return nil, ErrUnauthorized
 	}
 	return s.repo.GetAssignments(ctx, targetUserID)
@@ -844,7 +1029,7 @@ func (s *Service) AddUserAssignment(ctx context.Context, actorRole, actorUserID,
 	if schoolID == "" && targetUser.SchoolID != nil {
 		schoolID = *targetUser.SchoolID
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && targetUser.SchoolID != nil && *targetUser.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || targetUser.SchoolID == nil || *targetUser.SchoolID != actorSchoolID) {
 		return nil, ErrUnauthorized
 	}
 
@@ -887,7 +1072,7 @@ func (s *Service) DeleteUserAssignment(ctx context.Context, actorRole, actorScho
 	if err != nil {
 		return err
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && targetUser.SchoolID != nil && *targetUser.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || targetUser.SchoolID == nil || *targetUser.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 
@@ -928,7 +1113,7 @@ func (s *Service) SetCoordinatedClasses(ctx context.Context, actorRole, actorSch
 	if schoolID == "" && teacher.SchoolID != nil {
 		schoolID = *teacher.SchoolID
 	}
-	if actorRole != "superadmin" && actorSchoolID != "" && teacher.SchoolID != nil && *teacher.SchoolID != actorSchoolID {
+	if actorRole != "superadmin" && (actorSchoolID == "" || teacher.SchoolID == nil || *teacher.SchoolID != actorSchoolID) {
 		return ErrUnauthorized
 	}
 

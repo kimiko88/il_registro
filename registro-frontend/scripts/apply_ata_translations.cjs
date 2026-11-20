@@ -16,15 +16,32 @@ const localeMap = {
   'zh-CN': './translations/zh.cjs'
 };
 
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 function deepMerge(target, source) {
+  if (!source || typeof source !== 'object') return target;
   for (const key of Object.keys(source)) {
+    if (FORBIDDEN_KEYS.has(key) || !Object.prototype.hasOwnProperty.call(source, key)) {
+      continue;
+    }
     if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-      if (!target[key] || typeof target[key] !== 'object' || Array.isArray(target[key])) {
-        target[key] = {};
+      const existing = Object.prototype.hasOwnProperty.call(target, key) ? target[key] : undefined;
+      if (!existing || typeof existing !== 'object' || Array.isArray(existing)) {
+        Object.defineProperty(target, key, {
+          value: {},
+          writable: true,
+          enumerable: true,
+          configurable: true
+        });
       }
       deepMerge(target[key], source[key]);
     } else {
-      target[key] = source[key];
+      Object.defineProperty(target, key, {
+        value: source[key],
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
     }
   }
   return target;

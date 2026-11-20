@@ -72,14 +72,14 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		}
 
 		// Referrer Policy
-		c.Writer.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		c.Writer.Header().Set("Referrer-Policy", "no-referrer")
 
 		// X-XSS-Protection (legacy IE/Edge compatibility)
 		c.Writer.Header().Set("X-XSS-Protection", "1; mode=block")
 
 		// Permissions-Policy: restrict powerful browser APIs not needed by the app
 		c.Writer.Header().Set("Permissions-Policy",
-			"camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()")
+			"camera=(), microphone=(self), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()")
 
 		// Content Security Policy — strict nonce-based CSP without 'unsafe-inline'
 		nonce, err := generateNonce()

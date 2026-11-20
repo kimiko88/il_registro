@@ -118,11 +118,14 @@ func TestFullSchoolWorkflowIntegration(t *testing.T) {
 
 		// Link parent to student mock
 		ctx := context.Background()
+		schoolID := "school-galileo"
+		mockUserRepo.On("GetByID", mock.Anything, "student-1").Return(&users.User{ID: "student-1", Role: "student", SchoolID: &schoolID}, nil).Once()
+		mockUserRepo.On("GetByID", mock.Anything, "parent-1").Return(&users.User{ID: "parent-1", Role: "parent", SchoolID: &schoolID}, nil).Once()
 		mockUserRepo.On("GetStudentProfile", mock.Anything, "student-1").Return("student-profile-1", nil)
 		mockUserRepo.On("GetParentProfile", mock.Anything, "parent-1").Return("parent-profile-1", nil)
 		mockUserRepo.On("AddGuardian", mock.Anything, "student-profile-1", "parent-profile-1", "padre").Return(nil)
 
-		err := userSvc.AddGuardian(ctx, "secretary", "student-1", "parent-1", "padre")
+		err := userSvc.AddGuardian(ctx, "secretary", "student-1", "parent-1", "padre", schoolID)
 		assert.NoError(t, err)
 	})
 

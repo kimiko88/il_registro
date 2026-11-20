@@ -43,8 +43,11 @@ func TestMultiChannelDispatcher(t *testing.T) {
 		assert.NotEmpty(t, resp.BatchID)
 		assert.True(t, resp.EmergencyAlert)
 		assert.Equal(t, 6, resp.TotalDispatches) // 2 recipients * 3 channels
-		assert.Equal(t, 6, resp.SuccessCount)
-		assert.Equal(t, 0, resp.FailureCount)
+		assert.Equal(t, 0, resp.SuccessCount)
+		assert.Equal(t, 6, resp.FailureCount)
+		for _, result := range resp.Results {
+			assert.Equal(t, "SIMULATED", result.Status)
+		}
 	})
 
 	t.Run("Validation failure with invalid fiscal code or invalid phone", func(t *testing.T) {
@@ -116,7 +119,11 @@ func TestNotificationsHandler_MultiChannelEndpoint(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err)
 	assert.Equal(t, 2, resp.TotalDispatches)
-	assert.Equal(t, 2, resp.SuccessCount)
+	assert.Equal(t, 0, resp.SuccessCount)
+	assert.Equal(t, 2, resp.FailureCount)
+	for _, result := range resp.Results {
+		assert.Equal(t, "SIMULATED", result.Status)
+	}
 
 	// Unauthorized role test
 	studentRouter := setupTestNotificationsRouter(svc, "student-1", "student")

@@ -26,13 +26,26 @@ type Client struct {
 	rdb         *redis.Client
 }
 
-func NewClient(redisAddr string) *Client {
-	asynqClient := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr})
-	rdb := redis.NewClient(&redis.Options{Addr: redisAddr})
+func NewClient(redisAddr string, redisPassword ...string) *Client {
+	password := ""
+	if len(redisPassword) > 0 {
+		password = redisPassword[0]
+	}
+	asynqClient := asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr, Password: password})
+	rdb := redis.NewClient(&redis.Options{Addr: redisAddr, Password: password})
 	return &Client{
 		asynqClient: asynqClient,
 		rdb:         rdb,
 	}
+}
+
+// Ping verifies that Redis is reachable and credentials are accepted before
+// the worker starts accepting jobs.
+func (c *Client) Ping(ctx context.Context) error {
+	if c == nil || c.rdb == nil {
+		return fmt.Errorf("pdf worker Redis client is not configured")
+	}
+	return c.rdb.Ping(ctx).Err()
 }
 
 func (c *Client) Close() error {

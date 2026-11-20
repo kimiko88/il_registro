@@ -172,7 +172,9 @@ func TestHandler_Logout(t *testing.T) {
 			requestBody: map[string]string{},
 			setupMock: func(m *MockRepository) {
 				// Token not found → no-op, logout is idempotent
-				m.On("GetRefreshToken", mock.Anything, "").Return(nil, ErrInvalidToken)
+				// Empty refresh tokens are handled before repository access; authenticated
+				// logout still revokes every session belonging to the caller.
+				m.On("RevokeAllUserTokens", mock.Anything, "user-123").Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, w *httptest.ResponseRecorder) {

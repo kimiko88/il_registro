@@ -1,93 +1,102 @@
 package it.scuola.registro.teacher
 
 import it.scuola.registro.teacher.cache.OfflineCacheManager
-import it.scuola.registro.teacher.network.HttpTeacherApiService
+import it.scuola.registro.teacher.data.ClassSession
+import it.scuola.registro.teacher.data.DeferredScrutinyResolution
+import it.scuola.registro.teacher.data.GradeProposal
+import it.scuola.registro.teacher.data.StudentRollCall
 import it.scuola.registro.teacher.security.BiometricAuthCallback
 import it.scuola.registro.teacher.security.BiometricAuthHelper
-import it.scuola.registro.teacher.security.SecurityCheckHelper
-import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
-import org.junit.Before
 import org.junit.Test
 
 /**
- * End-to-End & Integration Test for Teacher App against the REAL Live Backend and Database.
- * Zero mocks / Zero stubs: queries live classes and students directly from the school server.
+ * Deterministic integration checks for the teacher offline-data and authentication
+ * boundaries. Tests must not depend on a deployed school backend, shared credentials,
+ * enrolled biometric hardware, or mutable production data.
  */
-class TeacherLiveDatabaseE2ETest {
+class TeacherOfflineIntegrationTest {
 
-    private lateinit var apiService: HttpTeacherApiService
-    private lateinit var cacheManager: OfflineCacheManager
-    private lateinit var securityHelper: SecurityCheckHelper
-    private lateinit var biometricHelper: BiometricAuthHelper
+    @Test
+    fun testTeacherOfflineCacheFullFlow() {
+        val cacheManager = OfflineCacheManager()
+        val classes = listOf(
+            ClassSession(
+                classId = "class-1",
+                className = "3A",
+                subject = "Matematica",
+                hourSlot = "08:00-09:00"
+            )
+        )
+        val rollCalls = listOf(
+            StudentRollCall(studentId = "student-1", fullName = "Studente Test")
+        )
+        val grades = listOf(
+            GradeProposal(studentId = "student-1", subjectId = "math", grade = 8.0)
+        )
+        val deferred = listOf(
+            DeferredScrutinyResolution(
+                studentId = "student-1",
+                subjectId = "math",
+                recoveryGrade = 7.0,
+                status = "recuperato",
+                finalDecision = "ammesso"
+            )
+        )
 
-    @Before
-    fun setUp() {
-        apiService = HttpTeacherApiService("https://registro-backend-fdu2.onrender.com/api/v1")
-        cacheManager = OfflineCacheManager()
-        securityHelper = SecurityCheckHelper()
-        biometricHelper = BiometricAuthHelper()
+        assertFalse("A new cache must not be considered valid", cacheManager.isCacheValid())
+
+        cacheManager.saveClasses(classes)
+        cacheManager.saveRollCalls(rollCalls)
+        cacheManager.saveGrades(grades)
+        cacheManager.saveDeferredScrutiny(deferred)
+
+        assertTrue("Cache must become valid after classes are saved", cacheManager.isCacheValid())
+        assertEquals(classes, cacheManager.getCachedClasses())
+        assertEquals(rollCalls, cacheManager.getCachedRollCalls())
+        assertEquals(grades, cacheManager.getCachedGrades())
+        assertEquals(deferred, cacheManager.getCachedDeferredScrutiny())
+
+        cacheManager.clearCache()
+
+        assertFalse("Cleared cache must be invalid", cacheManager.isCacheValid())
+        assertTrue(cacheManager.getCachedClasses().isEmpty())
+        assertTrue(cacheManager.getCachedRollCalls().isEmpty())
+        assertTrue(cacheManager.getCachedGrades().isEmpty())
+        assertTrue(cacheManager.getCachedDeferredScrutiny().isEmpty())
     }
 
     @Test
-    fun testLiveTeacherFullFlow_RealDatabaseIntegration() = runBlocking {
-        // 1. Device Security Integrity Checks
-        val securityReport = securityHelper.getSecurityReport()
-        assertNotNull(securityReport)
-        assertTrue(securityReport.containsKey("isRooted"))
-        assertTrue(securityReport.containsKey("isEmulator"))
+    fun testBiometricAuthenticationFailsClosedWhenNotConfigured() {
+        val biometricHelper = BiometricAuthHelper()
+        var successCalled = false
+        var failedCalled = false
+        var reportedError: Pair<Int, String>? = null
 
-        // 2. Biometric Authentication Helper
-        var biometricSuccess = false
+        assertFalse("Biometrics must remain unavailable until platform authentication is wired",
+            biometricHelper.isBiometricAvailable())
+
         biometricHelper.authenticate(object : BiometricAuthCallback {
             override fun onSuccess() {
-                biometricSuccess = true
+                successCalled = true
             }
+
             override fun onError(errorCode: Int, errString: String) {
-                biometricSuccess = false
+                reportedError = errorCode to errString
             }
+
             override fun onFailed() {
-                biometricSuccess = false
+                failedCalled = true
             }
         })
-        assertTrue("Biometric authentication helper must function", biometricSuccess)
 
-        // 3. Real Server Login with verified live teacher account
-        val loginResult = apiService.login("docente.incarichi@scuola.it", "password")
-        assertTrue("Real database login must succeed: ${loginResult.exceptionOrNull()?.message}", loginResult.isSuccess)
-
-        val token = loginResult.getOrThrow()
-        assertTrue("JWT token must be populated", token.isNotEmpty())
-
-        // 4. Retrieve REAL live classes from database
-        val classesResult = apiService.getClasses(token)
-        assertTrue("Classes fetch must succeed: ${classesResult.exceptionOrNull()?.message}", classesResult.isSuccess)
-        val classes = classesResult.getOrThrow()
-        assertTrue("Teacher must have classes assigned in the real database", classes.isNotEmpty())
-
-        val firstClass = classes.first()
-        assertTrue("Class ID must be valid", firstClass.classId.isNotBlank())
-        assertTrue("Class name must be valid", firstClass.className.isNotBlank())
-
-        // 5. Retrieve REAL students of that class from the database
-        val studentsResult = apiService.getClassStudents(token, firstClass.classId)
-        assertTrue("Students fetch must succeed: ${studentsResult.exceptionOrNull()?.message}", studentsResult.isSuccess)
-        val students = studentsResult.getOrThrow()
-        assertTrue("Class must contain students enrolled in database", students.isNotEmpty())
-
-        val firstStudent = students.first()
-        assertTrue("Student ID must be valid", firstStudent.studentId.isNotBlank())
-        assertTrue("Student name must be populated", firstStudent.fullName.isNotBlank())
-
-        // 6. Store real classes and roll calls into OfflineCacheManager
-        cacheManager.saveClasses(classes)
-        cacheManager.saveRollCalls(students)
-        assertTrue("Cache must be valid after saving live data", cacheManager.isCacheValid())
-        assertEquals("Cached classes count must match", classes.size, cacheManager.getCachedClasses().size)
-        assertEquals("Cached students count must match", students.size, cacheManager.getCachedRollCalls().size)
-
-        // 7. Clear cache
-        cacheManager.clearCache()
-        assertFalse("Cache must be invalidated after clear", cacheManager.isCacheValid())
+        assertFalse("An unavailable biometric implementation must never authenticate",
+            successCalled)
+        assertFalse("Unavailable authentication is an error, not a failed biometric match",
+            failedCalled)
+        assertNotNull("The caller must be informed that authentication is unavailable",
+            reportedError)
+        assertEquals(BiometricAuthHelper.BIOMETRIC_UNAVAILABLE, reportedError?.first)
+        assertTrue(reportedError?.second?.isNotBlank() == true)
     }
 }

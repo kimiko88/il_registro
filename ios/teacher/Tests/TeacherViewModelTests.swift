@@ -45,4 +45,14 @@ final class TeacherViewModelTests: XCTestCase {
         let invalid = viewModel.insertGrade(studentId: "s1", grade: 12.0, type: "Scritto")
         XCTAssertFalse(invalid)
     }
+    func testClearSessionRemovesPersonalData() {
+        viewModel.clearSession()
+        XCTAssertTrue(viewModel.students.isEmpty)
+        XCTAssertTrue(viewModel.grades.isEmpty)
+        XCTAssertNil(viewModel.currentSession)
+        XCTAssertFalse(viewModel.isHourSigned)
+        XCTAssertEqual(viewModel.lessonTopic, "")
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertFalse(viewModel.isLoading)
+    }
 }

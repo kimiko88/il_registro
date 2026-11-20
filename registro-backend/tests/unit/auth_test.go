@@ -36,10 +36,12 @@ func TestAuthService_Register(t *testing.T) {
 				FirstName: "Mario",
 				LastName:  "Rossi",
 				Role:      "student",
+				SchoolID:  "school-1",
 			},
 			setupMock: func() {
+				mockRepo.On("SchoolExists", mock.Anything, "school-1").Return(true, nil)
 				mockRepo.On("CreateUser", mock.Anything, mock.MatchedBy(func(u *auth.User) bool {
-					return u.Email == "new@test.com"
+					return u.Email == "new@test.com" && u.SchoolID != nil && *u.SchoolID == "school-1"
 				})).Return(nil)
 				mockRepo.On("AddPasswordHistory", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
@@ -53,8 +55,10 @@ func TestAuthService_Register(t *testing.T) {
 				FirstName: "Existing",
 				LastName:  "User",
 				Role:      "student",
+				SchoolID:  "school-1",
 			},
 			setupMock: func() {
+				mockRepo.On("SchoolExists", mock.Anything, "school-1").Return(true, nil)
 				mockRepo.On("CreateUser", mock.Anything, mock.Anything).Return(auth.ErrEmailAlreadyExists)
 			},
 			expectedError: auth.ErrEmailAlreadyExists,
@@ -74,6 +78,7 @@ func TestAuthService_Register(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
+			mockRepo.AssertExpectations(t)
 		})
 	}
 }

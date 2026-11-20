@@ -1,5 +1,6 @@
 package it.scuola.registro.student.network
 
+import it.scuola.registro.student.config.AppConfig
 import it.scuola.registro.student.data.AttendanceRecord
 import it.scuola.registro.student.data.GradeEntry
 import it.scuola.registro.student.data.HomeworkAssignment
@@ -24,7 +25,7 @@ interface StudentApiService {
 }
 
 class HttpStudentApiService(
-    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
+    private val baseUrl: String = AppConfig.BASE_URL
 ) : StudentApiService {
 
     override suspend fun login(email: String, password: String): Result<Pair<String, StudentUser>> =
@@ -39,6 +40,7 @@ class HttpStudentApiService(
 
                 val url = URL("$baseUrl/auth/login")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                     doOutput = true
@@ -71,11 +73,10 @@ class HttpStudentApiService(
                             email = userObj.optString("email", email),
                             className = userObj.optString("class_name", "Classe")
                         )
-                        Result.success(Pair(token, user))
+                        if (token.isBlank()) Result.failure(Exception("Token di accesso mancante")) else Result.success(Pair(token, user))
                     }
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
+                    Result.failure(Exception("Login fallito (HTTP $responseCode)"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -87,6 +88,7 @@ class HttpStudentApiService(
             try {
                 val url = URL("$baseUrl/grades/my-grades")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -159,6 +161,7 @@ class HttpStudentApiService(
             try {
                 val url = URL("$baseUrl/attendance/my-attendance")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -201,6 +204,7 @@ class HttpStudentApiService(
             try {
                 val url = URL("$baseUrl/agenda")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -244,6 +248,7 @@ class HttpStudentApiService(
             try {
                 val url = URL("$baseUrl/scrutiny/my-report-card")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -277,4 +282,23 @@ class HttpStudentApiService(
                 Result.failure(e)
             }
         }
+}
+
+suspend fun HttpStudentApiService.logout(token: String): Result<Unit> = withContext(Dispatchers.IO) {
+    try {
+        val connection = (URL("${AppConfig.BASE_URL}/auth/logout").openConnection() as HttpURLConnection).apply {
+            instanceFollowRedirects = false
+            requestMethod = "POST"
+            setRequestProperty("Authorization", "Bearer $token")
+            setRequestProperty("Accept", "application/json")
+            connectTimeout = 10000
+            readTimeout = 10000
+        }
+        val status = connection.responseCode
+        connection.disconnect()
+        if (status in 200..299) Result.success(Unit)
+        else Result.failure(IllegalStateException("Logout server non riuscito (HTTP $status)"))
+    } catch (error: Exception) {
+        Result.failure(error)
+    }
 }

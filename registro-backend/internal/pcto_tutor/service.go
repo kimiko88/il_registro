@@ -2,7 +2,10 @@ package pcto_tutor
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -14,11 +17,17 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
+func hashTutorToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
+
 func (s *Service) AuthenticateWithToken(ctx context.Context, token string) (*CompanyTutor, error) {
+	token = strings.TrimSpace(token)
 	if token == "" {
 		return nil, errors.New("token di accesso obbligatorio")
 	}
-	return s.repo.GetTutorByToken(ctx, token)
+	return s.repo.GetTutorByToken(ctx, hashTutorToken(token))
 }
 
 func (s *Service) RegisterTutor(ctx context.Context, tutor *CompanyTutor) error {
@@ -26,15 +35,18 @@ func (s *Service) RegisterTutor(ctx context.Context, tutor *CompanyTutor) error 
 		return errors.New("email, azienda e cognome tutor sono obbligatori")
 	}
 
-	token, expiresAt, err := GenerateMagicLinkToken(14 * 24 * time.Hour) // 14 days valid
+	token, expiresAt, err := GenerateMagicLinkToken(14 * 24 * time.Hour)
 	if err != nil {
 		return err
 	}
-	tutor.AccessToken = token
 	tutor.TokenExpiresAt = &expiresAt
 	tutor.IsActive = true
-
-	return s.repo.CreateTutor(ctx, tutor)
+	tutor.AccessToken = hashTutorToken(token)
+	err = s.repo.CreateTutor(ctx, tutor)
+	// The raw token is returned once to the authorized registrar; only its
+	// SHA-256 digest is persisted and subsequent reads never return it.
+	tutor.AccessToken = token
+	return err
 }
 
 func (s *Service) AssignStudent(ctx context.Context, tutorID, projectID, studentID string) error {

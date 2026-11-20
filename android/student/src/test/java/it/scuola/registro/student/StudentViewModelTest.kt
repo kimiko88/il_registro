@@ -42,4 +42,14 @@ class StudentViewModelTest {
         assertEquals(2, viewModel.getTotalAbsences())
         assertEquals(1, viewModel.getTotalLates())
     }
+    @Test
+    fun clearSession_removesPersonalData() {
+        viewModel.clearSession()
+        assertTrue(viewModel.grades.isEmpty())
+        assertTrue(viewModel.homeworkList.isEmpty())
+        assertTrue(viewModel.attendanceRecords.isEmpty())
+        assertEquals(null, viewModel.reportCard)
+        assertEquals(null, viewModel.errorMessage)
+        assertEquals(false, viewModel.isLoading)
+    }
 }

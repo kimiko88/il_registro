@@ -22,6 +22,11 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 }
 
+// PlanScopeValidator verifies that all users and classes referenced by a plan belong to one school.
+type PlanScopeValidator interface {
+	ValidatePlanScope(ctx context.Context, schoolID, studentID, classID string, coordinatorID, referenteID *string) (bool, error)
+}
+
 type repository struct {
 	db *sql.DB
 }
@@ -112,9 +117,11 @@ func (r *repository) Create(ctx context.Context, plan *PdpPlan) (*PdpPlan, error
 	// Encrypt clinical diagnosis at rest (GDPR Art. 9)
 	encDiagnosis := plan.Diagnosis
 	if encDiagnosis != "" {
-		if cipherText, err := crypto.EncryptString(encDiagnosis); err == nil {
-			encDiagnosis = cipherText
+		cipherText, encryptErr := crypto.EncryptString(encDiagnosis)
+		if encryptErr != nil {
+			return nil, fmt.Errorf("pdp.Create: encrypt diagnosis: %w", encryptErr)
 		}
+		encDiagnosis = cipherText
 	}
 
 	query := `
@@ -197,9 +204,11 @@ func (r *repository) Update(ctx context.Context, id string, req *UpdatePdpReques
 	if req.Diagnosis != nil {
 		encDiagnosis := *req.Diagnosis
 		if encDiagnosis != "" {
-			if cipherText, err := crypto.EncryptString(encDiagnosis); err == nil {
-				encDiagnosis = cipherText
+			cipherText, encryptErr := crypto.EncryptString(encDiagnosis)
+			if encryptErr != nil {
+				return nil, fmt.Errorf("pdp.Update: encrypt diagnosis: %w", encryptErr)
 			}
+			encDiagnosis = cipherText
 		}
 		set += fmt.Sprintf("diagnosis = $%d, ", i)
 		args = append(args, encDiagnosis)
@@ -258,4 +267,42 @@ func (r *repository) ApproveByFamily(ctx context.Context, id, approverID string)
 func (r *repository) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM pdp_plans WHERE id = $1`, id)
 	return err
+}
+
+func (r *repository) ValidatePlanScope(ctx context.Context, schoolID, studentID, classID string, coordinatorID, referenteID *string) (bool, error) {
+	var coordinator any
+	if coordinatorID != nil && *coordinatorID != "" {
+		coordinator = *coordinatorID
+	}
+	var referente any
+	if referenteID != nil && *referenteID != "" {
+		referente = *referenteID
+	}
+	var valid bool
+	err := r.db.QueryRowContext(ctx, `
+		SELECT EXISTS (
+			SELECT 1
+			FROM users student
+			JOIN students profile ON profile.user_id = student.id
+			JOIN classes class ON class.id = $3::uuid
+			WHERE student.id = $2::uuid
+			  AND student.school_id = $1::uuid
+			  AND student.deleted_at IS NULL
+			  AND class.school_id = $1::uuid
+			  AND profile.class_id = class.id
+			  AND ($4::uuid IS NULL OR EXISTS (
+				SELECT 1 FROM users coordinator
+				WHERE coordinator.id = $4::uuid
+				  AND coordinator.school_id = $1::uuid
+				  AND coordinator.deleted_at IS NULL
+			  ))
+			  AND ($5::uuid IS NULL OR EXISTS (
+				SELECT 1 FROM users referente
+				WHERE referente.id = $5::uuid
+				  AND referente.school_id = $1::uuid
+				  AND referente.deleted_at IS NULL
+			  ))
+		)
+	`, schoolID, studentID, classID, coordinator, referente).Scan(&valid)
+	return valid, err
 }

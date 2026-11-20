@@ -64,14 +64,13 @@ I parametri di connessione sono definiti nel file `Config/AppConfig.swift` di ci
 import Foundation
 
 public struct AppConfig {
-    // Default per simulatore iOS (accede al localhost del Mac):
-    public static var baseURL: String = "http://localhost:8080/api/v1"
-    public static var wsURL: String = "ws://localhost:8080/api/v1/ws"
-
-    // Per iPhone fisico connesso sulla stessa rete Wi-Fi:
-    // public static var baseURL: String = "http://192.168.1.xxx:8080/api/v1"
+    // Endpoint TLS: HTTPS e WSS sono richiesti anche per server locali.
+    public static var baseURL: String = "https://registro-backend-fdu2.onrender.com/api/v1"
+    public static var wsURL: String = "wss://registro-backend-fdu2.onrender.com/api/v1/ws"
 }
 ```
+
+Le app iOS applicano App Transport Security senza eccezioni per HTTP locale o remoto. La configurazione MDM accetta soltanto endpoint HTTPS/WSS validi; per i test locali usa un endpoint con certificato TLS attendibile.
 
 ---
 

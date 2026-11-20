@@ -1,0 +1,51 @@
+name: Android Security & Build
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Android unit tests, lint and release builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "23"
+          cache: gradle
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Verify wrapper
+        working-directory: android
+        run: ./gradlew --version
+
+      - name: Run unit tests
+        working-directory: android
+        run: ./gradlew --no-daemon test
+
+      - name: Run Android lint
+        working-directory: android
+        run: ./gradlew --no-daemon lintRelease
+
+      - name: Build all release APKs
+        working-directory: android
+        run: ./gradlew --no-daemon assembleRelease

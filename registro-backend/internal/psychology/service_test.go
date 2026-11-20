@@ -10,6 +10,10 @@ import (
 )
 
 func TestPsychologyDeskLifecycle(t *testing.T) {
+	t.Setenv("SERVER_MODE", "test")
+	t.Setenv("APP_ENV", "test")
+	t.Setenv("GIN_MODE", "test")
+	t.Setenv("ENCRYPTION_KEY", "0123456789abcdef0123456789abcdef")
 	ctx := context.Background()
 	svc := NewService(NewMemoryRepository())
 
@@ -64,8 +68,13 @@ func TestPsychologyDeskLifecycle(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, stdView.EncryptedClinicalNotes)
 
-	// 8. Psychologist reads session -> notes are accessible
+	// 8. Only the assigned psychologist receives plaintext clinical notes.
 	psyView, err := svc.GetSessionSecure(ctx, session.ID, psychologistID, "psychologist")
 	require.NoError(t, err)
-	assert.NotEmpty(t, psyView.EncryptedClinicalNotes)
+	assert.Equal(t, "Colloquio orientativo svolto in clima di ascolto empatico", psyView.ClinicalNotes)
+	assert.Empty(t, psyView.EncryptedClinicalNotes)
+	stored, err := svc.repo.GetSessionByID(ctx, session.ID)
+	require.NoError(t, err)
+	assert.NotContains(t, stored.EncryptedClinicalNotes, "Colloquio orientativo")
+	assert.NotEmpty(t, stored.EncryptedClinicalNotes)
 }

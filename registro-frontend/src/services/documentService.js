@@ -17,7 +17,7 @@ export const documentService = {
         return api.get(`/documents/${id}/versions`);
     },
     downloadDocument(id) {
-        return api.get(`/documents/${id}/download`, {
+        return api.get(`/documents/${id}/file`, {
             responseType: 'blob',
             timeout: 60000
         });

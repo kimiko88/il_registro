@@ -59,34 +59,48 @@ public class SecretaryViewModel: ObservableObject {
     @Published public var isLoading: Bool = false
     @Published public var errorMessage: String? = nil
 
+    private var sessionGeneration = UUID()
     private let apiService: SecretaryAPIServiceProtocol
 
     public init(apiService: SecretaryAPIServiceProtocol = HttpSecretaryAPIService()) {
         self.apiService = apiService
     }
 
+    public func clearSession() {
+        sessionGeneration = UUID()
+        users.removeAll()
+                classes.removeAll()
+                certificates.removeAll()
+                isLoading = false
+                errorMessage = nil
+    }
+
     public func loadFromDatabase(token: String) async {
-        await MainActor.run {
+        let requestGeneration = await MainActor.run {
             self.isLoading = true
             self.errorMessage = nil
+            return self.sessionGeneration
         }
         do {
             async let fetchedUsers = apiService.fetchUsers(token: token)
             async let fetchedClasses = apiService.fetchClasses(token: token)
             async let fetchedCertificates = apiService.fetchCertificates(token: token)
-
-            let (u, cl, cert) = try await (fetchedUsers, fetchedClasses, fetchedCertificates)
-
+            let (users, classes, certificates) = try await (fetchedUsers, fetchedClasses, fetchedCertificates)
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent, !Task.isCancelled else { return }
             await MainActor.run {
-                self.users = u.map {
+                guard self.sessionGeneration == requestGeneration else { return }
+                self.users = users.map {
                     let fullName = "\($0.firstName) \($0.lastName)".trimmingCharacters(in: .whitespacesAndNewlines)
                     return ManagedUserModel(id: $0.id, name: fullName.isEmpty ? $0.email : fullName, role: $0.role)
                 }
-                self.classes = cl
-                self.certificates = cert
+                self.classes = classes
+                self.certificates = certificates
                 self.isLoading = false
             }
         } catch {
+            let isCurrent = await MainActor.run { self.sessionGeneration == requestGeneration }
+            guard isCurrent else { return }
             await MainActor.run {
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false

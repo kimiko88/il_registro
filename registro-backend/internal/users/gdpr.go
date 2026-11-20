@@ -44,19 +44,31 @@ func (h *GDPRHandler) PseudonymizeUser(user *User) {
 }
 
 // GenerateDataExport creates a map of all user data for portability
-func (h *GDPRHandler) GenerateDataExport(user *User, logs []AuditLog) map[string]interface{} {
+func (h *GDPRHandler) GenerateDataExport(user *User, logs []AuditLog, personalData map[string]interface{}) map[string]interface{} {
+	// Audit records may contain third-party actor IDs, IP addresses or free-form
+	// details. Export only the event attributable to the subject, not those fields.
+	auditEvents := make([]map[string]interface{}, 0, len(logs))
+	for _, log := range logs {
+		auditEvents = append(auditEvents, map[string]interface{}{
+			"action":     log.Action,
+			"created_at": log.CreatedAt,
+		})
+	}
+	if personalData == nil {
+		personalData = map[string]interface{}{}
+	}
 	return map[string]interface{}{
 		"profile": map[string]interface{}{
-			"id":          user.ID,
-			"first_name":  user.FirstName,
-			"last_name":   user.LastName,
-			"email":       user.Email,
-			"fiscal_code": user.FiscalCode,
-			"role":        user.Role,
-			"created_at":  user.CreatedAt,
+			"id": user.ID, "first_name": user.FirstName, "last_name": user.LastName,
+			"email": user.Email, "fiscal_code": user.FiscalCode, "role": user.Role,
+			"school_id": user.SchoolID, "class_id": user.ClassID,
+			"phone_number": user.PhoneNumber, "job_title": user.JobTitle,
+			"date_of_birth": user.DateOfBirth, "is_active": user.IsActive,
+			"created_at": user.CreatedAt, "updated_at": user.UpdatedAt,
+			"last_login": user.LastLogin,
 		},
-		"audit_logs": logs,
-		// In a real system, we'd fetch grades, attendance, etc. here too
-		"generated_at": time.Now(),
+		"personal_data": personalData,
+		"audit_events":  auditEvents,
+		"generated_at":  time.Now(),
 	}
 }

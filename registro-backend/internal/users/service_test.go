@@ -320,7 +320,7 @@ func TestService_ListUsers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			_, _, err := service.ListUsers(context.Background(), tt.actorRole, "", tt.filter)
+			_, _, err := service.ListUsers(context.Background(), tt.actorRole, "school-1", tt.filter)
 			if tt.wantErr {
 				// We expect ErrUnauthorized
 				assert.Error(t, err)
@@ -347,7 +347,8 @@ func TestService_GetUser(t *testing.T) {
 			actorRole: "admin",
 			userID:    "user-123",
 			mockSetup: func() {
-				user := &User{ID: "user-123", Email: "test@example.com"}
+				schoolID := "school-1"
+				user := &User{ID: "user-123", Email: "test@example.com", SchoolID: &schoolID}
 				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
 			},
 			wantErr: false,
@@ -357,7 +358,8 @@ func TestService_GetUser(t *testing.T) {
 			actorRole: "teacher",
 			userID:    "user-456",
 			mockSetup: func() {
-				user := &User{ID: "user-456", Email: "student@example.com"}
+				schoolID := "school-1"
+				user := &User{ID: "user-456", Email: "student@example.com", SchoolID: &schoolID}
 				mockRepo.On("GetByID", mock.Anything, "user-456").Return(user, nil)
 			},
 			wantErr: false,
@@ -374,7 +376,7 @@ func TestService_GetUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			_, err := service.GetUser(context.Background(), tt.actorRole, "", tt.userID)
+			_, err := service.GetUser(context.Background(), tt.actorRole, "school-1", tt.userID)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -404,7 +406,8 @@ func TestService_UpdateUser(t *testing.T) {
 			userID:    "user-123",
 			req:       UpdateUserRequest{FirstName: &newName},
 			mockSetup: func() {
-				user := &User{ID: "user-123", FirstName: "Old Name"}
+				schoolID := "school-1"
+				user := &User{ID: "user-123", FirstName: "Old Name", SchoolID: &schoolID}
 				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
 				mockRepo.On("Update", mock.Anything, mock.AnythingOfType("*users.User")).Return(nil)
 			},
@@ -423,7 +426,7 @@ func TestService_UpdateUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			_, err := service.UpdateUser(context.Background(), tt.actorRole, "", tt.userID, tt.req)
+			_, err := service.UpdateUser(context.Background(), tt.actorRole, "school-1", tt.userID, tt.req)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -449,7 +452,9 @@ func TestService_DeleteUser(t *testing.T) {
 			actorRole: "admin",
 			userID:    "user-123",
 			mockSetup: func() {
-				mockRepo.On("GetByID", mock.Anything, "user-123").Return(&User{ID: "user-123"}, nil)
+				schoolID := "school-1"
+				mockRepo.On("GetByID", mock.Anything, "user-123").Return(&User{ID: "user-123", SchoolID: &schoolID}, nil)
+				mockRepo.On("RevokeAllUserTokens", mock.Anything, "user-123").Return(nil)
 				mockRepo.On("Delete", mock.Anything, "user-123").Return(nil)
 			},
 			wantErr: false,
@@ -466,7 +471,7 @@ func TestService_DeleteUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			err := service.DeleteUser(context.Background(), tt.actorRole, "", tt.userID)
+			err := service.DeleteUser(context.Background(), tt.actorRole, "school-1", tt.userID)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -477,6 +482,7 @@ func TestService_DeleteUser(t *testing.T) {
 }
 
 func TestService_ChangePassword(t *testing.T) {
+	t.Setenv("ALLOW_LEGACY_PASSWORD_PEPPER", "true")
 	mockRepo := new(MockRepository)
 	service := NewService(mockRepo)
 
@@ -699,7 +705,8 @@ func TestService_RestoreUser(t *testing.T) {
 			actorRole: "admin",
 			userID:    "user-123",
 			mockSetup: func() {
-				user := &User{ID: "user-123"}
+				schoolID := "school-1"
+				user := &User{ID: "user-123", SchoolID: &schoolID}
 				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
 				mockRepo.On("Restore", mock.Anything, "user-123").Return(nil)
 			},
@@ -717,7 +724,7 @@ func TestService_RestoreUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			err := service.RestoreUser(context.Background(), tt.actorRole, "", tt.userID)
+			err := service.RestoreUser(context.Background(), tt.actorRole, "school-1", tt.userID)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -743,7 +750,8 @@ func TestService_DisableMFA(t *testing.T) {
 			actorRole: "admin",
 			userID:    "user-123",
 			mockSetup: func() {
-				user := &User{ID: "user-123", MFAEnabled: true, MFASecret: "secret"}
+				schoolID := "school-1"
+				user := &User{ID: "user-123", SchoolID: &schoolID, MFAEnabled: true, MFASecret: "secret"}
 				mockRepo.On("GetByID", mock.Anything, "user-123").Return(user, nil)
 				mockRepo.On("ClearTempMFASecret", mock.Anything, "user-123").Return(nil)
 				mockRepo.On("RevokeAllUserTokens", mock.Anything, "user-123").Return(nil)
@@ -765,7 +773,7 @@ func TestService_DisableMFA(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			err := service.DisableMFA(context.Background(), tt.actorRole, tt.userID)
+			err := service.DisableMFA(context.Background(), tt.actorRole, tt.userID, "school-1")
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -886,7 +894,7 @@ func TestService_ExportUsers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
-			data, err := service.ExportUsers(context.Background(), tt.actorRole, "", UserFilter{}, tt.format)
+			data, err := service.ExportUsers(context.Background(), tt.actorRole, "school-1", UserFilter{}, tt.format)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -916,7 +924,8 @@ func TestService_GDPRConvert(t *testing.T) {
 	})
 
 	t.Run("GDPR Delete", func(t *testing.T) {
-		user := &User{ID: "user-del", Email: "del@e.com", FirstName: "F", LastName: "L"}
+		schoolID := "school-1"
+		user := &User{ID: "user-del", SchoolID: &schoolID, Email: "del@e.com", FirstName: "F", LastName: "L"}
 
 		mockRepo.On("GetByID", mock.Anything, "user-del").Return(user, nil).Once()
 		// Update should be called with modified user
@@ -925,9 +934,34 @@ func TestService_GDPRConvert(t *testing.T) {
 		})).Return(nil).Once()
 		mockRepo.On("RevokeAllUserTokens", mock.Anything, "user-del").Return(nil).Once()
 
-		err := service.GDPRDelete(context.Background(), "admin", "user-del")
+		err := service.GDPRDelete(context.Background(), "admin", "user-del", "school-1")
 		assert.NoError(t, err)
 	})
+}
+
+func TestGDPRGenerateDataExport_MinimizesThirdPartyAuditData(t *testing.T) {
+	user := &User{
+		ID: "subject-1", Email: "subject@example.test", FirstName: "Subject",
+		LastName: "User", PasswordHash: "must-not-export", MFASecret: "must-not-export",
+	}
+	logs := []AuditLog{{
+		UserID: "subject-1", ActorID: "third-party-actor", Action: "profile.updated",
+		Details: `{"other_user":"third-party"}`, IPAddress: "192.0.2.10",
+		CreatedAt: time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC),
+	}}
+	data := NewGDPRHandler(nil).GenerateDataExport(user, logs, map[string]interface{}{"grades": []interface{}{}})
+	assert.Contains(t, data, "personal_data")
+	assert.NotContains(t, data, "audit_logs")
+	events := data["audit_events"].([]map[string]interface{})
+	if assert.Len(t, events, 1) {
+		assert.Equal(t, "profile.updated", events[0]["action"])
+		assert.NotContains(t, events[0], "actor_id")
+		assert.NotContains(t, events[0], "ip_address")
+		assert.NotContains(t, events[0], "details")
+	}
+	profile := data["profile"].(map[string]interface{})
+	assert.NotContains(t, profile, "password_hash")
+	assert.NotContains(t, profile, "mfa_secret")
 }
 
 func TestService_DeleteUser_SchoolIDIsolation(t *testing.T) {

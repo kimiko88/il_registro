@@ -6,29 +6,18 @@ interface WebSocketListener {
     fun onDisconnected()
 }
 
+/**
+ * Placeholder until a real TLS WebSocket transport with authenticated lifecycle
+ * handling is implemented. It must never claim a connection or synthesize events.
+ */
 class StudentWebSocketClient {
-    private var isConnected: Boolean = false
-    private var listener: WebSocketListener? = null
-
     fun connect(wsUrl: String, token: String, listener: WebSocketListener) {
-        this.listener = listener
-        if (wsUrl.isNotBlank() && token.isNotBlank()) {
-            isConnected = true
-            listener.onConnected()
-        }
+        listener.onDisconnected()
     }
 
-    fun simulateIncomingMessage(message: String) {
-        if (isConnected) {
-            listener?.onMessageReceived(message)
-        }
-    }
+    fun simulateIncomingMessage(message: String) = Unit
 
-    fun disconnect() {
-        isConnected = false
-        listener?.onDisconnected()
-        listener = null
-    }
+    fun disconnect() = Unit
 
-    fun isConnectionActive(): Boolean = isConnected
+    fun isConnectionActive(): Boolean = false
 }

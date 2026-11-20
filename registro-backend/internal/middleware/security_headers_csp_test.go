@@ -51,7 +51,7 @@ func TestSecurityHeaders_ReferrerPolicy(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/test", nil)
 	r.ServeHTTP(w, req)
 
-	assert.Equal(t, "strict-origin-when-cross-origin", w.Header().Get("Referrer-Policy"))
+	assert.Equal(t, "no-referrer", w.Header().Get("Referrer-Policy"))
 }
 
 func TestSecurityHeaders_XSSProtection(t *testing.T) {
@@ -77,7 +77,7 @@ func TestSecurityHeaders_PermissionsPolicy(t *testing.T) {
 
 	pp := w.Header().Get("Permissions-Policy")
 	assert.Contains(t, pp, "camera=()")
-	assert.Contains(t, pp, "microphone=()")
+	assert.Contains(t, pp, "microphone=(self)")
 	assert.Contains(t, pp, "geolocation=()")
 	assert.Contains(t, pp, "payment=()")
 }

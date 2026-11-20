@@ -101,13 +101,13 @@ func (c *appIOClient) SendMessage(ctx context.Context, fiscalCode, subject, mark
 	}
 
 	bodyBytes, _ := json.Marshal(payload)
-	// If API key is not configured, simulate successful AgID testbed response
+	// Without credentials, report simulation explicitly; no message is sent.
 	if c.apiKey == "" {
 		msgID := fmt.Sprintf("io-msg-%s-%d", cf, time.Now().UnixNano())
 		return MultiChannelResult{
 			Channel:   ChannelAppIO,
 			Recipient: cf,
-			Status:    "SENT",
+			Status:    "SIMULATED",
 			MessageID: msgID,
 			Timestamp: time.Now(),
 		}
@@ -171,13 +171,13 @@ func (c *whatsAppClient) SendMessage(ctx context.Context, toPhone, templateName,
 		}
 	}
 
-	// Simulation mode if token is empty
+	// Without credentials, report simulation explicitly; no message is sent.
 	if c.accessToken == "" || c.phoneID == "" {
 		return MultiChannelResult{
 			Channel:   ChannelWhatsApp,
 			Recipient: phone,
-			Status:    "SENT",
-			MessageID: fmt.Sprintf("wamid.HBgM%d", time.Now().UnixNano()),
+			Status:    "SIMULATED",
+			MessageID: fmt.Sprintf("simulated-wa-%d", time.Now().UnixNano()),
 			Timestamp: time.Now(),
 		}
 	}
@@ -257,23 +257,23 @@ func (c *smsGatewayClient) SendSMS(ctx context.Context, toPhone, senderID, messa
 		senderID = "SCUOLA"
 	}
 
-	// If no external gateway configured, return simulated instant delivery
+	// Without a configured gateway, report simulation explicitly; no SMS is sent.
 	if c.apiKey == "" {
 		return MultiChannelResult{
 			Channel:   ChannelSMS,
 			Recipient: phone,
-			Status:    "SENT",
-			MessageID: fmt.Sprintf("sms-%s-%d", senderID, time.Now().UnixNano()),
+			Status:    "SIMULATED",
+			MessageID: fmt.Sprintf("simulated-sms-%s-%d", senderID, time.Now().UnixNano()),
 			Timestamp: time.Now(),
 		}
 	}
 
-	// External gateway call when configured
+	// The gateway integration is not implemented. Never report a delivery that did not occur.
 	return MultiChannelResult{
 		Channel:   ChannelSMS,
 		Recipient: phone,
-		Status:    "SENT",
-		MessageID: fmt.Sprintf("sms-gw-%d", time.Now().UnixNano()),
+		Status:    "FAILED",
+		Error:     "SMS gateway integration is not configured",
 		Timestamp: time.Now(),
 	}
 }

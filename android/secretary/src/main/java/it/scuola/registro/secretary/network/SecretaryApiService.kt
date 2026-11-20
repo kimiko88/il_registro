@@ -1,5 +1,7 @@
 package it.scuola.registro.secretary.network
 
+import android.net.Uri
+import it.scuola.registro.secretary.config.AppConfig
 import it.scuola.registro.secretary.data.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -27,7 +29,7 @@ interface SecretaryApiService {
 }
 
 class HttpSecretaryApiService(
-    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
+    private val baseUrl: String = AppConfig.BASE_URL
 ) : SecretaryApiService {
 
     override suspend fun login(email: String, password: String): Result<Pair<String, UserProfile?>> =
@@ -35,6 +37,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/auth/login")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                     doOutput = true
@@ -71,11 +74,10 @@ class HttpSecretaryApiService(
                                 schoolId = it.optString("school_id")
                             )
                         }
-                        Result.success(Pair(token, profile))
+                        if (token.isBlank()) Result.failure(Exception("Token di accesso mancante")) else Result.success(Pair(token, profile))
                     }
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
+                    Result.failure(Exception("Login fallito (HTTP $responseCode)"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -87,6 +89,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/admin/dashboard/stats")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -118,6 +121,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/users?page_size=200")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -166,6 +170,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/users")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -203,8 +208,7 @@ class HttpSecretaryApiService(
                         )
                     )
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Errore creazione utente: $err"))
+                    Result.failure(Exception("Errore creazione utente (HTTP ${conn.responseCode})"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -214,8 +218,9 @@ class HttpSecretaryApiService(
     override suspend fun updateUser(token: String, id: String, payload: UpdateUserPayload): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/users/$id")
+                val url = URL("$baseUrl/users/${Uri.encode(id)}")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "PATCH"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -238,8 +243,7 @@ class HttpSecretaryApiService(
                 if (conn.responseCode in 200..299) {
                     Result.success(true)
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Errore modifica utente: $err"))
+                    Result.failure(Exception("Errore modifica utente (HTTP ${conn.responseCode})"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -249,8 +253,9 @@ class HttpSecretaryApiService(
     override suspend fun deleteUser(token: String, id: String): Result<Boolean> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/users/$id")
+                val url = URL("$baseUrl/users/${Uri.encode(id)}")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "DELETE"
                     setRequestProperty("Authorization", "Bearer $token")
                     connectTimeout = 10000
@@ -260,8 +265,7 @@ class HttpSecretaryApiService(
                 if (conn.responseCode in 200..299) {
                     Result.success(true)
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Errore eliminazione utente: $err"))
+                    Result.failure(Exception("Errore eliminazione utente (HTTP ${conn.responseCode})"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -273,6 +277,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/scrutiny/overview")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -310,6 +315,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/certificates")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -365,6 +371,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/certificates/generate")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -408,8 +415,7 @@ class HttpSecretaryApiService(
                         )
                     )
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Errore generazione certificato: $err"))
+                    Result.failure(Exception("Errore generazione certificato (HTTP ${conn.responseCode})"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -421,6 +427,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/audit-log?limit=50")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -467,6 +474,7 @@ class HttpSecretaryApiService(
             try {
                 val url = URL("$baseUrl/auth/me")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -503,8 +511,9 @@ class HttpSecretaryApiService(
     ): Result<String> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/users/$userId/change-password")
+                val url = URL("$baseUrl/users/${Uri.encode(userId)}/change-password")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -524,16 +533,29 @@ class HttpSecretaryApiService(
                 if (conn.responseCode in 200..299) {
                     Result.success("Password aggiornata con successo")
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    val errMsg = try {
-                        JSONObject(err).optString("message", JSONObject(err).optString("error", err))
-                    } catch (_: Exception) {
-                        err
-                    }
-                    Result.failure(Exception("Errore aggiornamento password: $errMsg"))
+                    Result.failure(Exception("Errore aggiornamento password (HTTP ${conn.responseCode})"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
             }
         }
+}
+
+suspend fun HttpSecretaryApiService.logout(token: String): Result<Unit> = withContext(Dispatchers.IO) {
+    try {
+        val connection = (URL("${AppConfig.BASE_URL}/auth/logout").openConnection() as HttpURLConnection).apply {
+            instanceFollowRedirects = false
+            requestMethod = "POST"
+            setRequestProperty("Authorization", "Bearer $token")
+            setRequestProperty("Accept", "application/json")
+            connectTimeout = 10000
+            readTimeout = 10000
+        }
+        val status = connection.responseCode
+        connection.disconnect()
+        if (status in 200..299) Result.success(Unit)
+        else Result.failure(IllegalStateException("Logout server non riuscito (HTTP $status)"))
+    } catch (error: Exception) {
+        Result.failure(error)
+    }
 }

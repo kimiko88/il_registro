@@ -14,7 +14,7 @@ export const notificationService = {
     return api.post('/notifications/push-tokens', { device_token: token, platform })
   },
   unregisterPushToken(token) {
-    return api.delete('/notifications/push-tokens', { params: { device_token: token } })
+    return api.delete('/notifications/push-tokens', { data: { device_token: token } })
   },
   async requestPushPermissionAndRegister() {
     if (typeof window === 'undefined' || !('Notification' in window)) {

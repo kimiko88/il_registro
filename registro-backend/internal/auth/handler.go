@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"registro-backend/pkg/wsticket"
 
@@ -52,12 +53,28 @@ func (h *Handler) Register(c *gin.Context) {
 	if err := ValidateRegisterRequest(callerRole, &req); err != nil {
 		statusCode := http.StatusBadRequest
 		switch err {
-		case ErrInsufficientRole:
-			statusCode = http.StatusForbidden
-		case ErrCannotCreateRole:
+		case ErrInsufficientRole, ErrCannotCreateRole:
 			statusCode = http.StatusForbidden
 		}
 		c.JSON(statusCode, ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	// Tenant scope is derived from the authenticated principal, never from
+	// client-controlled JSON. Only superadmins may select another school.
+	actorSchoolID, hasSchool := GetSchoolID(c)
+	if callerRole != RoleSuperAdmin {
+		if !hasSchool {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "authenticated user has no school scope"})
+			return
+		}
+		if req.SchoolID != "" && req.SchoolID != actorSchoolID {
+			c.JSON(http.StatusForbidden, ErrorResponse{Error: "cannot create users in another school"})
+			return
+		}
+		req.SchoolID = actorSchoolID
+	} else if strings.TrimSpace(req.SchoolID) == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "school_id is required"})
 		return
 	}
 
@@ -83,34 +100,12 @@ func (h *Handler) Register(c *gin.Context) {
 	})
 }
 
-func isHTTPSRequest(c *gin.Context) bool {
-	if c.Request.TLS != nil {
-		return true
-	}
-	if os.Getenv("TRUST_PROXY_HEADERS") == "true" {
-		if c.GetHeader("X-Forwarded-Proto") == "https" || c.GetHeader("X-Forwarded-Ssl") == "on" {
-			return true
-		}
-	}
-	return false
-}
-
 func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
-	appEnv := os.Getenv("APP_ENV")
-	ginMode := os.Getenv("GIN_MODE")
-	cookieSecure := os.Getenv("COOKIE_SECURE")
 	cookieSameSite := os.Getenv("COOKIE_SAMESITE")
-
-	isSecure := cookieSecure == "true" || appEnv == "production" || ginMode == "release" || isHTTPSRequest(c)
-	if cookieSecure == "false" && appEnv != "production" && ginMode != "release" {
-		isSecure = false
-	}
-
 	domain := os.Getenv("COOKIE_DOMAIN")
 
 	// SameSite=None is required for cross-origin cookies (e.g. frontend on different domain than backend).
-	// Default: use None when secure (production/HTTPS), Lax otherwise (local dev).
-	// Override via COOKIE_SAMESITE=strict|lax|none.
+	// Default to SameSite=None with Secure=true; override via COOKIE_SAMESITE=strict|lax|none.
 	var sameSite http.SameSite
 	switch cookieSameSite {
 	case "strict":
@@ -118,18 +113,9 @@ func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 	case "lax":
 		sameSite = http.SameSiteLaxMode
 	case "none":
-		if isSecure {
-			sameSite = http.SameSiteNoneMode
-		} else {
-			sameSite = http.SameSiteLaxMode
-		}
+		sameSite = http.SameSiteNoneMode
 	default:
-		// Auto: in production/HTTPS, default to None for cross-origin support
-		if isSecure {
-			sameSite = http.SameSiteNoneMode
-		} else {
-			sameSite = http.SameSiteLaxMode
-		}
+		sameSite = http.SameSiteNoneMode
 	}
 
 	http.SetCookie(c.Writer, &http.Cookie{
@@ -138,7 +124,7 @@ func setRefreshTokenCookie(c *gin.Context, token string, maxAge int) {
 		MaxAge:   maxAge,
 		Path:     "/",
 		Domain:   domain,
-		Secure:   isSecure,
+		Secure:   true,
 		HttpOnly: true,
 		SameSite: sameSite,
 	})
@@ -439,11 +425,21 @@ func (h *Handler) IssueWSTicket(c *gin.Context) {
 		return
 	}
 
+	jtiValue, jtiExists := c.Get("jti")
+	jti, jtiOK := jtiValue.(string)
+	issuedAtValue, issuedAtExists := c.Get("token_issued_at")
+	issuedAt, issuedAtOK := issuedAtValue.(time.Time)
+	if !jtiExists || !jtiOK || jti == "" || !issuedAtExists || !issuedAtOK || issuedAt.IsZero() {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "missing originating session metadata"})
+		return
+	}
+
 	ticket, err := h.wsTicketStore.Issue(
 		userID,
 		emailStr,
 		role,
 		schoolIDStr,
+		wsticket.TicketSecurity{JTI: jti, IssuedAt: issuedAt},
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "could not issue ws ticket"})

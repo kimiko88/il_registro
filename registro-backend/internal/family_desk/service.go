@@ -56,19 +56,21 @@ func (s *Service) ReviewRequest(ctx context.Context, id, status, rejectionReason
 		return errors.New("istanza non trovata")
 	}
 
-	if err := s.repo.UpdateRequestStatus(ctx, id, status, rejectionReason, protocolNumber, reviewerID); err != nil {
-		return err
-	}
-
-	// Auto-sync delegate if approved
+	// A permanent delegate and the approved request must be committed atomically.
 	if status == StatusApproved && req.RequestType == TypeDelegaRitiro {
 		delegate, err := BuildDelegateFromRequest(req)
-		if err == nil && delegate != nil {
-			_ = s.repo.CreatePermanentDelegate(ctx, delegate)
+		if err != nil {
+			return err
 		}
+		atomicRepo, ok := s.repo.(interface {
+			ApproveRequestWithDelegate(context.Context, string, string, string, string, string, *PermanentDelegate) error
+		})
+		if !ok {
+			return errors.New("repository does not support atomic approval and delegate creation")
+		}
+		return atomicRepo.ApproveRequestWithDelegate(ctx, id, status, rejectionReason, protocolNumber, reviewerID, delegate)
 	}
-
-	return nil
+	return s.repo.UpdateRequestStatus(ctx, id, status, rejectionReason, protocolNumber, reviewerID)
 }
 
 func (s *Service) ListPermanentDelegates(ctx context.Context, studentID, schoolID string) ([]PermanentDelegate, error) {

@@ -65,7 +65,10 @@ fun ParentDashboardScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onLogout) {
+                    IconButton(onClick = {
+                        viewModel.clearSession()
+                        onLogout()
+                    }) {
                         Icon(Icons.Default.Logout, contentDescription = stringResource(R.string.logout), tint = Color.White)
                     }
                 },

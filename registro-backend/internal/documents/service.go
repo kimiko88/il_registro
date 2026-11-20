@@ -523,17 +523,21 @@ func (s *service) AttachFile(ctx context.Context, actorRole, schoolID, docID, fi
 		return errors.New("unauthorized: cannot access documents of another school")
 	}
 
-	// Bug 93: validazione URL per prevenire path traversal, javascript: injection e URL interni arbitrari.
-	cleanURL := strings.ReplaceAll(fileURL, "\r", "")
-	cleanURL = strings.ReplaceAll(cleanURL, "\n", "")
-	cleanURL = strings.TrimSpace(cleanURL)
-
+	// Only opaque keys for private Supabase objects are accepted; never persist
+	// public URLs that would bypass document-level authorization.
+	cleanURL := strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(fileURL, "\r", ""), "\n", ""))
 	parsedURL, err := url.Parse(cleanURL)
-	if err != nil || parsedURL.Scheme != "https" {
-		return errors.New("fileURL non valido: sono accettati solo URL HTTPS per i documenti ufficiali")
+	expectedPrefix := "/schools/" + doc.SchoolID + "/documents/" + docID + "/"
+	objectName := ""
+	if err == nil {
+		objectName = strings.TrimPrefix(parsedURL.Path, expectedPrefix)
 	}
-	if parsedURL.Host == "" {
-		return errors.New("fileURL non valido: host mancante")
+	if err != nil || parsedURL.Scheme != "supabase" || parsedURL.Host == "" ||
+		parsedURL.User != nil || parsedURL.RawQuery != "" || parsedURL.Fragment != "" ||
+		!strings.HasPrefix(parsedURL.Path, expectedPrefix) || objectName == "" ||
+		strings.Contains(objectName, "/") || objectName == "." || objectName == ".." ||
+		strings.ContainsAny(cleanURL, "\\?#\r\n\x00") {
+		return errors.New("fileURL non valida: chiave privata non appartenente alla scuola e al documento")
 	}
 
 	content, _ := s.repo.GetContent(docID, doc.CurrentVersion)

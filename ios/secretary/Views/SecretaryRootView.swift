@@ -9,9 +9,14 @@ public struct SecretaryRootView: View {
         self._token = State(initialValue: initialToken)
     }
 
+    private func logout() {
+        token = ""
+        isLoggedIn = false
+    }
+
     public var body: some View {
         if isLoggedIn {
-            SecretaryDashboardView(token: token)
+            SecretaryDashboardView(token: token, onLogout: logout)
         } else {
             LoginView(isLoggedIn: $isLoggedIn, token: $token)
         }

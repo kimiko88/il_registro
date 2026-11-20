@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"registro-backend/pkg/crypto"
 )
 
 var (
@@ -147,6 +149,9 @@ func (s *Service) SignParentConsent(ctx context.Context, schoolID, studentID, sc
 
 // BookSession creates a confidential booking. If the student is a minor, BOTH parental signatures are strictly verified.
 func (s *Service) BookSession(ctx context.Context, schoolID, studentID, schoolYear string, isMinor bool, req BookSessionRequest) (*PsychologySession, error) {
+	if schoolID == "" || studentID == "" || schoolYear == "" || req.PsychologistID == "" {
+		return nil, errors.New("school_id, student_id, school_year e psychologist_id sono obbligatori")
+	}
 	if isMinor {
 		consent, err := s.repo.GetConsent(ctx, studentID, schoolYear)
 		if err != nil || consent.Status != ConsentApproved {
@@ -163,13 +168,33 @@ func (s *Service) BookSession(ctx context.Context, schoolID, studentID, schoolYe
 	}
 
 	dur := req.DurationMinutes
-	if dur <= 0 {
-		dur = 45 // Standard 45 minutes
+	if dur == 0 {
+		dur = 45
 	}
-
-	// Generate pseudorandom alias for student privacy
-	randBytes := make([]byte, 3)
-	_, _ = rand.Read(randBytes)
+	if dur < 15 || dur > 120 {
+		return nil, errors.New("la durata del colloquio deve essere compresa tra 15 e 120 minuti")
+	}
+	if !slotTime.After(time.Now()) {
+		return nil, errors.New("l'orario del colloquio deve essere futuro")
+	}
+	existing, err := s.repo.ListSessionsByPsychologist(ctx, req.PsychologistID)
+	if err != nil {
+		return nil, err
+	}
+	for _, booked := range existing {
+		if booked.Status == "annullato" {
+			continue
+		}
+		startA, endA := slotTime, slotTime.Add(time.Duration(dur)*time.Minute)
+		startB, endB := booked.SlotTime, booked.SlotTime.Add(time.Duration(booked.DurationMinutes)*time.Minute)
+		if startA.Before(endB) && startB.Before(endA) {
+			return nil, ErrSlotAlreadyBooked
+		}
+	}
+	randBytes := make([]byte, 16)
+	if _, err := rand.Read(randBytes); err != nil {
+		return nil, fmt.Errorf("impossibile generare alias pseudonimo: %w", err)
+	}
 	alias := fmt.Sprintf("ALUNNO-CIC-%s", hex.EncodeToString(randBytes))
 
 	session := &PsychologySession{
@@ -198,19 +223,23 @@ func (s *Service) GetSessionSecure(ctx context.Context, sessionID, requestingUse
 		return nil, err
 	}
 
-	// If the requester is the student, return without clinical notes
-	if sess.StudentID == requestingUserID {
+	if sess.StudentID == requestingUserID && requestingRole == "student" {
 		safeCopy := *sess
 		safeCopy.EncryptedClinicalNotes = ""
+		safeCopy.ClinicalNotes = ""
 		return &safeCopy, nil
 	}
-
-	// Strictly prohibit principals, admins, teachers, secretaries from reading clinical notes
 	if requestingRole != "psychologist" || sess.PsychologistID != requestingUserID {
 		return nil, ErrProfessionalSecrecyViolation
 	}
-
-	return sess, nil
+	plain, err := crypto.DecryptString(sess.EncryptedClinicalNotes)
+	if err != nil && sess.EncryptedClinicalNotes != "" {
+		return nil, fmt.Errorf("decrittazione note cliniche fallita: %w", err)
+	}
+	safeCopy := *sess
+	safeCopy.ClinicalNotes = plain
+	safeCopy.EncryptedClinicalNotes = ""
+	return &safeCopy, nil
 }
 
 func (s *Service) UpdateClinicalNotes(ctx context.Context, sessionID, psychologistID, notes string) (*PsychologySession, error) {
@@ -223,17 +252,46 @@ func (s *Service) UpdateClinicalNotes(ctx context.Context, sessionID, psychologi
 		return nil, ErrProfessionalSecrecyViolation
 	}
 
-	sess.EncryptedClinicalNotes = notes
+	if len(notes) > 100000 {
+		return nil, errors.New("le note cliniche superano il limite consentito")
+	}
+	encrypted, err := crypto.EncryptString(notes)
+	if err != nil {
+		return nil, fmt.Errorf("cifratura note cliniche fallita: %w", err)
+	}
+	sess.EncryptedClinicalNotes = encrypted
+	sess.ClinicalNotes = ""
 	sess.Status = "svolto"
 	if err := s.repo.SaveSession(ctx, sess); err != nil {
 		return nil, err
 	}
-	return sess, nil
+	safeCopy := *sess
+	safeCopy.EncryptedClinicalNotes = ""
+	safeCopy.ClinicalNotes = notes
+	return &safeCopy, nil
 }
 
 func (s *Service) ListMySessions(ctx context.Context, userID, role string) ([]*PsychologySession, error) {
 	if role == "psychologist" {
-		return s.repo.ListSessionsByPsychologist(ctx, userID)
+		sessions, err := s.repo.ListSessionsByPsychologist(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		decrypted := make([]*PsychologySession, 0, len(sessions))
+		for _, sess := range sessions {
+			safe := *sess
+			plain, err := crypto.DecryptString(sess.EncryptedClinicalNotes)
+			if err != nil && sess.EncryptedClinicalNotes != "" {
+				return nil, fmt.Errorf("decrittazione note cliniche fallita: %w", err)
+			}
+			safe.ClinicalNotes = plain
+			safe.EncryptedClinicalNotes = ""
+			decrypted = append(decrypted, &safe)
+		}
+		return decrypted, nil
+	}
+	if role != "student" {
+		return nil, ErrProfessionalSecrecyViolation
 	}
 	// For students, sanitize notes
 	sessions, err := s.repo.ListSessionsByStudent(ctx, userID)

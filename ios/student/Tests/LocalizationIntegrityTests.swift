@@ -14,22 +14,22 @@ final class LocalizationIntegrityTests: XCTestCase {
     }
 
     func testDashboardTitleLocalizationResolves() {
-        let localizedTitle = studentLocalizedString("dashboard_title")
+        let localizedTitle = studentLocalizedString("dashboard_title", languageCode: "it")
         XCTAssertNotEqual(localizedTitle, "dashboard_title")
         XCTAssertEqual(localizedTitle, "La Mia Dashboard")
     }
 
     func testGradesTitleLocalizationResolves() {
-        let localizedGrades = studentLocalizedString("grades_title")
+        let localizedGrades = studentLocalizedString("grades_title", languageCode: "it")
         XCTAssertEqual(localizedGrades, "I Miei Voti")
     }
 
     func testTabBarLocalizationResolvesConciseNames() {
-        XCTAssertEqual(studentLocalizedString("tab_home"), "Home")
-        XCTAssertEqual(studentLocalizedString("tab_grades"), "Voti")
-        XCTAssertEqual(studentLocalizedString("tab_agenda"), "Agenda")
-        XCTAssertEqual(studentLocalizedString("tab_attendance"), "Presenze")
-        XCTAssertEqual(studentLocalizedString("tab_report_card"), "Pagella")
+        XCTAssertEqual(studentLocalizedString("tab_home", languageCode: "it"), "Home")
+        XCTAssertEqual(studentLocalizedString("tab_grades", languageCode: "it"), "Voti")
+        XCTAssertEqual(studentLocalizedString("tab_agenda", languageCode: "it"), "Agenda")
+        XCTAssertEqual(studentLocalizedString("tab_attendance", languageCode: "it"), "Presenze")
+        XCTAssertEqual(studentLocalizedString("tab_report_card", languageCode: "it"), "Pagella")
     }
 
     func testGradeEvaluationTypeLocalization() {
@@ -37,9 +37,9 @@ final class LocalizationIntegrityTests: XCTestCase {
         let oralGrade = GradeItemModel(id: "2", subject: "Storia", grade: 9.0, type: "Oral", date: "2026-08-28")
         let practicalGrade = GradeItemModel(id: "3", subject: "Informatica", grade: 10.0, type: "practical", date: "2026-08-28")
 
-        XCTAssertEqual(writtenGrade.localizedType, "Scritto")
-        XCTAssertEqual(oralGrade.localizedType, "Orale")
-        XCTAssertEqual(practicalGrade.localizedType, "Pratico")
+        XCTAssertEqual(writtenGrade.localizedType(languageCode: "it"), "Scritto")
+        XCTAssertEqual(oralGrade.localizedType(languageCode: "it"), "Orale")
+        XCTAssertEqual(practicalGrade.localizedType(languageCode: "it"), "Pratico")
     }
 
     func testAttendanceTypeLocalization() {
@@ -47,8 +47,8 @@ final class LocalizationIntegrityTests: XCTestCase {
         let absentRecord = StudentAttendanceRecordModel(id: "2", date: "2026-08-28", type: "absent")
         let lateRecord = StudentAttendanceRecordModel(id: "3", date: "2026-08-28", type: "late")
 
-        XCTAssertEqual(presentRecord.localizedType, "Presenza")
-        XCTAssertEqual(absentRecord.localizedType, "Assenza")
-        XCTAssertEqual(lateRecord.localizedType, "Ritardo")
+        XCTAssertEqual(presentRecord.localizedType(languageCode: "it"), "Presenza")
+        XCTAssertEqual(absentRecord.localizedType(languageCode: "it"), "Assenza")
+        XCTAssertEqual(lateRecord.localizedType(languageCode: "it"), "Ritardo")
     }
 }

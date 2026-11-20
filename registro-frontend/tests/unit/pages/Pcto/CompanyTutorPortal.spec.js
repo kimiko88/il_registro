@@ -6,6 +6,9 @@ import { pctoCompanyTutorService } from '@/services/pctoCompanyTutorService'
 vi.mock('vue-router', () => ({
     useRoute: () => ({
         query: { token: 'valid-test-token-12345' }
+    }),
+    useRouter: () => ({
+        replace: vi.fn().mockResolvedValue()
     })
 }))
 
@@ -64,6 +67,7 @@ describe('CompanyTutorPortal.vue', () => {
         await flushPromises()
         expect(pctoCompanyTutorService.getSession).toHaveBeenCalledWith('valid-test-token-12345')
         expect(pctoCompanyTutorService.getAssignedStudents).toHaveBeenCalledWith('valid-test-token-12345')
+        expect(localStorage.getItem('pcto_tutor_token')).toBeNull()
         expect(wrapper.vm.tutor.company_name).toBe('Acme Robotics Srl')
         expect(wrapper.vm.students).toHaveLength(1)
         expect(wrapper.vm.students[0].student_name).toBe('Andrea Costa')

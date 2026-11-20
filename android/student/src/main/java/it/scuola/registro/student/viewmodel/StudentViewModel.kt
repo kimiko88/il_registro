@@ -10,6 +10,7 @@ import it.scuola.registro.student.network.StudentApiService
 class StudentViewModel(
     private val apiService: StudentApiService = HttpStudentApiService()
 ) {
+    @Volatile private var sessionGeneration: Long = 0L
     var grades = mutableListOf<GradeEntry>()
         private set
 
@@ -28,32 +29,48 @@ class StudentViewModel(
     var errorMessage: String? = null
         private set
 
+    fun clearSession() {
+        sessionGeneration++
+        grades.clear()
+        homeworkList.clear()
+        attendanceRecords.clear()
+        reportCard = null
+        isLoading = false
+        errorMessage = null
+    }
+
     suspend fun loadFromDatabase(token: String): Boolean {
+        val requestGeneration = sessionGeneration
         isLoading = true
         errorMessage = null
         try {
             val gradesResult = apiService.getGrades(token)
+            if (requestGeneration != sessionGeneration) return false
             if (gradesResult.isSuccess) {
                 grades = gradesResult.getOrNull()?.toMutableList() ?: mutableListOf()
             }
 
             val attendanceResult = apiService.getAttendance(token)
+            if (requestGeneration != sessionGeneration) return false
             if (attendanceResult.isSuccess) {
                 attendanceRecords = attendanceResult.getOrNull()?.toMutableList() ?: mutableListOf()
             }
 
             val homeworkResult = apiService.getHomework(token)
+            if (requestGeneration != sessionGeneration) return false
             if (homeworkResult.isSuccess) {
                 homeworkList = homeworkResult.getOrNull()?.toMutableList() ?: mutableListOf()
             }
 
             val reportCardResult = apiService.getReportCard(token)
+            if (requestGeneration != sessionGeneration) return false
             if (reportCardResult.isSuccess) {
                 reportCard = reportCardResult.getOrNull()
             }
             isLoading = false
             return true
         } catch (e: Exception) {
+            if (requestGeneration != sessionGeneration) return false
             errorMessage = e.localizedMessage
             isLoading = false
             return false

@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"registro-backend/internal/users"
 
 	"github.com/gin-gonic/gin"
 )
@@ -70,6 +73,24 @@ func (m *mockFamilyRepo) CreatePermanentDelegate(ctx context.Context, delegate *
 	return nil
 }
 
+func (m *mockFamilyRepo) ApproveRequestWithDelegate(ctx context.Context, id, status, rejectionReason, protocolNumber, reviewerID string, delegate *PermanentDelegate) error {
+	req, ok := m.requests[id]
+	if !ok {
+		return errors.New("request not found")
+	}
+	req.Status = status
+	req.RejectionReason = rejectionReason
+	req.ProtocolNumber = protocolNumber
+	req.ReviewedBy = &reviewerID
+	now := time.Now()
+	req.ReviewedAt = &now
+	req.UpdatedAt = now
+	delegate.ID = "del-test-1"
+	delegate.CreatedAt = now
+	m.delegates[delegate.ID] = delegate
+	return nil
+}
+
 func (m *mockFamilyRepo) ListPermanentDelegates(ctx context.Context, studentID, schoolID string) ([]PermanentDelegate, error) {
 	var list []PermanentDelegate
 	for _, d := range m.delegates {
@@ -80,18 +101,44 @@ func (m *mockFamilyRepo) ListPermanentDelegates(ctx context.Context, studentID, 
 	return list, nil
 }
 
-func setupFamilyDeskRouter(repo Repository, role string) *gin.Engine {
+type mockFamilyDeskUsers struct {
+	users.Repository
+	byID map[string]*users.User
+}
+
+func newMockFamilyDeskUsers() *mockFamilyDeskUsers {
+	schoolID := "school-123"
+	return &mockFamilyDeskUsers{byID: map[string]*users.User{
+		"parent-456":  {ID: "parent-456", Role: "parent", SchoolID: &schoolID},
+		"student-789": {ID: "student-789", Role: "student", SchoolID: &schoolID},
+		"secretary-1": {ID: "secretary-1", Role: "secretary", SchoolID: &schoolID},
+	}}
+}
+
+func (m *mockFamilyDeskUsers) GetByID(_ context.Context, id string) (*users.User, error) {
+	user, ok := m.byID[id]
+	if !ok {
+		return nil, users.ErrUserNotFound
+	}
+	return user, nil
+}
+
+func (m *mockFamilyDeskUsers) IsGuardian(_ context.Context, parentID, studentID string) (bool, error) {
+	return parentID == "parent-456" && studentID == "student-789", nil
+}
+
+func setupFamilyDeskRouter(repo Repository, userRepo users.Repository, role string, userID, schoolID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.Use(func(c *gin.Context) {
 		c.Set("role", role)
-		c.Set("school_id", "school-123")
-		c.Set("user_id", "parent-456")
+		c.Set("school_id", schoolID)
+		c.Set("user_id", userID)
 		c.Next()
 	})
 
 	svc := NewService(repo)
-	handler := NewHandler(svc)
+	handler := NewHandler(svc, userRepo)
 	api := r.Group("/api/v1")
 	handler.RegisterRoutes(api)
 
@@ -100,8 +147,9 @@ func setupFamilyDeskRouter(repo Repository, role string) *gin.Engine {
 
 func TestFamilyDeskIntegrationWorkflow(t *testing.T) {
 	repo := newMockFamilyRepo()
-	parentRouter := setupFamilyDeskRouter(repo, "parent")
-	secretaryRouter := setupFamilyDeskRouter(repo, "secretary")
+	userRepo := newMockFamilyDeskUsers()
+	parentRouter := setupFamilyDeskRouter(repo, userRepo, "parent", "parent-456", "school-123")
+	secretaryRouter := setupFamilyDeskRouter(repo, userRepo, "secretary", "secretary-1", "school-123")
 
 	// Step 1: Parent submits 'delega_ritiro'
 	delegaPayload := map[string]interface{}{
@@ -122,8 +170,8 @@ func TestFamilyDeskIntegrationWorkflow(t *testing.T) {
 	w := httptest.NewRecorder()
 	parentRouter.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200 on submit request, got %d: %s", w.Code, w.Body.String())
+	if w.Code != http.StatusCreated {
+		t.Fatalf("expected 201 on submit request, got %d: %s", w.Code, w.Body.String())
 	}
 
 	// Step 2: Secretary approves request with protocol number

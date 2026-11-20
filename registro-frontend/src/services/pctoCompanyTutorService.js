@@ -3,7 +3,6 @@ import api from '@/services/api'
 export const pctoCompanyTutorService = {
     async getSession(token) {
         const response = await api.get('/pcto-tutor/session', {
-            params: { token },
             headers: { 'X-Tutor-Token': token }
         })
         return response.data

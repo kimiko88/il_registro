@@ -1,17 +1,34 @@
 package psychology
 
 import (
+	"fmt"
 	"net/http"
+	"time"
+
+	"registro-backend/internal/users"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	service *Service
+	service  *Service
+	userRepo users.Repository
 }
 
-func NewHandler(s *Service) *Handler {
-	return &Handler{service: s}
+func NewHandler(s *Service, repos ...users.Repository) *Handler {
+	h := &Handler{service: s}
+	if len(repos) > 0 {
+		h.userRepo = repos[0]
+	}
+	return h
+}
+
+func currentSchoolYear(now time.Time) string {
+	startYear := now.Year()
+	if now.Month() < time.September {
+		startYear--
+	}
+	return fmt.Sprintf("%d/%d", startYear, startYear+1)
 }
 
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
@@ -35,6 +52,25 @@ func (h *Handler) SignConsent(c *gin.Context) {
 		return
 	}
 
+	if c.GetString("role") != "parent" || h.userRepo == nil || schoolID == "" || userID == "" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "solo un genitore verificato può firmare il consenso"})
+		return
+	}
+	parent, err := h.userRepo.GetByID(c.Request.Context(), userID)
+	if err != nil || parent == nil || parent.SchoolID == nil || *parent.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "genitore non associato alla scuola"})
+		return
+	}
+	isGuardian, err := h.userRepo.IsGuardian(c.Request.Context(), userID, req.StudentID)
+	if err != nil || !isGuardian {
+		c.JSON(http.StatusForbidden, gin.H{"error": "rapporto genitore-studente non verificato"})
+		return
+	}
+	student, err := h.userRepo.GetByID(c.Request.Context(), req.StudentID)
+	if err != nil || student == nil || student.SchoolID == nil || *student.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "studente non associato alla scuola"})
+		return
+	}
 	consent, err := h.service.SignParentConsent(c.Request.Context(), schoolID, req.StudentID, req.SchoolYear, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -47,17 +83,35 @@ func (h *Handler) BookSession(c *gin.Context) {
 	schoolID := c.GetString("school_id")
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-
+	if role != "student" || h.userRepo == nil || schoolID == "" || userID == "" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "la prenotazione deve essere effettuata dallo studente autenticato"})
+		return
+	}
 	var req BookSessionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	// In Italian secondary schools students booking CIC are mostly minors unless specified
-	isMinor := role == "student"
-
-	session, err := h.service.BookSession(c.Request.Context(), schoolID, userID, "2025/2026", isMinor, req)
+	student, err := h.userRepo.GetByID(c.Request.Context(), userID)
+	if err != nil || student == nil || student.Role != "student" || student.SchoolID == nil || *student.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "profilo studente non valido"})
+		return
+	}
+	psychologist, err := h.userRepo.GetByID(c.Request.Context(), req.PsychologistID)
+	if err != nil || psychologist == nil || psychologist.Role != "psychologist" || psychologist.SchoolID == nil || *psychologist.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "psicologo non assegnato alla scuola"})
+		return
+	}
+	isMinor := true
+	if student.DateOfBirth != nil {
+		birth := *student.DateOfBirth
+		age := time.Now().Year() - birth.Year()
+		if time.Now().Before(birth.AddDate(age, 0, 0)) {
+			age--
+		}
+		isMinor = age < 18
+	}
+	session, err := h.service.BookSession(c.Request.Context(), schoolID, userID, currentSchoolYear(time.Now()), isMinor, req)
 	if err != nil {
 		if err == ErrBothParentsConsentRequired {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -72,7 +126,10 @@ func (h *Handler) BookSession(c *gin.Context) {
 func (h *Handler) ListMySessions(c *gin.Context) {
 	userID := c.GetString("user_id")
 	role := c.GetString("role")
-
+	if role != "student" && role != "psychologist" {
+		c.JSON(http.StatusForbidden, gin.H{"error": ErrProfessionalSecrecyViolation.Error()})
+		return
+	}
 	sessions, err := h.service.ListMySessions(c.Request.Context(), userID, role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

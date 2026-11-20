@@ -94,7 +94,10 @@ fun SecretaryDashboardScreen(
                     IconButton(onClick = { selectedTab = 5 }) {
                         Icon(Icons.Default.ManageAccounts, contentDescription = stringResource(R.string.profile_title), tint = Color.White)
                     }
-                    IconButton(onClick = onLogout) {
+                    IconButton(onClick = {
+                        viewModel.clearSession()
+                        onLogout()
+                    }) {
                         Icon(Icons.Default.Logout, contentDescription = stringResource(R.string.logout), tint = Color.White)
                     }
                 },

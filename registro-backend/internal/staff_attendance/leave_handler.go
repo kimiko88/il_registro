@@ -1,11 +1,25 @@
 package staff_attendance
 
 import (
+	"bytes"
+	"encoding/csv"
 	"net/http"
+	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"registro-backend/pkg/upload"
 )
+
+var validMonthPattern = regexp.MustCompile(`^\d{4}-(0[1-9]|1[0-2])$`)
+
+func sanitizeCSVCell(v string) string {
+	if len(v) > 0 && (v[0] == '=' || v[0] == '+' || v[0] == '-' || v[0] == '@' || v[0] == '\t' || v[0] == '\r') {
+		return "'" + v
+	}
+	return v
+}
 
 // LeaveHandler gestisce le API per richieste ferie/permessi del personale ATA
 type LeaveHandler struct {
@@ -107,27 +121,51 @@ func (h *LeaveHandler) ExportTimecard(c *gin.Context) {
 		return
 	}
 
-	month := c.Query("month")
+	month := strings.TrimSpace(c.Query("month"))
+	if month != "" && !validMonthPattern.MatchString(month) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "formato mese non valido (atteso YYYY-MM)"})
+		return
+	}
 	summaries, err := h.repo.GetAllMonthlyTimecards(c.Request.Context(), schoolID, month)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Header("Content-Type", "text/csv; charset=utf-8")
-	c.Header("Content-Disposition", "attachment; filename=\"cartellino_"+month+".csv\"")
-
-	// BOM UTF-8 per Excel italiano
-	_, _ = c.Writer.Write([]byte("\xef\xbb\xbf"))
-	_, _ = c.Writer.WriteString("Cognome,Nome,Ruolo,Mese,Ore Contratto,Ore Lavorate,Straordinari,Giorni Assenza,Giorni Ferie,Giorni Malattia,Ore Permesso\n")
-	for _, t := range summaries {
-		_, _ = c.Writer.WriteString(
-			t.LastName + "," + t.FirstName + "," + t.Role + "," + t.Month + "," +
-				formatFloat(t.ContractHours) + "," + formatFloat(t.WorkedHours) + "," +
-				formatFloat(t.OvertimeHours) + "," + itoa(t.AbsenceDays) + "," +
-				itoa(t.LeaveDays) + "," + itoa(t.SickDays) + "," + formatFloat(t.PermitHours) + "\n",
-		)
+	filename := "cartellino.csv"
+	if month != "" {
+		filename = "cartellino_" + month + ".csv"
 	}
+
+	var buf bytes.Buffer
+	// BOM UTF-8 per Excel italiano
+	buf.Write([]byte{0xEF, 0xBB, 0xBF})
+	w := csv.NewWriter(&buf)
+	_ = w.Write([]string{
+		"Cognome", "Nome", "Ruolo", "Mese",
+		"Ore Contratto", "Ore Lavorate", "Straordinari",
+		"Giorni Assenza", "Giorni Ferie", "Giorni Malattia", "Ore Permesso",
+	})
+	for _, t := range summaries {
+		_ = w.Write([]string{
+			sanitizeCSVCell(t.LastName),
+			sanitizeCSVCell(t.FirstName),
+			sanitizeCSVCell(t.Role),
+			sanitizeCSVCell(t.Month),
+			formatFloat(t.ContractHours),
+			formatFloat(t.WorkedHours),
+			formatFloat(t.OvertimeHours),
+			itoa(t.AbsenceDays),
+			itoa(t.LeaveDays),
+			itoa(t.SickDays),
+			formatFloat(t.PermitHours),
+		})
+	}
+	w.Flush()
+
+	c.Header("X-Content-Type-Options", "nosniff")
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
+	c.Data(http.StatusOK, "text/csv; charset=utf-8", buf.Bytes())
 }
 
 func (h *LeaveHandler) CreateLeave(c *gin.Context) {

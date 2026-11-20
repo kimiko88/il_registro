@@ -1,9 +1,11 @@
 package documents
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -34,6 +36,7 @@ func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	docs.POST("/upload", h.UploadFile) // multipart file upload with magic-byte validation
 	docs.GET("", h.ListDocuments)
 	docs.GET("/:id", h.GetDocument)
+	docs.GET("/:id/file", h.DownloadFile)
 	docs.GET("/:id/versions", h.GetDocumentVersions)
 	docs.PATCH("/:id", h.UpdateDocument)
 	docs.DELETE("/:id", h.DeleteDocument)
@@ -90,9 +93,30 @@ func (h *Handler) UploadFile(c *gin.Context) {
 		return
 	}
 
-	// Parse multipart form (limits to MaxUploadSize + small overhead for form fields)
+	// Bound the full multipart body before parsing form fields or file contents.
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, upload.MaxUploadSize+(1<<10))
 	if err := c.Request.ParseMultipartForm(upload.MaxUploadSize + (1 << 10)); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Impossibile leggere il form: " + err.Error()})
+		if strings.Contains(strings.ToLower(err.Error()), "request body too large") {
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "file troppo grande"})
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Impossibile leggere il form"})
+		}
+		return
+	}
+
+	// The file must be attached to an authorized document; otherwise the upload
+	// would create orphaned private objects that no user can retrieve.
+	docID := strings.TrimSpace(c.PostForm("document_id"))
+	if docID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "document_id obbligatorio"})
+		return
+	}
+	if _, err := h.service.GetDocument(c.Request.Context(), role, schoolID, docID); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "documento non accessibile"})
+		return
+	}
+	if _, ok := h.uploader.(upload.PrivateStorageDownloader); !ok {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "private document storage is not configured"})
 		return
 	}
 
@@ -103,63 +127,52 @@ func (h *Handler) UploadFile(c *gin.Context) {
 	}
 	defer func() { _ = file.Close() }()
 
-	// Validate size + real MIME type via magic bytes
-	if err := upload.ValidateUpload(file, header); err != nil {
+	// Validate the real MIME and strip privacy-invasive image metadata before
+	// sending bytes to storage. Do not trust Content-Type or the filename.
+	sanitizedBytes, detectedMIME, err := upload.ValidateAndSanitize(file, header)
+	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
-	}
-
-	// Rewind file reader after validation
-	if seeker, ok := file.(io.Seeker); ok {
-		_, _ = seeker.Seek(0, io.SeekStart)
 	}
 
 	// Generate a unique safe storage key using UUID and pure sanitized extension
 	cleanFilename := filepath.Base(header.Filename)
 	ext := strings.ToLower(filepath.Ext(cleanFilename))
-	allowedExts := map[string]bool{
-		".pdf": true, ".docx": true, ".doc": true, ".xlsx": true, ".xls": true,
-		".txt": true, ".jpg": true, ".jpeg": true, ".png": true, ".csv": true,
+	allowedExts := map[string]map[string]bool{
+		".pdf":  {"application/pdf": true},
+		".docx": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true},
+		".xlsx": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true},
+		".xls":  {"application/vnd.ms-excel": true},
+		".txt":  {"text/plain": true},
+		".csv":  {"text/csv": true, "text/plain": true},
+		".jpg":  {"image/jpeg": true},
+		".jpeg": {"image/jpeg": true},
+		".png":  {"image/png": true},
 	}
-	if !allowedExts[ext] {
+	if !allowedExts[ext][detectedMIME] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "estensione file non consentita"})
 		return
 	}
-	storagePath := uuid.New().String() + ext
+	storagePath := fmt.Sprintf("schools/%s/documents/%s/%s%s", schoolID, docID, uuid.New().String(), ext)
 
-	var publicURL string
-	if h.uploader != nil {
-		detectedMIME, errMIME := upload.DetectMIME(file)
-		if errMIME != nil {
-			detectedMIME = header.Header.Get("Content-Type")
+	storageKey, err := h.uploader.UploadFile(c.Request.Context(), storagePath, detectedMIME, bytes.NewReader(sanitizedBytes))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore caricamento storage"})
+		return
+	}
+	if err := h.service.AttachFile(c.Request.Context(), role, schoolID, docID, storageKey); err != nil {
+		if deleter, ok := h.uploader.(upload.StorageObjectDeleter); ok {
+			_ = deleter.DeleteFile(c.Request.Context(), storageKey)
 		}
-		// Rewind file reader again before uploading payload
-		if seeker, ok := file.(io.Seeker); ok {
-			_, _ = seeker.Seek(0, io.SeekStart)
-		}
-		publicURL, err = h.uploader.UploadFile(c.Request.Context(), storagePath, detectedMIME, file)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore caricamento storage"})
-			return
-		}
-	} else {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "storage provider not configured"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore associazione documento"})
 		return
 	}
 
-	docID := c.PostForm("document_id")
-	if docID != "" {
-		if err := h.service.AttachFile(c.Request.Context(), role, schoolID, docID, publicURL); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Errore associazione documento: " + err.Error()})
-			return
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusCreated, gin.H{
 		"message":     "File caricato con successo",
 		"filename":    header.Filename,
-		"size_bytes":  header.Size,
-		"url":         publicURL,
+		"size_bytes":  len(sanitizedBytes),
+		"url":         "/api/v1/documents/" + url.PathEscape(docID) + "/file",
 		"uploaded_by": userID,
 	})
 }
@@ -187,6 +200,81 @@ func (h *Handler) GetDocument(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+// DownloadFile authorizes document access before retrieving an object from private storage.
+// No public Supabase URL or storage credential is sent to the browser.
+func (h *Handler) DownloadFile(c *gin.Context) {
+	role := c.GetString("role")
+	schoolID := c.GetString("school_id")
+	if role == "" || schoolID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	detail, err := h.service.GetDocument(c.Request.Context(), role, schoolID, c.Param("id"))
+	if err != nil || detail == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "documento non trovato o non accessibile"})
+		return
+	}
+	var storageKey string
+	for _, line := range strings.Split(detail.Content, "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "Attachment: supabase://") {
+			storageKey = strings.TrimSpace(strings.TrimPrefix(line, "Attachment:"))
+		}
+	}
+	if storageKey == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "allegato privato non disponibile"})
+		return
+	}
+	parsedKey, parseErr := url.Parse(storageKey)
+	expectedPrefix := "/schools/" + schoolID + "/documents/" + c.Param("id") + "/"
+	objectName := ""
+	if parseErr == nil {
+		objectName = strings.TrimPrefix(parsedKey.Path, expectedPrefix)
+	}
+	if parseErr != nil || parsedKey.Scheme != "supabase" || parsedKey.Host == "" ||
+		!strings.HasPrefix(parsedKey.Path, expectedPrefix) || objectName == "" ||
+		strings.Contains(objectName, "/") || objectName == "." || objectName == ".." {
+		c.JSON(http.StatusNotFound, gin.H{"error": "allegato non appartenente al documento richiesto"})
+		return
+	}
+	downloader, ok := h.uploader.(upload.PrivateStorageDownloader)
+	if !ok {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "private document storage is not configured"})
+		return
+	}
+	reader, contentType, contentLength, err := downloader.DownloadFile(c.Request.Context(), storageKey)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "download documento non riuscito"})
+		return
+	}
+	defer func() { _ = reader.Close() }()
+	if contentLength > upload.MaxUploadSize {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "documento troppo grande"})
+		return
+	}
+	data, err := io.ReadAll(io.LimitReader(reader, upload.MaxUploadSize+1))
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "lettura documento non riuscita"})
+		return
+	}
+	if int64(len(data)) > upload.MaxUploadSize {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "documento troppo grande"})
+		return
+	}
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	filename := "document-" + c.Param("id") + ".bin"
+	if parsed, err := url.Parse(storageKey); err == nil {
+		filename = filepath.Base(strings.TrimPrefix(parsed.Path, "/"))
+	}
+	c.Header("Cache-Control", "private, no-store, max-age=0")
+	c.Header("Pragma", "no-cache")
+	c.Header("X-Content-Type-Options", "nosniff")
+	c.Header("Content-Disposition", upload.FormatContentDisposition(filename))
+	c.Data(http.StatusOK, contentType, data)
 }
 
 func (h *Handler) UpdateDocument(c *gin.Context) {

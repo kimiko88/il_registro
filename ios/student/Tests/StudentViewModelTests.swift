@@ -36,4 +36,12 @@ final class StudentViewModelTests: XCTestCase {
         XCTAssertTrue(toggled)
         XCTAssertTrue(viewModel.homework.first(where: { $0.id == "1" })?.isCompleted ?? false)
     }
+    func testClearSessionRemovesPersonalData() {
+        viewModel.clearSession()
+        XCTAssertTrue(viewModel.grades.isEmpty)
+        XCTAssertTrue(viewModel.homework.isEmpty)
+        XCTAssertTrue(viewModel.attendance.isEmpty)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertFalse(viewModel.isLoading)
+    }
 }

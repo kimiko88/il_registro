@@ -16,6 +16,11 @@ import (
 
 func TestIdempotencyMiddleware_ReplayOnSecondRequest(t *testing.T) {
 	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", "test-user")
+		c.Set("school_id", "test-school")
+		c.Next()
+	})
 	r.Use(IdempotencyMiddleware())
 
 	var callCount int
@@ -138,7 +143,7 @@ func TestSecurityHeadersMiddleware_BaseHeaders(t *testing.T) {
 	h := w.Header()
 	assert.Equal(t, "DENY", h.Get("X-Frame-Options"))
 	assert.Equal(t, "nosniff", h.Get("X-Content-Type-Options"))
-	assert.Equal(t, "strict-origin-when-cross-origin", h.Get("Referrer-Policy"))
+	assert.Equal(t, "no-referrer", h.Get("Referrer-Policy"))
 	assert.Equal(t, "1; mode=block", h.Get("X-XSS-Protection"))
 	assert.NotEmpty(t, h.Get("Permissions-Policy"))
 	assert.NotEmpty(t, h.Get("Content-Security-Policy"))

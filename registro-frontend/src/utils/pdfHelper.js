@@ -1,4 +1,29 @@
-import api from '../services/api'
+import api, { getBaseURL } from '../services/api'
+
+/**
+ * Resolve server-provided job URLs without allowing the API client to send
+ * its bearer token to another origin.
+ */
+function normalizeApiUrl(candidate) {
+    if (typeof candidate !== 'string' || !candidate.trim()) {
+        throw new Error('URL del job PDF non valida')
+    }
+
+    const apiBase = new URL(getBaseURL(), window.location.origin)
+    const resolved = new URL(candidate, apiBase)
+
+    if (
+        !['http:', 'https:'].includes(resolved.protocol) ||
+        resolved.origin !== apiBase.origin ||
+        resolved.username ||
+        resolved.password ||
+        resolved.hash
+    ) {
+        throw new Error('Il job PDF ha restituito un URL non consentito')
+    }
+
+    return `${resolved.pathname}${resolved.search}`
+}
 
 /**
  * Handles PDF download for both synchronous (direct PDF blob) and asynchronous (202 Accepted job queue) responses.
@@ -34,7 +59,7 @@ export async function handleAsyncPdfDownload(fetchFn, defaultFilename = 'documen
     }
 
     if (jobInfo && (jobInfo.job_id || jobInfo.status_url)) {
-        const statusUrl = jobInfo.status_url || `/scrutiny/pdf-jobs/${jobInfo.job_id}`
+        const statusUrl = normalizeApiUrl(jobInfo.status_url || `/scrutiny/pdf-jobs/${encodeURIComponent(String(jobInfo.job_id))}`)
         let attempts = 0
         let completedJob = null
 
@@ -57,9 +82,11 @@ export async function handleAsyncPdfDownload(fetchFn, defaultFilename = 'documen
             throw new Error('Timeout durante la generazione asincrona del PDF')
         }
 
-        // Fetch completed PDF blob (pass sync=true to get actual bytes)
+        // Validate the download URL before the authenticated API client sees it.
         const rawUrl = completedJob.download_url || statusUrl
-        const downloadUrl = rawUrl.includes('?') ? `${rawUrl}&sync=true` : `${rawUrl}?sync=true`
+        const downloadUrlObject = new URL(normalizeApiUrl(rawUrl), window.location.origin)
+        downloadUrlObject.searchParams.set('sync', 'true')
+        const downloadUrl = `${downloadUrlObject.pathname}${downloadUrlObject.search}`
         const finalPdfRes = await api.get(downloadUrl, { responseType: 'blob', timeout: 60000 })
         blobData = finalPdfRes.data
     }

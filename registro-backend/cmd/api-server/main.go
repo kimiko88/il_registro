@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -113,6 +114,42 @@ import (
 	"registro-backend/pkg/wsticket"
 )
 
+func memoryBackedEnterpriseFeaturesEnabled(cfg *config.Config) bool {
+	if cfg == nil {
+		return false
+	}
+	return !strings.EqualFold(cfg.Server.Mode, "release") &&
+		!strings.EqualFold(os.Getenv("APP_ENV"), "production") &&
+		!strings.EqualFold(os.Getenv("GIN_MODE"), "release")
+}
+
+func unavailableMemoryBackedFeature(c *gin.Context) {
+	c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
+		"error":   "feature_unavailable",
+		"message": "Funzionalità temporaneamente disabilitata: il modulo non dispone ancora di persistenza PostgreSQL condivisa in questa configurazione.",
+	})
+}
+
+func registerUnavailableMemoryBackedRoutes(api, protected *gin.RouterGroup) {
+	// Public routes for in-memory Interpelli and Albo modules.
+	for _, route := range []string{
+		"/public/interpelli", "/public/albo-pretorio",
+		"/public/amministrazione-trasparente",
+	} {
+		api.Any(route, unavailableMemoryBackedFeature)
+		api.Any(route+"/*path", unavailableMemoryBackedFeature)
+	}
+	// Protected routes for every module whose current bootstrap repository is
+	// process-local memory. This prevents apparent writes that vanish at restart.
+	for _, route := range []string{
+		"/interpelli", "/albo-pretorio", "/maturita", "/meals",
+		"/inventory", "/privacy", "/psychology",
+	} {
+		protected.Any(route, unavailableMemoryBackedFeature)
+		protected.Any(route+"/*path", unavailableMemoryBackedFeature)
+	}
+}
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -145,7 +182,8 @@ func main() {
 	}
 
 	tokenManager := jwt.NewTokenManager(privateKey, publicKey)
-	mfaService := auth.NewMFAService("RegistroElettronico")
+	mfaService := auth.NewMFAService("RegistroElettronico", redisURL)
+	defer func() { _ = mfaService.Close() }()
 	wsHub := ws.NewHub(redisURL)
 	go wsHub.Run(ctx)
 	appCache := cache.NewCache(redisURL)
@@ -250,6 +288,9 @@ func main() {
 	gradesH := grades.NewHandler(gradesSvc, gradesAnalytics)
 	attendanceH := attendance.NewHandler(attendanceSvc)
 	docsUploader := upload.NewSupabaseUploader(cfg.Supabase.URL, cfg.Supabase.Key, cfg.Supabase.Bucket)
+	if err := docsUploader.VerifyPrivateBucket(context.Background()); err != nil {
+		log.Printf("WARNING: document uploads/downloads disabled until private Supabase storage is verified: %v", err)
+	}
 	docsH := documents.NewHandler(docsSvc, docsUploader)
 	schedH := scheduling.NewHandler(schedSvc)
 
@@ -322,10 +363,10 @@ func main() {
 	inventoryH := inventory.NewHandler(inventorySvc)
 
 	privacySvc := privacy.NewService(nil)
-	privacyH := privacy.NewHandler(privacySvc)
+	privacyH := privacy.NewHandler(privacySvc, usersRepo)
 
 	psychologySvc := psychology.NewService(nil)
-	psychologyH := psychology.NewHandler(psychologySvc)
+	psychologyH := psychology.NewHandler(psychologySvc, usersRepo)
 
 	// 8. Setup Router
 	r := gin.New()
@@ -433,9 +474,13 @@ func main() {
 		api.POST("/public/csp-report", handler.HandleCSPReport)
 		r.POST("/public/csp-report", handler.HandleCSPReport)
 
-		// Public Routes per Interpelli, Albo Pretorio e Timbro Digitale
-		interpelliH.RegisterPublicRoutes(api)
-		alboH.RegisterPublicRoutes(api)
+		// Public Routes per Interpelli, Albo Pretorio e Timbro Digitale.
+		// Interpelli and Albo currently use process-local repositories, so
+		// expose them only outside release until PostgreSQL adapters are wired.
+		if memoryBackedEnterpriseFeaturesEnabled(cfg) {
+			interpelliH.RegisterPublicRoutes(api)
+			alboH.RegisterPublicRoutes(api)
+		}
 		signaturesH.RegisterPublicRoutes(api)
 
 		api.GET("/ws", authMiddleware.AuthenticateWSTicket(wsTicketStore), func(c *gin.Context) {
@@ -536,7 +581,7 @@ func main() {
 			textbooksH.RegisterRoutes(protected)
 
 			redisAddr := fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port)
-			pdfWorkerClient := pdfworker.NewClient(redisAddr)
+			pdfWorkerClient := pdfworker.NewClient(redisAddr, cfg.Redis.Password)
 			defer func() { _ = pdfWorkerClient.Close() }()
 
 			gradesH.SetPdfWorkerClient(pdfWorkerClient)
@@ -718,14 +763,15 @@ func main() {
 			// Sportello Digitale Istanze Famiglie & Delegati Permanenti
 			familyDeskRepo := family_desk.NewPostgresRepository(database)
 			familyDeskSvc := family_desk.NewService(familyDeskRepo)
-			familyDeskH := family_desk.NewHandler(familyDeskSvc)
+			familyDeskH := family_desk.NewHandler(familyDeskSvc, usersRepo)
+			familyDeskH.SetUploader(docsUploader)
 			familyDeskH.RegisterRoutes(protected)
 
 			// Portale Esterno Tutor Aziendale PCTO
 			pctoTutorRepo := pcto_tutor.NewPostgresRepository(database)
 			pctoTutorSvc := pcto_tutor.NewService(pctoTutorRepo)
 			pctoTutorH := pcto_tutor.NewHandler(pctoTutorSvc)
-			pctoTutorH.RegisterRoutes(api)
+			pctoTutorH.RegisterRoutes(api, protected)
 
 			// Elezioni Organi Collegiali (Urna Digitale & Voto Online Anonimo)
 			electionsRepo := elections.NewPostgresRepository(database)
@@ -745,14 +791,20 @@ func main() {
 			protocolH := protocol.NewHandler(protocolSvc)
 			protocolH.RegisterRoutes(protected)
 
-			// 10 Nuovi Moduli Enterprise Dealbreaker
-			interpelliH.RegisterProtectedRoutes(protected)
-			alboH.RegisterProtectedRoutes(protected)
-			maturitaH.RegisterRoutes(protected)
-			mealsH.RegisterRoutes(protected)
-			inventoryH.RegisterRoutes(protected)
-			privacyH.RegisterRoutes(protected)
-			psychologyH.RegisterRoutes(protected)
+			// Enterprise modules still using process-local repositories are
+			// not mounted in release: accept no silent, non-persistent writes.
+			if memoryBackedEnterpriseFeaturesEnabled(cfg) {
+				interpelliH.RegisterProtectedRoutes(protected)
+				alboH.RegisterProtectedRoutes(protected)
+				maturitaH.RegisterRoutes(protected)
+				mealsH.RegisterRoutes(protected)
+				inventoryH.RegisterRoutes(protected)
+				privacyH.RegisterRoutes(protected)
+				psychologyH.RegisterRoutes(protected)
+			} else {
+				log.Printf("WARNING: disabling memory-backed enterprise modules in release until PostgreSQL repositories are configured")
+				registerUnavailableMemoryBackedRoutes(api, protected)
+			}
 
 			// Expansion Pack: Art. 29 CCNL 40+40h, Sanità/Infortuni, DM 14/2024 & INVALSI, Pass Fuori Classe, Compiti Canvas, PNRR Futura, Infanzia
 			teacherHoursRepo := teacher_hours.NewRepository(database)

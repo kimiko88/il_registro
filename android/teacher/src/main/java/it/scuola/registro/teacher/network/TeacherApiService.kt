@@ -1,5 +1,7 @@
 package it.scuola.registro.teacher.network
 
+import android.net.Uri
+import it.scuola.registro.teacher.config.AppConfig
 import it.scuola.registro.teacher.data.ClassSession
 import it.scuola.registro.teacher.data.DeferredScrutinyResolution
 import it.scuola.registro.teacher.data.GradeProposal
@@ -25,7 +27,7 @@ interface TeacherApiService {
 }
 
 class HttpTeacherApiService(
-    private val baseUrl: String = "https://registro-backend-fdu2.onrender.com/api/v1"
+    private val baseUrl: String = AppConfig.BASE_URL
 ) : TeacherApiService {
 
     override suspend fun login(email: String, password: String): Result<String> =
@@ -33,6 +35,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/auth/login")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
                     doOutput = true
@@ -58,11 +61,10 @@ class HttpTeacherApiService(
                         Result.failure(Exception("Accesso non consentito: questo account non appartiene a un docente."))
                     } else {
                         val token = json.optString("access_token", json.optString("token"))
-                        Result.success(token)
+                        if (token.isBlank()) Result.failure(Exception("Token di accesso mancante")) else Result.success(token)
                     }
                 } else {
-                    val err = BufferedReader(InputStreamReader(conn.errorStream ?: conn.inputStream)).use { it.readText() }
-                    Result.failure(Exception("Login fallito (HTTP $responseCode): $err"))
+                    Result.failure(Exception("Login fallito (HTTP $responseCode)"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -72,31 +74,19 @@ class HttpTeacherApiService(
     override suspend fun getClasses(token: String): Result<List<ClassSession>> =
         withContext(Dispatchers.IO) {
             try {
-                var url = URL("$baseUrl/teacher/classes")
-                var conn = (url.openConnection() as HttpURLConnection).apply {
+                val url = URL("$baseUrl/teacher/classes")
+                val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
+                    setRequestProperty("Accept", "application/json")
                     connectTimeout = 10000
                     readTimeout = 10000
                 }
-                var response = if (conn.responseCode in 200..299) {
-                    BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
-                } else {
-                    ""
+                if (conn.responseCode !in 200..299) {
+                    return@withContext Result.failure(Exception("Errore recupero classi: HTTP ${conn.responseCode}"))
                 }
-                if (response.isEmpty() || response == "[]" || response == "null") {
-                    url = URL("$baseUrl/classes")
-                    conn = (url.openConnection() as HttpURLConnection).apply {
-                        requestMethod = "GET"
-                        setRequestProperty("Authorization", "Bearer $token")
-                        connectTimeout = 10000
-                        readTimeout = 10000
-                    }
-                    if (conn.responseCode in 200..299) {
-                        response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
-                    }
-                }
-
+                val response = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }.trim()
                 val list = mutableListOf<ClassSession>()
                 if (response.startsWith("[")) {
                     val arr = JSONArray(response)
@@ -113,6 +103,8 @@ class HttpTeacherApiService(
                             )
                         )
                     }
+                } else if (response.isNotEmpty() && response != "null") {
+                    return@withContext Result.failure(Exception("Formato risposta classi non valido"))
                 }
                 Result.success(list)
             } catch (e: Exception) {
@@ -123,8 +115,9 @@ class HttpTeacherApiService(
     override suspend fun getClassStudents(token: String, classId: String): Result<List<StudentRollCall>> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("$baseUrl/users?role=student&class_id=$classId")
+                val url = URL("$baseUrl/users?role=student&class_id=${Uri.encode(classId)}")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "GET"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Accept", "application/json")
@@ -170,6 +163,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/lessons")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -212,6 +206,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/attendance")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -254,6 +249,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/grades")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -289,6 +285,7 @@ class HttpTeacherApiService(
             try {
                 val url = URL("$baseUrl/scrutiny/deferred-resolution")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
+                    instanceFollowRedirects = false
                     requestMethod = "POST"
                     setRequestProperty("Authorization", "Bearer $token")
                     setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -317,4 +314,23 @@ class HttpTeacherApiService(
                 Result.failure(e)
             }
         }
+}
+
+suspend fun HttpTeacherApiService.logout(token: String): Result<Unit> = withContext(Dispatchers.IO) {
+    try {
+        val connection = (URL("${AppConfig.BASE_URL}/auth/logout").openConnection() as HttpURLConnection).apply {
+            instanceFollowRedirects = false
+            requestMethod = "POST"
+            setRequestProperty("Authorization", "Bearer $token")
+            setRequestProperty("Accept", "application/json")
+            connectTimeout = 10000
+            readTimeout = 10000
+        }
+        val status = connection.responseCode
+        connection.disconnect()
+        if (status in 200..299) Result.success(Unit)
+        else Result.failure(IllegalStateException("Logout server non riuscito (HTTP $status)"))
+    } catch (error: Exception) {
+        Result.failure(error)
+    }
 }

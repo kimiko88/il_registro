@@ -10,6 +10,8 @@ on:
 jobs:
   build-frontend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: ./registro-frontend

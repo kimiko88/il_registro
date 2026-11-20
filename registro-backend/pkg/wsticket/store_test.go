@@ -52,27 +52,18 @@ func TestWSTicketStore_ExpiredTicket(t *testing.T) {
 	}
 }
 
-func TestWSTicketStore_FallbackOnInvalidURL(t *testing.T) {
-	// Should log warning and fall back to in-memory store gracefully
-	store := NewStore("redis://invalid-host:6379")
+func TestWSTicketStore_FailsClosedOnInvalidURL(t *testing.T) {
+	// A configured but invalid Redis backend must not silently become local memory.
+	store := NewStore("not-a-redis-url")
 	defer func() { _ = store.Close() }()
 
-	ticket, err := store.Issue("user-456", "fallback@school.com", "admin", "school-2")
-	if err != nil {
-		t.Fatalf("expected issue to work on fallback store: %v", err)
+	if _, err := store.Issue("user-456", "fallback@school.com", "admin", "school-2"); err == nil {
+		t.Fatal("expected ticket issuance to fail when configured Redis is invalid")
 	}
-
-	userID, email, role, schoolID, ok := store.Consume(ticket)
-	if !ok {
-		t.Fatalf("expected consume to succeed on fallback store")
+	if _, _, _, _, ok := store.Consume("some-ticket"); ok {
+		t.Fatal("expected ticket consumption to fail when configured Redis is invalid")
 	}
-	if userID != "user-456" || email != "fallback@school.com" || role != "admin" || schoolID != "school-2" {
-		t.Errorf("claims mismatch on fallback store")
-	}
-
-	// Empty ticket consume
-	_, _, _, _, okEmpty := store.Consume("")
-	if okEmpty {
-		t.Errorf("expected empty ticket consume to return false")
+	if _, _, _, _, ok := store.Consume(""); ok {
+		t.Fatal("expected empty ticket consume to return false")
 	}
 }

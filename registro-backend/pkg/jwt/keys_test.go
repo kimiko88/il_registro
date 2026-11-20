@@ -9,6 +9,7 @@ import (
 )
 
 func TestGetOrGenerateKeys_FromFile(t *testing.T) {
+	setTestKeyGenerationMode(t)
 	tmpDir := t.TempDir()
 	privPath := filepath.Join(tmpDir, "private.pem")
 	pubPath := filepath.Join(tmpDir, "public.pem")
@@ -68,6 +69,7 @@ func TestGetOrGenerateKeys_FromEnvVar(t *testing.T) {
 }
 
 func TestGetOrGenerateKeys_ReadOnlyDirectoryFallback(t *testing.T) {
+	setTestKeyGenerationMode(t)
 	// Provide a path in an invalid/non-existent directory to simulate permission error on save
 	privPath := filepath.Join("/non_existent_folder_xyz_123", "private.pem")
 	pubPath := filepath.Join("/non_existent_folder_xyz_123", "public.pem")
@@ -83,6 +85,8 @@ func TestGetOrGenerateKeys_ReadOnlyDirectoryFallback(t *testing.T) {
 }
 
 func TestGetOrGenerateKeys_ProductionRequiresKey(t *testing.T) {
+	t.Setenv("SERVER_MODE", "test")
+	t.Setenv("GIN_MODE", "test")
 	t.Setenv("APP_ENV", "production")
 	t.Setenv("RSA_PRIVATE_KEY", "")
 	t.Setenv("JWT_PRIVATE_KEY", "")
@@ -91,4 +95,11 @@ func TestGetOrGenerateKeys_ProductionRequiresKey(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error in production when keys are missing, got nil")
 	}
+}
+
+func setTestKeyGenerationMode(t *testing.T) {
+	t.Helper()
+	t.Setenv("APP_ENV", "test")
+	t.Setenv("SERVER_MODE", "test")
+	t.Setenv("GIN_MODE", "test")
 }

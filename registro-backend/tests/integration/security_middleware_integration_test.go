@@ -40,7 +40,7 @@ func TestSecurityHeadersIntegration_AllHeadersPresentOnEveryRoute(t *testing.T) 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "DENY", w.Header().Get("X-Frame-Options"))
 	assert.Equal(t, "nosniff", w.Header().Get("X-Content-Type-Options"))
-	assert.Equal(t, "strict-origin-when-cross-origin", w.Header().Get("Referrer-Policy"))
+	assert.Equal(t, "no-referrer", w.Header().Get("Referrer-Policy"))
 	assert.NotEmpty(t, w.Header().Get("Permissions-Policy"))
 	assert.NotEmpty(t, w.Header().Get("Content-Security-Policy"))
 }
@@ -61,6 +61,11 @@ func TestSecurityHeadersIntegration_CSPReportUriPresent(t *testing.T) {
 
 func TestIdempotencyAndAuth_Integration_DuplicateGradeSubmission(t *testing.T) {
 	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", "test-user")
+		c.Set("school_id", "test-school")
+		c.Next()
+	})
 	r.Use(middleware.IdempotencyMiddleware())
 
 	callCount := 0
@@ -99,6 +104,11 @@ func TestIdempotencyAndAuth_Integration_DuplicateGradeSubmission(t *testing.T) {
 
 func TestIdempotencyAndAuth_Integration_AttendanceDeduplication(t *testing.T) {
 	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", "test-user")
+		c.Set("school_id", "test-school")
+		c.Next()
+	})
 	r.Use(middleware.IdempotencyMiddleware())
 
 	insertCount := 0

@@ -65,8 +65,19 @@ const getEffectiveLanguage = (userLang) => {
 };
 
 const activeAbortControllers = new Set();
+let sessionRequestGeneration = 0;
+
+const releaseRequestController = (config) => {
+    const controller = config?._sessionAbortController;
+    if (controller) activeAbortControllers.delete(controller);
+    if (config?._sessionAbortCleanup) {
+        config._sessionAbortCleanup();
+        delete config._sessionAbortCleanup;
+    }
+};
 
 export const cancelInFlightRequests = () => {
+    sessionRequestGeneration += 1;
     for (const controller of activeAbortControllers) {
         try {
             controller.abort();
@@ -79,6 +90,31 @@ export const cancelInFlightRequests = () => {
 
 api.interceptors.request.use(
     (config) => {
+        const controller = new AbortController();
+        config._sessionAbortController = controller;
+        config._sessionGeneration = sessionRequestGeneration;
+        activeAbortControllers.add(controller);
+        if (config.signal) {
+            if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.any === 'function') {
+                config.signal = AbortSignal.any([config.signal, controller.signal]);
+            } else {
+                const externalSignal = config.signal;
+                const abortFromExternal = () => controller.abort();
+                if (externalSignal.aborted) controller.abort();
+                else {
+                    externalSignal.addEventListener('abort', abortFromExternal, { once: true });
+                    config._sessionAbortCleanup = () => externalSignal.removeEventListener('abort', abortFromExternal);
+                }
+                config.signal = controller.signal;
+            }
+        } else {
+            config.signal = controller.signal;
+        }
+        if (controller.signal.aborted) {
+            releaseRequestController(config);
+            throw new axios.CanceledError('Richiesta annullata: sessione non attiva', config);
+        }
+
         let token = null;
         let userLang = null;
         try {
@@ -193,9 +229,20 @@ export const setApiI18n = (i18nInstance) => {
 };
 
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        const config = response?.config;
+        releaseRequestController(config);
+        if (config?._sessionGeneration !== undefined && config._sessionGeneration !== sessionRequestGeneration) {
+            throw new axios.CanceledError('Risposta ignorata: sessione modificata', config);
+        }
+        return response;
+    },
     async (error) => {
         const originalRequest = error?.config;
+        releaseRequestController(originalRequest);
+        if (originalRequest?._sessionGeneration !== undefined && originalRequest._sessionGeneration !== sessionRequestGeneration) {
+            return Promise.reject(new axios.CanceledError('Richiesta annullata: sessione modificata', originalRequest));
+        }
 
         // ── Automatic retry for transient server errors ──────────────────────
         // Retry up to 2 times on 502/503/504 and network timeouts.
@@ -218,6 +265,9 @@ api.interceptors.response.use(
             originalRequest._isRetryRequest = true;
             const delay = 500 * originalRequest._retryCount; // 500ms, then 1000ms
             await new Promise(resolve => setTimeout(resolve, delay));
+            if (originalRequest._sessionGeneration !== sessionRequestGeneration) {
+                return Promise.reject(new axios.CanceledError('Retry annullato: sessione modificata', originalRequest));
+            }
             return api(originalRequest);
         }
         // ─────────────────────────────────────────────────────────────────────
@@ -277,12 +327,16 @@ api.interceptors.response.use(
 
                 isRefreshing = true;
 
+                const refreshGeneration = sessionRequestGeneration;
                 try {
                     const refreshResponse = await axios.post(
                         `${getBaseURL()}/auth/refresh-token`,
                         {},
                         { withCredentials: true }
                     );
+                    if (refreshGeneration !== sessionRequestGeneration) {
+                        throw new axios.CanceledError('Ripristino sessione annullato', originalRequest);
+                    }
                     const access_token = refreshResponse.data?.access_token;
                     const newRefreshToken = refreshResponse.data?.refresh_token;
 
@@ -294,6 +348,9 @@ api.interceptors.response.use(
                     originalRequest.headers.Authorization = `Bearer ${access_token}`;
                     return api(originalRequest);
                 } catch (refreshErr) {
+                    if (refreshGeneration !== sessionRequestGeneration) {
+                        return Promise.reject(new axios.CanceledError('Ripristino sessione annullato', originalRequest));
+                    }
                     // Prova la re-autenticazione in-page se il handler è registrato
                     if (_reauthHandler) {
                         try {

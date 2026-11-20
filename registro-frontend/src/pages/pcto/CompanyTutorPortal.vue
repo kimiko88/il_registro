@@ -139,9 +139,9 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted } from 'vue'
+import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { pctoCompanyTutorService } from '@/services/pctoCompanyTutorService'
 
 export default defineComponent({
@@ -149,6 +149,7 @@ export default defineComponent({
   setup() {
     const { t } = useI18n()
     const route = useRoute()
+    const router = useRouter()
     const tutor = ref(null)
     const students = ref([])
     const loadingSession = ref(true)
@@ -175,7 +176,14 @@ export default defineComponent({
     })
 
     const loadSession = async () => {
-      token.value = route.query.token || localStorage.getItem('pcto_tutor_token') || ''
+      // A magic-link token is accepted once from the URL, then removed from
+      // browser history before any network request. Never persist it to Web Storage.
+      if (!token.value && typeof route.query.token === 'string' && route.query.token) {
+        token.value = route.query.token
+        const { token: _discardedToken, ...safeQuery } = route.query
+        await router.replace({ query: safeQuery })
+      }
+      localStorage.removeItem('pcto_tutor_token')
       if (!token.value) {
         authError.value = 'Token non valido / Invalid token'
         loadingSession.value = false
@@ -185,8 +193,6 @@ export default defineComponent({
       try {
         const sessionRes = await pctoCompanyTutorService.getSession(token.value)
         tutor.value = sessionRes.tutor
-        localStorage.setItem('pcto_tutor_token', token.value)
-
         const studentsRes = await pctoCompanyTutorService.getAssignedStudents(token.value)
         students.value = studentsRes.data || []
       } catch (e) {
@@ -261,6 +267,11 @@ export default defineComponent({
     }
 
     onMounted(loadSession)
+    onBeforeUnmount(() => {
+      token.value = ''
+      tutor.value = null
+      students.value = []
+    })
 
     return {
       t,

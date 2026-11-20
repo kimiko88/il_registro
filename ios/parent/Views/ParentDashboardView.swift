@@ -19,19 +19,22 @@ public struct ParentDashboardView: View {
     public var grades: [ParentGradeDisplayModel] = []
     public var colloquioSlots: [ParentColloquioSlotModel] = []
     public var circulars: [String] = []
+    public var onLogout: (() -> Void)?
 
     public init(
         token: String = "",
         viewModel: ParentViewModel = ParentViewModel(),
         grades: [ParentGradeDisplayModel] = [],
         colloquioSlots: [ParentColloquioSlotModel] = [],
-        circulars: [String] = []
+        circulars: [String] = [],
+        onLogout: (() -> Void)? = nil
     ) {
         self.token = token
         self.viewModel = viewModel
         self.grades = grades
         self.colloquioSlots = colloquioSlots
         self.circulars = circulars
+        self.onLogout = onLogout
     }
 
     public var body: some View {
@@ -57,6 +60,23 @@ public struct ParentDashboardView: View {
                 .tag(4)
         }
         .tint(Color(red: 0.05, green: 0.58, blue: 0.53))
+        .safeAreaInset(edge: .top) {
+            HStack {
+                Spacer()
+                Button {
+                    viewModel.clearSession()
+                    OfflineCacheManager.shared.clear()
+                    onLogout?()
+                } label: {
+                    Label("Esci", systemImage: "rectangle.portrait.and.arrow.right")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .accessibilityIdentifier("logoutButton")
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+            }
+            .background(.bar)
+        }
         .task {
             if !token.isEmpty {
                 await viewModel.loadFromDatabase(token: token)

@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -149,6 +150,14 @@ type MockStorageUploader struct {
 func (u *MockStorageUploader) UploadFile(ctx context.Context, storagePath, mimeType string, r io.Reader) (string, error) {
 	args := u.Called(ctx, storagePath, mimeType, r)
 	return args.String(0), args.Error(1)
+}
+
+func (u *MockStorageUploader) DownloadFile(ctx context.Context, storageKey string) (io.ReadCloser, string, int64, error) {
+	args := u.Called(ctx, storageKey)
+	if args.Get(0) == nil {
+		return nil, args.String(1), args.Get(2).(int64), args.Error(3)
+	}
+	return args.Get(0).(io.ReadCloser), args.String(1), args.Get(2).(int64), args.Error(3)
 }
 
 func (u *MockStorageUploader) DeleteFile(ctx context.Context, storagePath string) error {
@@ -368,5 +377,63 @@ func TestDocumentsHandler_AllEndpoints(t *testing.T) {
 	rTeacher.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusForbidden, w.Code)
 
+	svc.AssertExpectations(t)
+}
+
+func TestDocumentsHandler_DownloadPrivateAttachmentRequiresDocumentAuthorization(t *testing.T) {
+	svc := new(MockDocumentService)
+	upl := new(MockStorageUploader)
+	router := setupTestDocumentRouter(svc, upl, "teacher-1", "teacher", "school-1")
+
+	svc.On("GetDocument", mock.Anything, "teacher", "school-1", "doc-1").
+		Return(&DocumentDetailResponse{
+			DocumentListResponse: DocumentListResponse{ID: "doc-1"},
+			Content:              "verbale\nAttachment: supabase://documents/schools/school-1/documents/doc-1/file.pdf",
+		}, nil).Once()
+	upl.On("DownloadFile", mock.Anything, "supabase://documents/schools/school-1/documents/doc-1/file.pdf").
+		Return(io.NopCloser(strings.NewReader("%PDF-private")), "application/pdf", int64(13), nil).Once()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/documents/doc-1/file", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "%PDF-private", rec.Body.String())
+	assert.Contains(t, rec.Header().Get("Cache-Control"), "no-store")
+	assert.Contains(t, rec.Header().Get("Content-Disposition"), "attachment")
+	svc.AssertExpectations(t)
+	upl.AssertExpectations(t)
+}
+
+func TestDocumentsHandler_DownloadPrivateAttachmentDeniesUnauthorizedDocument(t *testing.T) {
+	svc := new(MockDocumentService)
+	upl := new(MockStorageUploader)
+	router := setupTestDocumentRouter(svc, upl, "teacher-1", "teacher", "school-1")
+
+	svc.On("GetDocument", mock.Anything, "teacher", "school-1", "other-school-doc").
+		Return(nil, errors.New("unauthorized")).Once()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/documents/other-school-doc/file", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	upl.AssertNotCalled(t, "DownloadFile", mock.Anything, mock.Anything)
+}
+
+func TestDocumentsHandler_DownloadPrivateAttachmentRejectsForeignDocumentKey(t *testing.T) {
+	svc := new(MockDocumentService)
+	upl := new(MockStorageUploader)
+	router := setupTestDocumentRouter(svc, upl, "teacher-1", "teacher", "school-1")
+
+	svc.On("GetDocument", mock.Anything, "teacher", "school-1", "doc-1").
+		Return(&DocumentDetailResponse{
+			DocumentListResponse: DocumentListResponse{ID: "doc-1"},
+			Content:              "Attachment: supabase://documents/schools/school-2/documents/other-doc/file.pdf",
+		}, nil).Once()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/documents/doc-1/file", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+	upl.AssertNotCalled(t, "DownloadFile", mock.Anything, mock.Anything)
 	svc.AssertExpectations(t)
 }

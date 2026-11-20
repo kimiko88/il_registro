@@ -114,6 +114,7 @@ func TestUsersHandler_AllEndpoints(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// 8. GET /users/:id/audit-log
+	repo.On("GetByID", mock.Anything, "u1").Return(&User{ID: "u1", SchoolID: &schID}, nil).Once()
 	repo.On("GetAuditLogs", mock.Anything, "u1", 50, 0).Return([]AuditLog{{ID: "a1", Action: "CREATE"}}, 1, nil).Once()
 	req, _ = http.NewRequest(http.MethodGet, "/api/v1/users/u1/audit-log", nil)
 	w = httptest.NewRecorder()
@@ -186,6 +187,7 @@ func TestUsersHandler_AllEndpoints(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// 16. Assignments: GET & POST & DELETE /users/:id/assignments
+	repo.On("GetByID", mock.Anything, "u1").Return(&User{ID: "u1", SchoolID: &schID}, nil).Once()
 	repo.On("GetAssignments", mock.Anything, "u1").Return([]UserAssignment{{ID: "as-1", UserID: "u1"}}, nil).Once()
 	req, _ = http.NewRequest(http.MethodGet, "/api/v1/users/u1/assignments", nil)
 	w = httptest.NewRecorder()
@@ -220,6 +222,7 @@ func TestUsersHandler_AllEndpoints(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// 18. Guardians: GET & POST & DELETE /users/:id/guardians
+	repo.On("GetByID", mock.Anything, "s1").Return(&User{ID: "s1", SchoolID: &schID, Role: "student"}, nil).Once()
 	repo.On("GetStudentProfile", mock.Anything, "s1").Return("prof-s1", nil).Times(3)
 	repo.On("GetGuardians", mock.Anything, "prof-s1").Return([]GuardianInfo{{ParentUserID: "p1"}}, nil).Once()
 	req, _ = http.NewRequest(http.MethodGet, "/api/v1/users/s1/guardians", nil)
@@ -227,6 +230,8 @@ func TestUsersHandler_AllEndpoints(t *testing.T) {
 	rAdmin.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
+	repo.On("GetByID", mock.Anything, "s1").Return(&User{ID: "s1", SchoolID: &schID, Role: "student"}, nil).Once()
+	repo.On("GetByID", mock.Anything, "p1").Return(&User{ID: "p1", SchoolID: &schID, Role: "parent"}, nil).Once()
 	repo.On("GetParentProfile", mock.Anything, "p1").Return("prof-p1", nil).Twice()
 	repo.On("AddGuardian", mock.Anything, "prof-s1", "prof-p1", "Father").Return(nil).Once()
 	guardianPayload := `{"parent_user_id":"p1","relationship_type":"Father"}`
@@ -236,6 +241,8 @@ func TestUsersHandler_AllEndpoints(t *testing.T) {
 	rAdmin.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
+	repo.On("GetByID", mock.Anything, "s1").Return(&User{ID: "s1", SchoolID: &schID, Role: "student"}, nil).Once()
+	repo.On("GetByID", mock.Anything, "p1").Return(&User{ID: "p1", SchoolID: &schID, Role: "parent"}, nil).Once()
 	repo.On("RemoveGuardian", mock.Anything, "prof-s1", "prof-p1").Return(nil).Once()
 	req, _ = http.NewRequest(http.MethodDelete, "/api/v1/users/s1/guardians/p1", nil)
 	w = httptest.NewRecorder()

@@ -31,7 +31,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
         let body = ["email": cleanEmail, "password": password]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "TeacherAPI", code: 401, userInfo: [NSLocalizedDescriptionKey: "Credenziali errate"])
         }
@@ -42,7 +42,8 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
             guard role == "teacher" || role == "coordinator" else {
                 throw NSError(domain: "TeacherAPI", code: 403, userInfo: [NSLocalizedDescriptionKey: "Accesso non consentito: questo account non appartiene a un docente."])
             }
-            if let token = json["token"] as? String ?? json["access_token"] as? String {
+            if let token = json["token"] as? String ?? json["access_token"] as? String,
+               !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return token
             }
         }
@@ -50,26 +51,20 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
     }
 
     public func fetchClasses(token: String) async throws -> [TeacherClassSessionModel] {
-        var url = baseURL.appendingPathComponent("teacher/classes")
+        let url = baseURL.appendingPathComponent("teacher/classes")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        var jsonArray: [[String: Any]] = []
-        if let (data, response) = try? await URLSession.shared.data(for: request),
-           let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
-           let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]], !arr.isEmpty {
-            jsonArray = arr
-        } else {
-            url = baseURL.appendingPathComponent("classes")
-            request = URLRequest(url: url)
-            request.httpMethod = "GET"
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            if let (data, response) = try? await URLSession.shared.data(for: request),
-               let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
-               let arr = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-                jsonArray = arr
-            }
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NSError(domain: "TeacherAPI", code: (response as? HTTPURLResponse)?.statusCode ?? 500,
+                          userInfo: [NSLocalizedDescriptionKey: "Errore recupero classi"])
+        }
+        guard let jsonArray = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            throw NSError(domain: "TeacherAPI", code: 502,
+                          userInfo: [NSLocalizedDescriptionKey: "Formato risposta classi non valido"])
         }
 
         return jsonArray.enumerated().map { index, dict in
@@ -84,12 +79,17 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
     }
 
     public func fetchClassStudents(token: String, classId: String) async throws -> [RollCallStudent] {
-        let url = baseURL.appendingPathComponent("users?role=student&class_id=\(classId)")
+        var components = URLComponents(url: baseURL.appendingPathComponent("users"), resolvingAgainstBaseURL: false)
+        components?.queryItems = [
+            URLQueryItem(name: "role", value: "student"),
+            URLQueryItem(name: "class_id", value: classId)
+        ]
+        guard let url = components?.url else { return [] }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        guard let (data, response) = try? await URLSession.shared.data(for: request),
+        guard let (data, response) = try? await SecureURLSession.shared.data(for: request),
               let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             return []
         }
@@ -126,7 +126,7 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
         let body = ["class_id": classId, "topic": topic]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NSError(domain: "TeacherAPI", code: 400, userInfo: [NSLocalizedDescriptionKey: "Errore firma lezione"])
         }
@@ -155,10 +155,25 @@ public class HttpTeacherAPIService: TeacherAPIServiceProtocol {
         let body: [String: Any] = ["class_id": classId, "records": recordsArray]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (_, response) = try await SecureURLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             return false
         }
         return true
+    }
+}
+
+public extension HttpTeacherAPIService {
+    /// Revokes the authenticated server session during an explicit user logout.
+    func revokeSession(token: String) async {
+        var request = URLRequest(url: baseURL.appendingPathComponent("auth/logout"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        guard let (_, response) = try? await SecureURLSession.shared.data(for: request),
+              let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            return
+        }
     }
 }

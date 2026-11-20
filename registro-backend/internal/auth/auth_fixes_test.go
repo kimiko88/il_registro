@@ -78,8 +78,10 @@ func TestAuthFixes_Register_TOCTOU(t *testing.T) {
 		Email:    "newuser@school.it",
 		Password: "Password123!",
 		Role:     "teacher",
+		SchoolID: "school-1",
 	}
 
+	mockRepo.On("SchoolExists", mock.Anything, "school-1").Return(true, nil).Once()
 	mockRepo.On("CreateUser", mock.Anything, mock.MatchedBy(func(u *User) bool {
 		return u.Email == "newuser@school.it"
 	})).Return(nil).Once()

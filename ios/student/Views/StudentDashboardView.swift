@@ -15,9 +15,19 @@ public struct StudentDashboardView: View {
         self.viewModel = viewModel
     }
 
+    private func logout() {
+        if !token.isEmpty {
+            let tokenToRevoke = token
+            Task { await HttpStudentAPIService().revokeSession(token: tokenToRevoke) }
+        }
+        viewModel.clearSession()
+        OfflineCacheManager.shared.clear()
+        onLogout?()
+    }
+
     public var body: some View {
         TabView(selection: $selectedTab) {
-            StudentHomeView(studentName: studentName, viewModel: viewModel, onLogout: onLogout)
+            StudentHomeView(studentName: studentName, viewModel: viewModel, onLogout: logout)
                 .tabItem {
                     Label(NSLocalizedString("tab_home", comment: ""), systemImage: "house.fill")
                 }
@@ -48,6 +58,21 @@ public struct StudentDashboardView: View {
                 .tag(4)
         }
         .tint(Color.purple)
+        .safeAreaInset(edge: .top) {
+            HStack {
+                Spacer()
+                Button {
+                    logout()
+                } label: {
+                    Label("Esci", systemImage: "rectangle.portrait.and.arrow.right")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .accessibilityIdentifier("logoutButton")
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+            }
+            .background(.bar)
+        }
         .task {
             if !token.isEmpty {
                 await viewModel.loadFromDatabase(token: token)

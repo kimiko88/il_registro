@@ -55,7 +55,10 @@ describe('Login.vue', () => {
                     'q-btn-dropdown': { template: '<div><slot /></div>' },
                     'q-icon': true,
                     'q-checkbox': true,
-                    'q-btn': { template: '<button type="submit"><slot /></button>' },
+                    'q-btn': {
+                        props: ['disable'],
+                        template: '<button type="submit" :disabled="disable"><slot /></button>'
+                    },
                     'q-dialog': { template: '<div><slot /></div>' },
                     'q-card': { template: '<div><slot /></div>' },
                     'q-card-section': { template: '<div><slot /></div>' },
@@ -105,8 +108,11 @@ describe('Login.vue', () => {
         expect(wrapper.text()).toContain('Invalid credentials')
     })
 
-    it('renders AgID SPID and CIE buttons', () => {
-        expect(wrapper.text()).toContain('Entra con SPID')
-        expect(wrapper.text()).toContain('Entra con CIE')
+    it('keeps SPID and CIE disabled until signed SAML verification is implemented', () => {
+        expect(wrapper.text()).toContain('SPID temporaneamente non disponibile')
+        expect(wrapper.text()).toContain('CIE temporaneamente non disponibile')
+        expect(wrapper.find('#btn-login-spid').element.disabled).toBe(true)
+        expect(wrapper.find('#btn-login-cie').element.disabled).toBe(true)
+        expect(wrapper.text()).toContain('verifica crittografica completa')
     })
 })
