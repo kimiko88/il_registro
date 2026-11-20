@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: '0 0 * * *'  # Once a day (midnight UTC)
 
+permissions: {}
 
 jobs:
   health-check:

@@ -58,3 +58,36 @@ func TestIdempotencyScopesResponsesAndRejectsPayloadReuse(t *testing.T) {
 	require.NotContains(t, otherUser.Body.String(), "user-1")
 	require.EqualValues(t, 2, calls.Load())
 }
+
+func TestIdempotencyNeutralizesUnsafeHTMLContentType(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "u-html")
+		c.Set("school_id", "s-html")
+		c.Next()
+	})
+	router.Use(IdempotencyMiddleware())
+	router.POST("/echo", func(c *gin.Context) {
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte("<script>alert(1)</script>"))
+	})
+
+	req1 := httptest.NewRequest(http.MethodPost, "/echo", strings.NewReader(`{}`))
+	req1.Header.Set(idempotencyHeader, "html-key-1")
+	rec1 := httptest.NewRecorder()
+	router.ServeHTTP(rec1, req1)
+
+	require.Equal(t, http.StatusOK, rec1.Code)
+	require.Equal(t, "nosniff", rec1.Header().Get("X-Content-Type-Options"))
+	require.NotContains(t, rec1.Header().Get("Content-Type"), "text/html")
+
+	req2 := httptest.NewRequest(http.MethodPost, "/echo", strings.NewReader(`{}`))
+	req2.Header.Set(idempotencyHeader, "html-key-1")
+	rec2 := httptest.NewRecorder()
+	router.ServeHTTP(rec2, req2)
+
+	require.Equal(t, http.StatusOK, rec2.Code)
+	require.Equal(t, "true", rec2.Header().Get("X-Idempotency-Replayed"))
+	require.Equal(t, "nosniff", rec2.Header().Get("X-Content-Type-Options"))
+	require.NotContains(t, rec2.Header().Get("Content-Type"), "text/html")
+}

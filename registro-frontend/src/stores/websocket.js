@@ -8,16 +8,9 @@ import { useScrutinyStore } from './scrutiny'
 import { Notify } from 'quasar'
 import { i18n } from '@/i18n'
 import api, { getBaseURL } from '@/services/api'
+import { escapeHTML, stripHTMLTags } from '@/utils/sanitize'
 
-const escapeHtml = (str) => {
-    if (!str) return ''
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-}
+const escapeHtml = escapeHTML
 
 export const useWebSocketStore = defineStore('websocket', () => {
     const socket = ref(null)
@@ -307,7 +300,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 sendDesktopNotification({
                     title: 'Registro Elettronico - Voti',
-                    body: gradeMsg.replace(/<[^>]+>/g, '')
+                    body: stripHTMLTags(gradeMsg)
                 })
                 break
             }
@@ -332,7 +325,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 sendDesktopNotification({
                     title: 'Registro Elettronico - Presenze',
-                    body: attMsg.replace(/<[^>]+>/g, '')
+                    body: stripHTMLTags(attMsg)
                 })
                 break
             }
@@ -353,7 +346,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 sendDesktopNotification({
                     title: 'Registro Elettronico - Giustifiche',
-                    body: justAppMsg.replace(/<[^>]+>/g, '')
+                    body: stripHTMLTags(justAppMsg)
                 })
                 break
             }
@@ -374,7 +367,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 sendDesktopNotification({
                     title: 'Registro Elettronico - Giustifiche',
-                    body: justRejMsg.replace(/<[^>]+>/g, '')
+                    body: stripHTMLTags(justRejMsg)
                 })
                 break
             }
@@ -396,7 +389,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 sendDesktopNotification({
                     title: 'Registro Elettronico - Comunicazioni',
-                    body: commMsg.replace(/<[^>]+>/g, '')
+                    body: stripHTMLTags(commMsg)
                 })
                 break
             }
@@ -411,7 +404,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 sendDesktopNotification({
                     title: 'Registro Elettronico - Note Disciplinari',
-                    body: noteMsg.replace(/<[^>]+>/g, '')
+                    body: stripHTMLTags(noteMsg)
                 })
                 break
             }
@@ -432,7 +425,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 sendDesktopNotification({
                     title: 'Registro Elettronico - Scrutinio',
-                    body: scrutinyMsg.replace(/<[^>]+>/g, '')
+                    body: stripHTMLTags(scrutinyMsg)
                 })
                 break
             }
@@ -458,7 +451,7 @@ export const useWebSocketStore = defineStore('websocket', () => {
                 })
                 sendDesktopNotification({
                     title: 'Registro Elettronico - Colloqui',
-                    body: slotMsg.replace(/<[^>]+>/g, '')
+                    body: stripHTMLTags(slotMsg)
                 })
                 break
             }

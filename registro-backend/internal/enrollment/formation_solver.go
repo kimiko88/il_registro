@@ -13,22 +13,34 @@ func NewFormationSolver() *FormationSolver {
 	return &FormationSolver{}
 }
 
+const maxTargetClasses = 100
+
 func (s *FormationSolver) Solve(pool []EnrollmentApplication, params FormationParams) (*ClassFormationDraftResult, error) {
 	if len(pool) == 0 {
 		return nil, errors.New("empty student pool")
 	}
 
 	targetClasses := params.TargetClassCount
+	if targetClasses > maxTargetClasses {
+		return nil, fmt.Errorf("target class count exceeds maximum allowed (%d)", maxTargetClasses)
+	}
 	if targetClasses <= 0 {
 		targetClasses = int(math.Ceil(float64(len(pool)) / 25.0))
 		if targetClasses <= 0 {
 			targetClasses = 1
 		}
+		if targetClasses > maxTargetClasses {
+			targetClasses = maxTargetClasses
+		}
 	}
 
 	classNames := make([]string, targetClasses)
 	for i := 0; i < targetClasses; i++ {
-		classNames[i] = fmt.Sprintf("1%c", 'A'+i)
+		if i < 26 {
+			classNames[i] = fmt.Sprintf("1%c", 'A'+i)
+		} else {
+			classNames[i] = fmt.Sprintf("1S%d", i+1)
+		}
 	}
 
 	classes := make([]ClassGroupAssignment, targetClasses)

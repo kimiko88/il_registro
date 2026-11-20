@@ -172,12 +172,14 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 				return
 			}
 			for key, value := range copyResponse.headers {
+				if strings.EqualFold(key, "Content-Type") || strings.EqualFold(key, "Content-Length") {
+					continue
+				}
 				c.Header(key, value)
 			}
-			contentType := copyResponse.headers["Content-Type"]
-			if contentType == "" {
-				contentType = "application/json"
-			}
+			c.Header("X-Content-Type-Options", "nosniff")
+			contentType := safeIdempotencyContentType(copyResponse.headers["Content-Type"])
+			c.Writer.Header().Set("Content-Type", contentType)
 			c.Data(copyResponse.status, contentType, copyResponse.body)
 			c.Abort()
 			return
@@ -186,10 +188,12 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 		if !owner {
 			return
 		}
-		writer := &responseWriter{ResponseWriter: c.Writer, body: &bytes.Buffer{}}
+		origWriter := c.Writer
+		writer := &responseWriter{ResponseWriter: origWriter, body: &bytes.Buffer{}}
 		c.Writer = writer
 		completed := false
 		defer func() {
+			c.Writer = origWriter
 			if completed {
 				return
 			}
@@ -203,30 +207,56 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 
 		c.Next()
 		completed = true
+		c.Writer = origWriter
 
 		status := writer.status
 		if status == 0 {
 			status = http.StatusOK
 		}
 		var response *cachedResponse
-		if status >= 200 && status < 500 {
+		var bodyBytes []byte
+		if !writer.passthrough && !writer.exceeded {
+			bodyBytes = append([]byte(nil), writer.body.Bytes()...)
+		}
+		if status >= 200 && status < 500 && !writer.exceeded && len(bodyBytes) <= maxIdempotencyResponse {
 			headers := make(map[string]string)
-			for key, values := range writer.Header() {
+			for key, values := range origWriter.Header() {
 				if len(values) > 0 {
 					headers[key] = values[0]
 				}
 			}
-			body := writer.body.Bytes()
-			replayable := len(body) <= maxIdempotencyResponse
-			if !replayable {
-				body = nil
+			response = &cachedResponse{
+				status:     status,
+				body:       append([]byte(nil), bodyBytes...),
+				headers:    headers,
+				storedAt:   time.Now(),
+				replayable: true,
+			}
+		} else if status >= 200 && status < 500 {
+			headers := make(map[string]string)
+			for key, values := range origWriter.Header() {
+				if len(values) > 0 {
+					headers[key] = values[0]
+				}
 			}
 			response = &cachedResponse{
 				status:     status,
-				body:       append([]byte(nil), body...),
 				headers:    headers,
 				storedAt:   time.Now(),
-				replayable: replayable,
+				replayable: false,
+			}
+		}
+
+		if !writer.passthrough {
+			c.Header("X-Content-Type-Options", "nosniff")
+			safeCT := safeIdempotencyContentType(origWriter.Header().Get("Content-Type"))
+			origWriter.Header().Set("Content-Type", safeCT)
+			if len(bodyBytes) == 0 && (status == http.StatusNoContent || status == http.StatusNotModified) {
+				origWriter.WriteHeader(status)
+			} else if len(bodyBytes) > 0 {
+				c.Data(status, safeCT, bodyBytes)
+			} else if writer.wroteHeader {
+				origWriter.WriteHeader(status)
 			}
 		}
 
@@ -240,30 +270,104 @@ func IdempotencyMiddleware() gin.HandlerFunc {
 	}
 }
 
-// responseWriter captures the response body without changing normal Gin writes.
+func safeIdempotencyContentType(raw string) string {
+	mediaType := strings.ToLower(strings.TrimSpace(strings.SplitN(raw, ";", 2)[0]))
+	switch mediaType {
+	case "", "text/html", "application/xhtml+xml", "image/svg+xml", "text/xml", "application/xml":
+		return "application/json; charset=utf-8"
+	default:
+		return raw
+	}
+}
+
+// responseWriter buffers cacheable responses up to maxIdempotencyResponse and falls back
+// to pass-through streaming for larger payloads, enforcing safe content types.
 type responseWriter struct {
 	gin.ResponseWriter
-	body   *bytes.Buffer
-	status int
+	body        *bytes.Buffer
+	status      int
+	wroteHeader bool
+	passthrough bool
+	exceeded    bool
+}
+
+func (rw *responseWriter) Status() int {
+	if rw.status != 0 {
+		return rw.status
+	}
+	return http.StatusOK
+}
+
+func (rw *responseWriter) Size() int {
+	if rw.passthrough {
+		return rw.ResponseWriter.Size()
+	}
+	return rw.body.Len()
+}
+
+func (rw *responseWriter) Written() bool {
+	if rw.passthrough {
+		return rw.ResponseWriter.Written()
+	}
+	return rw.wroteHeader || rw.body.Len() > 0
 }
 
 func (rw *responseWriter) WriteHeader(status int) {
 	rw.status = status
-	rw.ResponseWriter.WriteHeader(status)
+	rw.wroteHeader = true
+	if rw.passthrough {
+		rw.ResponseWriter.WriteHeader(status)
+	}
+}
+
+func (rw *responseWriter) WriteHeaderNow() {
+	if !rw.passthrough {
+		rw.switchToPassthrough()
+	}
+	rw.ResponseWriter.WriteHeaderNow()
+}
+
+func (rw *responseWriter) Flush() {
+	if !rw.passthrough {
+		rw.switchToPassthrough()
+	}
+	rw.ResponseWriter.Flush()
+}
+
+func (rw *responseWriter) switchToPassthrough() {
+	if rw.passthrough {
+		return
+	}
+	rw.passthrough = true
+	hdr := rw.ResponseWriter.Header()
+	hdr.Set("X-Content-Type-Options", "nosniff")
+	hdr.Set("Content-Type", safeIdempotencyContentType(hdr.Get("Content-Type")))
+	if rw.wroteHeader && rw.status != 0 {
+		rw.ResponseWriter.WriteHeader(rw.status)
+	}
+	if rw.body.Len() > 0 {
+		buffered := append([]byte(nil), rw.body.Bytes()...)
+		rw.body.Reset()
+		_, _ = rw.ResponseWriter.Write(buffered)
+	}
 }
 
 func (rw *responseWriter) Write(b []byte) (int, error) {
 	if rw.status == 0 {
 		rw.status = http.StatusOK
+		rw.wroteHeader = true
 	}
-	_, _ = rw.body.Write(b)
-	return rw.ResponseWriter.Write(b)
+	if rw.passthrough {
+		return rw.ResponseWriter.Write(b)
+	}
+	if rw.body.Len()+len(b) > maxIdempotencyResponse {
+		rw.exceeded = true
+		rw.switchToPassthrough()
+		return rw.ResponseWriter.Write(b)
+	}
+	return rw.body.Write(b)
 }
 
 func (rw *responseWriter) WriteString(s string) (int, error) {
-	if rw.status == 0 {
-		rw.status = http.StatusOK
-	}
-	_, _ = rw.body.WriteString(s)
-	return rw.ResponseWriter.WriteString(s)
+	return rw.Write([]byte(s))
 }

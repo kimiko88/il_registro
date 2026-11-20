@@ -10,6 +10,9 @@ on:
     paths:
       - 'registro-backend/**'
 
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: registro-backend

@@ -26,3 +26,21 @@ func TestRefreshTokenCookieHandling(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Contains(t, w.Body.String(), "missing refresh_token")
 }
+
+func TestSetRefreshTokenCookieAlwaysSecure(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	t.Setenv("COOKIE_SECURE", "false")
+	t.Setenv("APP_ENV", "development")
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/auth/login", nil)
+
+	setRefreshTokenCookie(c, "secret-rt", 3600)
+
+	cookies := w.Result().Cookies()
+	assert.Len(t, cookies, 1)
+	assert.Equal(t, "refreshToken", cookies[0].Name)
+	assert.True(t, cookies[0].Secure)
+	assert.True(t, cookies[0].HttpOnly)
+}

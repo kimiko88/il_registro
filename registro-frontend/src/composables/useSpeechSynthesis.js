@@ -1,5 +1,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useThemeStore } from 'src/stores/theme'
+import { stripHTMLTags } from 'src/utils/sanitize'
 
 export function useSpeechSynthesis() {
   const themeStore = useThemeStore()
@@ -32,7 +33,7 @@ export function useSpeechSynthesis() {
 
     stop()
 
-    const cleanText = text.replace(/<[^>]*>?/gm, '').trim()
+    const cleanText = stripHTMLTags(text).trim()
     if (!cleanText) return
 
     currentText.value = cleanText

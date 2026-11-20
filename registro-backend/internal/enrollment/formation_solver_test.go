@@ -140,3 +140,22 @@ func TestFormationSolver_RequestedClassmates(t *testing.T) {
 		t.Errorf("mutual requested classmates CF0001 and CF0002 were separated into classes %d and %d", classApp1, classApp2)
 	}
 }
+
+func TestFormationSolver_RejectsExcessiveTargetClassCount(t *testing.T) {
+	apps := []EnrollmentApplication{
+		{
+			ID:                "app-1",
+			StudentTaxCode:    "CF0001",
+			StudentFirstName:  "Marco",
+			StudentLastName:   "Rossi",
+			Gender:            "M",
+			MiddleSchoolGrade: 8,
+		},
+	}
+
+	solver := NewFormationSolver()
+	_, err := solver.Solve(apps, FormationParams{TargetClassCount: 1000000})
+	if err == nil {
+		t.Fatal("expected error when TargetClassCount exceeds upper bound")
+	}
+}

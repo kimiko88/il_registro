@@ -127,10 +127,11 @@ import { ref, reactive, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import api from '@/services/api'
+import { stripHTMLTags } from '@/utils/sanitize'
 
 const { t } = useI18n()
 
-const stripHtml = (html) => (html || '').replace(/<[^>]*>?/gm, '')
+const stripHtml = (html) => stripHTMLTags(html || '')
 
 const props = defineProps({
   modelValue: Boolean
