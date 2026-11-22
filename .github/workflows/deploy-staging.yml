@@ -3,23 +3,11 @@ name: Deploy Staging
 on:
   push:
     branches: [develop]
+  workflow_dispatch:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-    environment: staging
-    defaults:
-      run:
-        working-directory: ./registro-frontend
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-      - run: npm ci
-      - run: npm run build
-      - name: Deploy to Netlify (Staging)
-        run: npx netlify-cli deploy --alias=staging --dir=dist
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    uses: ./.github/workflows/deploy-ftp.yml
+    with:
+      environment: staging
+    secrets: inherit

@@ -1,0 +1,148 @@
+name: Deploy via FTP (reusable)
+
+# Reusable workflow: builds the frontend (static files) and the backend
+# (one static Go binary) and uploads both to an FTP/FTPS server.
+#
+# Configure these in the GitHub Environment (staging / production):
+#
+# Secrets:
+#   FTP_HOST          FTP server host name (e.g. ftp.example.com)
+#   FTP_USERNAME      FTP user
+#   FTP_PASSWORD      FTP password
+#   VITE_API_URL      (optional) backend API URL baked into the frontend build
+#
+# Variables (Settings → Environments → Variables):
+#   FTP_PORT              (optional) default 21
+#   FTP_FRONTEND_DIR      remote dir for the frontend, e.g. /public_html
+#   FTP_BACKEND_DIR       remote dir for the backend binary, e.g. /backend
+#   BACKEND_BINARY_NAME   (optional) default api-server
+#   BACKEND_GOARCH        (optional) amd64 | arm64, default amd64
+#   FTP_FRONTEND_DELETE   (optional) "true" = delete remote files missing from the build
+#   FTP_VERIFY_CERT       (optional) "false" = do not verify the FTPS TLS certificate
+#   VITE_API_URL          (optional) used if the secret of the same name is empty
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub Environment holding the FTP settings
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      FTP_HOST: ${{ secrets.FTP_HOST }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      FTP_PORT: ${{ vars.FTP_PORT || '21' }}
+      FTP_FRONTEND_DIR: ${{ vars.FTP_FRONTEND_DIR }}
+      FTP_BACKEND_DIR: ${{ vars.FTP_BACKEND_DIR }}
+      BINARY_NAME: ${{ vars.BACKEND_BINARY_NAME || 'api-server' }}
+      FTP_FRONTEND_DELETE: ${{ vars.FTP_FRONTEND_DELETE || 'false' }}
+      FTP_VERIFY_CERT: ${{ vars.FTP_VERIFY_CERT || 'true' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check FTP configuration
+        run: |
+          missing=0
+          for v in FTP_HOST FTP_USERNAME FTP_PASSWORD FTP_FRONTEND_DIR FTP_BACKEND_DIR; do
+            if [ -z "${!v}" ]; then
+              echo "::error::$v is not set for environment '${{ inputs.environment }}'"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      # ---------- Frontend ----------
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Build frontend
+        working-directory: ./registro-frontend
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL || vars.VITE_API_URL }}
+        run: |
+          if [ -n "$VITE_API_URL" ]; then
+            echo "VITE_API_URL=$VITE_API_URL" > .env.production
+          else
+            echo "::warning::VITE_API_URL is not set, using the build default"
+          fi
+          npm ci
+          npm run build
+          test -f dist/index.html
+
+      # ---------- Backend ----------
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: registro-backend/go.mod
+          cache-dependency-path: registro-backend/go.sum
+
+      - name: Build backend binary
+        working-directory: ./registro-backend
+        env:
+          CGO_ENABLED: "0"
+          GOOS: linux
+          GOARCH: ${{ vars.BACKEND_GOARCH || 'amd64' }}
+        run: |
+          mkdir -p ../deploy-backend
+          go build -trimpath \
+            -ldflags "-s -w -X registro-backend/pkg/version.GitCommit=$(git rev-parse --short HEAD) -X registro-backend/pkg/version.BuildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o "../deploy-backend/$BINARY_NAME" ./cmd/api-server
+          ls -lh "../deploy-backend/$BINARY_NAME"
+
+      # ---------- Upload ----------
+      - name: Install lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Upload frontend via FTP
+        run: |
+          delete_flag=""
+          if [ "$FTP_FRONTEND_DELETE" = "true" ]; then delete_flag="--delete"; fi
+          # Assets first, index.html last, so visitors never get an index.html
+          # that points to files not uploaded yet.
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" -p "$FTP_PORT" "$FTP_HOST" <<EOF
+          set cmd:fail-exit yes
+          set net:max-retries 3
+          set ssl:verify-certificate $FTP_VERIFY_CERT
+          mkdir -p -f "$FTP_FRONTEND_DIR"
+          mirror -R --verbose --parallel=4 $delete_flag --exclude-glob index.html registro-frontend/dist/ "$FTP_FRONTEND_DIR"
+          put -O "$FTP_FRONTEND_DIR" registro-frontend/dist/index.html
+          bye
+          EOF
+
+      - name: Upload backend binary via FTP
+        run: |
+          # Upload under a temporary name, then swap it in, so the running
+          # process is not left with a half-written file.
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" -p "$FTP_PORT" "$FTP_HOST" <<EOF
+          set cmd:fail-exit yes
+          set net:max-retries 3
+          set ssl:verify-certificate $FTP_VERIFY_CERT
+          mkdir -p -f "$FTP_BACKEND_DIR"
+          cd "$FTP_BACKEND_DIR"
+          put "deploy-backend/$BINARY_NAME" -o "$BINARY_NAME.new"
+          rm -f "$BINARY_NAME"
+          mv "$BINARY_NAME.new" "$BINARY_NAME"
+          bye
+          EOF
+          # Not every FTP server supports SITE CHMOD: warn instead of failing.
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" -p "$FTP_PORT" "$FTP_HOST" \
+            -e "set ssl:verify-certificate $FTP_VERIFY_CERT; chmod 755 \"$FTP_BACKEND_DIR/$BINARY_NAME\"; bye" \
+            || echo "::warning::Could not chmod the binary; set it executable on the server (chmod 755)"
+
+      - name: Summary
+        run: |
+          {
+            echo "### FTP deploy (${{ inputs.environment }})"
+            echo "- Frontend → \`$FTP_FRONTEND_DIR\`"
+            echo "- Backend binary → \`$FTP_BACKEND_DIR/$BINARY_NAME\`"
+            echo ""
+            echo "Restart the backend service on the server to run the new binary."
+          } >> "$GITHUB_STEP_SUMMARY"

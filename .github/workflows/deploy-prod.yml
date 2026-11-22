@@ -3,50 +3,11 @@ name: Deploy Production
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/checkout@v7
-
-      # Frontend Deploy (Netlify Production)
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-
-      - name: Debug Secrets
-        run: |
-          if [ -z "${{ secrets.VITE_API_URL }}" ]; then
-            echo "::warning::secrets.VITE_API_URL is EMPTY"
-          else
-            echo "secrets.VITE_API_URL is configured (length: ${#secret_val})"
-          fi
-          if [ -z "${{ vars.VITE_API_URL }}" ]; then
-            echo "vars.VITE_API_URL is EMPTY"
-          else
-            echo "vars.VITE_API_URL is configured"
-          fi
-        env:
-          secret_val: ${{ secrets.VITE_API_URL }}
-
-      - name: Build Frontend
-        run: |
-          cd registro-frontend
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL || vars.VITE_API_URL }}" > .env.production
-          npm ci
-          npm run build
-
-      - name: Deploy to Netlify Production
-        run: |
-          npx netlify-cli@latest deploy \
-            --prod \
-            --dir=registro-frontend/dist \
-            --site=$NETLIFY_SITE_ID \
-            --auth=$NETLIFY_AUTH_TOKEN \
-            --message="Production deploy from GitHub Actions"
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    uses: ./.github/workflows/deploy-ftp.yml
+    with:
+      environment: production
+    secrets: inherit
